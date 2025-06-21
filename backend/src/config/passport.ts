@@ -7,6 +7,45 @@ import { PrismaClient, User, SocialProvider } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Function to get OAuth settings from database
+async function getOAuthSettings() {
+  try {
+    const settings = await prisma.systemSetting.findMany({
+      where: {
+        key: {
+          in: ['googleOAuth', 'githubOAuth']
+        }
+      }
+    });
+
+    const oauthSettings = {
+      google: { clientId: '', clientSecret: '', enabled: false },
+      github: { clientId: '', clientSecret: '', enabled: false }
+    };
+
+    settings.forEach(setting => {
+      try {
+        const parsed = JSON.parse(setting.value);
+        if (setting.key === 'googleOAuth') {
+          oauthSettings.google = parsed;
+        } else if (setting.key === 'githubOAuth') {
+          oauthSettings.github = parsed;
+        }
+      } catch (parseError) {
+        console.error(`Error parsing ${setting.key} settings:`, parseError);
+      }
+    });
+
+    return oauthSettings;
+  } catch (error) {
+    console.error('Error fetching OAuth settings from database:', error);
+    return {
+      google: { clientId: '', clientSecret: '', enabled: false },
+      github: { clientId: '', clientSecret: '', enabled: false }
+    };
+  }
+}
+
 // Serialize user for session
 passport.serializeUser((user: any, done: (err: any, id?: any) => void) => {
   done(null, user.id);
@@ -56,75 +95,44 @@ passport.use(new LocalStrategy(
   }
 ));
 
-// Google OAuth Strategy
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  passport.use(new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_BASE_URL || 'http://localhost:4000'}/api/auth/google/callback`,
-      scope: ['profile', 'email'],
-      passReqToCallback: true // Enable passing request to callback for state access
-    },
-    async (req: any, accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: User | false) => void) => {
-      try {
-        const email = profile.emails?.[0]?.value?.toLowerCase();
-        if (!email) {
-          return done(new Error('No email provided by Google'), false);
-        }
+// Function to initialize OAuth strategies based on database settings
+async function initializeOAuthStrategies() {
+  const oauthSettings = await getOAuthSettings();
 
-        // Check if user already exists with this email
-        let user = await prisma.user.findUnique({
-          where: { email },
-          include: { socialAccounts: true }
-        });
-
-        if (user) {
-          // User exists, check if they have this social account linked
-          const existingSocialAccount = user.socialAccounts.find(
-            account => account.provider === SocialProvider.google
-          );
-
-          if (!existingSocialAccount) {
-            // Link this Google account to existing user
-            await prisma.socialAccount.create({
-              data: {
-                userId: user.id,
-                provider: SocialProvider.google,
-                providerId: profile.id,
-                providerEmail: email,
-                providerName: profile.displayName,
-                // Note: Not storing access/refresh tokens for security
-                profileData: JSON.stringify({
-                  id: profile.id,
-                  displayName: profile.displayName,
-                  email: email
-                })
-              }
-            });
-          } else {
-            // Update existing social account
-            await prisma.socialAccount.update({
-              where: { id: existingSocialAccount.id },
-              data: {
-                providerName: profile.displayName,
-                profileData: JSON.stringify({
-                  id: profile.id,
-                  displayName: profile.displayName,
-                  email: email
-                })
-              }
-            });
+  // Google OAuth Strategy
+  if (oauthSettings.google.enabled && oauthSettings.google.clientId && oauthSettings.google.clientSecret) {
+    passport.use(new GoogleStrategy(
+      {
+        clientID: oauthSettings.google.clientId,
+        clientSecret: oauthSettings.google.clientSecret,
+        callbackURL: `${process.env.BACKEND_BASE_URL || 'http://localhost:4000'}/api/auth/google/callback`,
+        scope: ['profile', 'email'],
+        passReqToCallback: true // Enable passing request to callback for state access
+      },
+      async (req: any, accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: User | false) => void) => {
+        try {
+          const email = profile.emails?.[0]?.value?.toLowerCase();
+          if (!email) {
+            return done(new Error('No email provided by Google'), false);
           }
-        } else {
-          // Create new user with Google account
-          user = await prisma.user.create({
-            data: {
-              email,
-              name: profile.displayName,
-              passwordHash: null, // No password for social login
-              socialAccounts: {
-                create: {
+
+          // Check if user already exists with this email
+          let user = await prisma.user.findUnique({
+            where: { email },
+            include: { socialAccounts: true }
+          });
+
+          if (user) {
+            // User exists, check if they have this social account linked
+            const existingSocialAccount = user.socialAccounts.find(
+              account => account.provider === SocialProvider.google
+            );
+
+            if (!existingSocialAccount) {
+              // Link this Google account to existing user
+              await prisma.socialAccount.create({
+                data: {
+                  userId: user.id,
                   provider: SocialProvider.google,
                   providerId: profile.id,
                   providerEmail: email,
@@ -136,92 +144,93 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
                     email: email
                   })
                 }
-              }
-            },
-            include: { socialAccounts: true }
-          });
-        }
-
-        return done(null, user);
-      } catch (error) {
-        console.error('Google OAuth error:', error);
-        return done(error, false);
-      }
-    }
-  ));
-}
-
-// GitHub OAuth Strategy
-if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-  passport.use(new GitHubStrategy(
-    {
-      clientID: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_BASE_URL || 'http://localhost:4000'}/api/auth/github/callback`,
-      scope: ['user:email'],
-      passReqToCallback: true // Enable passing request to callback for state access
-    },
-    async (req: any, accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: User | false) => void) => {
-      try {
-        const email = profile.emails?.[0]?.value?.toLowerCase();
-        if (!email) {
-          return done(new Error('No email provided by GitHub'), false);
-        }
-
-        // Check if user already exists with this email
-        let user = await prisma.user.findUnique({
-          where: { email },
-          include: { socialAccounts: true }
-        });
-
-        if (user) {
-          // User exists, check if they have this social account linked
-          const existingSocialAccount = user.socialAccounts.find(
-            account => account.provider === SocialProvider.github
-          );
-
-          if (!existingSocialAccount) {
-            // Link this GitHub account to existing user
-            await prisma.socialAccount.create({
-              data: {
-                userId: user.id,
-                provider: SocialProvider.github,
-                providerId: profile.id,
-                providerEmail: email,
-                providerName: profile.displayName || profile.username,
-                // Note: Not storing access/refresh tokens for security
-                profileData: JSON.stringify({
-                  id: profile.id,
-                  username: profile.username,
-                  displayName: profile.displayName,
-                  email: email
-                })
-              }
-            });
+              });
+            } else {
+              // Update existing social account
+              await prisma.socialAccount.update({
+                where: { id: existingSocialAccount.id },
+                data: {
+                  providerName: profile.displayName,
+                  profileData: JSON.stringify({
+                    id: profile.id,
+                    displayName: profile.displayName,
+                    email: email
+                  })
+                }
+              });
+            }
           } else {
-            // Update existing social account
-            await prisma.socialAccount.update({
-              where: { id: existingSocialAccount.id },
+            // Create new user with Google account
+            user = await prisma.user.create({
               data: {
-                providerName: profile.displayName || profile.username,
-                profileData: JSON.stringify({
-                  id: profile.id,
-                  username: profile.username,
-                  displayName: profile.displayName,
-                  email: email
-                })
-              }
+                email,
+                name: profile.displayName,
+                passwordHash: null, // No password for social login
+                socialAccounts: {
+                  create: {
+                    provider: SocialProvider.google,
+                    providerId: profile.id,
+                    providerEmail: email,
+                    providerName: profile.displayName,
+                    // Note: Not storing access/refresh tokens for security
+                    profileData: JSON.stringify({
+                      id: profile.id,
+                      displayName: profile.displayName,
+                      email: email
+                    })
+                  }
+                }
+              },
+              include: { socialAccounts: true }
             });
           }
-        } else {
-          // Create new user with GitHub account
-          user = await prisma.user.create({
-            data: {
-              email,
-              name: profile.displayName || profile.username,
-              passwordHash: null, // No password for social login
-              socialAccounts: {
-                create: {
+
+          return done(null, user);
+        } catch (error) {
+          console.error('Google OAuth error:', error);
+          return done(error, false);
+        }
+      }
+    ));
+    console.log('Google OAuth strategy initialized from database settings');
+  } else {
+    console.log('Google OAuth disabled or not configured');
+  }
+
+  // GitHub OAuth Strategy
+  if (oauthSettings.github.enabled && oauthSettings.github.clientId && oauthSettings.github.clientSecret) {
+    passport.use(new GitHubStrategy(
+      {
+        clientID: oauthSettings.github.clientId,
+        clientSecret: oauthSettings.github.clientSecret,
+        callbackURL: `${process.env.BACKEND_BASE_URL || 'http://localhost:4000'}/api/auth/github/callback`,
+        scope: ['user:email'],
+        passReqToCallback: true // Enable passing request to callback for state access
+      },
+      async (req: any, accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: User | false) => void) => {
+        try {
+          const email = profile.emails?.[0]?.value?.toLowerCase();
+          if (!email) {
+            return done(new Error('No email provided by GitHub'), false);
+          }
+
+          // Check if user already exists with this email
+          let user = await prisma.user.findUnique({
+            where: { email },
+            include: { socialAccounts: true }
+          });
+
+          if (user) {
+            // User exists, check if they have this social account linked
+            const existingSocialAccount = user.socialAccounts.find(
+              account => account.provider === SocialProvider.github
+            );
+
+            if (!existingSocialAccount) {
+              // Link this GitHub account to existing user
+              await prisma.socialAccount.create({
+                data: {
+                  userId: user.id,
                   provider: SocialProvider.github,
                   providerId: profile.id,
                   providerEmail: email,
@@ -234,19 +243,68 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
                     email: email
                   })
                 }
-              }
-            },
-            include: { socialAccounts: true }
-          });
-        }
+              });
+            } else {
+              // Update existing social account
+              await prisma.socialAccount.update({
+                where: { id: existingSocialAccount.id },
+                data: {
+                  providerName: profile.displayName || profile.username,
+                  profileData: JSON.stringify({
+                    id: profile.id,
+                    username: profile.username,
+                    displayName: profile.displayName,
+                    email: email
+                  })
+                }
+              });
+            }
+          } else {
+            // Create new user with GitHub account
+            user = await prisma.user.create({
+              data: {
+                email,
+                name: profile.displayName || profile.username,
+                passwordHash: null, // No password for social login
+                socialAccounts: {
+                  create: {
+                    provider: SocialProvider.github,
+                    providerId: profile.id,
+                    providerEmail: email,
+                    providerName: profile.displayName || profile.username,
+                    // Note: Not storing access/refresh tokens for security
+                    profileData: JSON.stringify({
+                      id: profile.id,
+                      username: profile.username,
+                      displayName: profile.displayName,
+                      email: email
+                    })
+                  }
+                }
+              },
+              include: { socialAccounts: true }
+            });
+          }
 
-        return done(null, user);
-      } catch (error) {
-        console.error('GitHub OAuth error:', error);
-        return done(error, false);
+          return done(null, user);
+        } catch (error) {
+          console.error('GitHub OAuth error:', error);
+          return done(error, false);
+        }
       }
-    }
-  ));
+    ));
+    console.log('GitHub OAuth strategy initialized from database settings');
+  } else {
+    console.log('GitHub OAuth disabled or not configured');
+  }
 }
+
+// Initialize OAuth strategies on startup
+initializeOAuthStrategies().catch(error => {
+  console.error('Error initializing OAuth strategies:', error);
+});
+
+// Export a function to reinitialize strategies when settings change
+export const reinitializeOAuthStrategies = initializeOAuthStrategies;
 
 export default passport; 
