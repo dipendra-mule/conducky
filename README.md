@@ -39,6 +39,10 @@ To run the full stack locally:
 
 Both the frontend and backend use `.env` files to manage environment variables and secrets. These files are loaded automatically by Docker Compose for local development.
 
+### Database-Stored Configuration
+
+**Email settings and OAuth credentials are now managed through the admin UI** and stored securely in the database with field-level encryption. See the [System Configuration Guide](website/docs/admin-guide/system-configuration.md) for details.
+
 - **Backend:**
   - `backend/.env` (example):
 
@@ -49,27 +53,12 @@ Both the frontend and backend use `.env` files to manage environment variables a
     FRONTEND_BASE_URL=http://localhost:3001
     BACKEND_BASE_URL=http://localhost:4000
     CORS_ORIGIN=http://localhost:3001
-    # Email Configuration
-    EMAIL_PROVIDER=console
-    EMAIL_FROM=noreply@conducky.local
-    EMAIL_REPLY_TO=
-
-    # SMTP Configuration (if EMAIL_PROVIDER=smtp)
-    SMTP_HOST=
-    SMTP_PORT=587
-    SMTP_SECURE=false
-    SMTP_USER=
-    SMTP_PASS=
-
-    # SendGrid Configuration (if EMAIL_PROVIDER=sendgrid)
-    SENDGRID_API_KEY=
-
-    # OAuth Configuration
-    GOOGLE_CLIENT_ID=
-    GOOGLE_CLIENT_SECRET=
-    GITHUB_CLIENT_ID=
-    GITHUB_CLIENT_SECRET=
-
+    
+    # Encryption key for database-stored configuration (email settings, OAuth credentials)
+    # REQUIRED: Must be at least 32 characters long
+    # Generate with: openssl rand -base64 32
+    # WARNING: Use a unique, secure key for each environment
+    ENCRYPTION_KEY=conducky-dev-encryption-key-change-in-production
     ```
 
 - **Frontend:**
@@ -79,6 +68,12 @@ Both the frontend and backend use `.env` files to manage environment variables a
     NEXT_PUBLIC_API_URL=http://localhost:4000
     BACKEND_API_URL=http://localhost:4000
     ```
+
+### Configuration Management
+
+- **System Settings**: Email and OAuth configuration is managed through **Admin → System Settings** in the web UI
+- **Environment Variables**: Only core application settings (database, session, URLs) use environment variables
+- **Security**: All sensitive configuration data is encrypted before database storage
 
 ### Overriding Variables
 

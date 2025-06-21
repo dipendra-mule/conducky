@@ -17,6 +17,23 @@ import helmet from 'helmet';
 // Import passport configuration
 import './src/config/passport';
 
+// Validate encryption key at startup
+import { validateEncryptionKey } from './src/utils/encryption';
+
+// Skip encryption validation in test environment unless specifically needed
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    console.log('🔐 Validating encryption key...');
+    validateEncryptionKey(process.env.ENCRYPTION_KEY || '');
+    console.log('✅ Encryption key validation passed');
+  } catch (error) {
+    console.error('❌ Encryption key validation failed:', (error as Error).message);
+    console.error('🔧 Please set a valid ENCRYPTION_KEY environment variable');
+    console.error('📖 See documentation for encryption key requirements');
+    process.exit(1);
+  }
+}
+
 // Import route modules
 import { 
   authRoutes, 

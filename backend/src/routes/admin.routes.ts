@@ -1,6 +1,13 @@
 import { Router, Request, Response } from 'express';
+import { requireAuth, AuthUser } from '../middleware/auth';
 import { requireSuperAdmin } from '../utils/rbac';
 import { PrismaClient } from '@prisma/client';
+import { reinitializeOAuthStrategies } from '../config/passport';
+
+// Extend Request interface to include user
+interface AuthenticatedRequest extends Request {
+  user: AuthUser;
+}
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -310,9 +317,33 @@ router.get('/system/settings', requireSuperAdmin(), async (req: Request, res: Re
     const settings = await prisma.systemSetting.findMany();
     
     // Convert array to object for easier frontend usage
-    const settingsObj: Record<string, string> = {};
+    const settingsObj: Record<string, any> = {};
     settings.forEach(setting => {
-      settingsObj[setting.key] = setting.value;
+      // Special handling for email settings - parse JSON
+      if (setting.key === 'email') {
+        try {
+          settingsObj[setting.key] = JSON.parse(setting.value);
+        } catch (parseError) {
+          console.error('Error parsing email settings:', parseError);
+          settingsObj[setting.key] = null;
+        }
+      } else if (setting.key === 'googleOAuth') {
+        try {
+          settingsObj[setting.key] = JSON.parse(setting.value);
+        } catch (parseError) {
+          console.error('Error parsing Google OAuth settings:', parseError);
+          settingsObj[setting.key] = null;
+        }
+      } else if (setting.key === 'githubOAuth') {
+        try {
+          settingsObj[setting.key] = JSON.parse(setting.value);
+        } catch (parseError) {
+          console.error('Error parsing GitHub OAuth settings:', parseError);
+          settingsObj[setting.key] = null;
+        }
+      } else {
+        settingsObj[setting.key] = setting.value;
+      }
     });
     
     res.json({ settings: settingsObj });
@@ -367,6 +398,9 @@ router.patch('/system/settings', requireSuperAdmin(), async (req: Request, res: 
         value: setting.value,
       })),
     });
+
+    // Reinitialize OAuth strategies
+    await reinitializeOAuthStrategies();
   } catch (error: any) {
     console.error('Error updating system settings:', error);
     res.status(500).json({
@@ -624,6 +658,430 @@ router.post('/events/:eventId/invites', requireSuperAdmin(), async (req: Request
       error: 'Failed to create event invite',
       details: error.message,
     });
+  }
+});
+
+// Add email configuration routes
+router.get('/settings/email', requireSuperAdmin(), async (req: Request, res: Response) => {
+  try {
+    // Fetch email settings from database
+    const emailSetting = await prisma.systemSetting.findUnique({
+      where: { key: 'email' }
+    });
+
+    let emailSettings = {
+      provider: 'console',
+      fromAddress: '',
+      fromName: '',
+      replyTo: '',
+      smtpHost: '',
+      smtpPort: 587,
+      smtpUsername: '',
+      smtpPassword: '',
+      smtpSecure: false,
+      smtpTls: false,
+      sendgridApiKey: ''
+    };
+
+    // If settings exist in database, parse and use them
+    if (emailSetting?.value) {
+      try {
+        const savedSettings = JSON.parse(emailSetting.value);
+        emailSettings = { ...emailSettings, ...savedSettings };
+      } catch (parseError) {
+        console.error('Error parsing saved email settings:', parseError);
+        // Fall back to defaults if parsing fails
+      }
+    }
+
+    res.json({
+      email: emailSettings
+    });
+  } catch (error) {
+    console.error('Error fetching email settings:', error);
+    res.status(500).json({ error: 'Failed to fetch email settings.' });
+  }
+});
+
+router.put('/settings/email', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    console.log('=== PUT /settings/email REQUEST ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
+    const { 
+      provider,
+      fromAddress,
+      fromName,
+      replyTo,
+      smtpHost, 
+      smtpPort, 
+      smtpUsername, 
+      smtpPassword, 
+      smtpSecure, 
+      smtpTls,
+      sendgridApiKey
+    } = req.body;
+
+    console.log('Extracted values:', { provider, fromAddress, fromName });
+
+    // Validate required fields based on provider
+    if (!provider) {
+      console.log('ERROR: No provider provided');
+      return res.status(400).json({ 
+        error: 'Email provider is required.' 
+      });
+    }
+
+    if (!fromAddress) {
+      console.log('ERROR: No fromAddress provided');
+      return res.status(400).json({ 
+        error: 'From address is required.' 
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(fromAddress)) {
+      console.log('ERROR: Invalid email format:', fromAddress);
+      return res.status(400).json({ 
+        error: 'From address must be a valid email address.' 
+      });
+    }
+
+    // Save email settings to database
+    const emailSettings = {
+      provider,
+      fromAddress,
+      fromName,
+      replyTo,
+      smtpHost,
+      smtpPort: parseInt(smtpPort) || 587,
+      smtpUsername,
+      smtpPassword,
+      smtpSecure: Boolean(smtpSecure),
+      smtpTls: Boolean(smtpTls),
+      sendgridApiKey
+    };
+
+    // Upsert the email settings in the SystemSetting table
+    await prisma.systemSetting.upsert({
+      where: { key: 'email' },
+      update: { 
+        value: JSON.stringify(emailSettings)
+      },
+      create: { 
+        key: 'email',
+        value: JSON.stringify(emailSettings)
+      }
+    });
+
+    console.log('Email settings saved to database successfully');
+
+    res.json({ 
+      message: 'Email settings saved successfully' 
+    });
+  } catch (error) {
+    console.error('Error updating email settings:', error);
+    res.status(500).json({ error: 'Failed to update email settings.' });
+  }
+});
+
+router.post('/settings/email/test', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { 
+      provider,
+      fromAddress,
+      fromName,
+      replyTo,
+      smtpHost,
+      smtpPort,
+      smtpUsername,
+      smtpPassword,
+      smtpSecure,
+      smtpTls,
+      sendgridApiKey
+    } = req.body;
+
+    // Validate required fields
+    if (!provider) {
+      return res.status(400).json({ 
+        error: 'Email provider is required.' 
+      });
+    }
+
+    if (!fromAddress) {
+      return res.status(400).json({ 
+        error: 'From address is required.' 
+      });
+    }
+
+    // Get current user for test email recipient
+    const currentUser = req.user;
+    if (!currentUser) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Get user's email from database
+    const user = await prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { email: true, name: true }
+    });
+
+    if (!user?.email) {
+      return res.status(400).json({ 
+        error: 'Unable to determine your email address for testing. Please ensure your profile has a valid email.' 
+      });
+    }
+
+    console.log(`\n=== EMAIL TEST (${provider.toUpperCase()} Provider) ===`);
+    console.log(`Testing email settings for user: ${user.email}`);
+    console.log(`From: ${fromAddress}`);
+    console.log(`From Name: ${fromName || 'Not set'}`);
+
+    // Import EmailService here to avoid circular imports
+    const { EmailService } = require('../utils/email');
+    
+    // Test the email configuration
+    const testResult = await EmailService.testEmailSettings({
+      provider,
+      fromAddress,
+      fromName,
+      replyTo,
+      smtpHost,
+      smtpPort,
+      smtpUsername,
+      smtpPassword,
+      smtpSecure,
+      smtpTls,
+      sendgridApiKey
+    }, user.email);
+
+    console.log(`Test result: ${testResult.success ? 'SUCCESS' : 'FAILED'}`);
+    console.log(`Message: ${testResult.message}`);
+    if (testResult.error) {
+      console.log(`Error: ${testResult.error}`);
+    }
+    console.log('=== END EMAIL TEST ===\n');
+
+    if (testResult.success) {
+      res.json({
+        success: true,
+        message: testResult.message,
+        details: `Test email sent to ${user.email}`
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: testResult.message,
+        details: testResult.error
+      });
+    }
+  } catch (error) {
+    console.error('Error testing email connection:', error);
+    res.status(500).json({ 
+      error: 'Failed to test email connection.',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Google OAuth configuration routes
+router.get('/settings/google-oauth', requireSuperAdmin(), async (req: Request, res: Response) => {
+  try {
+    // Fetch Google OAuth settings from database
+    const googleOAuthSetting = await prisma.systemSetting.findUnique({
+      where: { key: 'googleOAuth' }
+    });
+
+    let googleOAuthSettings = {
+      clientId: '',
+      clientSecret: '',
+      enabled: false
+    };
+
+    // If settings exist in database, parse and use them
+    if (googleOAuthSetting?.value) {
+      try {
+        const savedSettings = JSON.parse(googleOAuthSetting.value);
+        googleOAuthSettings = { ...googleOAuthSettings, ...savedSettings };
+      } catch (parseError) {
+        console.error('Error parsing saved Google OAuth settings:', parseError);
+        // Fall back to defaults if parsing fails
+      }
+    }
+
+    res.json({
+      googleOAuth: googleOAuthSettings
+    });
+  } catch (error) {
+    console.error('Error fetching Google OAuth settings:', error);
+    res.status(500).json({ error: 'Failed to fetch Google OAuth settings.' });
+  }
+});
+
+router.put('/settings/google-oauth', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { 
+      clientId,
+      clientSecret,
+      enabled
+    } = req.body;
+
+    // Validate required fields if enabled
+    if (enabled && (!clientId || !clientSecret)) {
+      return res.status(400).json({ 
+        error: 'Client ID and Client Secret are required when Google OAuth is enabled.' 
+      });
+    }
+
+    // Save Google OAuth settings to database
+    const googleOAuthSettings = {
+      clientId: clientId || '',
+      clientSecret: clientSecret || '',
+      enabled: Boolean(enabled)
+    };
+
+    // Upsert the Google OAuth settings in the SystemSetting table
+    await prisma.systemSetting.upsert({
+      where: { key: 'googleOAuth' },
+      update: { 
+        value: JSON.stringify(googleOAuthSettings)
+      },
+      create: { 
+        key: 'googleOAuth',
+        value: JSON.stringify(googleOAuthSettings)
+      }
+    });
+
+    console.log('Google OAuth settings saved to database successfully');
+
+    res.json({ 
+      message: 'Google OAuth settings saved successfully' 
+    });
+
+    // Reinitialize OAuth strategies
+    await reinitializeOAuthStrategies();
+  } catch (error) {
+    console.error('Error updating Google OAuth settings:', error);
+    res.status(500).json({ error: 'Failed to update Google OAuth settings.' });
+  }
+});
+
+// GitHub OAuth configuration routes
+router.get('/settings/github-oauth', requireSuperAdmin(), async (req: Request, res: Response) => {
+  try {
+    // Fetch GitHub OAuth settings from database
+    const githubOAuthSetting = await prisma.systemSetting.findUnique({
+      where: { key: 'githubOAuth' }
+    });
+
+    let githubOAuthSettings = {
+      clientId: '',
+      clientSecret: '',
+      enabled: false
+    };
+
+    // If settings exist in database, parse and use them
+    if (githubOAuthSetting?.value) {
+      try {
+        const savedSettings = JSON.parse(githubOAuthSetting.value);
+        githubOAuthSettings = { ...githubOAuthSettings, ...savedSettings };
+      } catch (parseError) {
+        console.error('Error parsing saved GitHub OAuth settings:', parseError);
+        // Fall back to defaults if parsing fails
+      }
+    }
+
+    res.json({
+      githubOAuth: githubOAuthSettings
+    });
+  } catch (error) {
+    console.error('Error fetching GitHub OAuth settings:', error);
+    res.status(500).json({ error: 'Failed to fetch GitHub OAuth settings.' });
+  }
+});
+
+router.put('/settings/github-oauth', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { 
+      clientId,
+      clientSecret,
+      enabled
+    } = req.body;
+
+    // Validate required fields if enabled
+    if (enabled && (!clientId || !clientSecret)) {
+      return res.status(400).json({ 
+        error: 'Client ID and Client Secret are required when GitHub OAuth is enabled.' 
+      });
+    }
+
+    // Save GitHub OAuth settings to database
+    const githubOAuthSettings = {
+      clientId: clientId || '',
+      clientSecret: clientSecret || '',
+      enabled: Boolean(enabled)
+    };
+
+    // Upsert the GitHub OAuth settings in the SystemSetting table
+    await prisma.systemSetting.upsert({
+      where: { key: 'githubOAuth' },
+      update: { 
+        value: JSON.stringify(githubOAuthSettings)
+      },
+      create: { 
+        key: 'githubOAuth',
+        value: JSON.stringify(githubOAuthSettings)
+      }
+    });
+
+    console.log('GitHub OAuth settings saved to database successfully');
+
+    res.json({ 
+      message: 'GitHub OAuth settings saved successfully' 
+    });
+
+    // Reinitialize OAuth strategies
+    await reinitializeOAuthStrategies();
+  } catch (error) {
+    console.error('Error updating GitHub OAuth settings:', error);
+    res.status(500).json({ error: 'Failed to update GitHub OAuth settings.' });
+  }
+});
+
+// Public endpoint to check OAuth provider availability (no auth required)
+router.get('/oauth-providers', async (req: Request, res: Response) => {
+  try {
+    const settings = await prisma.systemSetting.findMany({
+      where: {
+        key: {
+          in: ['googleOAuth', 'githubOAuth']
+        }
+      }
+    });
+
+    const providers = {
+      google: false,
+      github: false
+    };
+
+    settings.forEach(setting => {
+      try {
+        const config = JSON.parse(setting.value);
+        if (setting.key === 'googleOAuth' && config.enabled && config.clientId && config.clientSecret) {
+          providers.google = true;
+        } else if (setting.key === 'githubOAuth' && config.enabled && config.clientId && config.clientSecret) {
+          providers.github = true;
+        }
+      } catch (parseError) {
+        console.error(`Error parsing ${setting.key} settings:`, parseError);
+      }
+    });
+
+    res.json({ providers });
+  } catch (error) {
+    console.error('Error checking OAuth providers:', error);
+    res.status(500).json({ error: 'Failed to check OAuth providers' });
   }
 });
 

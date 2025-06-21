@@ -481,6 +481,143 @@ The Conducky Team
     const text = `${message}${actionUrl ? `\n\nView details: ${actionUrl}` : ''}`;
     return await this.sendEmail({ to, subject, text, html });
   }
+
+  /**
+   * Test email configuration with database-stored settings
+   * @param settings - Email settings from database
+   * @param testEmailAddress - Email address to send test email to
+   * @returns Promise resolving to test result
+   */
+  static async testEmailSettings(settings: any, testEmailAddress: string): Promise<{ success: boolean; message: string; error?: string }> {
+    try {
+      // Create a temporary EmailService with database settings
+      const testService = new EmailService();
+      
+      // Override the config with database settings
+      const config: EmailConfig = {
+        provider: settings.provider || 'console',
+        from: settings.fromAddress || 'noreply@conducky.local',
+        replyTo: settings.replyTo || null,
+      };
+
+      switch (settings.provider?.toLowerCase()) {
+        case 'smtp':
+          config.smtp = {
+            host: settings.smtpHost || 'localhost',
+            port: settings.smtpPort || 587,
+            secure: settings.smtpSecure || false,
+            auth: settings.smtpUsername && settings.smtpPassword ? {
+              user: settings.smtpUsername,
+              pass: settings.smtpPassword,
+            } : undefined,
+          };
+          break;
+
+        case 'sendgrid':
+          if (settings.sendgridApiKey) {
+            config.sendgrid = { apiKey: settings.sendgridApiKey };
+          }
+          break;
+
+        case 'console':
+        default:
+          config.console = true;
+          break;
+      }
+
+      // Override the private config
+      (testService as any).config = config;
+      
+      // Force re-initialization
+      (testService as any).isInitialized = false;
+      (testService as any).transporter = null;
+
+      // Send test email
+      const result = await testService.sendEmail({
+        to: testEmailAddress,
+        subject: 'Conducky Email Configuration Test',
+        text: `This is a test email from Conducky to verify your email configuration.
+
+Provider: ${settings.provider}
+From: ${settings.fromAddress}
+From Name: ${settings.fromName || 'Not set'}
+
+If you received this email, your email configuration is working correctly!
+
+This test was sent at: ${new Date().toISOString()}`,
+        html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Conducky Email Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background-color: #ffffff; padding: 30px; border: 1px solid #dee2e6; }
+    .footer { background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #6c757d; border-radius: 0 0 8px 8px; }
+    .success { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    .config { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🦆 Conducky</h1>
+      <h2>Email Configuration Test</h2>
+    </div>
+    
+    <div class="content">
+      <div class="success">
+        <strong>✅ Success!</strong> This is a test email from Conducky to verify your email configuration.
+      </div>
+      
+      <div class="config">
+        <strong>Configuration Details:</strong><br>
+        <strong>Provider:</strong> ${settings.provider}<br>
+        <strong>From:</strong> ${settings.fromAddress}<br>
+        <strong>From Name:</strong> ${settings.fromName || 'Not set'}
+      </div>
+      
+      <p>If you received this email, your email configuration is working correctly!</p>
+      
+      <p><strong>Test sent at:</strong> ${new Date().toISOString()}</p>
+    </div>
+    
+    <div class="footer">
+      <p>This test email was sent by Conducky Code of Conduct Management System</p>
+    </div>
+  </div>
+</body>
+</html>
+        `,
+        from: settings.fromAddress,
+        replyTo: settings.replyTo
+      });
+
+      if (result.success) {
+        return {
+          success: true,
+          message: `Test email sent successfully via ${settings.provider}. Check ${testEmailAddress} for the test message.`
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to send test email',
+          error: 'Email sending failed'
+        };
+      }
+
+    } catch (error: any) {
+      console.error('Email test failed:', error);
+      return {
+        success: false,
+        message: 'Email test failed',
+        error: error.message || 'Unknown error occurred'
+      };
+    }
+  }
 }
 
 // Create and export a singleton instance
