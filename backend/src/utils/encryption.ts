@@ -32,7 +32,7 @@ export function validateEncryptionKey(key: string): void {
   }
   
   // In production, warn if key appears to be the default dev key
-  if (process.env.NODE_ENV === 'production' && key.includes('dev') || key.includes('development')) {
+  if (process.env.NODE_ENV === 'production' && (key.includes('dev') || key.includes('development'))) {
     throw new Error('Production environments must not use development encryption keys');
   }
 }
