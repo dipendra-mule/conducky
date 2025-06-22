@@ -279,6 +279,63 @@ export class UnifiedRBACService {
       return false;
     }
   }
+
+  /**
+   * Get user's organizations with proper System Admin access
+   * TODO: Remove this when organization service is fully migrated to unified RBAC
+   */
+  async getUserOrganizations(userId: string) {
+    try {
+      // Check if user is System Admin
+      const isSystemAdmin = await this.isSystemAdmin(userId);
+      
+      if (isSystemAdmin) {
+        // System Admins get access to all organizations
+        const allOrganizations = await (this.prisma as any).organization.findMany({
+          orderBy: { name: 'asc' }
+        });
+        
+        const organizationsWithMembership = allOrganizations.map((org: any) => ({
+          ...org,
+          membership: {
+            id: `system-admin-${org.id}`, // Synthetic membership ID
+            organizationId: org.id,
+            userId,
+            role: 'org_admin', // System Admins get org_admin access
+            createdAt: new Date(),
+            createdById: userId,
+          },
+        }));
+        
+        return { organizations: organizationsWithMembership };
+      }
+      
+      // For non-System Admins, get explicit memberships
+      const memberships = await (this.prisma as any).organizationMembership.findMany({
+        where: { userId },
+        include: {
+          organization: true,
+        },
+      });
+
+      const organizations = memberships.map((membership: any) => ({
+        ...membership.organization,
+        membership: {
+          id: membership.id,
+          organizationId: membership.organizationId,
+          userId: membership.userId,
+          role: membership.role,
+          createdAt: membership.createdAt,
+          createdById: membership.createdById,
+        },
+      }));
+
+      return { organizations };
+    } catch (error: any) {
+      console.error('[UnifiedRBAC] Error getting user organizations:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

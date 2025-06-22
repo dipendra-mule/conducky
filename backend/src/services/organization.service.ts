@@ -268,7 +268,7 @@ export class OrganizationService {
   }
 
   /**
-   * List all organizations (SuperAdmin only)
+   * List all organizations (System Admin only)
    */
   async listOrganizations(): Promise<ServiceResult<{ organizations: OrganizationWithMemberships[] }>> {
     try {
@@ -416,12 +416,50 @@ export class OrganizationService {
   }
 
   /**
-   * Get user's organizations
+   * Get user's organizations (includes all organizations for System Admins)
    */
   async getUserOrganizations(
     userId: string
   ): Promise<ServiceResult<{ organizations: (Organization & { membership: OrganizationMembership })[] }>> {
     try {
+      // Check if user is System Admin
+      const userRoles = await prisma.userRole.findMany({
+        where: { 
+          userId,
+          scopeType: 'system'
+        },
+        include: {
+          role: true
+        }
+      });
+      
+      const isSystemAdmin = userRoles.some(ur => ur.role.name === 'system_admin');
+      
+      if (isSystemAdmin) {
+        // System Admins get access to all organizations
+        const allOrganizations = await prisma.organization.findMany({
+          orderBy: { name: 'asc' }
+        });
+        
+        const organizationsWithMembership = allOrganizations.map(org => ({
+          ...org,
+          membership: {
+            id: `system-admin-${org.id}`, // Synthetic membership ID
+            organizationId: org.id,
+            userId,
+            role: 'org_admin' as const, // System Admins get org_admin access
+            createdAt: new Date(),
+            createdById: userId,
+          },
+        }));
+        
+        return {
+          success: true,
+          data: { organizations: organizationsWithMembership },
+        };
+      }
+      
+      // For non-System Admins, get explicit memberships
       const memberships = await prisma.organizationMembership.findMany({
         where: { userId },
         include: {

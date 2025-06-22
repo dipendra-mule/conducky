@@ -130,6 +130,17 @@ export function SecureMarkdown({ content, type = 'general', className }: SecureM
       throw new Error('Content failed post-sanitization validation');
     }
     
+    // Post-process to add dark mode compatible classes
+    if (type === 'comment') {
+      // For comments, ensure proper text color in both light and dark modes
+      sanitizedContent = sanitizedContent
+        .replace(/<p>/g, '<p class="text-foreground">')
+        .replace(/<strong>/g, '<strong class="text-foreground font-semibold">')
+        .replace(/<em>/g, '<em class="text-foreground italic">')
+        .replace(/<code>/g, '<code class="text-foreground bg-muted px-1 py-0.5 rounded text-xs">')
+        .replace(/<blockquote>/g, '<blockquote class="text-foreground border-l-4 border-muted pl-4 italic">');
+    }
+    
   } catch (error) {
     console.warn('SecureMarkdown: Sanitization failed', error);
     return (

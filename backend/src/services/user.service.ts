@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { ServiceResult } from '../types';
+import { UnifiedRBACService } from './unified-rbac.service';
 
 export interface ProfileUpdateData {
   name?: string;
@@ -88,7 +89,11 @@ export interface AvatarUpload {
 }
 
 export class UserService {
-  constructor(private prisma: PrismaClient) {}
+  private unifiedRBAC: UnifiedRBACService;
+
+  constructor(private prisma: PrismaClient) {
+    this.unifiedRBAC = new UnifiedRBACService(prisma);
+  }
 
   /**
    * Validate password strength requirements
@@ -254,10 +259,11 @@ export class UserService {
   }
 
   /**
-   * Get user's events with roles
+   * Get user's events with roles (includes organization events for org admins)
    */
   async getUserEvents(userId: string): Promise<ServiceResult<{ events: UserEvent[]; globalRoles: string[] }>> {
     try {
+      // Get direct event roles
       const userEventRoles = await this.prisma.userEventRole.findMany({
         where: { userId },
         include: {
@@ -266,10 +272,23 @@ export class UserService {
         }
       });
 
+      // Get organization memberships to include org events
+      const orgMemberships = await this.prisma.organizationMembership.findMany({
+        where: { userId },
+        include: {
+          organization: {
+            include: {
+              events: true
+            }
+          }
+        }
+      });
+
       // Group by event and collect roles
       const eventsMap = new Map();
       const globalRoles: string[] = [];
       
+      // Process direct event roles
       userEventRoles.forEach(uer => {
         if (!uer.event) {
           // This is a global role (eventId is null)
@@ -288,6 +307,29 @@ export class UserService {
           });
         }
         eventsMap.get(eventId)?.roles.push(uer.role.name);
+      });
+
+      // Process organization events (org admins get event admin access)
+      orgMemberships.forEach(membership => {
+        if (membership.role === 'org_admin' && membership.organization.events) {
+          membership.organization.events.forEach(event => {
+            const eventId = event.id;
+            if (!eventsMap.has(eventId)) {
+              eventsMap.set(eventId, {
+                id: event.id,
+                name: event.name,
+                slug: event.slug,
+                description: event.description,
+                roles: []
+              });
+            }
+            // Org admins get Event Admin role on organization events
+            const eventData = eventsMap.get(eventId);
+            if (eventData && !eventData.roles.includes('Event Admin')) {
+              eventData.roles.push('Event Admin');
+            }
+          });
+        }
       });
 
       const events = Array.from(eventsMap.values());
@@ -391,7 +433,7 @@ export class UserService {
       
       eventRoles.forEach((eventData: any, eventId: string) => {
         const roles = eventData.roles;
-        const hasResponderOrAdmin = roles.some((r: string) => ['Responder', 'Event Admin', 'SuperAdmin'].includes(r));
+        const hasResponderOrAdmin = roles.some((r: string) => ['Responder', 'Event Admin', 'System Admin'].includes(r));
         
         if (hasResponderOrAdmin) {
           responderAdminEvents.push(eventId);

@@ -107,6 +107,18 @@ describe('Enhanced Event Reports API Integration Tests', () => {
       }
     ];
 
+    // Mock unified RBAC user roles (new structure)
+    const mockUserRoles = [
+      // System Admin user
+      { id: '1', userId: '1', roleId: '1', scopeType: 'system', scopeId: 'global', grantedAt: new Date(), role: { id: '1', name: 'system_admin' } },
+      // Event Admin for event1
+      { id: '2', userId: '1', roleId: '2', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '2', name: 'event_admin' } },
+      // Reporter for event1
+      { id: '3', userId: '2', roleId: '4', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '4', name: 'reporter' } },
+      // Responder for event1
+      { id: '4', userId: '3', roleId: '3', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '3', name: 'responder' } },
+    ];
+
     // Setup in-memory store
     inMemoryStore.users = [
       mockUser,
@@ -115,7 +127,8 @@ describe('Enhanced Event Reports API Integration Tests', () => {
     ];
     inMemoryStore.events = mockEvents;
     inMemoryStore.reports = mockReports;
-    inMemoryStore.userEventRoles = mockUserEventRoles;
+    inMemoryStore.userEventRoles = mockUserEventRoles; // Keep old structure for compatibility
+    inMemoryStore.userRoles = mockUserRoles; // Add new unified structure
   });
 
   describe('GET /api/events/slug/:slug/reports', () => {
@@ -395,13 +408,86 @@ describe('Event Reports Export and Bulk Actions', () => {
       adminRole = await prisma.role.create({ data: { name: 'Event Admin' } });
     }
 
-    // Assign roles
+    // Create unified roles (or find existing ones)
+    let unifiedReporterRole, unifiedResponderRole, unifiedAdminRole;
+    
+    try {
+      unifiedReporterRole = await prisma.unifiedRole.findFirst({ where: { name: 'reporter' } });
+      if (!unifiedReporterRole) {
+        unifiedReporterRole = await prisma.unifiedRole.create({ 
+          data: { name: 'reporter', description: 'Reporter role', level: 20 } 
+        });
+      }
+    } catch {
+      unifiedReporterRole = await prisma.unifiedRole.create({ 
+        data: { name: 'reporter', description: 'Reporter role', level: 20 } 
+      });
+    }
+    
+    try {
+      unifiedResponderRole = await prisma.unifiedRole.findFirst({ where: { name: 'responder' } });
+      if (!unifiedResponderRole) {
+        unifiedResponderRole = await prisma.unifiedRole.create({ 
+          data: { name: 'responder', description: 'Responder role', level: 40 } 
+        });
+      }
+    } catch {
+      unifiedResponderRole = await prisma.unifiedRole.create({ 
+        data: { name: 'responder', description: 'Responder role', level: 40 } 
+      });
+    }
+    
+    try {
+      unifiedAdminRole = await prisma.unifiedRole.findFirst({ where: { name: 'event_admin' } });
+      if (!unifiedAdminRole) {
+        unifiedAdminRole = await prisma.unifiedRole.create({ 
+          data: { name: 'event_admin', description: 'Event Admin role', level: 80 } 
+        });
+      }
+    } catch {
+      unifiedAdminRole = await prisma.unifiedRole.create({ 
+        data: { name: 'event_admin', description: 'Event Admin role', level: 80 } 
+      });
+    }
+
+    // Assign roles (old structure for backward compatibility)
     await prisma.userEventRole.createMany({
       data: [
         { userId: reporterId, eventId, roleId: reporterRole.id },
         { userId: responderId, eventId, roleId: responderRole.id },
         { userId: adminId, eventId, roleId: adminRole.id }
       ]
+    });
+
+    // Assign unified RBAC roles (new structure)
+    await prisma.userRole.create({
+      data: { 
+        userId: reporterId, 
+        roleId: unifiedReporterRole.id, 
+        scopeType: 'event', 
+        scopeId: eventId,
+        grantedAt: new Date()
+      }
+    });
+    
+    await prisma.userRole.create({
+      data: { 
+        userId: responderId, 
+        roleId: unifiedResponderRole.id, 
+        scopeType: 'event', 
+        scopeId: eventId,
+        grantedAt: new Date()
+      }
+    });
+    
+    await prisma.userRole.create({
+      data: { 
+        userId: adminId, 
+        roleId: unifiedAdminRole.id, 
+        scopeType: 'event', 
+        scopeId: eventId,
+        grantedAt: new Date()
+      }
     });
 
     // Create test reports

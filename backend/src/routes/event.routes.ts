@@ -39,7 +39,7 @@ const uploadEvidence = createUploadMiddleware({
 // ========================================
 
 // Get event users (by slug)
-router.get('/slug/:slug/users', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/users', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const query = {
@@ -70,7 +70,7 @@ router.get('/slug/:slug/users', requireRole(['Reporter', 'Responder', 'Event Adm
 });
 
 // Get individual user profile by event slug and user ID
-router.get('/slug/:slug/users/:userId', requireRole(['Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/users/:userId', requireRole(['Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, userId } = req.params;
     
@@ -95,7 +95,7 @@ router.get('/slug/:slug/users/:userId', requireRole(['Responder', 'Event Admin',
 });
 
 // Get user activity timeline by event slug and user ID
-router.get('/slug/:slug/users/:userId/activity', requireRole(['Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/users/:userId/activity', requireRole(['Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, userId } = req.params;
     const page = parseInt(req.query.page as string) || 1;
@@ -122,7 +122,7 @@ router.get('/slug/:slug/users/:userId/activity', requireRole(['Responder', 'Even
 });
 
 // Get user's reports by event slug and user ID
-router.get('/slug/:slug/users/:userId/reports', requireRole(['Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/users/:userId/reports', requireRole(['Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, userId } = req.params;
     const page = parseInt(req.query.page as string) || 1;
@@ -150,7 +150,7 @@ router.get('/slug/:slug/users/:userId/reports', requireRole(['Responder', 'Event
 });
 
 // Update event user (by slug)
-router.patch('/slug/:slug/users/:userId', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/slug/:slug/users/:userId', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, userId } = req.params;
     const { name, email, role } = req.body;
@@ -168,9 +168,9 @@ router.patch('/slug/:slug/users/:userId', requireRole(['Event Admin', 'SuperAdmi
     }
     
     // Validate role enum
-    const validRoles = ['SuperAdmin', 'Event Admin', 'Responder', 'Reporter'];
+    const validRoles = ['System Admin', 'Event Admin', 'Responder', 'Reporter'];
     if (!validRoles.includes(role)) {
-      res.status(400).json({ error: 'Invalid role. Must be one of: SuperAdmin, Admin, Responder, Reporter.' });
+      res.status(400).json({ error: 'Invalid role. Must be one of: System Admin, Admin, Responder, Reporter.' });
       return;
     }
     
@@ -197,7 +197,7 @@ router.patch('/slug/:slug/users/:userId', requireRole(['Event Admin', 'SuperAdmi
 });
 
 // Remove user from event (by slug)
-router.delete('/slug/:slug/users/:userId', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.delete('/slug/:slug/users/:userId', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, userId } = req.params;
     
@@ -222,7 +222,7 @@ router.delete('/slug/:slug/users/:userId', requireRole(['Event Admin', 'SuperAdm
 });
 
 // Get event statistics (by slug)
-router.get('/slug/:slug/stats', requireRole(['Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/stats', requireRole(['Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const user = req.user as any;
@@ -246,7 +246,7 @@ router.get('/slug/:slug/stats', requireRole(['Responder', 'Event Admin', 'SuperA
 });
 
 // Get enhanced event card data (by slug) - for dashboard cards
-router.get('/slug/:slug/cardstats', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/cardstats', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const user = req.user as any;
@@ -270,7 +270,7 @@ router.get('/slug/:slug/cardstats', requireRole(['Reporter', 'Responder', 'Event
 });
 
 // Get current user's role for an event (by slug)
-router.get('/slug/:slug/user-role', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/user-role', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const user = req.user as any;
@@ -403,7 +403,7 @@ router.get('/:eventId/users', async (req: Request, res: Response): Promise<void>
 });
 
 // Assign role to user
-router.post('/:eventId/roles', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/roles', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { userId, roleName } = req.body;
@@ -428,7 +428,7 @@ router.post('/:eventId/roles', requireRole(['Event Admin', 'SuperAdmin']), async
 });
 
 // Remove role from user
-router.delete('/:eventId/roles', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.delete('/:eventId/roles', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { userId, roleName } = req.body;
@@ -453,7 +453,7 @@ router.delete('/:eventId/roles', requireRole(['Event Admin', 'SuperAdmin']), asy
 });
 
 // Create report for event
-router.post('/:eventId/reports', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), uploadEvidence.array('evidence'), validateUploadedFiles, async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/reports', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), uploadEvidence.array('evidence'), validateUploadedFiles, async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;
@@ -585,7 +585,7 @@ router.get('/:eventId/reports/:reportId', async (req: Request, res: Response): P
 });
 
 // Get report state history
-router.get('/:eventId/reports/:reportId/state-history', requireRole(['Event Admin', 'SuperAdmin', 'Responder', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
+router.get('/:eventId/reports/:reportId/state-history', requireRole(['Event Admin', 'System Admin', 'Responder', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const user = req.user as any;
@@ -617,7 +617,7 @@ router.get('/:eventId/reports/:reportId/state-history', requireRole(['Event Admi
 });
 
 // Update report state with enhanced workflow support
-router.patch('/:eventId/reports/:reportId/state', requireRole(['Event Admin', 'SuperAdmin', 'Responder']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/state', requireRole(['Event Admin', 'System Admin', 'Responder']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { state, status, priority, assignedToUserId, resolution, notes, assignedTo } = req.body;
@@ -684,7 +684,7 @@ router.patch('/:eventId/reports/:reportId/state', requireRole(['Event Admin', 'S
 });
 
 // Update report title
-router.patch('/:eventId/reports/:reportId/title', requireRole(['Event Admin', 'SuperAdmin', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/title', requireRole(['Event Admin', 'System Admin', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { title } = req.body;
@@ -725,7 +725,7 @@ router.patch('/:eventId/reports/:reportId/title', requireRole(['Event Admin', 'S
 });
 
 // Update report location
-router.patch('/:eventId/reports/:reportId/location', requireRole(['Event Admin', 'SuperAdmin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/location', requireRole(['Event Admin', 'System Admin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { location } = req.body;
@@ -750,7 +750,7 @@ router.patch('/:eventId/reports/:reportId/location', requireRole(['Event Admin',
 });
 
 // Update report contact preference
-router.patch('/:eventId/reports/:reportId/contact-preference', requireRole(['Event Admin', 'SuperAdmin', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/contact-preference', requireRole(['Event Admin', 'System Admin', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { contactPreference } = req.body;
@@ -780,7 +780,7 @@ router.patch('/:eventId/reports/:reportId/contact-preference', requireRole(['Eve
 });
 
 // Update report type
-router.patch('/:eventId/reports/:reportId/type', requireRole(['Event Admin', 'SuperAdmin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/type', requireRole(['Event Admin', 'System Admin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { type } = req.body;
@@ -810,7 +810,7 @@ router.patch('/:eventId/reports/:reportId/type', requireRole(['Event Admin', 'Su
 });
 
 // Update report description
-router.patch('/:eventId/reports/:reportId/description', requireRole(['Event Admin', 'SuperAdmin', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/description', requireRole(['Event Admin', 'System Admin', 'Reporter']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { description } = req.body;
@@ -840,7 +840,7 @@ router.patch('/:eventId/reports/:reportId/description', requireRole(['Event Admi
 });
 
 // Update report incident date
-router.patch('/:eventId/reports/:reportId/incident-date', requireRole(['Event Admin', 'SuperAdmin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/incident-date', requireRole(['Event Admin', 'System Admin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { incidentAt } = req.body;
@@ -865,7 +865,7 @@ router.patch('/:eventId/reports/:reportId/incident-date', requireRole(['Event Ad
 });
 
 // Update report parties involved
-router.patch('/:eventId/reports/:reportId/parties', requireRole(['Event Admin', 'SuperAdmin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/:eventId/reports/:reportId/parties', requireRole(['Event Admin', 'System Admin', 'Reporter', 'Responder']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId, reportId } = req.params;
     const { parties } = req.body;
@@ -890,7 +890,7 @@ router.patch('/:eventId/reports/:reportId/parties', requireRole(['Event Admin', 
 });
 
 // Upload evidence for report
-router.post('/:eventId/reports/:reportId/evidence', requireRole(['Event Admin', 'SuperAdmin', 'Responder']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/reports/:reportId/evidence', requireRole(['Event Admin', 'System Admin', 'Responder']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { reportId } = req.params;
     const evidenceFiles = req.files as Express.Multer.File[];
@@ -978,7 +978,7 @@ router.get('/:eventId/reports/:reportId/evidence/:evidenceId/download', async (r
 });
 
 // Delete evidence file
-router.delete('/:eventId/reports/:reportId/evidence/:evidenceId', requireRole(['Event Admin', 'SuperAdmin', 'Responder']), async (req: Request, res: Response): Promise<void> => {
+router.delete('/:eventId/reports/:reportId/evidence/:evidenceId', requireRole(['Event Admin', 'System Admin', 'Responder']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { evidenceId } = req.params;
     
@@ -997,7 +997,7 @@ router.delete('/:eventId/reports/:reportId/evidence/:evidenceId', requireRole(['
 });
 
 // Upload event logo
-router.post('/:eventId/logo', requireRole(['Event Admin', 'SuperAdmin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/logo', requireRole(['Event Admin', 'System Admin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const logoFile = req.file;
@@ -1085,7 +1085,7 @@ router.get('/slug/:slug', async (req: Request, res: Response): Promise<void> => 
 });
 
 // Update event (by slug)
-router.patch('/slug/:slug', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/slug/:slug', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const updateData = req.body;
@@ -1116,7 +1116,7 @@ router.patch('/slug/:slug', requireRole(['Event Admin', 'SuperAdmin']), async (r
 });
 
 // Get all reports for an event by slug
-router.get('/slug/:slug/reports', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/reports', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     
@@ -1197,7 +1197,7 @@ router.get('/slug/:slug/test-export', (req: Request, res: Response) => {
 });
 
 // Export event reports (CSV/PDF)
-router.get('/slug/:slug/reports/export', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/reports/export', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const format = req.query.format as string;
@@ -1303,7 +1303,7 @@ router.get('/slug/:slug/reports/export', requireRole(['Reporter', 'Responder', '
 });
 
 // Bulk actions for event reports
-router.post('/slug/:slug/reports/bulk', requireRole(['Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/reports/bulk', requireRole(['Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const { action, reportIds, assignedTo, status, notes } = req.body;
@@ -1361,7 +1361,7 @@ router.post('/slug/:slug/reports/bulk', requireRole(['Responder', 'Event Admin',
 });
 
 // Create report for event by slug
-router.post('/slug/:slug/reports', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/reports', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;
@@ -1545,7 +1545,7 @@ router.get('/slug/:slug/logo', async (req: Request, res: Response): Promise<void
 });
 
 // Upload event logo by slug
-router.post('/slug/:slug/logo', requireRole(['Event Admin', 'SuperAdmin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/logo', requireRole(['Event Admin', 'System Admin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const logoFile = req.file;
@@ -1581,8 +1581,8 @@ router.post('/slug/:slug/logo', requireRole(['Event Admin', 'SuperAdmin']), uplo
   }
 });
 
-// Get invites for event by slug (requires Admin/SuperAdmin permissions)
-router.get('/slug/:slug/invites', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+// Get invites for event by slug (requires Admin/System Admin permissions)
+router.get('/slug/:slug/invites', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     
@@ -1608,7 +1608,7 @@ router.get('/slug/:slug/invites', requireRole(['Event Admin', 'SuperAdmin']), as
 });
 
 // Create invite for event by slug
-router.post('/slug/:slug/invites', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/invites', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const { maxUses, expiresAt, note, role } = req.body;
@@ -1659,7 +1659,7 @@ router.post('/slug/:slug/invites', requireRole(['Event Admin', 'SuperAdmin']), a
 });
 
 // Update invite by slug
-router.patch('/slug/:slug/invites/:inviteId', requireRole(['Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/slug/:slug/invites/:inviteId', requireRole(['Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, inviteId } = req.params;
     const updateData = req.body;
@@ -1690,7 +1690,7 @@ router.patch('/slug/:slug/invites/:inviteId', requireRole(['Event Admin', 'Super
 });
 
 // Create comment on report by slug
-router.post('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, reportId } = req.params;
     const { body, visibility = 'public', isMarkdown = false } = req.body;
@@ -1747,10 +1747,10 @@ router.post('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', '
     
     // Check if user can create internal comments
     const roles = accessResult.data!.roles;
-    const hasResponderRole = roles.some((role: string) => ['Event Admin', 'Responder', 'SuperAdmin'].includes(role));
+    const hasResponderRole = roles.some((role: string) => ['Event Admin', 'Responder', 'System Admin'].includes(role));
     
     if (visibility === 'internal' && !hasResponderRole) {
-      res.status(403).json({ error: 'Only Responders, Admins, and SuperAdmins can create internal comments.' });
+      res.status(403).json({ error: 'Only Responders, Admins, and System Admins can create internal comments.' });
       return;
     }
     
@@ -1786,7 +1786,7 @@ router.post('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', '
 });
 
 // Get comments for report by slug
-router.get('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, reportId } = req.params;
     const page = parseInt(req.query.page as string) || 1;
@@ -1840,7 +1840,7 @@ router.get('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', 'R
     const report = reportResult.data!.report;
     const isReporter = report.reporterId === user.id;
     const isAssigned = report.assignedResponderId === user.id;
-    const hasResponderRole = roles.some((role: string) => ['Event Admin', 'Responder', 'SuperAdmin'].includes(role));
+    const hasResponderRole = roles.some((role: string) => ['Event Admin', 'Responder', 'System Admin'].includes(role));
     
     // Users can see public comments, and internal comments if they have responder/admin permissions
     let allowedVisibilities: CommentVisibility[] = ['public'];
@@ -1889,7 +1889,7 @@ router.get('/slug/:slug/reports/:reportId/comments', requireRole(['Reporter', 'R
 });
 
 // Update report by slug (handles state, assignment, etc.)
-router.patch('/slug/:slug/reports/:reportId', requireRole(['Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/slug/:slug/reports/:reportId', requireRole(['Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, reportId } = req.params;
     const updateData = req.body;
@@ -1955,7 +1955,7 @@ router.patch('/slug/:slug/reports/:reportId', requireRole(['Responder', 'Event A
 });
 
 // Update report title by slug (Reporters can edit their own report titles)
-router.patch('/slug/:slug/reports/:reportId/title', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.patch('/slug/:slug/reports/:reportId/title', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, reportId } = req.params;
     const { title } = req.body;
@@ -2010,7 +2010,7 @@ router.patch('/slug/:slug/reports/:reportId/title', requireRole(['Reporter', 'Re
 });
 
 // Upload evidence for report by slug
-router.post('/slug/:slug/reports/:reportId/evidence', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/reports/:reportId/evidence', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, reportId } = req.params;
     
@@ -2062,7 +2062,7 @@ router.post('/slug/:slug/reports/:reportId/evidence', requireRole(['Reporter', '
     // Additional check for Reporters: they can only upload evidence to their own reports
     const report = reportResult.data!.report;
     const roles = accessResult.data!.roles;
-    const isReporter = roles.includes('Reporter') && !roles.some((role: string) => ['Responder', 'Event Admin', 'SuperAdmin'].includes(role));
+    const isReporter = roles.includes('Reporter') && !roles.some((role: string) => ['Responder', 'Event Admin', 'System Admin'].includes(role));
     
     if (isReporter && report.reporterId !== user.id) {
       res.status(403).json({ error: 'Reporters can only upload evidence to their own reports.' });
@@ -2092,7 +2092,7 @@ router.post('/slug/:slug/reports/:reportId/evidence', requireRole(['Reporter', '
 });
 
 // Get evidence files for report by slug
-router.get('/slug/:slug/reports/:reportId/evidence', requireRole(['Reporter', 'Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/slug/:slug/reports/:reportId/evidence', requireRole(['Reporter', 'Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, reportId } = req.params;
     
@@ -2150,7 +2150,7 @@ router.get('/slug/:slug/reports/:reportId/evidence', requireRole(['Reporter', 'R
 });
 
 // Delete evidence file by slug
-router.delete('/slug/:slug/reports/:reportId/evidence/:evidenceId', requireRole(['Responder', 'Event Admin', 'SuperAdmin']), async (req: Request, res: Response): Promise<void> => {
+router.delete('/slug/:slug/reports/:reportId/evidence/:evidenceId', requireRole(['Responder', 'Event Admin', 'System Admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, reportId, evidenceId } = req.params;
     

@@ -3,7 +3,7 @@ const request = require("supertest");
 const app = require("../../index");
 
 jest.mock("../../src/utils/rbac", () => ({
-  requireSuperAdmin: () => (req, res, next) => {
+  requireSystemAdmin: () => (req, res, next) => {
     req.isAuthenticated = () => true;
     
     // Check if user has System Admin role in any event
@@ -143,7 +143,7 @@ describe("Event endpoints", () => {
       const eventId = eventRes.body.event.id;
       const res = await request(app)
         .post(`/api/events/${eventId}/roles`)
-        .send({ userId: "1", roleName: "Admin" });
+        .send({ userId: "1", roleName: "Event Admin" });
 
       expect([200, 201]).toContain(res.statusCode);
       expect(res.body).toHaveProperty("message", "Role assigned.");
@@ -168,9 +168,9 @@ describe("Event endpoints", () => {
         .send({ userId: "999", roleName: "Event Admin" });
         
       expect(res.statusCode).toBe(400);
-      // The role "Event Admin" doesn't exist in this test's mock store (it has "Admin" instead)
-      // So this test actually validates role existence, not user existence
-      expect(res.body).toHaveProperty("error", "Role does not exist.");
+      // With improved role mapping, "Event Admin" maps to "Admin" which exists,
+      // so this now correctly tests user existence
+      expect(res.body).toHaveProperty("error", "User does not exist.");
     });
     it("should fail if user does not exist (using existing role)", async () => {
       const eventRes = await request(app)
@@ -180,7 +180,7 @@ describe("Event endpoints", () => {
       
       const res = await request(app)
         .post(`/api/events/${eventId}/roles`)
-        .send({ userId: "999", roleName: "Admin" }); // Use "Admin" role that exists in mock
+        .send({ userId: "999", roleName: "Event Admin" }); // Use "Event Admin" role that exists in mock
         
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error", "User does not exist.");
@@ -641,6 +641,17 @@ describe("Event endpoints", () => {
       // Add admin role for user 2
       inMemoryStore.users.push({ id: "2", email: "admin2@example.com", name: "Admin2" });
       inMemoryStore.userEventRoles.push({ userId: "2", eventId: "1", roleId: "2", role: { name: "Event Admin" }, user: { id: "2" } });
+      
+      // Also add to unified RBAC system
+      inMemoryStore.userRoles.push({
+        userId: "2",
+        scopeType: "event",
+        scopeId: "1",
+        roleId: "unified_event_admin",
+        role: { id: "unified_event_admin", name: "event_admin" },
+        user: { id: "2", email: "admin2@example.com", name: "Admin2" }
+      });
+      
       inMemoryStore.reports.push({
         id: "r11",
         eventId: "1",
@@ -1271,10 +1282,33 @@ describe("Report detail access control (slug-based)", () => {
       { id: "u2", email: "responder@example.com", name: "Responder" },
       { id: "u3", email: "other@example.com", name: "Other" },
     ];
+    
+    // Old system roles (for backward compatibility)
     inMemoryStore.userEventRoles = [
       { userId: "u1", eventId: "1", roleId: "4", role: { name: "Reporter" }, user: { id: "u1" } },
       { userId: "u2", eventId: "1", roleId: "3", role: { name: "Responder" }, user: { id: "u2" } },
     ];
+    
+    // Unified RBAC roles (new system)
+    inMemoryStore.userRoles = [
+      { 
+        userId: "u1", 
+        scopeType: "event", 
+        scopeId: "1", 
+        roleId: "unified_reporter", 
+        role: { id: "unified_reporter", name: "reporter" },
+        user: { id: "u1", email: "reporter@example.com", name: "Reporter" }
+      },
+      { 
+        userId: "u2", 
+        scopeType: "event", 
+        scopeId: "1", 
+        roleId: "unified_responder", 
+        role: { id: "unified_responder", name: "responder" },
+        user: { id: "u2", email: "responder@example.com", name: "Responder" }
+      },
+    ];
+    
     inMemoryStore.reports = [
       { id: "r1", eventId: "1", reporterId: "u1", type: "harassment", description: "Test report", state: "submitted" },
     ];

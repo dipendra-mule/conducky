@@ -10,7 +10,7 @@ interface EventActionsProps {
 }
 
 export function EventActions({ eventSlug, userRoles }: EventActionsProps) {
-  const isAdmin = userRoles.includes("Event Admin") || userRoles.includes("SuperAdmin");
+  const isAdmin = userRoles.includes("Event Admin") || userRoles.includes("System Admin");
   const isResponder = userRoles.includes("Responder");
   const isReporter = userRoles.includes("Reporter");
 

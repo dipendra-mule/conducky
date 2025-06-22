@@ -150,12 +150,12 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
   }
   
   // Determine current context based on URL
-  const isSystemAdmin = router.asPath.startsWith('/admin');
+  const isInAdminSection = router.asPath.startsWith('/admin');
   const isEventContext = router.asPath.startsWith('/events/');
   const isOrgContext = router.asPath.startsWith('/orgs/');
   
-  // Check if user is SuperAdmin using global roles
-  const isSuperAdmin = currentGlobalRoles.includes('SuperAdmin');
+  // Check if user is System Admin using global roles
+  const isSystemAdmin = currentGlobalRoles.includes('System Admin');
 
   // Get current event slug if in event context
   // Try router.query first (more reliable for dynamic routes), then fall back to asPath parsing
@@ -214,8 +214,8 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
       },
     ];
 
-    // Add System Admin Navigation for SuperAdmins (always visible)
-    if (isSuperAdmin) {
+    // Add System Admin Navigation for System Admins (always visible)
+    if (isSystemAdmin) {
       globalNavItems.push(
         {
           title: "System Dashboard",
@@ -280,7 +280,7 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
       const userOrgRole = targetOrg?.role;
       
       // Check role permissions
-      const isOrgAdmin = userOrgRole === 'org_admin' || isSuperAdmin;
+      const isOrgAdmin = userOrgRole === 'org_admin' || isSystemAdmin;
       
       // Base navigation items (available to all org members)
       orgNavItems = [
@@ -350,7 +350,7 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
         const userEventRole = targetEvent?.role;
         
         // Check role permissions
-        const isEventAdmin = userEventRole === 'Event Admin' || isSuperAdmin;
+        const isEventAdmin = userEventRole === 'Event Admin' || isSystemAdmin;
         const isEventResponder = userEventRole === 'Responder' || isEventAdmin;
 
         // Base navigation items (available to all roles)
@@ -440,7 +440,6 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
     };
   }, [
     isSystemAdmin,
-    isSuperAdmin,
     router.asPath,
     isEventContext,
     isOrgContext,
@@ -480,7 +479,7 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
         {/* Sidebar header is now empty since the app name is in the top bar */}
       </SidebarHeader>
       <SidebarContent>
-        {/* Global Navigation (includes system admin navigation for SuperAdmins) */}
+        {/* Global Navigation (includes system admin navigation for System Admins) */}
         <NavMain items={globalNav} label="Platform" />
         
         {/* Organization Navigation Section */}

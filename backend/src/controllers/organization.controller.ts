@@ -483,6 +483,17 @@ export class OrganizationController {
         return;
       }
 
+      // TEMPORARY: Use unified RBAC for System Admin organization access
+      // TODO: Remove this when organization service is fully migrated to unified RBAC
+      try {
+        const data = await unifiedRBAC.getUserOrganizations(userId);
+        res.json(data);
+        return;
+      } catch (unifiedError) {
+        console.warn('Unified RBAC failed, falling back to organization service:', unifiedError);
+        // Fall back to organization service if unified RBAC fails
+      }
+
       const result = await organizationService.getUserOrganizations(userId);
 
       if (!result.success) {

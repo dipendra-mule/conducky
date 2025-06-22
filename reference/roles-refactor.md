@@ -220,16 +220,52 @@ Event Level (scope_id = event_id):
 - [x] Design of unified solution
 - [x] User decisions collected
 - [x] Updated implementation plan
+- [x] **RBAC Middleware Updated** - Fixed requireRole() to use unified RBAC with org admin inheritance
+- [x] **User Events Endpoint Fixed** - Updated getUserEvents() to include organization events for org admins
+- [x] **System Admin Organization Access** - Added temporary getUserOrganizations() to UnifiedRBACService
 
-### 🚧 In Progress
-- [ ] Schema design and migration
-- [ ] RBAC service implementation
-- [ ] Controller updates
+### 🚧 In Progress  
+- [x] **Fixed Event Route Permissions** - Updated backend/src/utils/rbac.ts to use UnifiedRBACService
+- [x] **Fixed User Dashboard Events** - Updated backend/src/services/user.service.ts getUserEvents() method
+- [x] **Fixed System Admin Sidebar Navigation** - Updated organization controller to use unified RBAC
+- [ ] Test org admin access to event endpoints
+- [ ] Test System Admin organization access
+- [ ] Schema design and migration (already exists, needs testing)
+- [ ] Complete controller updates
 - [ ] Testing
 
 ### ⏳ Next Steps
-1. Create new Prisma schema models
-2. Create database migration
-3. Implement unified RBAC service
-4. Update all controllers
-5. Test the complete system (this should include running all tests in the backend and frontend; run `npm run test` in both the backend and frontend directories)
+1. ~~Create new Prisma schema models~~ (Already exists)
+2. ~~Create database migration~~ (Already exists) 
+3. ~~Implement unified RBAC service~~ (Already exists)
+4. **Test org admin dashboard access** - Verify org admins can see organization events
+5. **Fix frontend sidebar navigation** - Update navigation context for org admins
+6. Complete remaining controller updates
+7. Comprehensive testing
+
+### 🔧 Current Session Progress
+
+#### Issue Identified and Fixed
+- **Problem**: Org admins were getting 403 errors on event endpoints like `/api/events/slug/eventSlug/users`
+- **Root Cause**: `requireRole()` middleware was still using old dual-system approach
+- **Solution**: Updated `backend/src/utils/rbac.ts` to use `UnifiedRBACService` with proper org admin inheritance
+
+#### Changes Made
+1. **Updated requireRole() middleware**:
+   - Now uses `UnifiedRBACService` instead of direct database queries
+   - Implements org admin inheritance (org admins get event admin rights on their org's events)
+   - Maps old role names to new unified role names
+   - Maintains backward compatibility with existing route definitions
+
+2. **Updated requireSystemAdmin() middleware**:
+   - Now uses `unifiedRBAC.isSystemAdmin()` instead of manual role checking
+
+#### Expected Results
+- Org admins should now have access to event endpoints for events in their organization
+- Should resolve 403 errors on `/api/events/slug/eventSlug/users` and `/api/events/slug/eventSlug/reports`
+- Org admins should see event admin functionality in the UI
+
+#### Next Testing Steps
+1. User should test org admin access to event dashboard and management features
+2. Verify org admin can see event users, reports, and other event admin functionality
+3. Check that frontend navigation shows appropriate event admin options for org admins

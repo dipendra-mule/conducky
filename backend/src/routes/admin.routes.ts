@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth, AuthUser } from '../middleware/auth';
-import { requireSuperAdmin } from '../utils/rbac';
+import { requireSystemAdmin } from '../utils/rbac';
 import { PrismaClient } from '@prisma/client';
 import { reinitializeOAuthStrategies } from '../config/passport';
 
@@ -14,9 +14,9 @@ const prisma = new PrismaClient();
 
 /**
  * GET /api/admin/events
- * Get all events with statistics (SuperAdmin only)
+ * Get all events with statistics (System Admin only)
  */
-router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     // Get all events with user and report counts
     const events = await prisma.event.findMany({
@@ -99,9 +99,9 @@ router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): 
 
 /**
  * POST /api/admin/events
- * Create a new event (SuperAdmin only) - simplified version for basic event creation
+ * Create a new event (System Admin only) - simplified version for basic event creation
  */
-router.post('/events', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.post('/events', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, slug, description } = req.body;
     
@@ -197,9 +197,9 @@ router.post('/events', requireSuperAdmin(), async (req: Request, res: Response):
 
 /**
  * GET /api/admin/events/check-slug/:slug
- * Check if a slug is available (SuperAdmin only)
+ * Check if a slug is available (System Admin only)
  */
-router.get('/events/check-slug/:slug', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/check-slug/:slug', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
 
@@ -246,9 +246,9 @@ router.get('/events/check-slug/:slug', requireSuperAdmin(), async (req: Request,
 
 /**
  * GET /api/admin/events/stats
- * Get system-wide statistics (SuperAdmin only)
+ * Get system-wide statistics (System Admin only)
  */
-router.get('/events/stats', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/stats', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const [
       totalEvents,
@@ -309,9 +309,9 @@ router.get('/events/stats', requireSuperAdmin(), async (req: Request, res: Respo
 
 /**
  * GET /api/admin/system/settings
- * Get all system settings (SuperAdmin only)
+ * Get all system settings (System Admin only)
  */
-router.get('/system/settings', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/system/settings', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     // Get all system settings from database
     const settings = await prisma.systemSetting.findMany();
@@ -358,9 +358,9 @@ router.get('/system/settings', requireSuperAdmin(), async (req: Request, res: Re
 
 /**
  * PATCH /api/admin/system/settings
- * Update system settings (SuperAdmin only)
+ * Update system settings (System Admin only)
  */
-router.patch('/system/settings', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.patch('/system/settings', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const updates = req.body;
 
@@ -412,9 +412,9 @@ router.patch('/system/settings', requireSuperAdmin(), async (req: Request, res: 
 
 /**
  * PATCH /api/admin/events/:eventId/toggle
- * Toggle event active status (SuperAdmin only)
+ * Toggle event active status (System Admin only)
  */
-router.patch('/events/:eventId/toggle', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.patch('/events/:eventId/toggle', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { enabled } = req.body;
@@ -453,9 +453,9 @@ router.patch('/events/:eventId/toggle', requireSuperAdmin(), async (req: Request
 
 /**
  * GET /api/admin/events/:eventId
- * Get individual event details (SuperAdmin only)
+ * Get individual event details (System Admin only)
  */
-router.get('/events/:eventId', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
 
@@ -508,9 +508,9 @@ router.get('/events/:eventId', requireSuperAdmin(), async (req: Request, res: Re
 
 /**
  * GET /api/admin/events/:eventId/invites
- * Get event invite links (SuperAdmin only)
+ * Get event invite links (System Admin only)
  */
-router.get('/events/:eventId/invites', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/:eventId/invites', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
 
@@ -560,9 +560,9 @@ router.get('/events/:eventId/invites', requireSuperAdmin(), async (req: Request,
 
 /**
  * POST /api/admin/events/:eventId/invites
- * Create event invite link (SuperAdmin only)
+ * Create event invite link (System Admin only)
  */
-router.post('/events/:eventId/invites', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { email, role } = req.body;
@@ -662,7 +662,7 @@ router.post('/events/:eventId/invites', requireSuperAdmin(), async (req: Request
 });
 
 // Add email configuration routes
-router.get('/settings/email', requireSuperAdmin(), async (req: Request, res: Response) => {
+router.get('/settings/email', requireSystemAdmin(), async (req: Request, res: Response) => {
   try {
     // Fetch email settings from database
     const emailSetting = await prisma.systemSetting.findUnique({
@@ -703,7 +703,7 @@ router.get('/settings/email', requireSuperAdmin(), async (req: Request, res: Res
   }
 });
 
-router.put('/settings/email', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     console.log('=== PUT /settings/email REQUEST ===');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
@@ -786,7 +786,7 @@ router.put('/settings/email', requireSuperAdmin(), async (req: AuthenticatedRequ
   }
 });
 
-router.post('/settings/email/test', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/settings/email/test', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       provider,
@@ -886,7 +886,7 @@ router.post('/settings/email/test', requireSuperAdmin(), async (req: Authenticat
 });
 
 // Google OAuth configuration routes
-router.get('/settings/google-oauth', requireSuperAdmin(), async (req: Request, res: Response) => {
+router.get('/settings/google-oauth', requireSystemAdmin(), async (req: Request, res: Response) => {
   try {
     // Fetch Google OAuth settings from database
     const googleOAuthSetting = await prisma.systemSetting.findUnique({
@@ -919,7 +919,7 @@ router.get('/settings/google-oauth', requireSuperAdmin(), async (req: Request, r
   }
 });
 
-router.put('/settings/google-oauth', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/settings/google-oauth', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       clientId,
@@ -968,7 +968,7 @@ router.put('/settings/google-oauth', requireSuperAdmin(), async (req: Authentica
 });
 
 // GitHub OAuth configuration routes
-router.get('/settings/github-oauth', requireSuperAdmin(), async (req: Request, res: Response) => {
+router.get('/settings/github-oauth', requireSystemAdmin(), async (req: Request, res: Response) => {
   try {
     // Fetch GitHub OAuth settings from database
     const githubOAuthSetting = await prisma.systemSetting.findUnique({
@@ -1001,7 +1001,7 @@ router.get('/settings/github-oauth', requireSuperAdmin(), async (req: Request, r
   }
 });
 
-router.put('/settings/github-oauth', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/settings/github-oauth', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       clientId,

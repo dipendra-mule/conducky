@@ -50,7 +50,7 @@ jest.mock("../../src/utils/rbac", () => ({
     
     next();
   },
-  requireSuperAdmin: () => (req, res, next) => {
+  requireSystemAdmin: () => (req, res, next) => {
     req.isAuthenticated = () => true;
     
     const { inMemoryStore } = require("../../__mocks__/@prisma/client");

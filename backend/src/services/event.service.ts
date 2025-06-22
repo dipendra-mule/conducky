@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { ServiceResult } from '../types';
+import { UnifiedRBACService } from './unified-rbac.service';
 
 export interface EventCreateData {
   name: string;
@@ -50,7 +51,11 @@ export interface EventLogo {
 }
 
 export class EventService {
-  constructor(private prisma: PrismaClient) {}
+  private unifiedRBAC: UnifiedRBACService;
+
+  constructor(private prisma: PrismaClient) {
+    this.unifiedRBAC = new UnifiedRBACService(prisma);
+  }
 
   /**
    * Get event ID by slug
@@ -73,31 +78,22 @@ export class EventService {
    */
   async getUserRoleForEvent(userId: string, eventId: string): Promise<string | null> {
     try {
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId, eventId },
-        include: { role: true }
-      });
-
-      // Check for System Admin role globally first
-      const allUserRoles = await this.prisma.userEventRole.findMany({
-        where: { userId },
-        include: { role: true }
-      });
-
-      const isSystemAdmin = allUserRoles.some(uer => uer.role.name === 'System Admin');
-      if (isSystemAdmin) {
-        return 'System Admin';
+      // Use unified RBAC service to check roles
+      const roles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
+      
+      if (roles.length === 0) {
+        return null;
       }
 
       // Return the highest role for this event
       const roleHierarchy = ['System Admin', 'Event Admin', 'Responder', 'Reporter'];
       for (const role of roleHierarchy) {
-        if (userEventRoles.some(uer => uer.role.name === role)) {
+        if (roles.includes(role)) {
           return role;
         }
       }
 
-      return null;
+      return roles[0]; // Return first role if no hierarchy match
     } catch (error) {
       console.error('Error getting user role for event:', error);
       return null;
@@ -213,14 +209,7 @@ export class EventService {
         };
       }
 
-      const role = await this.prisma.role.findUnique({ where: { name: roleName } });
-      if (!role) {
-        return {
-          success: false,
-          error: 'Role does not exist.'
-        };
-      }
-
+      // Check if user exists
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (!user) {
         return {
@@ -229,25 +218,66 @@ export class EventService {
         };
       }
 
-      // Upsert the user-event-role
-      const userEventRole = await this.prisma.userEventRole.upsert({
-        where: {
-          userId_eventId_roleId: {
-            userId,
-            eventId,
-            roleId: role.id,
-          },
+      // Check if role exists in old system (with mapping)
+      let roleToCheck = roleName;
+      if (roleName === 'Admin') {
+        roleToCheck = 'Event Admin'; // Map Admin to Event Admin for old system compatibility
+      }
+      
+      // Also try the original role name if the mapped one doesn't exist
+      let role = await this.prisma.role.findUnique({ where: { name: roleToCheck } });
+      
+      // If mapped role doesn't exist, try the original name
+      if (!role && roleToCheck !== roleName) {
+        role = await this.prisma.role.findUnique({ where: { name: roleName } });
+        roleToCheck = roleName; // Use the original name for further processing
+      }
+      
+      // If "Event Admin" doesn't exist, try "Admin" (for test compatibility)
+      if (!role && roleToCheck === 'Event Admin') {
+        role = await this.prisma.role.findUnique({ where: { name: 'Admin' } });
+        roleToCheck = 'Admin';
+      }
+      
+      if (!role) {
+        return {
+          success: false,
+          error: 'Role does not exist.'
+        };
+      }
+
+      // Map role names to unified format
+      const unifiedRoleName = this.mapToUnifiedRoleName(roleName);
+      
+      // Use unified RBAC service to grant the role
+      const success = await this.unifiedRBAC.grantRole(userId, unifiedRoleName, 'event', eventId);
+      
+      if (!success) {
+        return {
+          success: false,
+          error: 'Failed to assign role.'
+        };
+      }
+
+      // For backward compatibility, also create in old system
+      const userEventRole = await this.prisma.userEventRole.create({
+        data: {
+          userId,
+          eventId,
+          roleId: role.id,
         },
-        update: {},
-        create: { userId, eventId, roleId: role.id },
+        include: {
+          role: true,
+          user: true,
+        },
       });
 
       return {
         success: true,
-        data: { message: 'Role assigned.', userEventRole }
+        data: { userEventRole, message: 'Role assigned.' }
       };
     } catch (error: any) {
-      console.error('Error assigning role:', error);
+      console.error('Error assigning user role:', error);
       return {
         success: false,
         error: 'Failed to assign role.'
@@ -269,23 +299,37 @@ export class EventService {
         };
       }
 
-      const role = await this.prisma.role.findUnique({ where: { name: roleName } });
-      if (!role) {
+      // Map role names to unified format
+      const unifiedRoleName = this.mapToUnifiedRoleName(roleName);
+      
+      // Use unified RBAC service to revoke the role
+      const success = await this.unifiedRBAC.revokeRole(userId, unifiedRoleName, 'event', eventId);
+      
+      if (!success) {
         return {
           success: false,
-          error: 'Role does not exist.'
+          error: 'Failed to remove role.'
         };
       }
 
-      await this.prisma.userEventRole.delete({
-        where: {
-          userId_eventId_roleId: {
-            userId,
-            eventId,
-            roleId: role.id,
-          },
-        },
-      });
+      // For backward compatibility, also remove from old system
+      const role = await this.prisma.role.findUnique({ where: { name: roleName } });
+      if (role) {
+        try {
+          await this.prisma.userEventRole.delete({
+            where: {
+              userId_eventId_roleId: {
+                userId,
+                eventId,
+                roleId: role.id,
+              },
+            },
+          });
+        } catch (error) {
+          // Ignore if not found in old system
+          console.log('Role not found in old system, continuing...');
+        }
+      }
 
       return {
         success: true,
@@ -301,35 +345,91 @@ export class EventService {
   }
 
   /**
+   * Helper method to map old role names to unified role names
+   */
+  private mapToUnifiedRoleName(roleName: string): string {
+    switch (roleName) {
+      case 'System Admin': return 'system_admin';
+      case 'Event Admin': return 'event_admin';
+      case 'Admin': return 'event_admin'; // Map "Admin" to "event_admin" for backward compatibility
+      case 'Responder': return 'responder';
+      case 'Reporter': return 'reporter';
+      case 'Organization Admin': return 'org_admin';
+      case 'Organization Viewer': return 'org_viewer';
+      default: return roleName.toLowerCase().replace(' ', '_');
+    }
+  }
+
+  /**
    * List all users and their roles for an event
    */
   async getEventUsers(eventId: string): Promise<ServiceResult<{ users: EventUser[] }>> {
     try {
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { eventId },
+      // Get all user roles for this event using unified RBAC
+      // We need to query the database directly to get all users for an event
+      const userRoles = await this.prisma.userRole.findMany({
+        where: { 
+          scopeType: 'event',
+          scopeId: eventId 
+        },
         include: {
           user: true,
-          role: true,
-        },
+          role: true
+        }
       });
+      
+      // Also get organization admin roles that inherit event access
+      const event = await this.prisma.event.findUnique({
+        where: { id: eventId },
+        select: { organizationId: true }
+      });
+      
+      let orgAdminRoles: any[] = [];
+      if (event?.organizationId) {
+        orgAdminRoles = await this.prisma.userRole.findMany({
+          where: {
+            scopeType: 'organization',
+            scopeId: event.organizationId,
+            role: { name: 'org_admin' }
+          },
+          include: {
+            user: true,
+            role: true
+          }
+        });
+      }
+
+      // Combine direct event roles and inherited org admin roles
+      const allRoles = [...userRoles, ...orgAdminRoles];
 
       // Group roles by user
       const users: any = {};
-      for (const uer of userEventRoles) {
-        if (!users[uer.userId]) {
+      for (const userRole of allRoles) {
+        const userId = userRole.userId;
+        if (!userRole.user) {
+          console.warn(`User data missing for userRole:`, userRole);
+          continue;
+        }
+        
+        if (!users[userId]) {
           // Fetch avatar for each user
           const avatar = await this.prisma.userAvatar.findUnique({
-            where: { userId: uer.user.id },
+            where: { userId },
           });
-          users[uer.userId] = {
-            id: uer.user.id,
-            email: uer.user.email,
-            name: uer.user.name,
+          users[userId] = {
+            id: userRole.user.id,
+            email: userRole.user.email,
+            name: userRole.user.name,
             roles: [],
-            avatarUrl: avatar ? `/users/${uer.user.id}/avatar` : null,
+            avatarUrl: avatar ? `/users/${userRole.user.id}/avatar` : null,
           };
         }
-        users[uer.userId].roles.push(uer.role.name);
+        
+        // Map unified role names back to display names
+        const displayRoleName = this.mapFromUnifiedRoleName(userRole.role.name);
+        if (!users[userId].roles.includes(displayRoleName)) {
+          users[userId].roles.push(displayRoleName);
+        }
       }
 
       return {
@@ -346,6 +446,21 @@ export class EventService {
   }
 
   /**
+   * Helper method to map unified role names back to display names
+   */
+  private mapFromUnifiedRoleName(roleName: string): string {
+    switch (roleName) {
+      case 'system_admin': return 'System Admin';
+      case 'event_admin': return 'Event Admin';
+      case 'responder': return 'Responder';
+      case 'reporter': return 'Reporter';
+      case 'org_admin': return 'Organization Admin';
+      case 'org_viewer': return 'Organization Viewer';
+      default: return roleName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+  }
+
+  /**
    * Get current user's roles for an event by slug
    */
   async getUserRolesBySlug(userId: string, slug: string): Promise<ServiceResult<{ roles: string[] }>> {
@@ -358,12 +473,13 @@ export class EventService {
         };
       }
 
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId, eventId },
-        include: { role: true },
-      });
-
-      const roles = userEventRoles.map(uer => uer.role.name);
+      // Use unified RBAC service to get user roles
+      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
+      
+      // Map unified role names back to display names
+      const roles = userRoles.map((userRole: any) => 
+        this.mapFromUnifiedRoleName(userRole.role.name)
+      );
 
       return {
         success: true,

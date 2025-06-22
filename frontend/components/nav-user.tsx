@@ -53,7 +53,7 @@ export function NavUser({
   const { isMobile, setOpenMobile } = useSidebar()
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
-  const isSuperAdmin = user.roles?.includes("SuperAdmin")
+  const isSystemAdmin = user.roles?.includes("System Admin")
   const router = useRouter()
   const { setUser } = React.useContext(UserContext)
   const [loggingOut, setLoggingOut] = React.useState(false)
@@ -161,7 +161,7 @@ export function NavUser({
                   My Events
                 </Link>
               </DropdownMenuItem>
-              {isSuperAdmin && (
+              {isSystemAdmin && (
                 <DropdownMenuItem asChild>
                   <Link href="/admin/dashboard" onClick={handleLinkClick}>
                     <Sparkles />

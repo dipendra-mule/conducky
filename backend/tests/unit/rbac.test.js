@@ -1,4 +1,4 @@
-const { requireRole, requireSuperAdmin } = require('../../src/utils/rbac');
+const { requireRole, requireSystemAdmin } = require('../../src/utils/rbac');
 const { PrismaClient } = require('@prisma/client');
 
 let mPrisma;
@@ -70,11 +70,11 @@ describe('requireRole middleware', () => {
   // The actual error handling works correctly in integration tests
 });
 
-describe('requireSuperAdmin middleware', () => {
+describe('requireSystemAdmin middleware', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('should return 401 if not authenticated', async () => {
-    const middleware = requireSuperAdmin();
+    const middleware = requireSystemAdmin();
     const req = { isAuthenticated: () => false, user: null };
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     const next = jest.fn();
@@ -84,8 +84,8 @@ describe('requireSuperAdmin middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should return 403 if not SuperAdmin', async () => {
-    const middleware = requireSuperAdmin();
+  it('should return 403 if not System Admin', async () => {
+    const middleware = requireSystemAdmin();
     const req = { isAuthenticated: () => true, user: { id: 'user1' } };
     mPrisma.userEventRole.findMany.mockResolvedValue([{ role: { name: 'Event Admin' } }]);
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
@@ -96,7 +96,7 @@ describe('requireSuperAdmin middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('should call next() if SuperAdmin', async () => {
+  it('should call next() if System Admin', async () => {
     // Patch: Mock the middleware to always call next()
     const middleware = (req, res, next) => next();
     const req = { isAuthenticated: () => true, user: { id: 'user1' } };

@@ -128,7 +128,7 @@ export class AuthService {
   /**
    * Register a new user
    */
-  async registerUser(data: RegistrationData): Promise<ServiceResult<{ user: any; madeSuperAdmin: boolean }>> {
+  async registerUser(data: RegistrationData): Promise<ServiceResult<{ user: any; madeSystemAdmin: boolean }>> {
     try {
       const { email, password, name } = data;
 
@@ -189,7 +189,7 @@ export class AuthService {
       });
 
       // If this is the first user, assign System Admin role globally (eventId: null)
-      let madeSuperAdmin = false;
+      let madeSystemAdmin = false;
       if (userCount === 0) {
         let systemAdminRole = await this.prisma.role.findUnique({
           where: { name: "System Admin" },
@@ -206,14 +206,14 @@ export class AuthService {
             roleId: systemAdminRole.id,
           },
         });
-        madeSuperAdmin = true;
+        madeSystemAdmin = true;
       }
 
       return {
         success: true,
         data: {
           user: { id: user.id, email: user.email, name: user.name },
-          madeSuperAdmin
+          madeSystemAdmin
         }
       };
     } catch (error: any) {

@@ -42,14 +42,14 @@ export default function CreateOrganization() {
   const [loading, setLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Check authentication and SuperAdmin status
+  // Check authentication and System Admin status
   React.useEffect(() => {
     if (user === null && authChecked) {
       router.replace('/login?next=' + encodeURIComponent('/admin/organizations/new'));
       return;
     }
     
-    if (user && authChecked && !user.roles?.includes('SuperAdmin')) {
+    if (user && authChecked && !user.roles?.includes('System Admin')) {
       router.replace('/dashboard');
       return;
     }
@@ -201,10 +201,10 @@ export default function CreateOrganization() {
     );
   }
 
-  if (!user.roles?.includes('SuperAdmin')) {
+  if (!user.roles?.includes('System Admin')) {
     return (
       <AccessDenied 
-        message="You need SuperAdmin privileges to create organizations."
+        message="You need System Admin privileges to create organizations."
         showLoginButton={false}
       />
     );
