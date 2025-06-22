@@ -16,18 +16,18 @@ interface User {
 /**
  * Role names supported by the RBAC system
  */
-type RoleName = "SuperAdmin" | "Event Admin" | "Responder" | "Reporter";
+type RoleName = "System Admin" | "Event Admin" | "Responder" | "Reporter";
 
 /**
  * Middleware to require a user to have one of the allowed roles for an event.
- * Supports role checking at both global level (SuperAdmin) and event-specific level.
+ * Supports role checking at both global level (System Admin) and event-specific level.
  * 
  * @param allowedRoles - Array of role names that are allowed to access the resource
  * @returns Express middleware function
  * 
  * @example
  * ```typescript
- * app.get('/admin-endpoint', requireRole(['Admin', 'SuperAdmin']), handler);
+ * app.get('/admin-endpoint', requireRole(['Admin', 'System Admin']), handler);
  * ```
  */
 export function requireRole(allowedRoles: RoleName[]) {
@@ -59,15 +59,15 @@ export function requireRole(allowedRoles: RoleName[]) {
 
       const user = req.user as any;
 
-      // SuperAdmins can access anything
-      if (allowedRoles.includes('SuperAdmin')) {
+      // System Admins can access anything
+      if (allowedRoles.includes('System Admin')) {
         const allUserRoles = await prisma.userEventRole.findMany({
           where: { userId: user.id },
           include: { role: true },
         });
 
-        const isSuperAdmin = allUserRoles.some((uer) => uer.role.name === 'SuperAdmin');
-        if (isSuperAdmin) {
+        const isSystemAdmin = allUserRoles.some((uer) => uer.role.name === 'System Admin');
+        if (isSystemAdmin) {
           next();
           return;
         }
@@ -119,8 +119,8 @@ export function requireRole(allowedRoles: RoleName[]) {
 }
 
 /**
- * Middleware to require a user to be a Super Admin (global role).
- * SuperAdmins have access to all system-level operations.
+ * Middleware to require a user to be a System Admin (global role).
+ * System Admins have access to all system-level operations.
  * 
  * @returns Express middleware function
  * 
@@ -145,12 +145,12 @@ export function requireSuperAdmin() {
         include: { role: true },
       });
       
-      const isSuperAdmin = userRoles.some(
-        (uer) => uer.role.name === "SuperAdmin",
+      const isSystemAdmin = userRoles.some(
+        (uer) => uer.role.name === "System Admin",
       );
       
-      if (!isSuperAdmin) {
-        res.status(403).json({ error: "Forbidden: Super Admins only" });
+      if (!isSystemAdmin) {
+        res.status(403).json({ error: "Forbidden: System Admins only" });
         return;
       }
       
@@ -158,7 +158,7 @@ export function requireSuperAdmin() {
     } catch (err: any) {
       res
         .status(500)
-        .json({ error: "Super Admin check failed", details: err.message });
+        .json({ error: "System Admin check failed", details: err.message });
     }
   };
 } 

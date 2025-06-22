@@ -188,22 +188,22 @@ export class AuthService {
         },
       });
 
-      // If this is the first user, assign SuperAdmin role globally (eventId: null)
+      // If this is the first user, assign System Admin role globally (eventId: null)
       let madeSuperAdmin = false;
       if (userCount === 0) {
-        let superAdminRole = await this.prisma.role.findUnique({
-          where: { name: "SuperAdmin" },
+        let systemAdminRole = await this.prisma.role.findUnique({
+          where: { name: "System Admin" },
         });
-        if (!superAdminRole) {
-          superAdminRole = await this.prisma.role.create({
-            data: { name: "SuperAdmin" },
+        if (!systemAdminRole) {
+          systemAdminRole = await this.prisma.role.create({
+            data: { name: "System Admin" },
           });
         }
         await this.prisma.userEventRole.create({
           data: {
             userId: user.id,
             eventId: null, // Global role assignment
-            roleId: superAdminRole.id,
+            roleId: systemAdminRole.id,
           },
         });
         madeSuperAdmin = true;

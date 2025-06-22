@@ -96,6 +96,9 @@ model User {
   createdOrganizations Organization[] @relation("OrganizationCreator")
   createdMemberships OrganizationMembership[] @relation("MembershipCreator")
   createdOrgInvites OrganizationInviteLink[] @relation("OrganizationInviteCreator")
+  // Unified role system relations
+  userRoles      UserRole[]
+  grantedRoles   UserRole[] @relation("RoleGranter")
 }
 
 model Event {
@@ -331,6 +334,44 @@ model UserNotificationSettings {
   systemAnnouncementEmail Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Unified Role System Models
+enum RoleScope {
+  system
+  organization  
+  event
+}
+
+model UnifiedRole {
+  id          String    @id @default(uuid())
+  name        String    @unique // system_admin, org_admin, org_viewer, event_admin, responder, reporter
+  scope       RoleScope
+  level       Int       // Hierarchy level (higher = more permissions)
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userRoles   UserRole[]
+}
+
+model UserRole {
+  id          String      @id @default(uuid())
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  role        UnifiedRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId      String
+  scopeType   RoleScope   // system, organization, event
+  scopeId     String      // 'SYSTEM' for system, org_id for org, event_id for event
+  grantedBy   User?       @relation("RoleGranter", fields: [grantedById], references: [id])
+  grantedById String?
+  grantedAt   DateTime    @default(now())
+  expiresAt   DateTime?   // Optional expiration
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@unique([userId, roleId, scopeType, scopeId], name: "user_role_unique")
+  @@index([userId, scopeType, scopeId])
+  @@index([scopeType, scopeId])
 }
 
 model Organization {

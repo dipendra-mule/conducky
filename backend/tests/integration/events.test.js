@@ -6,18 +6,18 @@ jest.mock("../../src/utils/rbac", () => ({
   requireSuperAdmin: () => (req, res, next) => {
     req.isAuthenticated = () => true;
     
-    // Check if user has SuperAdmin role in any event
+    // Check if user has System Admin role in any event
     const { inMemoryStore } = require("../../__mocks__/@prisma/client");
     
     // Use test user ID from header if provided, otherwise default to user 1
     const testUserId = req.headers['x-test-user-id'] || "1";
     const testUser = inMemoryStore.users.find(u => u.id === testUserId) || { id: testUserId, email: `user${testUserId}@example.com`, name: `User${testUserId}` };
     req.user = testUser;
-    const isSuperAdmin = inMemoryStore.userEventRoles.some(
-      (uer) => uer.userId === req.user.id && uer.role.name === "SuperAdmin"
+    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+      (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
     
-    if (!isSuperAdmin) {
+    if (!isSystemAdmin) {
       res.status(403).json({ error: "Forbidden: insufficient role" });
       return;
     }
@@ -45,12 +45,12 @@ jest.mock("../../src/utils/rbac", () => ({
       }
     }
     
-    // Check for SuperAdmin role globally
-    const isSuperAdmin = inMemoryStore.userEventRoles.some(
-      (uer) => uer.userId === req.user.id && uer.role.name === "SuperAdmin"
+    // Check for System Admin role globally
+    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+      (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
     
-    if (allowedRoles.includes("SuperAdmin") && isSuperAdmin) {
+    if (allowedRoles.includes("System Admin") && isSystemAdmin) {
       return next();
     }
     
@@ -76,7 +76,7 @@ beforeEach(() => {
   // Reset inMemoryStore to a clean state for each test
   inMemoryStore.events = [{ id: "1", name: "Event1", slug: "event1" }];
   inMemoryStore.roles = [
-    { id: "1", name: "SuperAdmin" },
+    { id: "1", name: "System Admin" },
     { id: "2", name: "Admin" },
     { id: "3", name: "Responder" },
     { id: "4", name: "Reporter" },
@@ -89,7 +89,7 @@ beforeEach(() => {
       userId: "1",
       eventId: "1",
       roleId: "1",
-      role: { name: "SuperAdmin" },
+      role: { name: "System Admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     },
   ];
@@ -104,7 +104,7 @@ describe("Event endpoints", () => {
   afterEach(() => jest.clearAllMocks());
 
   describe("POST /events", () => {
-    it("should create an event as SuperAdmin", async () => {
+    it("should create an event as System Admin", async () => {
       const res = await request(app)
         .post("/api/events")
         .send({ name: "Test Event", slug: "test-event" });
@@ -216,7 +216,7 @@ describe("Event endpoints", () => {
     it("should remove a role from a user (success)", async () => {
       const res = await request(app)
         .delete("/api/events/1/roles")
-        .send({ userId: "1", roleName: "SuperAdmin" });
+        .send({ userId: "1", roleName: "System Admin" });
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty("message", "Role removed.");
     });
@@ -708,12 +708,12 @@ describe("Slug-based Event/User Endpoints", () => {
     if (!inMemoryStore.events.find((e) => e.slug === slug)) {
       inMemoryStore.events.push({ id: "2", name: "Event1", slug });
     }
-    // Add SuperAdmin role for user 1 and event 2 for default tests
+    // Add System Admin role for user 1 and event 2 for default tests
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "1",
-      role: { name: "SuperAdmin" },
+      role: { name: "System Admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
   });
@@ -731,9 +731,9 @@ describe("Slug-based Event/User Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role", async () => {
-    // Remove all SuperAdmin roles for this user (across all events)
+    // Remove all System Admin roles for this user (across all events)
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
-      (uer) => !(uer.userId === "1" && uer.role.name === "SuperAdmin"),
+      (uer) => !(uer.userId === "1" && uer.role.name === "System Admin"),
     );
     // Remove all privileged roles for this event
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
@@ -800,9 +800,9 @@ describe("Slug-based Event/User Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to update", async () => {
-    // Remove all SuperAdmin roles for this user (across all events)
+    // Remove all System Admin roles for this user (across all events)
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
-      (uer) => !(uer.userId === "1" && uer.role.name === "SuperAdmin"),
+      (uer) => !(uer.userId === "1" && uer.role.name === "System Admin"),
     );
     // Remove all Event Admin roles for this event
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
@@ -852,9 +852,9 @@ describe("Slug-based Event/User Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to delete", async () => {
-    // Remove all SuperAdmin roles for this user (across all events)
+    // Remove all System Admin roles for this user (across all events)
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
-      (uer) => !(uer.userId === "1" && uer.role.name === "SuperAdmin"),
+      (uer) => !(uer.userId === "1" && uer.role.name === "System Admin"),
     );
     // Remove all Event Admin roles for this event
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
@@ -889,12 +889,12 @@ describe("Slug-based Event Endpoints", () => {
     if (!inMemoryStore.events.find((e) => e.slug === slug)) {
       inMemoryStore.events.push({ id: "2", name: "Event1", slug });
     }
-    // Add SuperAdmin role for user 1 and event 2 for default tests
+    // Add System Admin role for user 1 and event 2 for default tests
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "1",
-      role: { name: "SuperAdmin" },
+      role: { name: "System Admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
   });
@@ -944,11 +944,11 @@ describe("Slug-based Event Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to update event", async () => {
-    // Remove all SuperAdmin and Event Admin roles for this user
+    // Remove all System Admin and Event Admin roles for this user
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
-          uer.userId === "1" && ["SuperAdmin", "Event Admin"].includes(uer.role.name)
+          uer.userId === "1" && ["System Admin", "Event Admin"].includes(uer.role.name)
         ),
     );
     // Add only Reporter role
@@ -988,11 +988,11 @@ describe("Slug-based Event Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to upload logo", async () => {
-    // Remove all SuperAdmin and Event Admin roles for this user
+    // Remove all System Admin and Event Admin roles for this user
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
-          uer.userId === "1" && ["SuperAdmin", "Event Admin"].includes(uer.role.name)
+          uer.userId === "1" && ["System Admin", "Event Admin"].includes(uer.role.name)
         ),
     );
     // Add only Reporter role
@@ -1022,12 +1022,12 @@ describe("Slug-based Invite Endpoints", () => {
     if (!inMemoryStore.events.find((e) => e.slug === slug)) {
       inMemoryStore.events.push({ id: "2", name: "Event1", slug });
     }
-    // Add SuperAdmin role for user 1 and event 2 for default tests
+    // Add System Admin role for user 1 and event 2 for default tests
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "1",
-      role: { name: "SuperAdmin" },
+      role: { name: "System Admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
     // Add an invite for the event
@@ -1070,11 +1070,11 @@ describe("Slug-based Invite Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role", async () => {
-    // Remove all SuperAdmin and Event Admin roles for this user
+    // Remove all System Admin and Event Admin roles for this user
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
-          uer.userId === "1" && ["SuperAdmin", "Event Admin"].includes(uer.role.name)
+          uer.userId === "1" && ["System Admin", "Event Admin"].includes(uer.role.name)
         ),
     );
     // Add only Reporter role
@@ -1261,7 +1261,7 @@ describe("Report detail access control (slug-based)", () => {
     // Set up event, users, roles, and a report
     inMemoryStore.events = [{ id: "1", name: "Event1", slug: "event1" }];
     inMemoryStore.roles = [
-      { id: "1", name: "SuperAdmin" },
+      { id: "1", name: "System Admin" },
       { id: "2", name: "Admin" },
       { id: "3", name: "Responder" },
       { id: "4", name: "Reporter" },

@@ -4,6 +4,7 @@ import { EventService } from '../services/event.service';
 import { logAudit } from '../utils/audit';
 import { UserResponse } from '../types';
 import { PrismaClient } from '@prisma/client';
+import { UnifiedRBACService } from '../services/unified-rbac.service';
 
 // Extend Request type to include user
 interface AuthenticatedRequest extends Request {
@@ -21,25 +22,12 @@ const getPrismaClient = () => {
 };
 const prisma = getPrismaClient();
 const eventService = new EventService(prisma);
-
-// Helper function to check if user is SuperAdmin
-async function isSuperAdmin(userId: string): Promise<boolean> {
-  try {
-    const userRoles = await prisma.userEventRole.findMany({
-      where: { userId },
-      include: { role: true },
-    });
-    
-    return userRoles.some(uer => uer.role.name === 'SuperAdmin');
-  } catch (error) {
-    console.error('Error checking SuperAdmin status:', error);
-    return false;
-  }
-}
+// Create UnifiedRBAC instance with the same Prisma client
+const unifiedRBAC = new UnifiedRBACService(prisma);
 
 export class OrganizationController {
   /**
-   * Create a new organization (SuperAdmin only)
+   * Create a new organization (System Admin only)
    */
   async createOrganization(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
@@ -89,29 +77,33 @@ export class OrganizationController {
    */
   async getOrganization(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { organizationId } = req.params;
       const userId = req.user?.id;
+      const organizationId = req.params.organizationId;
 
       if (!userId) {
         res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
-      const result = await organizationService.getOrganizationById(organizationId);
+      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
+      // Check if user has access to this organization using the old system
+      const prisma = getPrismaClient();
+      const orgMembership = await prisma.organizationMembership.findFirst({
+        where: { 
+          userId,
+          organizationId: organizationId
+        }
+      });
 
-      if (!result.success) {
-        res.status(404).json({ error: result.error });
+      if (!orgMembership) {
+        res.status(403).json({ error: 'Access denied' });
         return;
       }
 
-      // Check if user has access to this organization
-      const hasAccess = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId
-      );
+      const result = await organizationService.getOrganizationById(organizationId);
 
-      if (!hasAccess) {
-        res.status(403).json({ error: 'Access denied' });
+      if (!result.success) {
+        res.status(result.error === 'Organization not found' ? 404 : 500).json({ error: result.error });
         return;
       }
 
@@ -142,19 +134,23 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user has access to this organization
+      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
       const organization = result.data?.organization;
       if (!organization) {
         res.status(404).json({ error: 'Organization not found' });
         return;
       }
 
-      const hasAccess = await organizationService.hasOrganizationRole(
-        userId,
-        organization.id as string
-      );
+      // Check if user has access to this organization using the old system
+      const prisma = getPrismaClient();
+      const orgMembership = await prisma.organizationMembership.findFirst({
+        where: { 
+          userId,
+          organizationId: organization.id as string
+        }
+      });
 
-      if (!hasAccess) {
+      if (!orgMembership) {
         res.status(403).json({ error: 'Access denied' });
         return;
       }
@@ -180,14 +176,18 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
+      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
+      // Check if user is org admin using the old system
+      const prisma = getPrismaClient();
+      const orgMembership = await prisma.organizationMembership.findFirst({
+        where: { 
+          userId,
+          organizationId: organizationId,
+          role: 'org_admin'
+        }
+      });
 
-      if (!isOrgAdmin) {
+      if (!orgMembership) {
         res.status(403).json({ error: 'Organization admin access required' });
         return;
       }
@@ -223,7 +223,7 @@ export class OrganizationController {
   }
 
   /**
-   * Delete organization (SuperAdmin only)
+   * Delete organization (System Admin only)
    */
   async deleteOrganization(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
@@ -235,10 +235,18 @@ export class OrganizationController {
         return;
       }
 
-      // Verify SuperAdmin permission (defense in depth)
-      const isUserSuperAdmin = await isSuperAdmin(userId);
-      if (!isUserSuperAdmin) {
-        res.status(403).json({ error: 'SuperAdmin access required' });
+      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
+      // Check if user is System Admin using the old system
+      const prisma = getPrismaClient();
+      const allUserRoles = await prisma.userEventRole.findMany({
+        where: { userId },
+        include: { role: true }
+      });
+      
+      const isSystemAdmin = allUserRoles.some((uer: any) => uer.role.name === 'System Admin');
+      
+      if (!isSystemAdmin) {
+        res.status(403).json({ error: 'System Admin access required' });
         return;
       }
 
@@ -266,7 +274,7 @@ export class OrganizationController {
   }
 
   /**
-   * List all organizations (SuperAdmin only)
+   * List all organizations (System Admin only)
    */
   async listOrganizations(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
@@ -277,10 +285,18 @@ export class OrganizationController {
         return;
       }
 
-      // Verify SuperAdmin permission (defense in depth)
-      const isUserSuperAdmin = await isSuperAdmin(userId);
-      if (!isUserSuperAdmin) {
-        res.status(403).json({ error: 'SuperAdmin access required' });
+      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
+      // Check if user is System Admin using the old system
+      const prisma = getPrismaClient();
+      const allUserRoles = await prisma.userEventRole.findMany({
+        where: { userId },
+        include: { role: true }
+      });
+      
+      const isSystemAdmin = allUserRoles.some((uer: any) => uer.role.name === 'System Admin');
+      
+      if (!isSystemAdmin) {
+        res.status(403).json({ error: 'System Admin access required' });
         return;
       }
 
@@ -317,12 +333,8 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
+      // Check if user is org admin using unified RBAC
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
 
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
@@ -378,12 +390,8 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
+      // Check if user is org admin using unified RBAC
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
 
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
@@ -432,12 +440,8 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
+      // Check if user is org admin using unified RBAC
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
 
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
@@ -494,21 +498,12 @@ export class OrganizationController {
   }
 
   /**
-   * Create event in organization (Org Admin only)
+   * Create event for organization
    */
   async createEvent(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { organizationId } = req.params;
-      const { 
-        name, 
-        slug, 
-        description, 
-        startDate, 
-        endDate, 
-        website, 
-        contactEmail,
-        codeOfConduct 
-      } = req.body;
+      const { name, slug, description, startDate, endDate, website, contactEmail, codeOfConduct } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
@@ -521,13 +516,20 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
-
+      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
+      // Check if user is org admin using the old organization membership system
+      const prisma = getPrismaClient();
+      const orgMembership = await prisma.organizationMembership.findUnique({
+        where: {
+          organizationId_userId: {
+            organizationId,
+            userId
+          }
+        }
+      });
+      
+      const isOrgAdmin = orgMembership?.role === 'org_admin';
+      
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
         return;
@@ -548,16 +550,31 @@ export class OrganizationController {
         },
       });
 
-      // Automatically assign the creator as event admin
-      const adminRole = await prisma.role.findUnique({ where: { name: 'Event Admin' } });
-      if (adminRole) {
-        await prisma.userEventRole.create({
-          data: {
+      // TEMPORARY: Use old system to assign event admin role
+      // First, find or create the Event Admin role
+      const eventAdminRole = await prisma.role.findUnique({
+        where: { name: 'Event Admin' }
+      });
+
+      if (eventAdminRole) {
+        // Assign the creator as event admin using old system
+        await prisma.userEventRole.upsert({
+          where: {
+            userId_eventId_roleId: {
+              userId,
+              eventId: event.id,
+              roleId: eventAdminRole.id
+            }
+          },
+          update: {},
+          create: {
             userId,
             eventId: event.id,
-            roleId: adminRole.id,
-          },
+            roleId: eventAdminRole.id
+          }
         });
+      } else {
+        console.warn('Event Admin role not found in old system');
       }
 
       // Log audit event
@@ -593,11 +610,8 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user has access to this organization
-      const hasAccess = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId
-      );
+      // Check if user has access to this organization using unified RBAC
+      const hasAccess = await unifiedRBAC.hasOrgRole(userId, organizationId);
 
       if (!hasAccess) {
         res.status(403).json({ error: 'Access denied' });
@@ -643,12 +657,8 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
+      // Check if user is org admin using unified RBAC
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
 
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
@@ -714,12 +724,8 @@ export class OrganizationController {
 
       const organizationId = orgResult.data.organization.id as string;
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
+      // Check if user is org admin using unified RBAC
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
 
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
@@ -840,12 +846,8 @@ export class OrganizationController {
         return;
       }
 
-      // Check if user is org admin
-      const isOrgAdmin = await organizationService.hasOrganizationRole(
-        userId,
-        organizationId,
-        'org_admin'
-      );
+      // Check if user is org admin using unified RBAC
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
 
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });

@@ -25,12 +25,12 @@ jest.mock("../../src/utils/rbac", () => ({
       }
     }
     
-    // Check for SuperAdmin role globally
-    const isSuperAdmin = inMemoryStore.userEventRoles.some(
-      (uer) => uer.userId === req.user.id && uer.role.name === "SuperAdmin"
+    // Check for System Admin role globally
+    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+      (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
     
-    if (allowedRoles.includes("SuperAdmin") && isSuperAdmin) {
+    if (allowedRoles.includes("System Admin") && isSystemAdmin) {
       return next();
     }
     
@@ -60,13 +60,13 @@ jest.mock("../../src/utils/rbac", () => ({
     const testUser = inMemoryStore.users.find(u => u.id === testUserId) || { id: testUserId, email: `user${testUserId}@example.com`, name: `User${testUserId}` };
     req.user = testUser;
     
-    // Check for SuperAdmin role globally
-    const isSuperAdmin = inMemoryStore.userEventRoles.some(
-      (uer) => uer.userId === req.user.id && uer.role.name === "SuperAdmin"
+    // Check for System Admin role globally
+    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+      (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
     
-    if (!isSuperAdmin) {
-      res.status(403).json({ error: "Forbidden: Super Admins only" });
+    if (!isSystemAdmin) {
+      res.status(403).json({ error: "Forbidden: System Admins only" });
       return;
     }
     
@@ -78,7 +78,7 @@ beforeEach(() => {
   // Reset inMemoryStore to a clean state for each test
   inMemoryStore.events = [{ id: "1", name: "Event1", slug: "event1" }];
   inMemoryStore.roles = [
-    { id: "1", name: "SuperAdmin" },
+    { id: "1", name: "System Admin" },
     { id: "2", name: "Event Admin" },
     { id: "3", name: "Responder" },
     { id: "4", name: "Reporter" },

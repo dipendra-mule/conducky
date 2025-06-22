@@ -11,7 +11,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
     // Reset inMemoryStore for isolation
     inMemoryStore.events = [{ id: "1", name: "Event1", slug: "event1" }];
     inMemoryStore.roles = [
-      { id: "1", name: "SuperAdmin" },
+      { id: "1", name: "System Admin" },
       { id: "2", name: "Admin" },
       { id: "3", name: "Responder" },
       { id: "4", name: "Reporter" },

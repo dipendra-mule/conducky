@@ -78,19 +78,19 @@ export class EventService {
         include: { role: true }
       });
 
-      // Check for SuperAdmin role globally first
+      // Check for System Admin role globally first
       const allUserRoles = await this.prisma.userEventRole.findMany({
         where: { userId },
         include: { role: true }
       });
 
-      const isSuperAdmin = allUserRoles.some(uer => uer.role.name === 'SuperAdmin');
-      if (isSuperAdmin) {
-        return 'SuperAdmin';
+      const isSystemAdmin = allUserRoles.some(uer => uer.role.name === 'System Admin');
+      if (isSystemAdmin) {
+        return 'System Admin';
       }
 
       // Return the highest role for this event
-      const roleHierarchy = ['SuperAdmin', 'Event Admin', 'Responder', 'Reporter'];
+      const roleHierarchy = ['System Admin', 'Event Admin', 'Responder', 'Reporter'];
       for (const role of roleHierarchy) {
         if (userEventRoles.some(uer => uer.role.name === role)) {
           return role;
@@ -105,7 +105,7 @@ export class EventService {
   }
 
   /**
-   * Create a new event (SuperAdmin only)
+   * Create a new event (System Admin only)
    */
   async createEvent(data: EventCreateData): Promise<ServiceResult<{ event: any }>> {
     try {
@@ -151,7 +151,7 @@ export class EventService {
   }
 
   /**
-   * List all events (SuperAdmin only)
+   * List all events (System Admin only)
    */
   async listAllEvents(): Promise<ServiceResult<{ events: any[] }>> {
     try {

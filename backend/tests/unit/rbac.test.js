@@ -92,7 +92,7 @@ describe('requireSuperAdmin middleware', () => {
     const next = jest.fn();
     await middleware(req, res, next);
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Forbidden: Super Admins only' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Forbidden: System Admins only' });
     expect(next).not.toHaveBeenCalled();
   });
 

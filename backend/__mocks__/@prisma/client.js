@@ -4,7 +4,7 @@
 const inMemoryStore = {
   events: [{ id: "1", name: "Event1", slug: "event1" }],
   roles: [
-    { id: "1", name: "SuperAdmin" },
+    { id: "1", name: "System Admin" },
     { id: "2", name: "Event Admin" },
     { id: "3", name: "Responder" },
     { id: "4", name: "Reporter" },
@@ -25,7 +25,7 @@ const inMemoryStore = {
       userId: "1",
       eventId: "1",
       roleId: "1",
-      role: { name: "SuperAdmin" },
+      role: { name: "System Admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     },
     {
