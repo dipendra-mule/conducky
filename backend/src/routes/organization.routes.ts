@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { OrganizationController } from '../controllers/organization.controller';
 import { requireAuth } from '../middleware/auth';
-import { requireSuperAdmin } from '../utils/rbac';
+import { requireSystemAdmin } from '../utils/rbac';
 import { createUploadMiddleware } from '../utils/upload';
 
 const router = Router();
@@ -91,7 +91,7 @@ router.use(requireAuth);
  *   post:
  *     tags: [Organizations]
  *     summary: Create a new organization
- *     description: Create a new organization. Only SuperAdmins can create organizations.
+ *     description: Create a new organization. Only System Admins can create organizations.
  *     security:
  *       - sessionAuth: []
  *     requestBody:
@@ -150,7 +150,7 @@ router.use(requireAuth);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: Insufficient permissions (SuperAdmin required)
+ *         description: Insufficient permissions (System Admin required)
  *         content:
  *           application/json:
  *             schema:
@@ -162,7 +162,7 @@ router.use(requireAuth);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/', requireSuperAdmin(), organizationController.createOrganization.bind(organizationController));
+router.post('/', requireSystemAdmin(), organizationController.createOrganization.bind(organizationController));
 
 /**
  * @swagger
@@ -170,7 +170,7 @@ router.post('/', requireSuperAdmin(), organizationController.createOrganization.
  *   get:
  *     tags: [Organizations]
  *     summary: List all organizations
- *     description: Retrieve a list of all organizations in the system. Only accessible to SuperAdmins.
+ *     description: Retrieve a list of all organizations in the system. Only accessible to System Admins.
  *     security:
  *       - sessionAuth: []
  *     parameters:
@@ -225,7 +225,7 @@ router.post('/', requireSuperAdmin(), organizationController.createOrganization.
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: Insufficient permissions (SuperAdmin required)
+ *         description: Insufficient permissions (System Admin required)
  *         content:
  *           application/json:
  *             schema:
@@ -237,7 +237,7 @@ router.post('/', requireSuperAdmin(), organizationController.createOrganization.
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/', requireSuperAdmin(), organizationController.listOrganizations.bind(organizationController));
+router.get('/', requireSystemAdmin(), organizationController.listOrganizations.bind(organizationController));
 
 /**
  * @swagger
@@ -471,7 +471,7 @@ router.get('/slug/:orgSlug', organizationController.getOrganizationBySlug.bind(o
  *   delete:
  *     tags: [Organizations]
  *     summary: Delete organization
- *     description: Delete an organization and all its associated data. Only SuperAdmins can delete organizations.
+ *     description: Delete an organization and all its associated data. Only System Admins can delete organizations.
  *     security:
  *       - sessionAuth: []
  *     parameters:
@@ -501,7 +501,7 @@ router.get('/slug/:orgSlug', organizationController.getOrganizationBySlug.bind(o
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: Insufficient permissions (SuperAdmin required)
+ *         description: Insufficient permissions (System Admin required)
  *         content:
  *           application/json:
  *             schema:
@@ -523,7 +523,7 @@ router.get('/:organizationId', organizationController.getOrganization.bind(organ
 
 router.put('/:organizationId', organizationController.updateOrganization.bind(organizationController));
 
-router.delete('/:organizationId', requireSuperAdmin(), organizationController.deleteOrganization.bind(organizationController));
+router.delete('/:organizationId', requireSystemAdmin(), organizationController.deleteOrganization.bind(organizationController));
 
 /**
  * Organization Membership Routes

@@ -95,7 +95,7 @@ export default function CreateEvent() {
       
       if (response.ok) {
         const data = await response.json();
-        // Redirect to event details where SuperAdmin can create admin invite
+        // Redirect to event details where System Admin can create admin invite
         router.push(`/admin/events/${data.event.id}/settings`);
       } else {
         const errorData = await response.json();

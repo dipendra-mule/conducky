@@ -226,18 +226,18 @@ export default function ReportDetail() {
     }
   }, [report?.createdAt, report?.updatedAt]);
 
-  const isSuperAdmin =
-    user && user.roles && user.roles.includes("Global Admin");
+  const isSystemAdmin =
+    user && user.roles && user.roles.includes("System Admin");
   const canChangeState =
-    isSuperAdmin ||
-    userRoles.some((r) => ["Responder", "Admin", "Global Admin"].includes(r));
+    isSystemAdmin ||
+    userRoles.some((r) => ["Responder", "Event Admin", "System Admin"].includes(r));
   const isResponderOrAbove = userRoles.some((r) =>
-    ["Responder", "Admin", "SuperAdmin", "Global Admin"].includes(r),
+    ["Responder", "Event Admin", "System Admin"].includes(r),
   );
 
-  // Helper: check if user is admin or superadmin
-  const isAdminOrSuperAdmin = userRoles.some((r) =>
-    ["Admin", "SuperAdmin", "Global Admin"].includes(r),
+  // Helper: check if user is admin or system admin
+  const isAdminOrSystemAdmin = userRoles.some((r) =>
+    ["Event Admin", "System Admin"].includes(r),
   );
 
   // Fetch event users for assignment dropdown if admin/responder
@@ -248,7 +248,7 @@ export default function ReportDetail() {
       .then(res => res.ok ? res.json() : { users: [] })
       .then(data => {
 
-        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + `/api/events/slug/${eventSlug}/users?role=Admin&limit=1000`, { credentials: 'include' })
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + `/api/events/slug/${eventSlug}/users?role=Event Admin&limit=1000`, { credentials: 'include' })
           .then(res2 => res2.ok ? res2.json() : { users: [] })
           .then(data2 => {
 
@@ -482,7 +482,7 @@ export default function ReportDetail() {
     user &&
     report &&
     report.reporterId &&
-    (user.id === report.reporterId || isAdminOrSuperAdmin);
+    (user.id === report.reporterId || isAdminOrSystemAdmin);
     
   const handleEvidenceUpload = async (filesOrEvent: File[] | React.FormEvent<HTMLFormElement>) => {
     let files: File[];

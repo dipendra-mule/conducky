@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { ServiceResult } from '../types';
+import { UnifiedRBACService } from './unified-rbac.service';
 
 export interface ReportCreateData {
   eventId: string;
@@ -103,7 +104,22 @@ export interface UserReportsResponse {
 }
 
 export class ReportService {
-  constructor(private prisma: PrismaClient) {}
+  private unifiedRBAC: UnifiedRBACService;
+
+  constructor(private prisma: PrismaClient) {
+    this.unifiedRBAC = new UnifiedRBACService(prisma);
+  }
+
+  /**
+   * Helper method to check if user can edit a report
+   */
+  private async canUserEditReport(userId: string, eventId: string, isReporter: boolean, requiredRoles: string[] = ['responder', 'event_admin', 'system_admin']): Promise<boolean> {
+    if (isReporter) {
+      return true;
+    }
+    
+    return await this.unifiedRBAC.hasEventRole(userId, eventId, requiredRoles);
+  }
 
   /**
    * Create a new report with optional evidence files
@@ -456,7 +472,7 @@ export class ReportService {
         }
 
         const hasResponderOrAdmin = assignedUser.userEventRoles.some((er: any) => 
-                  ['Responder', 'Event Admin', 'SuperAdmin'].includes(er.role.name) ||
+                  ['Responder', 'Event Admin', 'System Admin'].includes(er.role.name) ||
         ['responder', 'event admin'].includes(er.role.name.toLowerCase())
         );
 
@@ -985,9 +1001,9 @@ export class ReportService {
 
       eventRoles.forEach((eventData: any, eventId: string) => {
         const roles = eventData.roles;
-        const hasResponderOrAdmin = roles.some((r: string) => ['Responder', 'Event Admin', 'SuperAdmin'].includes(r));
+        const isResponderOrAbove = roles.some((r: string) => ['Responder', 'Event Admin', 'System Admin'].includes(r));
 
-        if (hasResponderOrAdmin) {
+        if (isResponderOrAbove) {
           responderAdminEvents.push(eventId);
         } else {
           reporterOnlyEvents.push(eventId);
@@ -1165,15 +1181,26 @@ export class ReportService {
       // Check if user is the reporter
       const isReporter = !!(report.reporterId && userId === report.reporterId);
 
-      // Get user's roles for this event
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId, eventId: report.eventId },
-        include: { role: true },
+      // Use unified RBAC service to get user roles
+      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', report.eventId);
+      const roles = userRoles.map((userRole: any) => {
+        // Map unified role names back to display names
+        switch (userRole.role.name) {
+          case 'system_admin': return 'System Admin';
+          case 'event_admin': return 'Event Admin';
+          case 'responder': return 'Responder';
+          case 'reporter': return 'Reporter';
+          default: return userRole.role.name;
+        }
       });
 
-      const roles = userEventRoles.map(uer => uer.role.name);
-      const isResponderOrAbove = roles.some(r => ['Responder', 'Event Admin', 'SuperAdmin'].includes(r));
+      // Also check for organization admin inheritance
+      const hasOrgAdminRole = await this.unifiedRBAC.hasEventRole(userId, report.eventId, ['event_admin']);
+      if (hasOrgAdminRole && !roles.includes('Event Admin')) {
+        roles.push('Event Admin');
+      }
 
+      const isResponderOrAbove = roles.some((r: string) => ['Responder', 'Event Admin', 'System Admin'].includes(r));
       const hasAccess = isReporter || isResponderOrAbove;
 
       return {
@@ -1206,18 +1233,12 @@ export class ReportService {
         };
       }
 
-      // Check permissions: reporter can edit their own report, or user must be Admin/SuperAdmin
+      // Check permissions: reporter can edit their own report, or user must be Admin/System Admin
       const isReporter = !!(report.reporterId && userId === report.reporterId);
 
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId, eventId },
-        include: { role: true },
-      });
-
-      const userRoles = userEventRoles.map(uer => uer.role.name);
-      const isAdminOrSuper = userRoles.includes('Event Admin') || userRoles.includes('SuperAdmin');
-
-      const canEdit = isReporter || isAdminOrSuper;
+      // Use unified RBAC service to check roles
+      const hasAdminRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['event_admin', 'system_admin']);
+      const canEdit = isReporter || hasAdminRole;
 
       return {
         success: true,
@@ -1257,15 +1278,9 @@ export class ReportService {
       if (userId) {
         const isReporter = !!(report.reporterId && userId === report.reporterId);
 
-        const userEventRoles = await this.prisma.userEventRole.findMany({
-          where: { userId, eventId },
-          include: { role: true },
-        });
-
-        const userRoles = userEventRoles.map(uer => uer.role.name);
-        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'SuperAdmin'].includes(r));
-
-        const canEdit = isReporter || isResponderOrAbove;
+        // Use unified RBAC service to check roles
+        const hasResponderRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
+        const canEdit = isReporter || hasResponderRole;
 
         if (!canEdit) {
           return {
@@ -1391,7 +1406,7 @@ export class ReportService {
         });
 
         const userRoles = userEventRoles.map(uer => uer.role.name);
-        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'SuperAdmin'].includes(r));
+        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'System Admin'].includes(r));
 
         const canEdit = isReporter || isResponderOrAbove;
 
@@ -1466,7 +1481,7 @@ export class ReportService {
         });
 
         const userRoles = userEventRoles.map(uer => uer.role.name);
-        const isAdminOrAbove = userRoles.some(r => ['Event Admin', 'SuperAdmin'].includes(r));
+        const isAdminOrAbove = userRoles.some(r => ['Event Admin', 'System Admin'].includes(r));
 
         const canEdit = isReporter || isAdminOrAbove;
 
@@ -1549,7 +1564,7 @@ export class ReportService {
         });
 
         const userRoles = userEventRoles.map(uer => uer.role.name);
-        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'SuperAdmin'].includes(r));
+        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'System Admin'].includes(r));
 
         const canEdit = isReporter || isResponderOrAbove;
 
@@ -1617,7 +1632,7 @@ export class ReportService {
         });
 
         const userRoles = userEventRoles.map(uer => uer.role.name);
-        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'SuperAdmin'].includes(r));
+        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'System Admin'].includes(r));
 
         const canEdit = isReporter || isResponderOrAbove;
 
@@ -1955,7 +1970,7 @@ export class ReportService {
       }
 
       const userRoles = userEventRoles.map(uer => uer.role.name);
-      const canBulkUpdate = userRoles.some(role => ['Responder', 'Event Admin', 'SuperAdmin'].includes(role));
+      const canBulkUpdate = userRoles.some(role => ['Responder', 'Event Admin', 'System Admin'].includes(role));
 
       if (!canBulkUpdate) {
         return {

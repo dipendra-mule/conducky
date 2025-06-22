@@ -162,7 +162,7 @@ export default function ProfileEvents() {
   // Get role badge variant
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case 'Admin':
+      case 'Event Admin':
         return 'destructive';
       case 'Responder':
         return 'default';
@@ -176,7 +176,7 @@ export default function ProfileEvents() {
   // Get role icon
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'Admin':
+      case 'Event Admin':
         return <Shield className="h-3 w-3" />;
       case 'Responder':
         return <CheckCircle className="h-3 w-3" />;

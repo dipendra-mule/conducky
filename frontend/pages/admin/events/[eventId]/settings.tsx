@@ -55,7 +55,7 @@ export default function SystemEventSettings() {
   
   // Invite creation state
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('Admin');
+  const [inviteRole, setInviteRole] = useState('Event Admin');
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
@@ -328,7 +328,7 @@ export default function SystemEventSettings() {
                       onChange={(e) => setInviteRole(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="Admin">Admin</option>
+                      <option value="Event Admin">Event Admin</option>
                       <option value="Responder">Responder</option>
                     </select>
                   </div>

@@ -66,7 +66,7 @@ const options: swaggerJSDoc.Options = {
             },
             role: {
               type: 'string',
-              enum: ['SUPERADMIN', 'ADMIN', 'RESPONDENT', 'GUEST'],
+              enum: ['SYSTEM_ADMIN', 'ADMIN', 'RESPONDENT', 'GUEST'],
               description: 'User global role',
             },
             isActive: {

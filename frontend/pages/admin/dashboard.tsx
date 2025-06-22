@@ -34,7 +34,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Check authentication and SuperAdmin status
+  // Check authentication and System Admin status
   useEffect(() => {
     // Only redirect if we're certain user is null after context initialization
     if (user === null && authChecked) {
@@ -42,9 +42,9 @@ export default function AdminDashboard() {
       return;
     }
     
-    // Check if user is SuperAdmin
-    if (user && authChecked && !user.roles?.includes('SuperAdmin')) {
-      router.replace('/dashboard'); // Redirect non-SuperAdmins to regular dashboard
+    // Check if user is System Admin
+    if (user && authChecked && !user.roles?.includes('System Admin')) {
+      router.replace('/dashboard'); // Redirect non-System Admins to regular dashboard
       return;
     }
   }, [user, authChecked, router]);
@@ -56,8 +56,8 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    // Only fetch stats if user is authenticated and is SuperAdmin
-    if (user && user.roles?.includes('SuperAdmin')) {
+    // Only fetch stats if user is authenticated and is System Admin
+    if (user && user.roles?.includes('System Admin')) {
       fetchSystemStats();
     }
   }, [user]);
@@ -125,8 +125,8 @@ export default function AdminDashboard() {
     );
   }
 
-  // Check if user is SuperAdmin (additional safety check)
-  if (!user.roles?.includes('SuperAdmin')) {
+  // Check if user is System Admin (additional safety check)
+  if (!user.roles?.includes('System Admin')) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="mx-auto max-w-7xl">

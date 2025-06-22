@@ -50,7 +50,7 @@ export default function EventTeam() {
   }, [searchTerm]);
 
   // Check if current user has admin permissions
-  const isAdmin = user && ['Event Admin', 'SuperAdmin'].some(role => 
+  const isAdmin = user && ['Event Admin', 'System Admin'].some(role => 
     user.roles?.includes(role)
   );
 
@@ -183,8 +183,8 @@ export default function EventTeam() {
 
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
-      case 'superadmin': return 'bg-red-100 text-red-800 border-red-200';
-      case 'admin': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'system admin': return 'bg-red-100 text-red-800 border-red-200';
+      case 'event admin': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'responder': return 'bg-green-100 text-green-800 border-green-200';
       case 'reporter': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -192,7 +192,7 @@ export default function EventTeam() {
   };
 
   const getHighestRole = (roles: string[]) => {
-    const roleHierarchy = ['SuperAdmin', 'Admin', 'Responder', 'Reporter'];
+    const roleHierarchy = ['System Admin', 'Event Admin', 'Responder', 'Reporter'];
     for (const role of roleHierarchy) {
       if (roles.includes(role)) {
         return role;
@@ -286,8 +286,8 @@ export default function EventTeam() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="SuperAdmin">SuperAdmin</SelectItem>
-                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="System Admin">System Admin</SelectItem>
+                  <SelectItem value="Event Admin">Event Admin</SelectItem>
                   <SelectItem value="Responder">Responder</SelectItem>
                   <SelectItem value="Reporter">Reporter</SelectItem>
                 </SelectContent>

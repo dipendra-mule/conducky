@@ -390,10 +390,10 @@ app.get('/audit-test', async (req: any, res: any) => {
 
 app.get('/admin-only', async (req: any, res: any) => {
   try {
-    const { requireSuperAdmin } = await import('./src/utils/rbac');
+    const { requireSystemAdmin } = await import('./src/utils/rbac');
     // Apply RBAC middleware inline for testing
-    requireSuperAdmin()(req, res, () => {
-      res.json({ message: 'SuperAdmin access granted!' });
+    requireSystemAdmin()(req, res, () => {
+      res.json({ message: 'System Admin access granted!' });
     });
   } catch (error: any) {
     res.status(500).json({ error: 'RBAC test failed', details: error.message });

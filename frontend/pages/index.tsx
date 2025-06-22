@@ -93,7 +93,7 @@ export default function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-background transition-colors duration-200 p-4">
         <Card className="w-full max-w-md p-4 sm:p-8">
           <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Welcome! Set Up Your First User</h1>
-          <p className="mb-4 text-muted-foreground">No users exist yet. Create the first user (will be Global Admin):</p>
+          <p className="mb-4 text-muted-foreground">No users exist yet. Create the first user (will be System Admin):</p>
           <UserRegistrationForm
             buttonText="Create First User"
             loading={false}
@@ -113,7 +113,7 @@ export default function Home() {
                 setFirstUserError(data.error || 'Failed to create user.');
                 return;
               }
-              setFirstUserSuccess('First user created and set as Global Admin! You can now log in.');
+              setFirstUserSuccess('First user created and set as System Admin! You can now log in.');
               setFirstUserNeeded(false);
             }}
           />

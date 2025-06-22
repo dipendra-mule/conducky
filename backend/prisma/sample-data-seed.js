@@ -7,15 +7,16 @@ async function main() {
 
   // Ensure roles exist first
   console.log('🔑 Creating roles...');
-  const roles = ['Reporter', 'Responder', 'Event Admin', 'SuperAdmin'];
+  const roles = ['Reporter', 'Responder', 'Event Admin', 'System Admin'];
   const roleMap = {};
-  for (const name of roles) {
-    roleMap[name] = await prisma.role.upsert({
-      where: { name },
+  for (const roleName of roles) {
+    const role = await prisma.role.upsert({
+      where: { name: roleName },
       update: {},
-      create: { name },
+      create: { name: roleName },
     });
-    console.log(`✅ Role ensured: ${name}`);
+    roleMap[roleName] = role;
+    console.log(`✅ Role ensured: ${roleName}`);
   }
 
   // Create diverse users with @mattstratton.com emails
@@ -81,16 +82,16 @@ async function main() {
       data: { 
         userId: userRecords['Matt Stratton'].id, 
         eventId: null, 
-        roleId: roleMap['SuperAdmin'].id 
+        roleId: roleMap['System Admin'].id 
       },
     });
-    console.log('👑 SuperAdmin role assigned to Matt Stratton');
+    console.log('👑 System Admin role assigned to Matt Stratton');
   } catch (error) {
     // Role might already exist, which is fine
     if (error.code !== 'P2002') { // P2002 is unique constraint violation
       throw error;
     }
-    console.log('👑 SuperAdmin role already exists for Matt Stratton');
+    console.log('👑 System Admin role already exists for Matt Stratton');
   }
 
   // Create Organizations
@@ -518,7 +519,7 @@ async function main() {
   console.log(`📋 Reports: ${reportCount} created with comments`);
   console.log('');
   console.log('🔐 Test Login Credentials:');
-  console.log('Email: matt@mattstratton.com (SuperAdmin)');
+  console.log('Email: matt@mattstratton.com (System Admin)');
   console.log('Email: alice.anderson@mattstratton.com (Org Admin)');
   console.log('Email: david.davis@mattstratton.com (Event Admin)');
   console.log('Email: henry.harris@mattstratton.com (Responder)');
