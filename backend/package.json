@@ -13,6 +13,8 @@
     "seed:roles": "node prisma/roles-seed.js",
     "sample-data": "node prisma/sample-data-seed.js",
     "migrate:events-to-orgs": "node scripts/migrate-events-to-organizations.js",
+    "migrate:fix-state": "node scripts/fix-migration-state.js",
+    "migrate:unified-roles": "node scripts/migrate-to-unified-roles.js",
     "test": "jest",
     "test:ci": "jest --coverage --reporters=jest-junit",
     "test:coverage": "jest --coverage",
