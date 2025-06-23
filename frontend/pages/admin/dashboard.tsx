@@ -42,9 +42,9 @@ export default function AdminDashboard() {
       return;
     }
     
-    // Check if user is System Admin
-    if (user && authChecked && !user.roles?.includes('System Admin')) {
-      router.replace('/dashboard'); // Redirect non-System Admins to regular dashboard
+    // Check if user is System Admin (using unified role name)
+    if (user && authChecked && !user.roles?.includes('system_admin')) {
+      router.replace('/dashboard'); // Redirect non-system admins to regular dashboard
       return;
     }
   }, [user, authChecked, router]);
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Only fetch stats if user is authenticated and is System Admin
-    if (user && user.roles?.includes('System Admin')) {
+    if (user && user.roles?.includes('system_admin')) {
       fetchSystemStats();
     }
   }, [user]);
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
   }
 
   // Check if user is System Admin (additional safety check)
-  if (!user.roles?.includes('System Admin')) {
+  if (!user.roles?.includes('system_admin')) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="mx-auto max-w-7xl">

@@ -49,7 +49,7 @@ export default function CreateOrganization() {
       return;
     }
     
-    if (user && authChecked && !user.roles?.includes('System Admin')) {
+    if (user && authChecked && !user.roles?.includes('system_admin')) {
       router.replace('/dashboard');
       return;
     }
@@ -201,10 +201,10 @@ export default function CreateOrganization() {
     );
   }
 
-  if (!user.roles?.includes('System Admin')) {
+  if (!user.roles?.includes('system_admin')) {
     return (
       <AccessDenied 
-        message="You need System Admin privileges to create organizations."
+        message="You need system admin privileges to create organizations."
         showLoginButton={false}
       />
     );

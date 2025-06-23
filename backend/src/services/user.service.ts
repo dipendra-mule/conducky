@@ -263,56 +263,60 @@ export class UserService {
    */
   async getUserEvents(userId: string): Promise<ServiceResult<{ events: UserEvent[]; globalRoles: string[] }>> {
     try {
-      // Get direct event roles
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId },
-        include: {
-          event: true,
-          role: true
-        }
-      });
+      // Get all user roles using unified RBAC
+      const allUserRoles = await this.unifiedRBAC.getAllUserRoles(userId);
 
-      // Get organization memberships to include org events
-      const orgMemberships = await this.prisma.organizationMembership.findMany({
-        where: { userId },
-        include: {
-          organization: {
-            include: {
-              events: true
-            }
-          }
-        }
-      });
+      // Process system-level roles for globalRoles
+      const globalRoles = allUserRoles.system;
 
-      // Group by event and collect roles
+      // Get events map to track roles per event
       const eventsMap = new Map();
-      const globalRoles: string[] = [];
-      
+
       // Process direct event roles
-      userEventRoles.forEach(uer => {
-        if (!uer.event) {
-          // This is a global role (eventId is null)
-          globalRoles.push(uer.role.name);
-          return;
-        }
+      for (const eventId of Object.keys(allUserRoles.events)) {
+        const eventRoles = allUserRoles.events[eventId];
         
-        const eventId = uer.event.id;
-        if (!eventsMap.has(eventId)) {
+        // Get event details
+        const event = await this.prisma.event.findUnique({
+          where: { id: eventId },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true
+          }
+        });
+
+        if (event) {
           eventsMap.set(eventId, {
-            id: uer.event.id,
-            name: uer.event.name,
-            slug: uer.event.slug,
-            description: uer.event.description,
-            roles: []
+            id: event.id,
+            name: event.name,
+            slug: event.slug,
+            description: event.description,
+            roles: eventRoles
           });
         }
-        eventsMap.get(eventId)?.roles.push(uer.role.name);
-      });
+      }
 
       // Process organization events (org admins get event admin access)
-      orgMemberships.forEach(membership => {
-        if (membership.role === 'org_admin' && membership.organization.events) {
-          membership.organization.events.forEach(event => {
+      for (const orgId of Object.keys(allUserRoles.organizations)) {
+        const orgRoles = allUserRoles.organizations[orgId];
+        
+        // Check if user is org admin
+        if (orgRoles.includes('org_admin')) {
+          // Get organization events
+          const orgEvents = await this.prisma.event.findMany({
+            where: { organizationId: orgId },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true
+            }
+          });
+
+          // Add org events with event_admin role
+          orgEvents.forEach(event => {
             const eventId = event.id;
             if (!eventsMap.has(eventId)) {
               eventsMap.set(eventId, {
@@ -323,14 +327,15 @@ export class UserService {
                 roles: []
               });
             }
-            // Org admins get Event Admin role on organization events
+            
+            // Org admins get event_admin role on organization events
             const eventData = eventsMap.get(eventId);
-            if (eventData && !eventData.roles.includes('Event Admin')) {
-              eventData.roles.push('Event Admin');
+            if (eventData && !eventData.roles.includes('event_admin')) {
+              eventData.roles.push('event_admin');
             }
           });
         }
-      });
+      }
 
       const events = Array.from(eventsMap.values());
 
@@ -391,35 +396,66 @@ export class UserService {
       
       const skip = (pageNum - 1) * limitNum;
 
-      // Get user's event roles to determine access
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId },
-        include: {
-          event: true,
-          role: true
-        }
-      });
+      // Get user's roles using unified RBAC to determine access
+      const allUserRoles = await this.unifiedRBAC.getAllUserRoles(userId);
+      
+      // Build event roles map for access control
+      const eventRoles = new Map();
+      
+      // Process direct event roles
+      for (const eventId of Object.keys(allUserRoles.events)) {
+        const eventRoles_list = allUserRoles.events[eventId];
+        
+        // Get event details
+        const event = await this.prisma.event.findUnique({
+          where: { id: eventId },
+          select: { id: true, name: true, slug: true }
+        });
 
-      if (userEventRoles.length === 0) {
+        if (event) {
+          eventRoles.set(eventId, {
+            event: event,
+            roles: eventRoles_list
+          });
+        }
+      }
+
+      // Process organization events (org admins get access to organization events)
+      for (const orgId of Object.keys(allUserRoles.organizations)) {
+        const orgRoles = allUserRoles.organizations[orgId];
+        
+        if (orgRoles.includes('org_admin')) {
+          // Get organization events
+          const orgEvents = await this.prisma.event.findMany({
+            where: { organizationId: orgId },
+            select: { id: true, name: true, slug: true }
+          });
+
+          // Add org events with event_admin access
+          orgEvents.forEach(event => {
+            const eventId = event.id;
+            if (!eventRoles.has(eventId)) {
+              eventRoles.set(eventId, {
+                event: event,
+                roles: []
+              });
+            }
+            
+            // Org admins get event_admin role on organization events
+            const eventData = eventRoles.get(eventId);
+            if (eventData && !eventData.roles.includes('event_admin')) {
+              eventData.roles.push('event_admin');
+            }
+          });
+        }
+      }
+
+      if (eventRoles.size === 0) {
         return {
           success: true,
           data: { reports: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0, canViewAssignments: false }
         };
       }
-
-      // Group roles by event for access control
-      const eventRoles = new Map();
-      userEventRoles.forEach(uer => {
-        if (!uer.event) return; // Skip if event is null
-        const eventId = uer.event.id;
-        if (!eventRoles.has(eventId)) {
-          eventRoles.set(eventId, {
-            event: uer.event,
-            roles: []
-          });
-        }
-        eventRoles.get(eventId)?.roles.push(uer.role.name);
-      });
 
       // Build where clause based on user's access
       const eventIds = Array.from(eventRoles.keys());
@@ -433,7 +469,7 @@ export class UserService {
       
       eventRoles.forEach((eventData: any, eventId: string) => {
         const roles = eventData.roles;
-        const hasResponderOrAdmin = roles.some((r: string) => ['Responder', 'Event Admin', 'System Admin'].includes(r));
+        const hasResponderOrAdmin = roles.some((r: string) => ['responder', 'event_admin', 'system_admin'].includes(r));
         
         if (hasResponderOrAdmin) {
           responderAdminEvents.push(eventId);
@@ -589,34 +625,29 @@ export class UserService {
    */
   async leaveEvent(userId: string, eventId: string): Promise<ServiceResult<{ message: string }>> {
     try {
-      // Check if user is a member of the event
-      const userRoles = await this.prisma.userEventRole.findMany({
-        where: { 
-          userId, 
-          eventId 
-        },
-        include: {
-          event: true,
-          role: true
-        }
-      });
+      // Check if user has any roles for this event using unified RBAC
+      const userEventRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
 
-      if (userRoles.length === 0) {
+      if (userEventRoles.length === 0) {
         return {
           success: false,
           error: 'You are not a member of this event.'
         };
       }
 
-      // Check if user is the only admin
-      const isAdmin = userRoles.some(ur => ur.role.name === 'Event Admin');
+      // Check if user is the only event admin
+      const isAdmin = userEventRoles.some((ur: any) => ur.role.name === 'event_admin');
       if (isAdmin) {
-        const adminCount = await this.prisma.userEventRole.count({
+        // Count how many event admins exist for this event by checking all users with event roles
+        const allEventUsers = await (this.prisma as any).userRole.findMany({
           where: {
-            eventId,
-            role: { name: 'Event Admin' }
-          }
+            scopeType: 'event',
+            scopeId: eventId,
+            role: { name: 'event_admin' }
+          },
+          include: { role: true }
         });
+        const adminCount = allEventUsers.length;
 
         if (adminCount === 1) {
           return {
@@ -626,15 +657,19 @@ export class UserService {
         }
       }
 
-      // Remove user from event
-      await this.prisma.userEventRole.deleteMany({
-        where: {
-          userId,
-          eventId
-        }
-      });
+      // Remove all user roles for this event using unified RBAC
+      const roleNames = userEventRoles.map((ur: any) => ur.role.name);
+      for (const roleName of roleNames) {
+        await this.unifiedRBAC.revokeRole(userId, roleName, 'event', eventId);
+      }
 
-      const eventName = userRoles[0]?.event?.name || 'the event';
+      // Get event name for response
+      const event = await this.prisma.event.findUnique({
+        where: { id: eventId },
+        select: { name: true }
+      });
+      const eventName = event?.name || 'the event';
+
       return {
         success: true,
         data: { message: `Successfully left ${eventName}.` }
@@ -653,13 +688,25 @@ export class UserService {
    */
   async getQuickStats(userId: string): Promise<ServiceResult<QuickStats>> {
     try {
-      // Get all event memberships
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId },
-        include: { event: true, role: true },
-      });
-      const eventIds = userEventRoles.map(uer => uer.eventId).filter(Boolean);
-      const eventCount = new Set(eventIds).size;
+      // Get all user roles using unified RBAC
+      const allUserRoles = await this.unifiedRBAC.getAllUserRoles(userId);
+      
+      // Count unique events from direct event roles and organization events
+      const eventIds = new Set(Object.keys(allUserRoles.events));
+      
+      // Add organization events for org admins
+      for (const orgId of Object.keys(allUserRoles.organizations)) {
+        const orgRoles = allUserRoles.organizations[orgId];
+        if (orgRoles.includes('org_admin')) {
+          const orgEvents = await this.prisma.event.findMany({
+            where: { organizationId: orgId },
+            select: { id: true }
+          });
+          orgEvents.forEach(event => eventIds.add(event.id));
+        }
+      }
+      
+      const eventCount = eventIds.size;
 
       // Get unique report IDs to avoid double counting when user has multiple roles for same report
       const reporterIds = await this.prisma.report.findMany({ 
@@ -671,11 +718,8 @@ export class UserService {
         select: { id: true } 
       });
       
-      // Count events where user is admin
-      const adminEventIds = userEventRoles
-        .filter(uer => uer.role.name === 'Event Admin' && uer.eventId)
-        .map(uer => uer.eventId!)
-        .filter((id): id is string => id !== null);
+      // Count reports where user is event admin or org admin
+      const adminEventIds = Array.from(eventIds);
       const adminIds = adminEventIds.length > 0 ? await this.prisma.report.findMany({ 
         where: { eventId: { in: adminEventIds } }, 
         select: { id: true } 

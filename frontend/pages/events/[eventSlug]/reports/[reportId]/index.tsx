@@ -227,17 +227,17 @@ export default function ReportDetail() {
   }, [report?.createdAt, report?.updatedAt]);
 
   const isSystemAdmin =
-    user && user.roles && user.roles.includes("System Admin");
+    user && user.roles && user.roles.includes("system_admin");
   const canChangeState =
     isSystemAdmin ||
-    userRoles.some((r) => ["Responder", "Event Admin", "System Admin"].includes(r));
+    userRoles.some((r) => ["responder", "event_admin", "system_admin"].includes(r));
   const isResponderOrAbove = userRoles.some((r) =>
-    ["Responder", "Event Admin", "System Admin"].includes(r),
+    ["responder", "event_admin", "system_admin"].includes(r),
   );
 
   // Helper: check if user is admin or system admin
   const isAdminOrSystemAdmin = userRoles.some((r) =>
-    ["Event Admin", "System Admin"].includes(r),
+    ["event_admin", "system_admin"].includes(r),
   );
 
   // Fetch event users for assignment dropdown if admin/responder

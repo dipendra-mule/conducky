@@ -85,28 +85,18 @@ export class OrganizationController {
         return;
       }
 
-      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
-      // Check if user has access to this organization using the old system
-      const prisma = getPrismaClient();
-      const orgMembership = await prisma.organizationMembership.findFirst({
-        where: { 
-          userId,
-          organizationId: organizationId
-        }
-      });
-
-      if (!orgMembership) {
+      // Unified RBAC: allow org members and system admins
+      const hasAccess = await unifiedRBAC.hasOrgRole(userId, organizationId);
+      if (!hasAccess) {
         res.status(403).json({ error: 'Access denied' });
         return;
       }
 
       const result = await organizationService.getOrganizationById(organizationId);
-
       if (!result.success) {
         res.status(result.error === 'Organization not found' ? 404 : 500).json({ error: result.error });
         return;
       }
-
       res.json(result.data);
     } catch (error: any) {
       console.error('Error getting organization:', error);
@@ -128,33 +118,22 @@ export class OrganizationController {
       }
 
       const result = await organizationService.getOrganizationBySlug(orgSlug);
-
       if (!result.success) {
         res.status(404).json({ error: result.error });
         return;
       }
-
-      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
       const organization = result.data?.organization;
       if (!organization) {
         res.status(404).json({ error: 'Organization not found' });
         return;
       }
 
-      // Check if user has access to this organization using the old system
-      const prisma = getPrismaClient();
-      const orgMembership = await prisma.organizationMembership.findFirst({
-        where: { 
-          userId,
-          organizationId: organization.id as string
-        }
-      });
-
-      if (!orgMembership) {
+      // Unified RBAC: allow org members and system admins
+      const hasAccess = await unifiedRBAC.hasOrgRole(userId, organization.id as string);
+      if (!hasAccess) {
         res.status(403).json({ error: 'Access denied' });
         return;
       }
-
       res.json(result.data);
     } catch (error: any) {
       console.error('Error getting organization by slug:', error);
@@ -176,18 +155,9 @@ export class OrganizationController {
         return;
       }
 
-      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
-      // Check if user is org admin using the old system
-      const prisma = getPrismaClient();
-      const orgMembership = await prisma.organizationMembership.findFirst({
-        where: { 
-          userId,
-          organizationId: organizationId,
-          role: 'org_admin'
-        }
-      });
-
-      if (!orgMembership) {
+      // Unified RBAC: require org_admin or system_admin
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
+      if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
         return;
       }
@@ -200,12 +170,10 @@ export class OrganizationController {
         logoUrl,
         settings,
       });
-
       if (!result.success) {
         res.status(400).json({ error: result.error });
         return;
       }
-
       // Log audit event
       await logAudit({
         eventId: undefined,
@@ -214,7 +182,6 @@ export class OrganizationController {
         targetType: 'organization',
         targetId: organizationId,
       });
-
       res.json(result.data);
     } catch (error: any) {
       console.error('Error updating organization:', error);
@@ -235,16 +202,8 @@ export class OrganizationController {
         return;
       }
 
-      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
-      // Check if user is System Admin using the old system
-      const prisma = getPrismaClient();
-      const allUserRoles = await prisma.userEventRole.findMany({
-        where: { userId },
-        include: { role: true }
-      });
-      
-      const isSystemAdmin = allUserRoles.some((uer: any) => uer.role.name === 'System Admin');
-      
+      // Unified RBAC: allow system admins
+      const isSystemAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['system_admin']);
       if (!isSystemAdmin) {
         res.status(403).json({ error: 'System Admin access required' });
         return;
@@ -285,16 +244,8 @@ export class OrganizationController {
         return;
       }
 
-      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
-      // Check if user is System Admin using the old system
-      const prisma = getPrismaClient();
-      const allUserRoles = await prisma.userEventRole.findMany({
-        where: { userId },
-        include: { role: true }
-      });
-      
-      const isSystemAdmin = allUserRoles.some((uer: any) => uer.role.name === 'System Admin');
-      
+      // Unified RBAC: allow system admins
+      const isSystemAdmin = await unifiedRBAC.isSystemAdmin(userId);
       if (!isSystemAdmin) {
         res.status(403).json({ error: 'System Admin access required' });
         return;
@@ -527,20 +478,8 @@ export class OrganizationController {
         return;
       }
 
-      // TEMPORARY: Use old RBAC system while debugging UnifiedRBAC Prisma issue
-      // Check if user is org admin using the old organization membership system
-      const prisma = getPrismaClient();
-      const orgMembership = await prisma.organizationMembership.findUnique({
-        where: {
-          organizationId_userId: {
-            organizationId,
-            userId
-          }
-        }
-      });
-      
-      const isOrgAdmin = orgMembership?.role === 'org_admin';
-      
+      // Unified RBAC: allow org_admin and system_admin
+      const isOrgAdmin = await unifiedRBAC.hasOrgRole(userId, organizationId, ['org_admin']);
       if (!isOrgAdmin) {
         res.status(403).json({ error: 'Organization admin access required' });
         return;
@@ -563,29 +502,11 @@ export class OrganizationController {
 
       // TEMPORARY: Use old system to assign event admin role
       // First, find or create the Event Admin role
-      const eventAdminRole = await prisma.role.findUnique({
-        where: { name: 'Event Admin' }
-      });
-
-      if (eventAdminRole) {
-        // Assign the creator as event admin using old system
-        await prisma.userEventRole.upsert({
-          where: {
-            userId_eventId_roleId: {
-              userId,
-              eventId: event.id,
-              roleId: eventAdminRole.id
-            }
-          },
-          update: {},
-          create: {
-            userId,
-            eventId: event.id,
-            roleId: eventAdminRole.id
-          }
-        });
-      } else {
-        console.warn('Event Admin role not found in old system');
+      // Assign the creator as event admin using unified RBAC
+      try {
+        await unifiedRBAC.grantRole(userId, 'event_admin', 'event', event.id);
+      } catch (error) {
+        console.warn('Failed to assign event admin role via unified RBAC:', error);
       }
 
       // Log audit event
@@ -600,11 +521,7 @@ export class OrganizationController {
       res.status(201).json({ event });
     } catch (error: any) {
       console.error('Error creating event:', error);
-      if (error.code === 'P2002') {
-        res.status(400).json({ error: 'Event slug already exists' });
-      } else {
-        res.status(500).json({ error: 'Internal server error' });
-      }
+      res.status(500).json({ error: 'Internal server error' });
     }
   }
 
@@ -791,7 +708,7 @@ export class OrganizationController {
       const logo = result.data;
 
       if (!logo) {
-        res.status(404).json({ error: 'Logo not found.' });
+        res.status(404).json({ error: 'Logo not found' });
         return;
       }
 
@@ -830,7 +747,7 @@ export class OrganizationController {
       const logo = result.data;
 
       if (!logo) {
-        res.status(404).json({ error: 'Logo not found.' });
+        res.status(404).json({ error: 'Logo not found' });
         return;
       }
 
@@ -1056,4 +973,4 @@ export class OrganizationController {
       res.status(500).json({ error: 'Internal server error' });
     }
   }
-} 
+}

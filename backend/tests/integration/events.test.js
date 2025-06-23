@@ -13,11 +13,16 @@ jest.mock("../../src/utils/rbac", () => ({
     const testUserId = req.headers['x-test-user-id'] || "1";
     const testUser = inMemoryStore.users.find(u => u.id === testUserId) || { id: testUserId, email: `user${testUserId}@example.com`, name: `User${testUserId}` };
     req.user = testUser;
-    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+    
+    // Check both legacy and unified role data
+    const isSystemAdminLegacy = inMemoryStore.userEventRoles.some(
       (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
+    const isSystemAdminUnified = inMemoryStore.userRoles.some(
+      (ur) => ur.userId === req.user.id && ur.role.name === "system_admin" && ur.scopeType === "system"
+    );
     
-    if (!isSystemAdmin) {
+    if (!isSystemAdminLegacy && !isSystemAdminUnified) {
       res.status(403).json({ error: "Forbidden: insufficient role" });
       return;
     }
@@ -44,26 +49,57 @@ jest.mock("../../src/utils/rbac", () => ({
         eventId = event.id;
       }
     }
+
+    // Map legacy role names to unified role names for compatibility
+    const roleMapping = {
+      'System Admin': 'system_admin',
+      'Event Admin': 'event_admin', 
+      'Responder': 'responder',
+      'Reporter': 'reporter'
+    };
     
-    // Check for System Admin role globally
-    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+    // Map allowed roles to include both legacy and unified names
+    const mappedRoles = [...allowedRoles];
+    allowedRoles.forEach(role => {
+      if (roleMapping[role]) {
+        mappedRoles.push(roleMapping[role]);
+      }
+      // Also check reverse mapping
+      for (const [legacy, unified] of Object.entries(roleMapping)) {
+        if (unified === role && !mappedRoles.includes(legacy)) {
+          mappedRoles.push(legacy);
+        }
+      }
+    });
+    
+    // Check for System Admin role globally (check both legacy and unified data)
+    const isSystemAdminLegacy = inMemoryStore.userEventRoles.some(
       (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
+    const isSystemAdminUnified = inMemoryStore.userRoles.some(
+      (ur) => ur.userId === req.user.id && ur.role.name === "system_admin" && ur.scopeType === "system"
+    );
     
-    if (allowedRoles.includes("System Admin") && isSystemAdmin) {
+    if ((mappedRoles.includes("System Admin") || mappedRoles.includes("system_admin")) && (isSystemAdminLegacy || isSystemAdminUnified)) {
       return next();
     }
     
-    // Check for allowed roles for this specific event
-    const userRoles = inMemoryStore.userEventRoles.filter(
+    // Check for allowed roles for this specific event (both legacy and unified)
+    const legacyUserRoles = inMemoryStore.userEventRoles.filter(
       (uer) => uer.userId === req.user.id && uer.eventId === eventId
     );
-    
-    const hasRole = userRoles.some((uer) =>
-      allowedRoles.includes(uer.role.name)
+    const unifiedUserRoles = inMemoryStore.userRoles.filter(
+      (ur) => ur.userId === req.user.id && ur.scopeType === "event" && ur.scopeId === eventId
     );
     
-    if (!hasRole) {
+    const hasLegacyRole = legacyUserRoles.some((uer) =>
+      mappedRoles.includes(uer.role.name)
+    );
+    const hasUnifiedRole = unifiedUserRoles.some((ur) =>
+      mappedRoles.includes(ur.role.name)
+    );
+    
+    if (!hasLegacyRole && !hasUnifiedRole) {
       res.status(403).json({ error: "Forbidden: insufficient role" });
       return;
     }
@@ -76,14 +112,26 @@ beforeEach(() => {
   // Reset inMemoryStore to a clean state for each test
   inMemoryStore.events = [{ id: "1", name: "Event1", slug: "event1" }];
   inMemoryStore.roles = [
-    { id: "1", name: "System Admin" },
-    { id: "2", name: "Admin" },
-    { id: "3", name: "Responder" },
-    { id: "4", name: "Reporter" },
+    { id: "1", name: "system_admin" },
+    { id: "2", name: "event_admin" },
+    { id: "3", name: "responder" },
+    { id: "4", name: "reporter" },
   ];
   inMemoryStore.users = [
     { id: "1", email: "admin@example.com", name: "Admin" },
   ];
+  // Unified RBAC data - this is what the migrated services now use
+  inMemoryStore.userRoles = [
+    {
+      userId: "1",
+      scopeType: "system",
+      scopeId: "",
+      roleId: "1",
+      role: { name: "system_admin" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    },
+  ];
+  // Legacy data - kept for backward compatibility during migration
   inMemoryStore.userEventRoles = [
     {
       userId: "1",
@@ -143,7 +191,7 @@ describe("Event endpoints", () => {
       const eventId = eventRes.body.event.id;
       const res = await request(app)
         .post(`/api/events/${eventId}/roles`)
-        .send({ userId: "1", roleName: "Event Admin" });
+        .send({ userId: "1", roleName: "event_admin" });
 
       expect([200, 201]).toContain(res.statusCode);
       expect(res.body).toHaveProperty("message", "Role assigned.");
@@ -165,7 +213,7 @@ describe("Event endpoints", () => {
       
       const res = await request(app)
         .post(`/api/events/${eventId}/roles`)
-        .send({ userId: "999", roleName: "Event Admin" });
+        .send({ userId: "999", roleName: "event_admin" });
         
       expect(res.statusCode).toBe(400);
       // With improved role mapping, "Event Admin" maps to "Admin" which exists,
@@ -180,7 +228,7 @@ describe("Event endpoints", () => {
       
       const res = await request(app)
         .post(`/api/events/${eventId}/roles`)
-        .send({ userId: "999", roleName: "Event Admin" }); // Use "Event Admin" role that exists in mock
+        .send({ userId: "999", roleName: "event_admin" }); // Use "event_admin" role that exists in mock
         
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error", "User does not exist.");
@@ -216,7 +264,7 @@ describe("Event endpoints", () => {
     it("should remove a role from a user (success)", async () => {
       const res = await request(app)
         .delete("/api/events/1/roles")
-        .send({ userId: "1", roleName: "System Admin" });
+        .send({ userId: "1", roleName: "system_admin" });
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty("message", "Role removed.");
     });
@@ -742,11 +790,11 @@ describe("Slug-based Event/User Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role", async () => {
-    // Remove all System Admin roles for this user (across all events)
+    // Remove all System Admin roles for this user (across all events) - Legacy
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) => !(uer.userId === "1" && uer.role.name === "System Admin"),
     );
-    // Remove all privileged roles for this event
+    // Remove all privileged roles for this event - Legacy
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
@@ -755,7 +803,7 @@ describe("Slug-based Event/User Endpoints", () => {
           ["Event Admin", "Responder"].includes(uer.role.name)
         ),
     );
-    // Add a non-privileged role
+    // Add a non-privileged role - Legacy
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
@@ -763,6 +811,24 @@ describe("Slug-based Event/User Endpoints", () => {
       role: { name: "Reporter" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
+
+    // Also update unified RBAC data
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) => !(ur.userId === "1" && ur.role.name === "system_admin")
+    );
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) => !(ur.userId === "1" && ur.scopeType === "event" && ur.scopeId === "2" && ["event_admin", "responder"].includes(ur.role.name))
+    );
+    // Add only reporter role in unified format
+    inMemoryStore.userRoles.push({
+      userId: "1",
+      scopeType: "event",
+      scopeId: "2",
+      roleId: "3",
+      role: { name: "reporter" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    });
+
     // Debug log
     const rolesForUserEvent = inMemoryStore.userEventRoles
       .filter((uer) => uer.userId === "1" && uer.eventId === "2")
@@ -789,7 +855,7 @@ describe("Slug-based Event/User Endpoints", () => {
     const res = await request(app).patch(`/api/events/slug/${slug}/users/2`).send({
       name: "User2 Updated",
       email: "user2updated@example.com",
-      role: "Responder",
+      role: "responder",
     });
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty("message", "User updated.");
@@ -806,7 +872,7 @@ describe("Slug-based Event/User Endpoints", () => {
   it("should return 404 if event not found on update", async () => {
     const res = await request(app)
       .patch("/api/events/slug/doesnotexist/users/2")
-      .send({ name: "User2", email: "user2@example.com", role: "Responder" });
+      .send({ name: "User2", email: "user2@example.com", role: "responder" });
     expect(res.statusCode).toBe(404);
   });
 
@@ -834,7 +900,7 @@ describe("Slug-based Event/User Endpoints", () => {
     });
     const res = await request(app)
       .patch(`/api/events/slug/${slug}/users/2`)
-      .send({ name: "User2", email: "user2@example.com", role: "Responder" });
+      .send({ name: "User2", email: "user2@example.com", role: "responder" });
     expect(res.statusCode).toBe(403);
   });
 
@@ -892,20 +958,33 @@ describe("Slug-based Event/User Endpoints", () => {
 describe("Slug-based Event Endpoints", () => {
   const slug = "event1";
   beforeEach(() => {
-    // Remove all roles for user 1 and event 2
+    // Remove all roles for user 1 and event 2 - Legacy
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) => !(uer.userId === "1" && uer.eventId === "2"),
+    );
+    // Remove all roles for user 1 and event 2 - Unified
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) => !(ur.userId === "1" && ur.scopeType === "event" && ur.scopeId === "2"),
     );
     // Ensure the event with slug exists in the inMemoryStore
     if (!inMemoryStore.events.find((e) => e.slug === slug)) {
       inMemoryStore.events.push({ id: "2", name: "Event1", slug });
     }
-    // Add System Admin role for user 1 and event 2 for default tests
+    // Add System Admin role for user 1 and event 2 for default tests - Legacy
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "1",
       role: { name: "System Admin" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    });
+    // Add System Admin role for user 1 and event 2 for default tests - Unified
+    inMemoryStore.userRoles.push({
+      userId: "1",
+      scopeType: "event",
+      scopeId: "2",
+      roleId: "1",
+      role: { name: "system_admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
   });

@@ -37,7 +37,23 @@ describe('Organization Event Creation Bug Fix', () => {
     };
     inMemoryStore.organizations.push(testOrganization);
 
-    // Make user an organization admin
+    // Make user an organization admin using unified RBAC
+    const orgAdminRole = inMemoryStore.unifiedRoles.find(r => r.name === 'org_admin');
+    if (orgAdminRole) {
+      const orgAdminUserRole = {
+        id: 'test-user-role-1',
+        userId: testUser.id,
+        roleId: orgAdminRole.id,
+        scopeType: 'organization',
+        scopeId: testOrganization.id,
+        grantedAt: new Date(),
+        role: { id: orgAdminRole.id, name: 'org_admin' },
+        user: { id: testUser.id, email: testUser.email, name: testUser.name }
+      };
+      inMemoryStore.userRoles.push(orgAdminUserRole);
+    }
+
+    // Also add legacy membership for compatibility (optional)
     orgAdminMembership = {
       id: 'test-membership-1',
       organizationId: testOrganization.id,
@@ -82,17 +98,20 @@ describe('Organization Event Creation Bug Fix', () => {
     expect(response.body.event.slug).toBe('test-org-event');
     expect(response.body.event.organizationId).toBe(testOrganization.id);
 
-    // Verify that the creator was automatically assigned as Event Admin
-    const userEventRole = inMemoryStore.userEventRoles.find(uer => 
-      uer.userId === testUser.id && 
-      uer.eventId === response.body.event.id && 
-      uer.roleId === eventAdminRole.id
+    // Verify that the creator was automatically assigned as Event Admin via unified RBAC
+    const eventAdminUnifiedRole = inMemoryStore.unifiedRoles.find(r => r.name === 'event_admin');
+    const userRole = inMemoryStore.userRoles.find(ur => 
+      ur.userId === testUser.id && 
+      ur.scopeType === 'event' &&
+      ur.scopeId === response.body.event.id && 
+      ur.roleId === eventAdminUnifiedRole.id
     );
 
-    expect(userEventRole).not.toBeNull();
-    expect(userEventRole.userId).toBe(testUser.id);
-    expect(userEventRole.eventId).toBe(response.body.event.id);
-    expect(userEventRole.roleId).toBe(eventAdminRole.id);
+    expect(userRole).not.toBeNull();
+    expect(userRole.userId).toBe(testUser.id);
+    expect(userRole.scopeId).toBe(response.body.event.id);
+    expect(userRole.scopeType).toBe('event');
+    expect(userRole.roleId).toBe(eventAdminUnifiedRole.id);
   });
 
   test('should fail to create event if user is not organization admin', async () => {

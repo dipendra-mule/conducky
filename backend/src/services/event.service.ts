@@ -259,18 +259,14 @@ export class EventService {
         };
       }
 
-      // For backward compatibility, also create in old system
-      const userEventRole = await this.prisma.userEventRole.create({
-        data: {
-          userId,
-          eventId,
-          roleId: role.id,
-        },
-        include: {
-          role: true,
-          user: true,
-        },
-      });
+      // Create synthetic userEventRole for backward compatibility
+      const userEventRole = {
+        userId,
+        eventId,
+        roleId: role.id,
+        role: { name: roleName },
+        user: { id: userId }
+      };
 
       return {
         success: true,
@@ -312,24 +308,7 @@ export class EventService {
         };
       }
 
-      // For backward compatibility, also remove from old system
-      const role = await this.prisma.role.findUnique({ where: { name: roleName } });
-      if (role) {
-        try {
-          await this.prisma.userEventRole.delete({
-            where: {
-              userId_eventId_roleId: {
-                userId,
-                eventId,
-                roleId: role.id,
-              },
-            },
-          });
-        } catch (error) {
-          // Ignore if not found in old system
-          console.log('Role not found in old system, continuing...');
-        }
-      }
+      // Note: Legacy system cleanup no longer needed as we're using unified RBAC
 
       return {
         success: true,
@@ -425,10 +404,10 @@ export class EventService {
           };
         }
         
-        // Map unified role names back to display names
-        const displayRoleName = this.mapFromUnifiedRoleName(userRole.role.name);
-        if (!users[userId].roles.includes(displayRoleName)) {
-          users[userId].roles.push(displayRoleName);
+        // Use unified role names directly (no more mapping to display names)
+        const roleName = userRole.role.name;
+        if (!users[userId].roles.includes(roleName)) {
+          users[userId].roles.push(roleName);
         }
       }
 
@@ -476,10 +455,8 @@ export class EventService {
       // Use unified RBAC service to get user roles
       const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
       
-      // Map unified role names back to display names
-      const roles = userRoles.map((userRole: any) => 
-        this.mapFromUnifiedRoleName(userRole.role.name)
-      );
+      // Return unified role names directly (no more mapping to display names)
+      const roles = userRoles.map((userRole: any) => userRole.role.name);
 
       return {
         success: true,
@@ -534,43 +511,91 @@ export class EventService {
         };
       }
 
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: userEventRoleWhere,
-        include: { user: true, role: true },
-        orderBy: [{ user: { [sort as string]: order } }],
-        skip: (pageNum - 1) * limitNum,
-        take: limitNum,
+      // Get all users with roles for this event using unified RBAC
+      const allUserRoles = await this.prisma.userRole.findMany({
+        where: {
+          scopeType: 'event',
+          scopeId: eventId
+        },
+        include: {
+          user: true,
+          role: true
+        }
       });
-
-      // Group roles by user
-      const users: any = {};
-      for (const uer of userEventRoles) {
-        if (!users[uer.userId]) {
+      
+      // Build user data with role filtering if specified
+      const usersMap: any = {};
+      for (const roleData of allUserRoles) {
+        const userId = roleData.userId;
+        const roleName = roleData.role.name;
+        
+        // Apply role filter if specified
+        if (role && roleName !== role) {
+          continue;
+        }
+        
+        if (!usersMap[userId]) {
+          // Get user details
+          const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          });
+          
+          if (!user) continue;
+          
+          // Apply search filter if specified
+          if (search) {
+            const searchLower = search.toLowerCase();
+            if (!user.name?.toLowerCase().includes(searchLower) && 
+                !user.email.toLowerCase().includes(searchLower)) {
+              continue;
+            }
+          }
+          
           // Fetch avatar for each user
           const avatar = await this.prisma.userAvatar.findUnique({
-            where: { userId: uer.user.id },
+            where: { userId: user.id },
           });
-          users[uer.userId] = {
-            id: uer.user.id,
-            email: uer.user.email,
-            name: uer.user.name,
+          
+          usersMap[userId] = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
             roles: [],
-            avatarUrl: avatar ? `/users/${uer.user.id}/avatar` : null,
-            joinDate: uer.user.createdAt,
-            lastActivity: uer.user.updatedAt,
+            avatarUrl: avatar ? `/users/${user.id}/avatar` : null,
+            joinDate: user.createdAt,
+            lastActivity: user.updatedAt,
           };
         }
-        users[uer.userId].roles.push(uer.role.name);
+        
+        usersMap[userId].roles.push(roleName);
       }
-
-      // For pagination: count total matching users
-      const total = await this.prisma.userEventRole.count({
-        where: userEventRoleWhere,
+      
+      // Convert to array and apply sorting
+      const allUsers: EventUser[] = Object.values(usersMap);
+      const sortField = sort as keyof EventUser || 'name';
+      allUsers.sort((a: EventUser, b: EventUser) => {
+        const aVal = a[sortField] || '';
+        const bVal = b[sortField] || '';
+        if (order === 'desc') {
+          return bVal > aVal ? 1 : -1;
+        }
+        return aVal > bVal ? 1 : -1;
       });
+      
+      // Apply pagination
+      const total = allUsers.length;
+      const paginatedUsers = allUsers.slice((pageNum - 1) * limitNum, pageNum * limitNum);
 
       return {
         success: true,
-        data: { users: Object.values(users), total }
+        data: { users: paginatedUsers, total }
       };
     } catch (error: any) {
       console.error('Error listing users for event:', error);
@@ -615,30 +640,25 @@ export class EventService {
         });
       }
 
-      // Update role for this event: remove old roles, add new one
-      const eventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId, eventId },
-      });
-
-      for (const er of eventRoles) {
-        await this.prisma.userEventRole.delete({ where: { id: er.id } });
+      // Update role for this event using unified RBAC: remove old roles, add new one
+      const currentRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
+      
+      // Remove all current event roles for this user
+      for (const currentRole of currentRoles) {
+        await this.unifiedRBAC.revokeRole(userId, currentRole.role.name, 'event', eventId);
       }
 
-      const roleRecord = await this.prisma.role.findUnique({ where: { name: role } });
-      if (!roleRecord) {
+      // Map legacy role name to unified role name
+      const unifiedRoleName = this.mapToUnifiedRoleName(role);
+      if (!unifiedRoleName) {
         return {
           success: false,
           error: 'Invalid role.'
         };
       }
 
-      await this.prisma.userEventRole.create({
-        data: {
-          userId,
-          eventId,
-          roleId: roleRecord.id,
-        },
-      });
+      // Grant the new role using unified RBAC
+      await this.unifiedRBAC.grantRole(userId, unifiedRoleName, 'event', eventId);
 
       return {
         success: true,
@@ -666,20 +686,21 @@ export class EventService {
         };
       }
 
-      // Check if user is the only admin
-      const userRoles = await this.prisma.userEventRole.findMany({
-        where: { userId, eventId },
-        include: { role: true }
-      });
-
-      const isAdmin = userRoles.some(ur => ur.role.name === 'Event Admin');
+      // Check if user is the only admin using unified RBAC
+      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
+      
+      const isAdmin = userRoles.some((ur: any) => ur.role.name === 'event_admin');
       if (isAdmin) {
-        const adminCount = await this.prisma.userEventRole.count({
+        // Count how many event admins exist for this event
+        const allEventUsers = await this.prisma.userRole.findMany({
           where: {
-            eventId,
-            role: { name: 'Event Admin' }
-          }
+            scopeType: 'event',
+            scopeId: eventId,
+            role: { name: 'event_admin' }
+          },
+          include: { role: true }
         });
+        const adminCount = allEventUsers.length;
 
         if (adminCount === 1) {
           return {
@@ -689,10 +710,10 @@ export class EventService {
         }
       }
 
-      // Remove all roles for this user in this event
-      await this.prisma.userEventRole.deleteMany({
-        where: { userId, eventId },
-      });
+      // Remove all roles for this user in this event using unified RBAC
+      for (const userRole of userRoles) {
+        await this.unifiedRBAC.revokeRole(userId, userRole.role.name, 'event', eventId);
+      }
 
       return {
         success: true,
@@ -876,39 +897,37 @@ export class EventService {
         };
       }
 
-      // Get user details with their roles in this event
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId, eventId },
-        select: {
-          id: true,
-          role: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              createdAt: true,
-              avatar: true
-            }
-          }
-        }
-      });
-
-      if (userEventRoles.length === 0) {
+      // Get user details with their roles in this event using unified RBAC
+      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
+      
+      if (userRoles.length === 0) {
         return {
           success: false,
           error: 'User not found in this event.'
         };
       }
 
-      const user = userEventRoles[0].user;
-      const roles = userEventRoles.map(uer => uer.role.name);
-      // Use user's createdAt as join date since UserEventRole doesn't have createdAt
+      // Get user details
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          avatar: true
+        }
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not found.'
+        };
+      }
+
+      const roles = userRoles.map((ur: any) => ur.role.name);
+      // Use user's createdAt as join date since UserRole doesn't have createdAt
       const joinDate = user.createdAt;
 
       // Get last activity (most recent report, comment, or audit log)
@@ -1300,10 +1319,40 @@ export class EventService {
         where: { eventId }
       });
 
-      // Get total users for this event
-      const totalUsers = await this.prisma.userEventRole.count({
-        where: { eventId }
+      // Get total users for this event using unified RBAC
+      const eventUserRoles = await this.prisma.userRole.findMany({
+        where: { 
+          scopeType: 'event',
+          scopeId: eventId 
+        },
+        select: { userId: true }
       });
+      
+      // Also count organization admins who have inherited access
+      const event_org = await this.prisma.event.findUnique({
+        where: { id: eventId },
+        select: { organizationId: true }
+      });
+      
+      let orgAdminCount = 0;
+      if (event_org?.organizationId) {
+        const orgAdmins = await this.prisma.userRole.findMany({
+          where: {
+            scopeType: 'organization',
+            scopeId: event_org.organizationId,
+            role: { name: 'org_admin' }
+          },
+          select: { userId: true }
+        });
+        orgAdminCount = orgAdmins.length;
+      }
+      
+      // Get unique user count (in case user has multiple roles)
+      const uniqueUserIds = new Set([
+        ...eventUserRoles.map(ur => ur.userId),
+        // Don't double count org admins who also have direct event roles
+      ]);
+      const totalUsers = uniqueUserIds.size + orgAdminCount;
 
       // Get reports that need response (submitted, acknowledged, investigating)
       const needsResponseCount = await this.prisma.report.count({

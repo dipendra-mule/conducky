@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
-import { EventService } from "../services/event.service";
 import { UnifiedRBACService } from "../services/unified-rbac.service";
+import { EventService } from "../services/event.service";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const unifiedRBAC = new UnifiedRBACService(prisma);
@@ -16,33 +16,28 @@ interface User {
 }
 
 /**
- * Role names supported by the RBAC system
+ * Legacy role names mapping to new unified role names
  */
-type RoleName = "System Admin" | "Event Admin" | "Responder" | "Reporter";
+const ROLE_MAPPING: Record<string, string> = {
+  'SuperAdmin': 'system_admin',
+  'Event Admin': 'event_admin',
+  'Responder': 'responder',
+  'Reporter': 'reporter',
+  'org_admin': 'org_admin',
+  'org_viewer': 'org_viewer'
+};
 
 /**
- * Helper function to map old role names to unified role names
+ * All supported role names (both legacy and new for backward compatibility)
  */
-function mapToUnifiedRoleName(role: RoleName): string {
-  switch (role) {
-    case 'System Admin': return 'system_admin';
-    case 'Event Admin': return 'event_admin';
-    case 'Responder': return 'responder';
-    case 'Reporter': return 'reporter';
-  }
-}
+type RoleName = "SuperAdmin" | "Event Admin" | "Responder" | "Reporter" | "system_admin" | "event_admin" | "responder" | "reporter" | "org_admin" | "org_viewer";
 
 /**
- * Middleware to require a user to have one of the allowed roles for an event.
- * Uses unified RBAC system with organization admin inheritance.
+ * Middleware to require a user to have one of the allowed roles.
+ * Now uses the unified RBAC system with proper role inheritance.
  * 
  * @param allowedRoles - Array of role names that are allowed to access the resource
  * @returns Express middleware function
- * 
- * @example
- * ```typescript
- * app.get('/admin-endpoint', requireRole(['Event Admin', 'System Admin']), handler);
- * ```
  */
 export function requireRole(allowedRoles: RoleName[]) {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -73,8 +68,11 @@ export function requireRole(allowedRoles: RoleName[]) {
 
       const user = req.user as any;
 
-      // System Admins can access anything
-      if (allowedRoles.includes('System Admin')) {
+      // Map legacy role names to new role names
+      const mappedRoles = allowedRoles.map(role => ROLE_MAPPING[role] || role);
+
+      // Check system admin access first (system admins can access everything)
+      if (mappedRoles.includes('system_admin') || allowedRoles.includes('SuperAdmin')) {
         const isSystemAdmin = await unifiedRBAC.isSystemAdmin(user.id);
         if (isSystemAdmin) {
           next();
@@ -82,46 +80,29 @@ export function requireRole(allowedRoles: RoleName[]) {
         }
       }
 
-      // For event-specific routes, use unified RBAC with org admin inheritance
+      // For event-specific routes, check event roles with inheritance
       if (eventId) {
-        // Map old role names to new unified role names
-        const unifiedRoleNames = allowedRoles.map(role => {
-          if (role === 'System Admin') return 'system_admin';
-          if (role === 'Event Admin') return 'event_admin';
-          if (role === 'Responder') return 'responder';
-          if (role === 'Reporter') return 'reporter';
-          return 'unknown_role'; // This should never happen with our type system
-        });
-
-        // Check if user has event role (includes org admin inheritance)
-        const hasEventRole = await unifiedRBAC.hasEventRole(user.id, eventId, unifiedRoleNames);
-        
-        if (!hasEventRole) {
-          res.status(403).json({ error: "Forbidden: insufficient role" });
+        const hasEventRole = await unifiedRBAC.hasEventRole(user.id, eventId, mappedRoles);
+        if (hasEventRole) {
+          next();
           return;
         }
-        
-        next();
       } else {
-        // For non-event-specific routes, check if user has any of the allowed roles globally
-        const unifiedRoleNames = allowedRoles.map(role => {
-          if (role === 'System Admin') return 'system_admin';
-          if (role === 'Event Admin') return 'event_admin';
-          if (role === 'Responder') return 'responder';
-          if (role === 'Reporter') return 'reporter';
-          return 'unknown_role'; // This should never happen with our type system
-        });
+        // For non-event-specific routes, check if user has any of the required roles across all scopes
+        const hasAnyRole = await Promise.all([
+          unifiedRBAC.hasRole(user.id, mappedRoles, 'system', 'SYSTEM'),
+          unifiedRBAC.hasRole(user.id, mappedRoles, 'organization'),
+          unifiedRBAC.hasRole(user.id, mappedRoles, 'event')
+        ]);
 
-        // Check for system-level roles
-        const hasSystemRole = await unifiedRBAC.hasRole(user.id, unifiedRoleNames, 'system');
-        
-        if (!hasSystemRole) {
-          res.status(403).json({ error: "Forbidden: insufficient role" });
+        if (hasAnyRole.some(Boolean)) {
+          next();
           return;
         }
-
-        next();
       }
+
+      res.status(403).json({ error: "Forbidden: insufficient role" });
+      return;
     } catch (err: any) {
       console.error('[RBAC] Error in requireRole middleware:', err);
       res.status(500).json({ error: 'Internal server error' });
@@ -130,15 +111,10 @@ export function requireRole(allowedRoles: RoleName[]) {
 }
 
 /**
- * Middleware to require a user to be a System Admin (global role).
- * Uses unified RBAC system.
+ * Middleware to require a user to be a System Admin (replaces SuperAdmin).
+ * System Admins have access to all system-level operations.
  * 
  * @returns Express middleware function
- * 
- * @example
- * ```typescript
- * app.post('/admin/events', requireSystemAdmin(), createEventHandler);
- * ```
  */
 export function requireSystemAdmin() {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -158,9 +134,93 @@ export function requireSystemAdmin() {
       
       next();
     } catch (err: any) {
+      console.error('[RBAC] Error in requireSystemAdmin middleware:', err);
       res
         .status(500)
         .json({ error: "System Admin check failed", details: err.message });
+    }
+  };
+}
+
+/**
+ * Legacy function name for backward compatibility
+ * @deprecated Use requireSystemAdmin instead
+ */
+export const requireSuperAdmin = requireSystemAdmin;
+
+/**
+ * Middleware to require organization-level roles
+ */
+export function requireOrgRole(allowedRoles: string[], organizationId?: string) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    try {
+      const user = req.user as any;
+      const orgId = organizationId || req.params.organizationId || req.params.orgId;
+
+      if (!orgId) {
+        res.status(400).json({ error: "Organization ID required" });
+        return;
+      }
+
+      const hasOrgRole = await unifiedRBAC.hasOrgRole(user.id, orgId, allowedRoles);
+      
+      if (!hasOrgRole) {
+        res.status(403).json({ error: "Forbidden: insufficient organization role" });
+        return;
+      }
+      
+      next();
+    } catch (err: any) {
+      console.error('[RBAC] Error in requireOrgRole middleware:', err);
+      res.status(500).json({ error: "Organization role check failed", details: err.message });
+    }
+  };
+}
+
+/**
+ * Middleware to require event-level roles (with org admin inheritance)
+ */
+export function requireEventRole(allowedRoles: string[], eventId?: string) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    try {
+      const user = req.user as any;
+      let eventIdToCheck = eventId || req.params.eventId || req.params.id;
+
+      // If no eventId but we have a slug, try to get eventId from slug
+      if (!eventIdToCheck && req.params.slug) {
+        const eventService = new EventService(prisma);
+        const foundEventId = await eventService.getEventIdBySlug(req.params.slug);
+        if (foundEventId) {
+          eventIdToCheck = foundEventId;
+        }
+      }
+
+      if (!eventIdToCheck) {
+        res.status(400).json({ error: "Event ID required" });
+        return;
+      }
+
+      const hasEventRole = await unifiedRBAC.hasEventRole(user.id, eventIdToCheck, allowedRoles);
+      
+      if (!hasEventRole) {
+        res.status(403).json({ error: "Forbidden: insufficient event role" });
+        return;
+      }
+      
+      next();
+    } catch (err: any) {
+      console.error('[RBAC] Error in requireEventRole middleware:', err);
+      res.status(500).json({ error: "Event role check failed", details: err.message });
     }
   };
 } 
