@@ -1137,8 +1137,11 @@ export class ReportService {
               }
             }
           },
-          _count: {
-            select: { comments: true }
+          comments: {
+            select: {
+              id: true,
+              visibility: true
+            }
           }
         },
         orderBy: { [sortField]: sortOrder },
@@ -1146,11 +1149,34 @@ export class ReportService {
         take: limitNum
       });
 
-      // Add user's role in each event to the response
-      const reportsWithRoles = reports.map(report => ({
-        ...report,
-        userRoles: eventRoles.get(report.eventId)?.roles || []
-      }));
+      // Add user's role in each event to the response and calculate visible comment count
+      const reportsWithRoles = reports.map(report => {
+        const userRoles = eventRoles.get(report.eventId)?.roles || [];
+        const isResponderOrAbove = userRoles.some((r: string) => ['responder', 'event_admin', 'system_admin'].includes(r));
+        
+        // Calculate comment count based on user permissions
+        let visibleCommentCount = 0;
+        if (isResponderOrAbove) {
+          // Responders and above can see all comments
+          visibleCommentCount = report.comments.length;
+        } else {
+          // Reporters can only see public comments (and internal if they're assigned to the report)
+          const isAssignedToReport = report.assignedResponderId === userId;
+          visibleCommentCount = report.comments.filter(comment => 
+            comment.visibility === 'public' || (comment.visibility === 'internal' && isAssignedToReport)
+          ).length;
+        }
+
+        // Remove the comments array and add the count
+        const { comments, ...reportWithoutComments } = report;
+        return {
+          ...reportWithoutComments,
+          _count: {
+            comments: visibleCommentCount
+          },
+          userRoles
+        };
+      });
 
       return {
         success: true,
@@ -1690,38 +1716,35 @@ export class ReportService {
         sort = 'createdAt',
         order = 'desc',
         userId: filterUserId,
-        includeStats = false,
-        reportIds
+        reportIds,
+        includeStats = false
       } = query;
 
-      // Validate pagination parameters
-      const pageNum = parseInt(String(page), 10);
-      const limitNum = parseInt(String(limit), 10);
+      // Validate pagination
+      const pageNum = parseInt(page.toString());
+      const limitNum = Math.min(parseInt(limit.toString()), 100);
 
-      if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+      if (pageNum < 1 || limitNum < 1) {
         return {
           success: false,
-          error: 'Invalid pagination parameters. Page and limit must be positive integers.'
-        };
-      }
-
-      if (limitNum > 100) {
-        return {
-          success: false,
-          error: 'Limit cannot exceed 100 items per page.'
+          error: 'Invalid pagination parameters'
         };
       }
 
       const skip = (pageNum - 1) * limitNum;
 
-      // Unified RBAC: allow event_admin, responder, reporter, org_admin, system_admin
-      const hasEventAccess = await this.unifiedRBAC.hasEventRole(userId, eventId, ['event_admin', 'responder', 'reporter']);
-      if (!hasEventAccess) {
+      // Check if user has access to this event
+      const hasAccess = await this.unifiedRBAC.hasEventRole(userId, eventId, ['reporter', 'responder', 'event_admin', 'system_admin']);
+      
+      if (!hasAccess) {
         return {
           success: false,
           error: 'Access denied. User does not have permission for this event.'
         };
       }
+
+      // Check user's role to determine comment visibility
+      const isResponderOrAbove = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
 
       // Get reports with includes
       const reports = await this.prisma.report.findMany({
@@ -1778,9 +1801,10 @@ export class ReportService {
               slug: true
             }
           },
-          _count: {
+          comments: {
             select: {
-              comments: true
+              id: true,
+              visibility: true
             }
           }
         },
@@ -1789,11 +1813,33 @@ export class ReportService {
         take: limitNum
       });
 
-      // Add user roles to each report
-      const reportsWithRoles = reports.map(report => ({
-        ...report,
-        userRoles: [] // Roles are not directly available here, but can be fetched if needed
-      }));
+      // Add user roles to each report and calculate visible comment count
+      const reportsWithRoles = reports.map(report => {
+        // Calculate comment count based on user permissions
+        let visibleCommentCount = 0;
+        if (report.comments && Array.isArray(report.comments)) {
+          if (isResponderOrAbove) {
+            // Responders and above can see all comments
+            visibleCommentCount = report.comments.length;
+          } else {
+            // Reporters can only see public comments (and internal if they're assigned to the report)
+            const isAssignedToReport = report.assignedResponderId === userId;
+            visibleCommentCount = report.comments.filter(comment => 
+              comment.visibility === 'public' || (comment.visibility === 'internal' && isAssignedToReport)
+            ).length;
+          }
+        }
+
+        // Remove the comments array and add the count
+        const { comments, ...reportWithoutComments } = report;
+        return {
+          ...reportWithoutComments,
+          _count: {
+            comments: visibleCommentCount
+          },
+          userRoles: [] // Roles are not directly available here, but can be fetched if needed
+        };
+      });
 
       // Get total count
       const total = await this.prisma.report.count({
@@ -1836,8 +1882,8 @@ export class ReportService {
                   { description: { contains: search, mode: 'insensitive' } }
                 ]
               } : {}),
-                        ...(status ? { state: status as any } : {}),
-          ...(severity ? { severity: severity as any } : {}),
+              ...(status ? { state: status as any } : {}),
+              ...(severity ? { severity: severity as any } : {}),
               ...(assigned === 'me' ? { assignedResponderId: userId } : {}),
               ...(assigned === 'unassigned' ? { assignedResponderId: null } : {}),
               ...(filterUserId ? { reporterId: filterUserId } : {}),
