@@ -27,8 +27,8 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const isAdmin = userRoles.includes("Event Admin") || userRoles.includes("System Admin");
-  const isResponder = userRoles.includes("Responder");
+  const isAdmin = userRoles.includes("event_admin") || userRoles.includes("system_admin");
+  const isResponder = userRoles.includes("responder");
 
   useEffect(() => {
     async function fetchRecentReports() {

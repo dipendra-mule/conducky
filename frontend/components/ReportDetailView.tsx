@@ -90,12 +90,12 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
   onReportUpdate,
   ...rest
 }) => {
-  const isSystemAdmin = user && user.roles && user.roles.includes("System Admin");
+  const isSystemAdmin = user && user.roles && user.roles.includes("system_admin");
   const isResponderOrAbove = userRoles.some((r) =>
-    ["Responder", "Event Admin", "System Admin"].includes(r)
+    ["responder", "event_admin", "system_admin"].includes(r)
   );
   const isAdminOrSystemAdmin = userRoles.some((r) =>
-    ["Event Admin", "System Admin"].includes(r)
+    ["event_admin", "system_admin"].includes(r)
   );
   const canChangeState = isSystemAdmin || isResponderOrAbove;
   const canEditTitle = user && (user.id === report.reporterId || isAdminOrSystemAdmin);
