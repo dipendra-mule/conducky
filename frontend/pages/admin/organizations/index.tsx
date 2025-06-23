@@ -59,14 +59,14 @@ export default function AdminOrganizations() {
   const [error, setError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Check authentication and SuperAdmin status
+  // Check authentication and System Admin status
   useEffect(() => {
     if (user === null && authChecked) {
       router.replace('/login?next=' + encodeURIComponent('/admin/organizations'));
       return;
     }
     
-    if (user && authChecked && !user.roles?.includes('SuperAdmin')) {
+    if (user && authChecked && !user.roles?.includes('system_admin')) {
       router.replace('/dashboard');
       return;
     }
@@ -78,7 +78,7 @@ export default function AdminOrganizations() {
   }, []);
 
   useEffect(() => {
-    if (user && user.roles?.includes('SuperAdmin')) {
+    if (user && user.roles?.includes('system_admin')) {
       fetchOrganizations();
     }
   }, [user]);
@@ -147,7 +147,7 @@ export default function AdminOrganizations() {
     );
   }
 
-  if (!user.roles?.includes('SuperAdmin')) {
+  if (!user.roles?.includes('system_admin')) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="mx-auto max-w-7xl">

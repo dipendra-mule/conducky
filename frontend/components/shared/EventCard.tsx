@@ -36,9 +36,9 @@ interface EventCardProps {
 
 export function EventCard({ event }: EventCardProps) {
   const { name, slug, description, roles } = event;
-  const isAdmin = roles.includes("Event Admin");
-  const isResponder = roles.includes("Responder");
-  const isReporter = roles.includes("Reporter");
+  const isAdmin = roles.includes("event_admin");
+  const isResponder = roles.includes("responder");
+  const isReporter = roles.includes("reporter");
   
   const [stats, setStats] = useState<EventCardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);

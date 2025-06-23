@@ -13,10 +13,10 @@ export interface EventNavBarProps {
 }
 
 export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openReportModal }: EventNavBarProps) {
-  const isAdmin = userRoles.includes("Event Admin");
-  const isResponder = userRoles.includes("Responder");
-  const isSuperAdmin = userRoles.includes("SuperAdmin");
-  const canSeeEventReports = isResponder || isAdmin || isSuperAdmin;
+  const isAdmin = userRoles.includes("event_admin");
+  const isResponder = userRoles.includes("responder");
+  const isSystemAdmin = userRoles.includes("system_admin");
+  const canSeeEventReports = isResponder || isAdmin || isSystemAdmin;
 
   return (
     <nav className="w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-10 sticky top-[56px] md:top-[72px]">

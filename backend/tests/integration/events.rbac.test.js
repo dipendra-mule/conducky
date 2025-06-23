@@ -11,7 +11,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
     // Reset inMemoryStore for isolation
     inMemoryStore.events = [{ id: "1", name: "Event1", slug: "event1" }];
     inMemoryStore.roles = [
-      { id: "1", name: "SuperAdmin" },
+      { id: "1", name: "System Admin" },
       { id: "2", name: "Admin" },
       { id: "3", name: "Responder" },
       { id: "4", name: "Reporter" },
@@ -19,14 +19,29 @@ describe("Event endpoints RBAC/forbidden tests", () => {
     inMemoryStore.users = [
       { id: "1", email: "admin@example.com", name: "Admin" },
     ];
+    
+    // Clear both old and new role structures
     inMemoryStore.userEventRoles = [];
+    inMemoryStore.userRoles = [];
     inMemoryStore.reports = [];
+    
     // Require app after store setup to ensure shared state
     app = require("../../index");
   });
 
   it("should return 403 if user does not have required role for PATCH /events/:eventId/reports/:reportId/state", async () => {
-    // Add only Reporter role for user 1, event 1
+    // Add only Reporter role for user 1, event 1 using unified RBAC structure
+    inMemoryStore.userRoles.push({
+      id: "1",
+      userId: "1",
+      roleId: "4",
+      scopeType: "event",
+      scopeId: "1",
+      grantedAt: new Date(),
+      role: { id: "4", name: "reporter" } // Use unified role name
+    });
+    
+    // Also keep old structure for backward compatibility in case some parts still use it
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "1",
@@ -34,6 +49,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
       role: { name: "Reporter" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
+    
     inMemoryStore.reports.push({
       id: "r6",
       eventId: "1",
@@ -41,6 +57,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
       description: "Report 6",
       state: "submitted",
     });
+    
     // Simulate authentication by setting req.user and req.isAuthenticated via a session or test helper if needed
     // (If your app uses passport or similar, you may need to set a cookie or header)
     const agent = request.agent(app);

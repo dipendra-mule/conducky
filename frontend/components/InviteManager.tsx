@@ -29,7 +29,7 @@ interface InviteManagerProps {
 
 export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
   const [inviteLinks, setInviteLinks] = useState<Invite[]>([]);
-  const [newInvite, setNewInvite] = useState<InviteForm>({ maxUses: "", expiresAt: "", note: "", role: rolesList[0] || "Reporter" });
+  const [newInvite, setNewInvite] = useState<InviteForm>({ maxUses: "", expiresAt: "", note: "", role: rolesList[0] || "reporter" });
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [inviteSuccess, setInviteSuccess] = useState("");
@@ -64,12 +64,12 @@ export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
           maxUses: newInvite.maxUses || undefined,
           expiresAt: newInvite.expiresAt || undefined,
           note: newInvite.note || undefined,
-          role: newInvite.role || "Reporter",
+          role: newInvite.role || "reporter",
         }),
       });
       if (!res.ok) throw new Error("Failed to create invite");
       setInviteSuccess("Invite link created!");
-      setNewInvite({ maxUses: "", expiresAt: "", note: "", role: rolesList[0] || "Reporter" });
+      setNewInvite({ maxUses: "", expiresAt: "", note: "", role: rolesList[0] || "reporter" });
       fetchInvites();
     } catch {
       setInviteError("Failed to create invite link");
@@ -98,6 +98,19 @@ export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
   const handleCopyInviteUrl = (url: string) => {
     navigator.clipboard.writeText(url);
     alert("Invite link copied to clipboard!");
+  };
+
+  const formatRoleName = (role: string) => {
+    switch (role) {
+      case 'event_admin':
+        return 'Event Admin';
+      case 'responder':
+        return 'Responder';
+      case 'reporter':
+        return 'Reporter';
+      default:
+        return role;
+    }
   };
 
   return (
@@ -132,7 +145,7 @@ export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
           className="border px-2 py-1 rounded dark:bg-gray-800 dark:text-gray-100 sm:px-2 sm:py-1 sm:text-sm"
         >
           {rolesList.map(role => (
-            <option key={role} value={role}>{role}</option>
+            <option key={role} value={role}>{formatRoleName(role)}</option>
           ))}
         </select>
         <Button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 sm:px-3 sm:py-1.5 sm:text-sm" disabled={inviteLoading}>
@@ -178,7 +191,7 @@ export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
                       </Button>
                     </div>
                   </TableCell>
-                  <TableCell>{typeof invite.role === "string" ? invite.role : invite.role.name}</TableCell>
+                  <TableCell>{typeof invite.role === "string" ? formatRoleName(invite.role) : formatRoleName(invite.role.name)}</TableCell>
                   <TableCell>{invite.disabled ? "Disabled" : "Active"}</TableCell>
                   <TableCell>{invite.useCount}/{invite.maxUses || "∞"}</TableCell>
                   <TableCell>{invite.expiresAt ? new Date(invite.expiresAt).toLocaleString() : "—"}</TableCell>

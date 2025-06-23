@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth, AuthUser } from '../middleware/auth';
-import { requireSuperAdmin } from '../utils/rbac';
+import { requireSystemAdmin } from '../utils/rbac';
 import { PrismaClient } from '@prisma/client';
 import { reinitializeOAuthStrategies } from '../config/passport';
 
@@ -13,20 +13,47 @@ const router = Router();
 const prisma = new PrismaClient();
 
 /**
- * GET /api/admin/events
- * Get all events with statistics (SuperAdmin only)
+ * Helper function to count event users using unified RBAC
  */
-router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+async function getEventUserCount(eventId: string): Promise<number> {
+  const userRoles = await prisma.userRole.findMany({
+    where: {
+      scopeType: 'event',
+      scopeId: eventId
+    },
+    distinct: ['userId'] // Count unique users only
+  });
+  return userRoles.length;
+}
+
+/**
+ * Helper function to get event user creation dates for activity tracking
+ */
+async function getEventUserDates(eventId: string): Promise<Date[]> {
+  const userRoles = await prisma.userRole.findMany({
+    where: {
+      scopeType: 'event',
+      scopeId: eventId
+    },
+    include: {
+      user: {
+        select: { createdAt: true }
+      }
+    },
+    distinct: ['userId']
+  });
+  return userRoles.map(ur => ur.user.createdAt);
+}
+
+/**
+ * GET /api/admin/events
+ * Get all events with statistics (System Admin only)
+ */
+router.get('/events', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
-    // Get all events with user and report counts
+    // Get all events with report counts (user counts will be calculated separately)
     const events = await prisma.event.findMany({
       include: {
-        userEventRoles: {
-          include: {
-            user: true,
-            role: true,
-          },
-        },
         reports: {
           select: {
             id: true,
@@ -36,7 +63,6 @@ router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): 
         },
         _count: {
           select: {
-            userEventRoles: true,
             reports: true,
           },
         },
@@ -51,11 +77,14 @@ router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): 
     const totalReports = await prisma.report.count();
     const activeEvents = events.length; // All events are active for now, will add status field later
 
-    // Transform events data for API response
-    const eventsData = events.map((event) => {
+    // Transform events data for API response with unified RBAC user counts
+    const eventsData = await Promise.all(events.map(async (event) => {
+      // Get user count and dates using unified RBAC
+      const userCount = await getEventUserCount(event.id);
+      const userDates = await getEventUserDates(event.id);
+      
       // Find the most recent activity (report or user join)
       const reportDates = event.reports.map(r => r.createdAt);
-      const userDates = event.userEventRoles.map(uer => uer.user.createdAt);
       const allDates = [...reportDates, ...userDates, event.createdAt];
       const lastActivity = allDates.length > 0 
         ? new Date(Math.max(...allDates.map(d => d.getTime())))
@@ -67,7 +96,7 @@ router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): 
         slug: event.slug,
         description: event.description,
         status: 'active' as const, // Will implement enable/disable later
-        userCount: event._count.userEventRoles,
+        userCount: userCount,
         reportCount: event._count.reports,
         createdAt: event.createdAt.toISOString(),
         updatedAt: event.updatedAt.toISOString(),
@@ -75,7 +104,7 @@ router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): 
         website: event.website,
         contactEmail: event.contactEmail,
       };
-    });
+    }));
 
     const statistics = {
       totalEvents: events.length,
@@ -99,9 +128,9 @@ router.get('/events', requireSuperAdmin(), async (req: Request, res: Response): 
 
 /**
  * POST /api/admin/events
- * Create a new event (SuperAdmin only) - simplified version for basic event creation
+ * Create a new event (System Admin only) - simplified version for basic event creation
  */
-router.post('/events', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.post('/events', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, slug, description } = req.body;
     
@@ -197,9 +226,9 @@ router.post('/events', requireSuperAdmin(), async (req: Request, res: Response):
 
 /**
  * GET /api/admin/events/check-slug/:slug
- * Check if a slug is available (SuperAdmin only)
+ * Check if a slug is available (System Admin only)
  */
-router.get('/events/check-slug/:slug', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/check-slug/:slug', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
 
@@ -246,9 +275,9 @@ router.get('/events/check-slug/:slug', requireSuperAdmin(), async (req: Request,
 
 /**
  * GET /api/admin/events/stats
- * Get system-wide statistics (SuperAdmin only)
+ * Get system-wide statistics (System Admin only)
  */
-router.get('/events/stats', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/stats', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const [
       totalEvents,
@@ -309,9 +338,9 @@ router.get('/events/stats', requireSuperAdmin(), async (req: Request, res: Respo
 
 /**
  * GET /api/admin/system/settings
- * Get all system settings (SuperAdmin only)
+ * Get all system settings (System Admin only)
  */
-router.get('/system/settings', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/system/settings', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     // Get all system settings from database
     const settings = await prisma.systemSetting.findMany();
@@ -358,9 +387,9 @@ router.get('/system/settings', requireSuperAdmin(), async (req: Request, res: Re
 
 /**
  * PATCH /api/admin/system/settings
- * Update system settings (SuperAdmin only)
+ * Update system settings (System Admin only)
  */
-router.patch('/system/settings', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.patch('/system/settings', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const updates = req.body;
 
@@ -412,9 +441,9 @@ router.patch('/system/settings', requireSuperAdmin(), async (req: Request, res: 
 
 /**
  * PATCH /api/admin/events/:eventId/toggle
- * Toggle event active status (SuperAdmin only)
+ * Toggle event active status (System Admin only)
  */
-router.patch('/events/:eventId/toggle', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.patch('/events/:eventId/toggle', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { enabled } = req.body;
@@ -453,9 +482,9 @@ router.patch('/events/:eventId/toggle', requireSuperAdmin(), async (req: Request
 
 /**
  * GET /api/admin/events/:eventId
- * Get individual event details (SuperAdmin only)
+ * Get individual event details (System Admin only)
  */
-router.get('/events/:eventId', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
 
@@ -464,7 +493,6 @@ router.get('/events/:eventId', requireSuperAdmin(), async (req: Request, res: Re
       include: {
         _count: {
           select: {
-            userEventRoles: true,
             reports: true,
           },
         },
@@ -477,6 +505,9 @@ router.get('/events/:eventId', requireSuperAdmin(), async (req: Request, res: Re
       });
       return;
     }
+
+    // Get user count using unified RBAC
+    const userCount = await getEventUserCount(eventId);
 
     res.json({
       event: {
@@ -491,7 +522,7 @@ router.get('/events/:eventId', requireSuperAdmin(), async (req: Request, res: Re
         endDate: event.endDate?.toISOString(),
         codeOfConduct: event.codeOfConduct,
         setupComplete: event.isActive, // For now, isActive indicates setup completion
-        userCount: event._count.userEventRoles,
+        userCount: userCount,
         reportCount: event._count.reports,
         createdAt: event.createdAt.toISOString(),
         updatedAt: event.updatedAt.toISOString(),
@@ -508,9 +539,9 @@ router.get('/events/:eventId', requireSuperAdmin(), async (req: Request, res: Re
 
 /**
  * GET /api/admin/events/:eventId/invites
- * Get event invite links (SuperAdmin only)
+ * Get event invite links (System Admin only)
  */
-router.get('/events/:eventId/invites', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.get('/events/:eventId/invites', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
 
@@ -560,9 +591,9 @@ router.get('/events/:eventId/invites', requireSuperAdmin(), async (req: Request,
 
 /**
  * POST /api/admin/events/:eventId/invites
- * Create event invite link (SuperAdmin only)
+ * Create event invite link (System Admin only)
  */
-router.post('/events/:eventId/invites', requireSuperAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { email, role } = req.body;
@@ -662,7 +693,7 @@ router.post('/events/:eventId/invites', requireSuperAdmin(), async (req: Request
 });
 
 // Add email configuration routes
-router.get('/settings/email', requireSuperAdmin(), async (req: Request, res: Response) => {
+router.get('/settings/email', requireSystemAdmin(), async (req: Request, res: Response) => {
   try {
     // Fetch email settings from database
     const emailSetting = await prisma.systemSetting.findUnique({
@@ -703,7 +734,7 @@ router.get('/settings/email', requireSuperAdmin(), async (req: Request, res: Res
   }
 });
 
-router.put('/settings/email', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     console.log('=== PUT /settings/email REQUEST ===');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
@@ -786,7 +817,7 @@ router.put('/settings/email', requireSuperAdmin(), async (req: AuthenticatedRequ
   }
 });
 
-router.post('/settings/email/test', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/settings/email/test', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       provider,
@@ -886,7 +917,7 @@ router.post('/settings/email/test', requireSuperAdmin(), async (req: Authenticat
 });
 
 // Google OAuth configuration routes
-router.get('/settings/google-oauth', requireSuperAdmin(), async (req: Request, res: Response) => {
+router.get('/settings/google-oauth', requireSystemAdmin(), async (req: Request, res: Response) => {
   try {
     // Fetch Google OAuth settings from database
     const googleOAuthSetting = await prisma.systemSetting.findUnique({
@@ -919,7 +950,7 @@ router.get('/settings/google-oauth', requireSuperAdmin(), async (req: Request, r
   }
 });
 
-router.put('/settings/google-oauth', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/settings/google-oauth', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       clientId,
@@ -968,7 +999,7 @@ router.put('/settings/google-oauth', requireSuperAdmin(), async (req: Authentica
 });
 
 // GitHub OAuth configuration routes
-router.get('/settings/github-oauth', requireSuperAdmin(), async (req: Request, res: Response) => {
+router.get('/settings/github-oauth', requireSystemAdmin(), async (req: Request, res: Response) => {
   try {
     // Fetch GitHub OAuth settings from database
     const githubOAuthSetting = await prisma.systemSetting.findUnique({
@@ -1001,7 +1032,7 @@ router.get('/settings/github-oauth', requireSuperAdmin(), async (req: Request, r
   }
 });
 
-router.put('/settings/github-oauth', requireSuperAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+router.put('/settings/github-oauth', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { 
       clientId,

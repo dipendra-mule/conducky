@@ -594,10 +594,14 @@ export function CommentsSection({
                           </div>
                         </div>
                       ) : (
-                        <div className="prose prose-sm max-w-none dark:prose-invert">
-                          <SecureMarkdown type="comment">
-                            {highlightSearchTerm(comment.body)}
-                          </SecureMarkdown>
+                        <div>
+                          <div className="prose prose-sm max-w-none dark:prose-invert">
+                            <SecureMarkdown 
+                              type="comment" 
+                              content={highlightSearchTerm(comment.body)}
+                              className="text-foreground"
+                            />
+                          </div>
                         </div>
                       )}
 

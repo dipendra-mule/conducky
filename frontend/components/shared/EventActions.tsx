@@ -10,9 +10,9 @@ interface EventActionsProps {
 }
 
 export function EventActions({ eventSlug, userRoles }: EventActionsProps) {
-  const isAdmin = userRoles.includes("Event Admin") || userRoles.includes("SuperAdmin");
-  const isResponder = userRoles.includes("Responder");
-  const isReporter = userRoles.includes("Reporter");
+  const isAdmin = userRoles.includes("event_admin") || userRoles.includes("system_admin");
+  const isResponder = userRoles.includes("responder");
+  const isReporter = userRoles.includes("reporter");
 
   return (
     <Card className="p-6 mb-6">

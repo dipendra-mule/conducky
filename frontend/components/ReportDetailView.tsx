@@ -90,15 +90,15 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
   onReportUpdate,
   ...rest
 }) => {
-  const isSuperAdmin = user && user.roles && user.roles.includes("Global Admin");
+  const isSystemAdmin = user && user.roles && user.roles.includes("system_admin");
   const isResponderOrAbove = userRoles.some((r) =>
-    ["Responder", "Event Admin", "SuperAdmin", "Global Admin"].includes(r)
+    ["responder", "event_admin", "system_admin"].includes(r)
   );
-  const isAdminOrSuperAdmin = userRoles.some((r) =>
-    ["Event Admin", "SuperAdmin", "Global Admin"].includes(r)
+  const isAdminOrSystemAdmin = userRoles.some((r) =>
+    ["event_admin", "system_admin"].includes(r)
   );
-  const canChangeState = isSuperAdmin || isResponderOrAbove;
-  const canEditTitle = user && (user.id === report.reporterId || isAdminOrSuperAdmin);
+  const canChangeState = isSystemAdmin || isResponderOrAbove;
+  const canEditTitle = user && (user.id === report.reporterId || isAdminOrSystemAdmin);
 
   const [commentBody, setCommentBody] = useState("");
   const [commentVisibility, setCommentVisibility] = useState("public");
@@ -210,7 +210,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               canEditContactPreference={user && user.id === report.reporterId}
               canEditIncidentAt={isResponderOrAbove || (user && user.id === report.reporterId)}
               canEditParties={isResponderOrAbove || (user && user.id === report.reporterId)}
-              canEditDescription={isAdminOrSuperAdmin || (user && user.id === report.reporterId)}
+              canEditDescription={isAdminOrSystemAdmin || (user && user.id === report.reporterId)}
               canEditType={isResponderOrAbove || (user && user.id === report.reporterId)}
               onLocationEdit={async (location) => {
                 try {

@@ -4,10 +4,65 @@
 const inMemoryStore = {
   events: [{ id: "1", name: "Event1", slug: "event1" }],
   roles: [
-    { id: "1", name: "SuperAdmin" },
+    { id: "1", name: "System Admin" },
     { id: "2", name: "Event Admin" },
     { id: "3", name: "Responder" },
     { id: "4", name: "Reporter" },
+  ],
+  // Unified RBAC tables
+  unifiedRoles: [
+    { id: "1", name: "system_admin", description: "System Administrator", level: 100 },
+    { id: "2", name: "event_admin", description: "Event Administrator", level: 80 },
+    { id: "3", name: "responder", description: "Incident Responder", level: 60 },
+    { id: "4", name: "reporter", description: "Report Creator", level: 40 },
+    { id: "5", name: "org_admin", description: "Organization Administrator", level: 90 },
+    { id: "6", name: "org_viewer", description: "Organization Viewer", level: 30 },
+  ],
+  userRoles: [
+    // System Admin user
+    { 
+      id: "1", 
+      userId: "1", 
+      roleId: "1", 
+      scopeType: "system", 
+      scopeId: "global", 
+      grantedAt: new Date(), 
+      role: { id: "1", name: "system_admin" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" }
+    },
+    // Event Admin for event 1
+    { 
+      id: "2", 
+      userId: "1", 
+      roleId: "2", 
+      scopeType: "event", 
+      scopeId: "1", 
+      grantedAt: new Date(), 
+      role: { id: "2", name: "event_admin" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" }
+    },
+    // Reporter for event 1
+    { 
+      id: "3", 
+      userId: "2", 
+      roleId: "4", 
+      scopeType: "event", 
+      scopeId: "1", 
+      grantedAt: new Date(), 
+      role: { id: "4", name: "reporter" },
+      user: { id: "2", email: "reporter@example.com", name: "Reporter User" }
+    },
+    // Responder for event 1
+    { 
+      id: "4", 
+      userId: "3", 
+      roleId: "3", 
+      scopeType: "event", 
+      scopeId: "1", 
+      grantedAt: new Date(), 
+      role: { id: "3", name: "responder" },
+      user: { id: "3", email: "responder@example.com", name: "Responder User" }
+    },
   ],
   organizations: [
     { id: "1", name: "Test Organization", slug: "test-org", description: "Test org", createdById: "1" }
@@ -25,7 +80,7 @@ const inMemoryStore = {
       userId: "1",
       eventId: "1",
       roleId: "1",
-      role: { name: "SuperAdmin" },
+      role: { name: "System Admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     },
     {
@@ -157,6 +212,7 @@ class PrismaClient {
         ({ where }) =>
           inMemoryStore.roles.find((r) => r.name === where.name) || null,
       ),
+      findMany: jest.fn(() => [...inMemoryStore.roles]),
       create: jest.fn(({ data }) => {
         const newRole = {
           id: (inMemoryStore.roles.length + 1).toString(),
@@ -1729,6 +1785,131 @@ class PrismaClient {
       }),
     };
     
+    // Add unified RBAC models
+    this.unifiedRole = {
+      findUnique: jest.fn(({ where }) =>
+        inMemoryStore.unifiedRoles.find((r) => r.id === where.id || r.name === where.name) || null
+      ),
+      findMany: jest.fn(() => [...inMemoryStore.unifiedRoles]),
+      create: jest.fn(({ data }) => {
+        const newRole = {
+          id: (inMemoryStore.unifiedRoles.length + 1).toString(),
+          ...data,
+        };
+        inMemoryStore.unifiedRoles.push(newRole);
+        return newRole;
+      }),
+    };
+
+    this.userRole = {
+      findMany: jest.fn(({ where, include }) => {
+        let results = [...inMemoryStore.userRoles];
+        
+        if (where) {
+          if (where.userId) {
+            results = results.filter((ur) => ur.userId === where.userId);
+          }
+          if (where.scopeType) {
+            results = results.filter((ur) => ur.scopeType === where.scopeType);
+          }
+          if (where.scopeId) {
+            results = results.filter((ur) => ur.scopeId === where.scopeId);
+          }
+          if (where.roleId) {
+            results = results.filter((ur) => ur.roleId === where.roleId);
+          }
+        }
+
+        // Handle includes
+        if (include) {
+          results = results.map(ur => {
+            const result = { ...ur };
+            if (include.role && !result.role) {
+              // Only look up if not already embedded
+              result.role = inMemoryStore.unifiedRoles.find(r => r.id === ur.roleId);
+            }
+            if (include.user && !result.user) {
+              // Only look up if not already embedded
+              result.user = inMemoryStore.users.find(u => u.id === ur.userId);
+            }
+            return result;
+          });
+        }
+
+        return results;
+      }),
+      findFirst: jest.fn(({ where }) => {
+        let results = [...inMemoryStore.userRoles];
+        
+        if (where) {
+          if (where.userId) {
+            results = results.filter((ur) => ur.userId === where.userId);
+          }
+          if (where.scopeType) {
+            results = results.filter((ur) => ur.scopeType === where.scopeType);
+          }
+          if (where.scopeId) {
+            results = results.filter((ur) => ur.scopeId === where.scopeId);
+          }
+          if (where.roleId) {
+            results = results.filter((ur) => ur.roleId === where.roleId);
+          }
+        }
+
+        return results[0] || null;
+      }),
+      create: jest.fn(({ data }) => {
+        const newUserRole = {
+          id: (inMemoryStore.userRoles.length + 1).toString(),
+          grantedAt: new Date(),
+          ...data,
+        };
+        inMemoryStore.userRoles.push(newUserRole);
+        return newUserRole;
+      }),
+      upsert: jest.fn(({ where, create, update }) => {
+        // Check if user role exists based on compound unique constraint
+        const existingIndex = inMemoryStore.userRoles.findIndex(ur => 
+          ur.userId === where.user_role_unique.userId &&
+          ur.roleId === where.user_role_unique.roleId &&
+          ur.scopeType === where.user_role_unique.scopeType &&
+          ur.scopeId === where.user_role_unique.scopeId
+        );
+
+        if (existingIndex !== -1) {
+          // Update existing
+          inMemoryStore.userRoles[existingIndex] = {
+            ...inMemoryStore.userRoles[existingIndex],
+            ...update,
+          };
+          return inMemoryStore.userRoles[existingIndex];
+        } else {
+          // Create new
+          const newUserRole = {
+            id: (inMemoryStore.userRoles.length + 1).toString(),
+            grantedAt: new Date(),
+            ...create,
+          };
+          inMemoryStore.userRoles.push(newUserRole);
+          return newUserRole;
+        }
+      }),
+      deleteMany: jest.fn(({ where }) => {
+        const before = inMemoryStore.userRoles.length;
+        if (where) {
+          inMemoryStore.userRoles = inMemoryStore.userRoles.filter(ur => {
+            let keep = true;
+            if (where.userId && ur.userId !== where.userId) keep = false;
+            if (where.roleId && ur.roleId !== where.roleId) keep = false;
+            if (where.scopeType && ur.scopeType !== where.scopeType) keep = false;
+            if (where.scopeId && ur.scopeId !== where.scopeId) keep = false;
+            return !keep; // filter keeps items that return true, we want to remove items where keep is false
+          });
+        }
+        return { count: before - inMemoryStore.userRoles.length };
+      }),
+    };
+
     // Add transaction support for the mock
     this.$transaction = jest.fn().mockImplementation(async (operations) => {
       // Handle both callback and array patterns

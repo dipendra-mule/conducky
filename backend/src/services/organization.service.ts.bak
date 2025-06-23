@@ -388,7 +388,7 @@ export class OrganizationService {
             ...org,
             memberships: memberships,
             _count: {
-              events: org._count?.events || 0,
+              events: org._count.events,
               memberships: memberships.length,
             },
           };

@@ -6,4 +6,4 @@
  */
 
 // Re-export RBAC functions from utils
-export { requireRole, requireSuperAdmin } from '../utils/rbac'; 
+export { requireRole, requireSystemAdmin } from '../utils/rbac'; 

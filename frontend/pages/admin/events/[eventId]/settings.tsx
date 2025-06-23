@@ -55,7 +55,7 @@ export default function SystemEventSettings() {
   
   // Invite creation state
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('Admin');
+  const [inviteRole, setInviteRole] = useState('Event Admin');
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
@@ -165,6 +165,19 @@ export default function SystemEventSettings() {
       document.execCommand('copy');
       document.body.removeChild(textArea);
       alert('Invite link copied to clipboard!');
+    }
+  };
+
+  const formatRoleName = (role: string) => {
+    switch (role) {
+      case 'event_admin':
+        return 'Event Admin';
+      case 'responder':
+        return 'Responder';
+      case 'reporter':
+        return 'Reporter';
+      default:
+        return role;
     }
   };
 
@@ -328,8 +341,8 @@ export default function SystemEventSettings() {
                       onChange={(e) => setInviteRole(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="Admin">Admin</option>
-                      <option value="Responder">Responder</option>
+                                              <option value="event_admin">{formatRoleName("event_admin")}</option>
+                        <option value="responder">{formatRoleName("responder")}</option>
                     </select>
                   </div>
                 </div>
@@ -372,7 +385,7 @@ export default function SystemEventSettings() {
                         <div>
                           <p className="font-medium">{invite.email}</p>
                           <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Badge variant="outline">{invite.role}</Badge>
+                            <Badge variant="outline">{formatRoleName(invite.role)}</Badge>
                             <span>•</span>
                             <span>{invite.status}</span>
                             <span>•</span>

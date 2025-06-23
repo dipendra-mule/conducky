@@ -9,8 +9,8 @@ async function main() {
   // First, ensure essential roles exist
   await seedRoles();
 
-  // Create SuperAdmin user first (needed for organization creation)
-  const superEmail = 'superadmin@test.com';
+  // Create System Admin user first (needed for organization creation)
+  const superEmail = 'systemadmin@test.com';
   const superPassword = 'superpass';
   const superPasswordHash = await bcrypt.hash(superPassword, 10);
   const superUser = await prisma.user.upsert({
@@ -98,8 +98,8 @@ async function main() {
     },
   });
 
-  // Assign SuperAdmin role to super user for the event (for testing purposes)
-  const superRole = await prisma.role.findUnique({ where: { name: 'SuperAdmin' } });
+  // Assign System Admin role to super user for the event (for testing purposes)
+  const superRole = await prisma.role.findUnique({ where: { name: 'System Admin' } });
   await prisma.userEventRole.upsert({
     where: {
       userId_eventId_roleId: {
@@ -156,7 +156,7 @@ async function main() {
 
   console.log('✅ Test organization created:', testOrg.name, '(ID:', testOrg.id + ')');
   console.log('✅ Test event linked to organization. Event ID:', event.id);
-  console.log('✅ SuperAdmin user seeded:', superEmail, '/ password:', superPassword);
+  console.log('✅ System Admin user seeded:', superEmail, '/ password:', superPassword);
   console.log('✅ Event Admin user seeded:', adminEmail, '/ password:', adminPassword, '(also org admin)');
   console.log('✅ Org Viewer user seeded:', viewerEmail, '/ password:', viewerPassword);
   console.log('✅ SystemSetting seeded: showPublicEventList = false');

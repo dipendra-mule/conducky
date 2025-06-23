@@ -20,7 +20,7 @@ export default function InviteUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [event, setEvent] = useState<{ name: string } | null>(null);
-  const rolesList = ["Admin", "Responder", "Reporter"];
+  const rolesList = ["event_admin", "responder", "reporter"];
 
   useEffect(() => {
     if (!eventSlug) return;
@@ -97,8 +97,8 @@ export default function InviteUsersPage() {
     return userEventRoles.includes(role);
   }
 
-  const isSuperAdmin = hasGlobalRole("SuperAdmin");
-  const isEventAdmin = hasEventRole("Event Admin");
+  const isSystemAdmin = hasGlobalRole("system_admin");
+  const isEventAdmin = hasEventRole("event_admin");
 
   if (loading) {
     return (
@@ -135,8 +135,8 @@ export default function InviteUsersPage() {
     );
   }
 
-  // Only allow SuperAdmins or Event Admins to access invite page
-  if (!isSuperAdmin && !isEventAdmin) {
+  // Only allow System Admins or Event Admins to access invite page
+  if (!isSystemAdmin && !isEventAdmin) {
     return (
       <div className="min-h-screen bg-background py-8 px-4">
         <div className="w-full max-w-6xl mx-auto">

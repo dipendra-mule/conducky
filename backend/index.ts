@@ -197,12 +197,11 @@ app.use('/api/organizations', organizationRoutes); // Organization management ro
 app.get('/api/session', async (req: any, res: any) => {
   if (req.user) {
     try {
-      // Get user roles (same pattern as RBAC middleware)
-      const userEventRoles = await prisma.userEventRole.findMany({
-        where: { userId: req.user.id },
-        include: { role: true },
-      });
-      const roles = userEventRoles.map((uer: any) => uer.role.name);
+      // Get user roles using unified RBAC
+      const { UnifiedRBACService } = await import('./src/services/unified-rbac.service');
+      const unifiedRBAC = new UnifiedRBACService(prisma);
+      const systemRoles = await unifiedRBAC.getUserRoles(req.user.id, 'system', 'SYSTEM');
+      const roles = systemRoles.map((userRole: any) => userRole.role.name);
 
       // Get avatar if exists
       const avatar = await prisma.userAvatar.findUnique({
@@ -390,10 +389,10 @@ app.get('/audit-test', async (req: any, res: any) => {
 
 app.get('/admin-only', async (req: any, res: any) => {
   try {
-    const { requireSuperAdmin } = await import('./src/utils/rbac');
+    const { requireSystemAdmin } = await import('./src/utils/rbac');
     // Apply RBAC middleware inline for testing
-    requireSuperAdmin()(req, res, () => {
-      res.json({ message: 'SuperAdmin access granted!' });
+    requireSystemAdmin()(req, res, () => {
+      res.json({ message: 'System Admin access granted!' });
     });
   } catch (error: any) {
     res.status(500).json({ error: 'RBAC test failed', details: error.message });

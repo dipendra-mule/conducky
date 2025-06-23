@@ -123,18 +123,16 @@ router.get('/session-debug', async (req: any, res: Response): Promise<void> => {
     };
 
     try {
-      // Test UserEventRole query
-      const userEventRoles = await prisma.userEventRole.findMany({
-        where: { userId: req.user.id },
-        include: { role: true },
-      });
-      diagnostics.queries.userEventRoles = {
+      // Test Unified RBAC query
+      const unifiedRBAC = new (await import('../services/unified-rbac.service')).UnifiedRBACService(prisma);
+      const userRoles = await unifiedRBAC.getUserRoles(req.user.id);
+      diagnostics.queries.unifiedRoles = {
         success: true,
-        count: userEventRoles.length,
-        data: userEventRoles
+        count: userRoles.length,
+        data: userRoles
       };
     } catch (error: any) {
-      diagnostics.queries.userEventRoles = {
+      diagnostics.queries.unifiedRoles = {
         success: false,
         error: error.message
       };

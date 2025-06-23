@@ -6,7 +6,7 @@ const baseProps = {
   eventSlug: "test-event",
   eventName: "Test Event",
   user: { id: "1" },
-  userRoles: ["Event Admin"],
+      userRoles: ["event_admin"],
   openReportModal: jest.fn(),
 };
 

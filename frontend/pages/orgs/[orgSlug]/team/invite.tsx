@@ -93,7 +93,7 @@ export default function OrganizationInviteUsersPage() {
     return user.roles.includes(role);
   }
 
-  const isSuperAdmin = hasGlobalRole("SuperAdmin");
+  const isSystemAdmin = hasGlobalRole("system_admin");
   const isOrgAdmin = userOrgRole === "org_admin";
 
   if (loading) {
@@ -131,8 +131,8 @@ export default function OrganizationInviteUsersPage() {
     );
   }
 
-  // Only allow SuperAdmins or Organization Admins to access invite page
-  if (!isSuperAdmin && !isOrgAdmin) {
+  // Only allow System Admins or Organization Admins to access invite page
+  if (!isSystemAdmin && !isOrgAdmin) {
     return (
       <div className="min-h-screen bg-background py-8 px-4">
         <div className="w-full max-w-6xl mx-auto">
