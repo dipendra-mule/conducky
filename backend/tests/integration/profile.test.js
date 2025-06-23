@@ -198,17 +198,20 @@ describe("Profile Management API", () => {
     });
 
     it("should allow user to leave event", async () => {
-      // Set up user event roles in the store
-      inMemoryStore.userEventRoles = [
+      // Set up user event roles in the store using unified RBAC
+      inMemoryStore.userRoles = [
         {
-          id: "uer1",
+          id: "ur1",
           userId: mockUser.id,
-          eventId: mockEvent.id,
-          roleId: "3", // Responder role
-          event: mockEvent,
-          role: { id: "3", name: "Responder" }
+          roleId: "3",
+          scopeType: "event",
+          scopeId: mockEvent.id,
+          grantedAt: new Date(),
+          role: { id: "3", name: "responder" },
+          user: { id: mockUser.id, email: mockUser.email, name: mockUser.name }
         }
       ];
+      inMemoryStore.userEventRoles = []; // Clear legacy data
 
       const res = await request(app)
         .delete(`/users/me/events/${mockEvent.id}`);
@@ -216,25 +219,28 @@ describe("Profile Management API", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body.message).toContain("Successfully left Test Event");
       
-      // Check that the user was removed from the event
-      const remainingRoles = inMemoryStore.userEventRoles.filter(
-        uer => uer.userId === mockUser.id && uer.eventId === mockEvent.id
+      // Check that the user was removed from the event (unified RBAC)
+      const remainingRoles = inMemoryStore.userRoles.filter(
+        ur => ur.userId === mockUser.id && ur.scopeId === mockEvent.id && ur.scopeType === "event"
       );
       expect(remainingRoles).toHaveLength(0);
     });
 
     it("should prevent only admin from leaving", async () => {
-      // Set up user as the only admin
-      inMemoryStore.userEventRoles = [
+      // Set up user as the only admin using unified RBAC
+      inMemoryStore.userRoles = [
         {
-          id: "uer1",
+          id: "ur1",
           userId: mockUser.id,
-          eventId: mockEvent.id,
-          roleId: "2", // Event Admin role
-          event: mockEvent,
-          role: { id: "2", name: "Event Admin" }
+          roleId: "2",
+          scopeType: "event",
+          scopeId: mockEvent.id,
+          grantedAt: new Date(),
+          role: { id: "2", name: "event_admin" },
+          user: { id: mockUser.id, email: mockUser.email, name: mockUser.name }
         }
       ];
+      inMemoryStore.userEventRoles = []; // Clear legacy data
 
       const res = await request(app)
         .delete(`/users/me/events/${mockEvent.id}`);
@@ -245,6 +251,7 @@ describe("Profile Management API", () => {
 
     it("should handle user not in event", async () => {
       // Clear user event roles
+      inMemoryStore.userRoles = [];
       inMemoryStore.userEventRoles = [];
 
       const res = await request(app)
@@ -266,31 +273,46 @@ describe("Profile Management API", () => {
 
   describe("GET /api/users/me/events", () => {
     it("should return user events with roles", async () => {
-      // Set up user event roles in the store
-      inMemoryStore.userEventRoles = [
+      // Set up test events in the store 
+      inMemoryStore.events = [
+        { id: "event1", name: "Event 1", slug: "event-1", description: "First event" },
+        { id: "event2", name: "Event 2", slug: "event-2", description: "Second event" }
+      ];
+
+      // Set up unified user roles in the store
+      inMemoryStore.userRoles = [
+        // Event Admin role for event1
         {
-          id: "uer1",
+          id: "ur1",
           userId: mockUser.id,
-          eventId: "event1",
           roleId: "2",
-          event: { id: "event1", name: "Event 1", slug: "event-1", description: "First event" },
-          role: { id: "2", name: "Event Admin" }
+          scopeType: "event",
+          scopeId: "event1",
+          grantedAt: new Date(),
+          role: { id: "2", name: "event_admin" },
+          user: { id: mockUser.id, email: mockUser.email, name: mockUser.name }
         },
+        // Reporter role for event1  
         {
-          id: "uer2",
+          id: "ur2",
           userId: mockUser.id,
-          eventId: "event1",
           roleId: "4",
-          event: { id: "event1", name: "Event 1", slug: "event-1", description: "First event" },
-          role: { id: "4", name: "Reporter" }
+          scopeType: "event",
+          scopeId: "event1",
+          grantedAt: new Date(),
+          role: { id: "4", name: "reporter" },
+          user: { id: mockUser.id, email: mockUser.email, name: mockUser.name }
         },
+        // Responder role for event2
         {
-          id: "uer3",
+          id: "ur3",
           userId: mockUser.id,
-          eventId: "event2",
           roleId: "3",
-          event: { id: "event2", name: "Event 2", slug: "event-2", description: "Second event" },
-          role: { id: "3", name: "Responder" }
+          scopeType: "event",
+          scopeId: "event2",
+          grantedAt: new Date(),
+          role: { id: "3", name: "responder" },
+          user: { id: mockUser.id, email: mockUser.email, name: mockUser.name }
         }
       ];
 
@@ -301,10 +323,10 @@ describe("Profile Management API", () => {
       expect(res.body.events).toHaveLength(2); // Two unique events
       
       const event1 = res.body.events.find(e => e.id === "event1");
-      expect(event1.roles).toEqual(["Event Admin", "Reporter"]);
+      expect(event1.roles).toEqual(["event_admin", "reporter"]);
       
       const event2 = res.body.events.find(e => e.id === "event2");
-      expect(event2.roles).toEqual(["Responder"]);
+      expect(event2.roles).toEqual(["responder"]);
     });
 
     it("should require authentication", async () => {

@@ -60,10 +60,10 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         createdAt: '2024-01-16T14:15:00Z',
         updatedAt: '2024-01-16T15:00:00Z',
         eventId: 'event1',
-        reporterId: '2',
+        reporterId: '3',
         assignedResponderId: null,
         event: mockEvents[0],
-        reporter: { id: '2', name: 'Reporter User', email: 'reporter@example.com' },
+        reporter: { id: '3', name: 'Test Reporter', email: 'testreporter@example.com' },
         assignedResponder: null,
         evidenceFiles: [],
         _count: { comments: 0 }
@@ -113,10 +113,10 @@ describe('Enhanced Event Reports API Integration Tests', () => {
       { id: '1', userId: '1', roleId: '1', scopeType: 'system', scopeId: 'global', grantedAt: new Date(), role: { id: '1', name: 'system_admin' } },
       // Event Admin for event1
       { id: '2', userId: '1', roleId: '2', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '2', name: 'event_admin' } },
-      // Reporter for event1
-      { id: '3', userId: '2', roleId: '4', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '4', name: 'reporter' } },
-      // Responder for event1
-      { id: '4', userId: '3', roleId: '3', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '3', name: 'responder' } },
+      // Reporter for event1 (user 3 should be reporter to match test expectations)
+      { id: '3', userId: '3', roleId: '4', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '4', name: 'reporter' } },
+      // Responder for event1 (user 2 as responder)
+      { id: '4', userId: '2', roleId: '3', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '3', name: 'responder' } },
     ];
 
     // Setup in-memory store

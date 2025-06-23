@@ -93,7 +93,7 @@ export default function OrganizationInviteUsersPage() {
     return user.roles.includes(role);
   }
 
-  const isSystemAdmin = hasGlobalRole("System Admin");
+  const isSystemAdmin = hasGlobalRole("system_admin");
   const isOrgAdmin = userOrgRole === "org_admin";
 
   if (loading) {

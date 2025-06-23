@@ -6,6 +6,7 @@
 
 import crypto from 'crypto';
 import { prisma } from '../config/database';
+import { UnifiedRBACService } from '../services/unified-rbac.service';
 
 /**
  * Get event ID by slug
@@ -33,11 +34,15 @@ export function generateInviteCode(length = 16): string {
  * @returns Promise<string | null> - Role name or null if no role
  */
 export async function getUserRoleForEvent(userId: string, eventId: string): Promise<string | null> {
-  const userEventRole = await prisma.userEventRole.findFirst({
-    where: { userId, eventId },
-    include: { role: true },
-  });
-  return userEventRole?.role.name || null;
+  const rbacService = new UnifiedRBACService(prisma);
+  const userRoles = await rbacService.getUserRoles(userId, 'event', eventId);
+  
+  // Return the highest level role if multiple roles exist
+  if (userRoles.length === 0) return null;
+  
+  // Sort by role level (higher level = more permissions) and return the highest
+  const sortedRoles = userRoles.sort((a: any, b: any) => (b.role.level || 0) - (a.role.level || 0));
+  return sortedRoles[0].role.name;
 }
 
 

@@ -180,7 +180,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     );
 
     // Add admin shortcuts for System Admins
-    if (user?.roles?.includes('System Admin')) {
+    if (user?.roles?.includes('system_admin')) {
       items.push(
         { title: 'System Admin', href: '/admin/dashboard', category: 'shortcut', description: 'System administration' },
         { title: 'Manage Events', href: '/admin/events', category: 'shortcut', description: 'Event management' },

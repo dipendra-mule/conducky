@@ -1,5 +1,6 @@
 import { PrismaClient, NotificationType } from '@prisma/client';
 import { ServiceResult } from '../types';
+import { UnifiedRBACService } from './unified-rbac.service';
 
 export interface NotificationQuery {
   page?: number;
@@ -67,7 +68,11 @@ export interface NotificationStats {
 }
 
 export class NotificationService {
-  constructor(private prisma: PrismaClient) {}
+  private unifiedRBAC: UnifiedRBACService;
+
+  constructor(private prisma: PrismaClient) {
+    this.unifiedRBAC = new UnifiedRBACService(prisma);
+  }
 
   /**
    * Get user's notifications with pagination and filtering
@@ -410,20 +415,21 @@ export class NotificationService {
         usersToNotify.add(report.assignedResponderId);
       }
 
-      // Add event admins and responders (excluding the user who triggered the action)
-      const eventUsers = await this.prisma.userEventRole.findMany({
+      // Add event admins and responders using unified RBAC (excluding the user who triggered the action)
+      const eventUserRoles = await this.prisma.userRole.findMany({
         where: {
-          eventId: report.eventId,
+          scopeType: 'event',
+          scopeId: report.eventId,
           role: {
-            name: { in: ['Event Admin', 'Responder'] }
+            name: { in: ['event_admin', 'responder'] }
           }
         },
-        include: { user: true }
+        select: { userId: true }
       });
 
-      eventUsers.forEach(eur => {
-        if (eur.userId !== excludeUserId) {
-          usersToNotify.add(eur.userId);
+      eventUserRoles.forEach(userRole => {
+        if (userRole.userId !== excludeUserId) {
+          usersToNotify.add(userRole.userId);
         }
       });
 

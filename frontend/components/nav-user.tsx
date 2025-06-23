@@ -53,7 +53,7 @@ export function NavUser({
   const { isMobile, setOpenMobile } = useSidebar()
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
-  const isSystemAdmin = user.roles?.includes("System Admin")
+  const isSystemAdmin = user.roles?.includes("system_admin")
   const router = useRouter()
   const { setUser } = React.useContext(UserContext)
   const [loggingOut, setLoggingOut] = React.useState(false)

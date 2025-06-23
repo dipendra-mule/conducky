@@ -25,8 +25,8 @@ describe("ReportDetailView", () => {
     state: "submitted",
     reporter: { id: "u1", name: "Alice", email: "alice@example.com" },
   };
-  const user = { id: "u2", name: "Bob", email: "bob@example.com", roles: ["Responder"] };
-  const userRoles = ["Responder"];
+  const user = { id: "u2", name: "Bob", email: "bob@example.com", roles: ["responder"] };
+  const userRoles = ["responder"];
   const comments = [
     { id: "c1", body: "A comment", author: { id: "u2", name: "Bob" }, createdAt: new Date().toISOString(), visibility: "public" },
   ];
@@ -75,7 +75,7 @@ describe("ReportDetailView", () => {
       <ReportDetailView
         report={baseReport}
         user={user}
-        userRoles={["Event Admin"]}
+        userRoles={["event_admin"]}
         adminMode={true}
         assignmentFields={{ assignedResponderId: "u2", severity: "high", resolution: "done" }}
         setAssignmentFields={setAssignmentFields}
@@ -242,8 +242,8 @@ describe("ReportDetailView", () => {
     render(
       <ReportDetailView
         report={{ ...baseReport, title: "Test Title", reporterId: "u2" }}
-        user={{ id: "admin", name: "Admin", roles: ["Event Admin"] }}
-        userRoles={["Event Admin"]}
+        user={{ id: "admin", name: "Admin", roles: ["event_admin"] }}
+        userRoles={["event_admin"]}
       />
     );
     expect(screen.getByLabelText('Edit title')).toBeInTheDocument();

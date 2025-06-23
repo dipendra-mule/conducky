@@ -24,26 +24,57 @@ jest.mock("../../src/utils/rbac", () => ({
         eventId = event.id;
       }
     }
+
+    // Map legacy role names to unified role names for compatibility
+    const roleMapping = {
+      'System Admin': 'system_admin',
+      'Event Admin': 'event_admin', 
+      'Responder': 'responder',
+      'Reporter': 'reporter'
+    };
     
-    // Check for System Admin role globally
-    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+    // Map allowed roles to include both legacy and unified names
+    const mappedRoles = [...allowedRoles];
+    allowedRoles.forEach(role => {
+      if (roleMapping[role]) {
+        mappedRoles.push(roleMapping[role]);
+      }
+      // Also check reverse mapping
+      for (const [legacy, unified] of Object.entries(roleMapping)) {
+        if (unified === role && !mappedRoles.includes(legacy)) {
+          mappedRoles.push(legacy);
+        }
+      }
+    });
+    
+    // Check for System Admin role globally (check both legacy and unified data)
+    const isSystemAdminLegacy = inMemoryStore.userEventRoles.some(
       (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
+    const isSystemAdminUnified = inMemoryStore.userRoles.some(
+      (ur) => ur.userId === req.user.id && ur.role.name === "system_admin" && ur.scopeType === "system"
+    );
     
-    if (allowedRoles.includes("System Admin") && isSystemAdmin) {
+    if ((mappedRoles.includes("System Admin") || mappedRoles.includes("system_admin")) && (isSystemAdminLegacy || isSystemAdminUnified)) {
       return next();
     }
     
-    // Check for allowed roles for this specific event
-    const userRoles = inMemoryStore.userEventRoles.filter(
+    // Check for allowed roles for this specific event (both legacy and unified)
+    const legacyUserRoles = inMemoryStore.userEventRoles.filter(
       (uer) => uer.userId === req.user.id && uer.eventId === eventId
     );
-    
-    const hasRole = userRoles.some((uer) =>
-      allowedRoles.includes(uer.role.name)
+    const unifiedUserRoles = inMemoryStore.userRoles.filter(
+      (ur) => ur.userId === req.user.id && ur.scopeType === "event" && ur.scopeId === eventId
     );
     
-    if (!hasRole) {
+    const hasLegacyRole = legacyUserRoles.some((uer) =>
+      mappedRoles.includes(uer.role.name)
+    );
+    const hasUnifiedRole = unifiedUserRoles.some((ur) =>
+      mappedRoles.includes(ur.role.name)
+    );
+    
+    if (!hasLegacyRole && !hasUnifiedRole) {
       res.status(403).json({ error: "Forbidden: insufficient role" });
       return;
     }
@@ -60,12 +91,15 @@ jest.mock("../../src/utils/rbac", () => ({
     const testUser = inMemoryStore.users.find(u => u.id === testUserId) || { id: testUserId, email: `user${testUserId}@example.com`, name: `User${testUserId}` };
     req.user = testUser;
     
-    // Check for System Admin role globally
-    const isSystemAdmin = inMemoryStore.userEventRoles.some(
+    // Check both legacy and unified role data
+    const isSystemAdminLegacy = inMemoryStore.userEventRoles.some(
       (uer) => uer.userId === req.user.id && uer.role.name === "System Admin"
     );
+    const isSystemAdminUnified = inMemoryStore.userRoles.some(
+      (ur) => ur.userId === req.user.id && ur.role.name === "system_admin" && ur.scopeType === "system"
+    );
     
-    if (!isSystemAdmin) {
+    if (!isSystemAdminLegacy && !isSystemAdminUnified) {
       res.status(403).json({ error: "Forbidden: System Admins only" });
       return;
     }
@@ -78,16 +112,44 @@ beforeEach(() => {
   // Reset inMemoryStore to a clean state for each test
   inMemoryStore.events = [{ id: "1", name: "Event1", slug: "event1" }];
   inMemoryStore.roles = [
-    { id: "1", name: "System Admin" },
-    { id: "2", name: "Event Admin" },
-    { id: "3", name: "Responder" },
-    { id: "4", name: "Reporter" },
+    { id: "1", name: "system_admin" },
+    { id: "2", name: "event_admin" },
+    { id: "3", name: "responder" },
+    { id: "4", name: "reporter" },
   ];
   inMemoryStore.users = [
     { id: "1", email: "admin@example.com", name: "Admin", createdAt: new Date('2024-01-01') },
     { id: "2", email: "responder@example.com", name: "Responder", createdAt: new Date('2024-01-02') },
     { id: "3", email: "reporter@example.com", name: "Reporter", createdAt: new Date('2024-01-03') },
   ];
+  // Unified RBAC data - this is what the migrated services now use
+  inMemoryStore.userRoles = [
+    {
+      userId: "1",
+      scopeType: "event",
+      scopeId: "1",
+      roleId: "2",
+      role: { name: "event_admin" },
+      user: { id: "1", email: "admin@example.com", name: "Admin", createdAt: new Date('2024-01-01') },
+    },
+    {
+      userId: "2",
+      scopeType: "event",
+      scopeId: "1",
+      roleId: "3",
+      role: { name: "responder" },
+      user: { id: "2", email: "responder@example.com", name: "Responder", createdAt: new Date('2024-01-02') },
+    },
+    {
+      userId: "3",
+      scopeType: "event",
+      scopeId: "1",
+      roleId: "4",
+      role: { name: "reporter" },
+      user: { id: "3", email: "reporter@example.com", name: "Reporter", createdAt: new Date('2024-01-03') },
+    },
+  ];
+  // Legacy data - kept for backward compatibility during migration
   inMemoryStore.userEventRoles = [
     {
       userId: "1",
@@ -129,7 +191,7 @@ describe('Team Management Endpoints', () => {
       expect(res.body.user).toBeDefined();
       expect(res.body.user.id).toBe('2');
       expect(res.body.user.email).toBe('responder@example.com');
-      expect(res.body.roles).toContain('Responder');
+      expect(res.body.roles).toContain('responder');
       expect(res.body.joinDate).toBeDefined();
     });
 

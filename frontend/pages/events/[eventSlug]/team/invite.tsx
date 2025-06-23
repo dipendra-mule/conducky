@@ -20,7 +20,7 @@ export default function InviteUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [event, setEvent] = useState<{ name: string } | null>(null);
-  const rolesList = ["Event Admin", "Responder", "Reporter"];
+  const rolesList = ["event_admin", "responder", "reporter"];
 
   useEffect(() => {
     if (!eventSlug) return;
@@ -97,8 +97,8 @@ export default function InviteUsersPage() {
     return userEventRoles.includes(role);
   }
 
-  const isSystemAdmin = hasGlobalRole("System Admin");
-  const isEventAdmin = hasEventRole("Event Admin");
+  const isSystemAdmin = hasGlobalRole("system_admin");
+  const isEventAdmin = hasEventRole("event_admin");
 
   if (loading) {
     return (

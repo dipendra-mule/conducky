@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { ServiceResult } from '../types';
+import { UnifiedRBACService } from './unified-rbac.service';
 
 export interface InviteCreateData {
   eventId: string;
@@ -50,7 +51,11 @@ export interface RegistrationWithInviteData {
 }
 
 export class InviteService {
-  constructor(private prisma: PrismaClient) {}
+  private unifiedRBAC: UnifiedRBACService;
+
+  constructor(private prisma: PrismaClient) {
+    this.unifiedRBAC = new UnifiedRBACService(prisma);
+  }
 
   /**
    * Generate a unique invite code
@@ -354,29 +359,42 @@ export class InviteService {
         };
       }
 
-      // Check if user is already a member of the event
-      const existing = await this.prisma.userEventRole.findFirst({
-        where: {
-          userId,
-          eventId: invite.eventId
-        }
-      });
-
-      if (existing) {
+      // Check if user is already a member of the event using unified RBAC
+      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', invite.eventId);
+      
+      if (userRoles.length > 0) {
         return {
           success: false,
           error: 'You are already a member of this event.'
         };
       }
 
-      // Assign role for the event from invite
-      await this.prisma.userEventRole.create({
-        data: {
-          userId,
-          eventId: invite.eventId,
-          roleId: invite.roleId
-        }
+      // Get role name from legacy role ID for unified RBAC
+      const role = await this.prisma.role.findUnique({
+        where: { id: invite.roleId },
+        select: { name: true }
       });
+
+      if (!role) {
+        return {
+          success: false,
+          error: 'Invalid role in invite.'
+        };
+      }
+
+      // Map legacy role name to unified role name
+      const roleMapping: { [key: string]: string } = {
+        'System Admin': 'system_admin',
+        'Event Admin': 'event_admin',
+        'Admin': 'event_admin',
+        'Responder': 'responder',
+        'Reporter': 'reporter'
+      };
+
+      const unifiedRoleName = roleMapping[role.name] || role.name.toLowerCase().replace(' ', '_');
+
+      // Assign role using unified RBAC
+      await this.unifiedRBAC.grantRole(userId, unifiedRoleName, 'event', invite.eventId);
 
       // Increment useCount
       await this.prisma.eventInviteLink.update({
@@ -472,14 +490,32 @@ export class InviteService {
         data: { email, passwordHash, name: name || null }
       });
 
-      // Assign role for the event from invite
-      await this.prisma.userEventRole.create({
-        data: {
-          userId: user.id,
-          eventId: invite.eventId,
-          roleId: invite.roleId
-        }
+      // Get role name from legacy role ID for unified RBAC
+      const role = await this.prisma.role.findUnique({
+        where: { id: invite.roleId },
+        select: { name: true }
       });
+
+      if (!role) {
+        return {
+          success: false,
+          error: 'Invalid role in invite.'
+        };
+      }
+
+      // Map legacy role name to unified role name
+      const roleMapping: { [key: string]: string } = {
+        'System Admin': 'system_admin',
+        'Event Admin': 'event_admin',
+        'Admin': 'event_admin',
+        'Responder': 'responder',
+        'Reporter': 'reporter'
+      };
+
+      const unifiedRoleName = roleMapping[role.name] || role.name.toLowerCase().replace(' ', '_');
+
+      // Assign role using unified RBAC
+      await this.unifiedRBAC.grantRole(user.id, unifiedRoleName, 'event', invite.eventId);
 
       // Increment useCount
       await this.prisma.eventInviteLink.update({

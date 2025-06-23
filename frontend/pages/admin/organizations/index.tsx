@@ -66,7 +66,7 @@ export default function AdminOrganizations() {
       return;
     }
     
-    if (user && authChecked && !user.roles?.includes('System Admin')) {
+    if (user && authChecked && !user.roles?.includes('system_admin')) {
       router.replace('/dashboard');
       return;
     }
@@ -78,7 +78,7 @@ export default function AdminOrganizations() {
   }, []);
 
   useEffect(() => {
-    if (user && user.roles?.includes('System Admin')) {
+    if (user && user.roles?.includes('system_admin')) {
       fetchOrganizations();
     }
   }, [user]);
@@ -147,7 +147,7 @@ export default function AdminOrganizations() {
     );
   }
 
-  if (!user.roles?.includes('System Admin')) {
+  if (!user.roles?.includes('system_admin')) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="mx-auto max-w-7xl">

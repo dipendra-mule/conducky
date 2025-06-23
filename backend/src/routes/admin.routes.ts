@@ -13,20 +13,47 @@ const router = Router();
 const prisma = new PrismaClient();
 
 /**
+ * Helper function to count event users using unified RBAC
+ */
+async function getEventUserCount(eventId: string): Promise<number> {
+  const userRoles = await prisma.userRole.findMany({
+    where: {
+      scopeType: 'event',
+      scopeId: eventId
+    },
+    distinct: ['userId'] // Count unique users only
+  });
+  return userRoles.length;
+}
+
+/**
+ * Helper function to get event user creation dates for activity tracking
+ */
+async function getEventUserDates(eventId: string): Promise<Date[]> {
+  const userRoles = await prisma.userRole.findMany({
+    where: {
+      scopeType: 'event',
+      scopeId: eventId
+    },
+    include: {
+      user: {
+        select: { createdAt: true }
+      }
+    },
+    distinct: ['userId']
+  });
+  return userRoles.map(ur => ur.user.createdAt);
+}
+
+/**
  * GET /api/admin/events
  * Get all events with statistics (System Admin only)
  */
 router.get('/events', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
-    // Get all events with user and report counts
+    // Get all events with report counts (user counts will be calculated separately)
     const events = await prisma.event.findMany({
       include: {
-        userEventRoles: {
-          include: {
-            user: true,
-            role: true,
-          },
-        },
         reports: {
           select: {
             id: true,
@@ -36,7 +63,6 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
         },
         _count: {
           select: {
-            userEventRoles: true,
             reports: true,
           },
         },
@@ -51,11 +77,14 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
     const totalReports = await prisma.report.count();
     const activeEvents = events.length; // All events are active for now, will add status field later
 
-    // Transform events data for API response
-    const eventsData = events.map((event) => {
+    // Transform events data for API response with unified RBAC user counts
+    const eventsData = await Promise.all(events.map(async (event) => {
+      // Get user count and dates using unified RBAC
+      const userCount = await getEventUserCount(event.id);
+      const userDates = await getEventUserDates(event.id);
+      
       // Find the most recent activity (report or user join)
       const reportDates = event.reports.map(r => r.createdAt);
-      const userDates = event.userEventRoles.map(uer => uer.user.createdAt);
       const allDates = [...reportDates, ...userDates, event.createdAt];
       const lastActivity = allDates.length > 0 
         ? new Date(Math.max(...allDates.map(d => d.getTime())))
@@ -67,7 +96,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
         slug: event.slug,
         description: event.description,
         status: 'active' as const, // Will implement enable/disable later
-        userCount: event._count.userEventRoles,
+        userCount: userCount,
         reportCount: event._count.reports,
         createdAt: event.createdAt.toISOString(),
         updatedAt: event.updatedAt.toISOString(),
@@ -75,7 +104,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
         website: event.website,
         contactEmail: event.contactEmail,
       };
-    });
+    }));
 
     const statistics = {
       totalEvents: events.length,
@@ -464,7 +493,6 @@ router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: R
       include: {
         _count: {
           select: {
-            userEventRoles: true,
             reports: true,
           },
         },
@@ -477,6 +505,9 @@ router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: R
       });
       return;
     }
+
+    // Get user count using unified RBAC
+    const userCount = await getEventUserCount(eventId);
 
     res.json({
       event: {
@@ -491,7 +522,7 @@ router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: R
         endDate: event.endDate?.toISOString(),
         codeOfConduct: event.codeOfConduct,
         setupComplete: event.isActive, // For now, isActive indicates setup completion
-        userCount: event._count.userEventRoles,
+        userCount: userCount,
         reportCount: event._count.reports,
         createdAt: event.createdAt.toISOString(),
         updatedAt: event.updatedAt.toISOString(),

@@ -50,7 +50,7 @@ export default function EventTeam() {
   }, [searchTerm]);
 
   // Check if current user has admin permissions
-  const isAdmin = user && ['Event Admin', 'System Admin'].some(role => 
+  const isAdmin = user && ['event_admin', 'system_admin'].some(role => 
     user.roles?.includes(role)
   );
 
@@ -183,8 +183,8 @@ export default function EventTeam() {
 
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
-      case 'system admin': return 'bg-red-100 text-red-800 border-red-200';
-      case 'event admin': return 'bg-blue-100 text-blue-800 border-blue-200';
+                case 'system_admin': return 'bg-red-100 text-red-800 border-red-200';
+              case 'event_admin': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'responder': return 'bg-green-100 text-green-800 border-green-200';
       case 'reporter': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -192,7 +192,7 @@ export default function EventTeam() {
   };
 
   const getHighestRole = (roles: string[]) => {
-    const roleHierarchy = ['System Admin', 'Event Admin', 'Responder', 'Reporter'];
+    const roleHierarchy = ['system_admin', 'event_admin', 'responder', 'reporter'];
     for (const role of roleHierarchy) {
       if (roles.includes(role)) {
         return role;
@@ -286,10 +286,10 @@ export default function EventTeam() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="System Admin">System Admin</SelectItem>
-                  <SelectItem value="Event Admin">Event Admin</SelectItem>
-                  <SelectItem value="Responder">Responder</SelectItem>
-                  <SelectItem value="Reporter">Reporter</SelectItem>
+                  <SelectItem value="system_admin">System Admin</SelectItem>
+                                      <SelectItem value="event_admin">Event Admin</SelectItem>
+                    <SelectItem value="responder">Responder</SelectItem>
+                    <SelectItem value="reporter">Reporter</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {

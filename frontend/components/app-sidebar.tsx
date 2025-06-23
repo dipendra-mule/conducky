@@ -150,12 +150,11 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
   }
   
   // Determine current context based on URL
-  const isInAdminSection = router.asPath.startsWith('/admin');
   const isEventContext = router.asPath.startsWith('/events/');
   const isOrgContext = router.asPath.startsWith('/orgs/');
   
-  // Check if user is System Admin using global roles
-  const isSystemAdmin = currentGlobalRoles.includes('System Admin');
+  // Check if user is System Admin using global roles (unified role name)
+  const isSystemAdmin = currentGlobalRoles.includes('system_admin');
 
   // Get current event slug if in event context
   // Try router.query first (more reliable for dynamic routes), then fall back to asPath parsing
@@ -349,9 +348,9 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
         const targetEvent = events.find(event => event.url.includes(targetEventSlug));
         const userEventRole = targetEvent?.role;
         
-        // Check role permissions
-        const isEventAdmin = userEventRole === 'Event Admin' || isSystemAdmin;
-        const isEventResponder = userEventRole === 'Responder' || isEventAdmin;
+        // Check role permissions (using unified role names)
+        const isEventAdmin = userEventRole === 'event_admin' || isSystemAdmin;
+        const isEventResponder = userEventRole === 'responder' || isEventAdmin;
 
         // Base navigation items (available to all roles)
         eventNavItems = [

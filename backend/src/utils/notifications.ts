@@ -5,6 +5,7 @@
  */
 
 import { prisma } from '../config/database';
+import { UnifiedRBACService } from '../services/unified-rbac.service';
 import { getUserNotificationSettings } from '../services/user-notification-settings.service';
 import { emailService } from './email';
 
@@ -112,13 +113,15 @@ export async function notifyReportEvent(reportId: string, type: string, excludeU
       return;
     }
 
-    // Get all users with Responder or Event Admin roles for this event
-    const eventUsers = await prisma.userEventRole.findMany({
+    // Get all users with responder or event_admin roles for this event using unified RBAC
+    // Query the userRole table directly for this event with the specific roles
+    const eventUserRoles = await prisma.userRole.findMany({
       where: {
-        eventId: report.eventId,
+        scopeType: 'event',
+        scopeId: report.eventId,
         role: {
           name: {
-            in: ['Responder', 'Event Admin'],
+            in: ['responder', 'event_admin'],
           },
         },
       },
@@ -127,6 +130,13 @@ export async function notifyReportEvent(reportId: string, type: string, excludeU
         role: true,
       },
     });
+    
+    // Transform to match expected structure for backward compatibility
+    const eventUsers = eventUserRoles.map((userRole: any) => ({
+      userId: userRole.userId,
+      user: userRole.user,
+      role: userRole.role
+    }));
 
     // Create notifications for each relevant user
     const notifications = eventUsers

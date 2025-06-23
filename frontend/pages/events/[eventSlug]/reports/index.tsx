@@ -31,7 +31,7 @@ export default function EventReportsPage() {
           let data = null;
           try {
             data = await response.json();
-          } catch (e) {
+          } catch {
             data = { error: await response.text() };
           }
           if (!response.ok) {
@@ -41,9 +41,9 @@ export default function EventReportsPage() {
             return;
           }
           if (data.roles) {
-            // Check if user has responder, event admin, or system admin role
+            // Check if user has responder, event admin, or system admin role (unified names)
             const hasAccess = data.roles.some((role: string) => 
-              ['Responder', 'Event Admin', 'System Admin'].includes(role)
+              ['responder', 'event_admin', 'system_admin'].includes(role)
             );
             setAccessDenied(!hasAccess);
           } else {

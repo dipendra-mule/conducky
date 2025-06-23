@@ -455,7 +455,13 @@ export class ReportService {
       // Verify assigned user exists and has appropriate role if assignment is required
       if (assignedToUserId) {
         const assignedUser = await this.prisma.user.findUnique({
-          where: { id: assignedToUserId }
+          where: { id: assignedToUserId },
+          include: {
+            userEventRoles: {
+              where: { eventId: eventId },
+              include: { role: true }
+            }
+          }
         });
 
         if (!assignedUser) {
@@ -465,14 +471,12 @@ export class ReportService {
           };
         }
 
-        // Check if user has appropriate role using unified RBAC
-        const hasEventRole = await this.unifiedRBAC.hasEventRole(
-          assignedToUserId, 
-          eventId, 
-          ['responder', 'event_admin']
+        const hasResponderOrAdmin = assignedUser.userEventRoles.some((er: any) => 
+                  ['Responder', 'Event Admin', 'System Admin'].includes(er.role.name) ||
+        ['responder', 'event admin'].includes(er.role.name.toLowerCase())
         );
 
-        if (!hasEventRole) {
+        if (!hasResponderOrAdmin) {
           return {
             success: false,
             error: 'Assigned user must have Responder or Event Admin role for this event.'
@@ -1018,7 +1022,7 @@ export class ReportService {
 
       eventRoles.forEach((eventData: any, eventId: string) => {
         const roles = eventData.roles;
-        const isResponderOrAbove = roles.some((r: string) => ['responder', 'event_admin', 'system_admin'].includes(r));
+        const isResponderOrAbove = roles.some((r: string) => ['Responder', 'Event Admin', 'System Admin'].includes(r));
 
         if (isResponderOrAbove) {
           responderAdminEvents.push(eventId);
@@ -1203,21 +1207,21 @@ export class ReportService {
       const roles = userRoles.map((userRole: any) => {
         // Map unified role names back to display names
         switch (userRole.role.name) {
-          case 'system_admin': return 'system_admin';
-          case 'event_admin': return 'event_admin';
-          case 'responder': return 'responder';
-          case 'reporter': return 'reporter';
+          case 'system_admin': return 'System Admin';
+          case 'event_admin': return 'Event Admin';
+          case 'responder': return 'Responder';
+          case 'reporter': return 'Reporter';
           default: return userRole.role.name;
         }
       });
 
       // Also check for organization admin inheritance
       const hasOrgAdminRole = await this.unifiedRBAC.hasEventRole(userId, report.eventId, ['event_admin']);
-      if (hasOrgAdminRole && !roles.includes('event_admin')) {
-        roles.push('event_admin');
+      if (hasOrgAdminRole && !roles.includes('Event Admin')) {
+        roles.push('Event Admin');
       }
 
-      const isResponderOrAbove = roles.some((r: string) => ['responder', 'event_admin', 'system_admin'].includes(r));
+      const isResponderOrAbove = roles.some((r: string) => ['Responder', 'Event Admin', 'System Admin'].includes(r));
       const hasAccess = isReporter || isResponderOrAbove;
 
       return {
@@ -1417,10 +1421,15 @@ export class ReportService {
       if (userId) {
         const isReporter = !!(report.reporterId && userId === report.reporterId);
 
-        // Use unified RBAC to check event permissions
-        const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
+        const userEventRoles = await this.prisma.userEventRole.findMany({
+          where: { userId, eventId },
+          include: { role: true },
+        });
 
-        const canEdit = isReporter || hasEventRole;
+        const userRoles = userEventRoles.map(uer => uer.role.name);
+        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'System Admin'].includes(r));
+
+        const canEdit = isReporter || isResponderOrAbove;
 
         if (!canEdit) {
           return {
@@ -1487,10 +1496,15 @@ export class ReportService {
       if (userId) {
         const isReporter = !!(report.reporterId && userId === report.reporterId);
 
-        // Use unified RBAC to check event permissions (description requires admin+ access)
-        const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['event_admin', 'system_admin']);
+        const userEventRoles = await this.prisma.userEventRole.findMany({
+          where: { userId, eventId },
+          include: { role: true },
+        });
 
-        const canEdit = isReporter || hasEventRole;
+        const userRoles = userEventRoles.map(uer => uer.role.name);
+        const isAdminOrAbove = userRoles.some(r => ['Event Admin', 'System Admin'].includes(r));
+
+        const canEdit = isReporter || isAdminOrAbove;
 
         if (!canEdit) {
           return {
@@ -1565,10 +1579,15 @@ export class ReportService {
       if (userId) {
         const isReporter = !!(report.reporterId && userId === report.reporterId);
 
-        // Use unified RBAC to check event permissions
-        const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
+        const userEventRoles = await this.prisma.userEventRole.findMany({
+          where: { userId, eventId },
+          include: { role: true },
+        });
 
-        const canEdit = isReporter || hasEventRole;
+        const userRoles = userEventRoles.map(uer => uer.role.name);
+        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'System Admin'].includes(r));
+
+        const canEdit = isReporter || isResponderOrAbove;
 
         if (!canEdit) {
           return {
@@ -1628,10 +1647,15 @@ export class ReportService {
       if (userId) {
         const isReporter = !!(report.reporterId && userId === report.reporterId);
 
-        // Use unified RBAC to check event permissions
-        const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
+        const userEventRoles = await this.prisma.userEventRole.findMany({
+          where: { userId, eventId },
+          include: { role: true },
+        });
 
-        const canEdit = isReporter || hasEventRole;
+        const userRoles = userEventRoles.map(uer => uer.role.name);
+        const isResponderOrAbove = userRoles.some(r => ['Responder', 'Event Admin', 'System Admin'].includes(r));
+
+        const canEdit = isReporter || isResponderOrAbove;
 
         if (!canEdit) {
           return {
@@ -1734,7 +1758,7 @@ export class ReportService {
             ]
           } : {}),
           ...(status ? { state: status as any } : {}),
-          ...(severity ? { severity: severity as any } : {}),
+          ...(severity ? { severity } : {}),
           ...(assigned === 'me' ? { assignedResponderId: userId } : {}),
           ...(assigned === 'unassigned' ? { assignedResponderId: null } : {}),
           ...(filterUserId ? { reporterId: filterUserId } : {}),
@@ -1836,14 +1860,16 @@ export class ReportService {
                   { description: { contains: search, mode: 'insensitive' } }
                 ]
               } : {}),
-                        ...(status ? { state: status as any } : {}),
-          ...(severity ? { severity: severity as any } : {}),
+              ...(status ? { state: status } : {}),
+              ...(severity ? { severity } : {}),
               ...(assigned === 'me' ? { assignedResponderId: userId } : {}),
               ...(assigned === 'unassigned' ? { assignedResponderId: null } : {}),
               ...(filterUserId ? { reporterId: filterUserId } : {}),
               ...(reportIds && reportIds.length > 0 ? { id: { in: reportIds } } : {})
             },
-            _count: true
+            _count: {
+              _all: true
+            }
           });
 
           stats = {
@@ -1856,7 +1882,7 @@ export class ReportService {
           };
 
           statsResult.forEach(stat => {
-            const count = stat._count || 0;
+            const count = stat._count?._all || 0;
             switch (stat.state) {
               case 'submitted':
                 stats!.submitted = count;
@@ -1925,10 +1951,28 @@ export class ReportService {
       let updated = 0;
       const errors: string[] = [];
 
-      // Verify user has access to the event using unified RBAC
-      const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
+      // Verify user has access to the event
+      const userEventRoles = await this.prisma.userEventRole.findMany({
+        where: {
+          userId,
+          eventId
+        },
+        include: {
+          role: true
+        }
+      });
 
-      if (!hasEventRole) {
+      if (userEventRoles.length === 0) {
+        return {
+          success: false,
+          error: 'Access denied: User not authorized for this event'
+        };
+      }
+
+      const userRoles = userEventRoles.map(uer => uer.role.name);
+      const canBulkUpdate = userRoles.some(role => ['Responder', 'Event Admin', 'System Admin'].includes(role));
+
+      if (!canBulkUpdate) {
         return {
           success: false,
           error: 'Access denied: Insufficient permissions for bulk operations'

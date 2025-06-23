@@ -155,9 +155,9 @@ export default function EventDashboard() {
   }
 
   // Determine user's highest role for content display
-  const isAdmin = userRoles.includes('Event Admin');
-  const isResponder = userRoles.includes('Responder');
-  const isReporter = userRoles.includes('Reporter');
+  const isAdmin = userRoles.includes('event_admin');
+  const isResponder = userRoles.includes('responder');
+  const isReporter = userRoles.includes('reporter');
 
   return (
     <div className="min-h-screen bg-background p-4">

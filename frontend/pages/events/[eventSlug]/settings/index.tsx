@@ -32,7 +32,7 @@ export default function EventAdminPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [userEventRoles, setUserEventRoles] = useState<string[]>([]);
-  const [rolesList] = useState<string[]>(["Event Admin", "Responder", "Reporter"]);
+  const [rolesList] = useState<string[]>(["event_admin", "responder", "reporter"]);
   const [page, setPage] = useState(1);
   const [logoUploadLoading, setLogoUploadLoading] = useState(false);
   const [logoExists, setLogoExists] = useState(false);
@@ -134,8 +134,8 @@ export default function EventAdminPage() {
     return userEventRoles.includes(role);
   }
 
-  const isSystemAdmin = hasGlobalRole("System Admin");
-  const isEventAdmin = hasEventRole("Event Admin");
+  const isSystemAdmin = hasGlobalRole("system_admin");
+  const isEventAdmin = hasEventRole("event_admin");
 
   // Only allow System Admins or Event Admins to access settings
   if (!isSystemAdmin && !isEventAdmin) {

@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { ServiceResult } from '../types';
 import { emailService } from '../utils/email';
+import { UnifiedRBACService } from './unified-rbac.service';
 
 export interface PasswordValidation {
   isValid: boolean;
@@ -47,6 +48,8 @@ export interface RateLimitResult {
 }
 
 export class AuthService {
+  private rbacService = new UnifiedRBACService();
+
   // Rate limiting for password reset attempts
   // Uses database for persistence across server restarts
   constructor(private prisma: PrismaClient) {}
@@ -188,25 +191,15 @@ export class AuthService {
         },
       });
 
-      // If this is the first user, assign System Admin role globally (eventId: null)
+      // If this is the first user, assign system_admin role using unified RBAC
       let madeSystemAdmin = false;
       if (userCount === 0) {
-        let systemAdminRole = await this.prisma.role.findUnique({
-          where: { name: "System Admin" },
-        });
-        if (!systemAdminRole) {
-          systemAdminRole = await this.prisma.role.create({
-            data: { name: "System Admin" },
-          });
-        }
-        await this.prisma.userEventRole.create({
-          data: {
-            userId: user.id,
-            eventId: null, // Global role assignment
-            roleId: systemAdminRole.id,
-          },
-        });
-        madeSystemAdmin = true;
+        madeSystemAdmin = await this.rbacService.grantRole(
+          user.id, 
+          'system_admin', 
+          'system', 
+          ''
+        );
       }
 
       return {
@@ -521,14 +514,11 @@ export class AuthService {
    */
   async getSessionData(userId: string): Promise<ServiceResult<SessionData>> {
     try {
-      // Fetch user roles
-      const userEventRoles = await this.prisma.userEventRole.findMany({
-        where: { userId },
-        include: { role: true },
-      });
+      // Fetch user roles using unified RBAC service
+      const userRoles = await this.rbacService.getUserRoles(userId);
 
-      // Flatten roles to a list of role names
-      const roles = userEventRoles.map((uer: any) => uer.role.name);
+      // Flatten roles to a list of role names (unified role names)
+      const roles = userRoles.map((ur: any) => ur.role.name);
 
       // Check for avatar
       const avatar = await this.prisma.userAvatar.findUnique({

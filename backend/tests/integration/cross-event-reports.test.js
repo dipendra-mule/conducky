@@ -97,35 +97,47 @@ describe('Cross-Event Reports API Integration Tests', () => {
       }
     ];
 
-    // Mock user event roles
-    const mockUserEventRoles = [
+    // Mock unified user roles
+    const mockUserRoles = [
       {
+        id: 'ur1',
         userId: '1',
-        eventId: 'event1',
-        roleId: '2', // Event Admin role ID
-        event: mockEvents[0],
-        role: { name: 'Event Admin' }
+        roleId: '2',
+        scopeType: 'event',
+        scopeId: 'event1',
+        grantedAt: new Date(),
+        role: { id: '2', name: 'event_admin' },
+        user: { id: '1', email: 'test@example.com', name: 'Test User' }
       },
       {
+        id: 'ur2',
         userId: '1',
-        eventId: 'event2',
-        roleId: '3', // Responder role ID
-        event: mockEvents[1],
-        role: { name: 'Responder' }
+        roleId: '3',
+        scopeType: 'event',
+        scopeId: 'event2',
+        grantedAt: new Date(),
+        role: { id: '3', name: 'responder' },
+        user: { id: '1', email: 'test@example.com', name: 'Test User' }
       },
       {
+        id: 'ur3',
         userId: '2',
-        eventId: 'event1',
-        roleId: '4', // Reporter role ID
-        event: mockEvents[0],
-        role: { name: 'Reporter' }
+        roleId: '4',
+        scopeType: 'event',
+        scopeId: 'event1',
+        grantedAt: new Date(),
+        role: { id: '4', name: 'reporter' },
+        user: { id: '2', email: 'reporter@example.com', name: 'Reporter User' }
       },
       {
+        id: 'ur4',
         userId: '3',
-        eventId: 'event1',
-        roleId: '3', // Responder role ID
-        event: mockEvents[0],
-        role: { name: 'Responder' }
+        roleId: '3',
+        scopeType: 'event',
+        scopeId: 'event1',
+        grantedAt: new Date(),
+        role: { id: '3', name: 'responder' },
+        user: { id: '3', email: 'user@example.com', name: 'Another User' }
       }
     ];
 
@@ -137,7 +149,8 @@ describe('Cross-Event Reports API Integration Tests', () => {
     ];
     inMemoryStore.events = mockEvents;
     inMemoryStore.reports = mockReports;
-    inMemoryStore.userEventRoles = mockUserEventRoles;
+    inMemoryStore.userRoles = mockUserRoles; // Use unified RBAC data
+    inMemoryStore.userEventRoles = []; // Clear legacy data
   });
 
   describe('GET /api/users/me/reports', () => {

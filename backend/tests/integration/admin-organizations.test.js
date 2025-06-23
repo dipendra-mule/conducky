@@ -46,14 +46,17 @@ jest.mock('../../src/utils/rbac', () => ({
     const testUser = inMemoryStore.users.find(u => u.id === testUserId) || { id: testUserId, email: `user${testUserId}@example.com`, name: `User${testUserId}` };
     req.user = testUser;
     
-    // Check if user has System Admin role
-    const hasSystemAdminRole = inMemoryStore.userRoles?.some(ur => 
+    // Check both legacy and unified role data
+    const hasSystemAdminUnified = inMemoryStore.userRoles?.some(ur => 
       ur.userId === testUserId && 
       ur.role?.name === 'system_admin' && 
       ur.scopeType === 'system'
     );
+    const hasSystemAdminLegacy = inMemoryStore.userEventRoles?.some(
+      (uer) => uer.userId === testUserId && uer.role.name === "System Admin"
+    );
     
-    if (!hasSystemAdminRole) {
+    if (!hasSystemAdminUnified && !hasSystemAdminLegacy) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
     
@@ -80,7 +83,7 @@ describe('System Admin Organizations Management', () => {
         userId: '1', 
         roleId: '1', 
         scopeType: 'system', 
-        scopeId: 'global', 
+        scopeId: 'SYSTEM', 
         grantedAt: new Date(), 
         role: { id: '1', name: 'system_admin' } 
       }

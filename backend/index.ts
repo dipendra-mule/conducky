@@ -197,12 +197,11 @@ app.use('/api/organizations', organizationRoutes); // Organization management ro
 app.get('/api/session', async (req: any, res: any) => {
   if (req.user) {
     try {
-      // Get user roles (same pattern as RBAC middleware)
-      const userEventRoles = await prisma.userEventRole.findMany({
-        where: { userId: req.user.id },
-        include: { role: true },
-      });
-      const roles = userEventRoles.map((uer: any) => uer.role.name);
+      // Get user roles using unified RBAC
+      const { UnifiedRBACService } = await import('./src/services/unified-rbac.service');
+      const unifiedRBAC = new UnifiedRBACService(prisma);
+      const systemRoles = await unifiedRBAC.getUserRoles(req.user.id, 'system', 'SYSTEM');
+      const roles = systemRoles.map((userRole: any) => userRole.role.name);
 
       // Get avatar if exists
       const avatar = await prisma.userAvatar.findUnique({
