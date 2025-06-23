@@ -8,8 +8,14 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
     env:
-      REGISTRY: docker.io
+      REGISTRY_DOCKERHUB: docker.io
+      REGISTRY_GHCR: ghcr.io
       IMAGE_FRONTEND: mattstratton/conducky-frontend
       IMAGE_BACKEND: mattstratton/conducky-backend
     steps:
@@ -27,31 +33,74 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_GHCR }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract tag version
         id: get_tag
         run: |
           echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
+      - name: Extract metadata for frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.IMAGE_FRONTEND }}
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}-frontend
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest,enable={{is_default_branch}}
+
       - name: Build and push frontend image
+        id: push-frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.IMAGE_FRONTEND }}:${{ env.TAG }}
-            ${{ env.IMAGE_FRONTEND }}:latest
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
           build-args: |
             APP_VERSION=${{ env.TAG }}
 
+      - name: Generate artifact attestation for frontend
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY_GHCR }}/${{ github.repository }}-frontend
+          subject-digest: ${{ steps.push-frontend.outputs.digest }}
+          push-to-registry: true
+
+      - name: Extract metadata for backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.IMAGE_BACKEND }}
+            ${{ env.REGISTRY_GHCR }}/${{ github.repository }}-backend
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest,enable={{is_default_branch}}
+
       - name: Build and push backend image
+        id: push-backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.IMAGE_BACKEND }}:${{ env.TAG }}
-            ${{ env.IMAGE_BACKEND }}:latest
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
           build-args: |
-            APP_VERSION=${{ env.TAG }} 
+            APP_VERSION=${{ env.TAG }}
+
+      - name: Generate artifact attestation for backend
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY_GHCR }}/${{ github.repository }}-backend
+          subject-digest: ${{ steps.push-backend.outputs.digest }}
+          push-to-registry: true 
