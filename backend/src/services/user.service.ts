@@ -583,8 +583,11 @@ export class UserService {
           evidenceFiles: {
             select: { id: true, filename: true, mimetype: true, size: true }
           },
-          _count: {
-            select: { comments: true }
+          comments: {
+            select: {
+              id: true,
+              visibility: true
+            }
           }
         },
         orderBy: { [sortField]: sortOrder },
@@ -592,11 +595,36 @@ export class UserService {
         take: limitNum
       });
 
-      // Add user's role in each event to the response
-      const reportsWithRoles = reports.map(report => ({
-        ...report,
-        userRoles: eventRoles.get(report.eventId)?.roles || []
-      }));
+      // Add user's role in each event to the response and calculate visible comment count
+      const reportsWithRoles = reports.map(report => {
+        const userRoles = eventRoles.get(report.eventId)?.roles || [];
+        const isResponderOrAbove = userRoles.some((r: string) => ['responder', 'event_admin', 'system_admin'].includes(r));
+        
+        // Calculate comment count based on user permissions
+        let visibleCommentCount = 0;
+        if (report.comments && Array.isArray(report.comments)) {
+          if (isResponderOrAbove) {
+            // Responders and above can see all comments
+            visibleCommentCount = report.comments.length;
+          } else {
+            // Reporters can only see public comments (and internal if they're assigned to the report)
+            const isAssignedToReport = report.assignedResponderId === userId;
+            visibleCommentCount = report.comments.filter(comment => 
+              comment.visibility === 'public' || (comment.visibility === 'internal' && isAssignedToReport)
+            ).length;
+          }
+        }
+
+        // Remove the comments array and add the count
+        const { comments, ...reportWithoutComments } = report;
+        return {
+          ...reportWithoutComments,
+          _count: {
+            comments: visibleCommentCount
+          },
+          userRoles
+        };
+      });
 
       const canViewAssignments = responderAdminEvents.length > 0;
 
