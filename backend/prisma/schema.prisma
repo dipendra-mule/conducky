@@ -69,7 +69,10 @@ enum SocialProvider {
   github
 }
 
-
+enum OrganizationRole {
+  org_admin
+  org_viewer
+}
 
 model User {
   id             String   @id @default(uuid())
@@ -78,6 +81,7 @@ model User {
   passwordHash   String? // Optional for social login users
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  userEventRoles UserEventRole[]
   reports        Report[] @relation("ReporterReports")
   auditLogs      AuditLog[]
   reportComments ReportComment[]
@@ -88,7 +92,9 @@ model User {
   notifications  Notification[]
   socialAccounts SocialAccount[]
   notificationSettings UserNotificationSettings?
+  organizationMemberships OrganizationMembership[]
   createdOrganizations Organization[] @relation("OrganizationCreator")
+  createdMemberships OrganizationMembership[] @relation("MembershipCreator")
   createdOrgInvites OrganizationInviteLink[] @relation("OrganizationInviteCreator")
   // Unified role system relations
   userRoles      UserRole[]
@@ -110,6 +116,7 @@ model Event {
   updatedAt      DateTime @updatedAt
   organizationId String?  // Nullable initially for migration
   organization   Organization? @relation(fields: [organizationId], references: [id])
+  userEventRoles UserEventRole[]
   reports        Report[]
   auditLogs      AuditLog[]
   inviteLinks    EventInviteLink[]
@@ -117,9 +124,23 @@ model Event {
   notifications  Notification[]
 }
 
+model Role {
+  id   String @id @default(uuid())
+  name String @unique // e.g., Reporter, Responder, Admin, SuperAdmin
+  userEventRoles UserEventRole[]
+  eventInviteLinks EventInviteLink[]
+}
 
-
-
+model UserEventRole {
+  id      String @id @default(uuid())
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+  event   Event? @relation(fields: [eventId], references: [id])
+  eventId String?
+  role    Role   @relation(fields: [roleId], references: [id])
+  roleId  String
+  @@unique([userId, eventId, roleId])
+}
 
 model Report {
   id          String   @id @default(uuid())
@@ -173,7 +194,7 @@ model EventInviteLink {
   disabled        Boolean  @default(false)
   note            String?
   roleId          String
-  role            UnifiedRole @relation(fields: [roleId], references: [id])
+  role            Role     @relation(fields: [roleId], references: [id])
 }
 
 model ReportComment {
@@ -331,8 +352,6 @@ model UnifiedRole {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   userRoles   UserRole[]
-  eventInviteLinks EventInviteLink[]
-  organizationInviteLinks OrganizationInviteLink[]
 }
 
 model UserRole {
@@ -369,13 +388,26 @@ model Organization {
   createdById String
   
   // Relationships
+  memberships OrganizationMembership[]
   events      Event[]
   auditLogs   AuditLog[]
   logo        OrganizationLogo?
   inviteLinks OrganizationInviteLink[]
 }
 
-
+model OrganizationMembership {
+  id             String           @id @default(uuid())
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  role           OrganizationRole
+  createdAt      DateTime         @default(now())
+  createdBy      User?            @relation("MembershipCreator", fields: [createdById], references: [id])
+  createdById    String?
+  
+  @@unique([organizationId, userId])
+}
 
 model OrganizationLogo {
   id             String       @id @default(uuid())
@@ -401,6 +433,5 @@ model OrganizationInviteLink {
   useCount         Int              @default(0)
   disabled         Boolean          @default(false)
   note             String?
-  roleId           String
-  role             UnifiedRole @relation(fields: [roleId], references: [id])
+  role             OrganizationRole
 }
