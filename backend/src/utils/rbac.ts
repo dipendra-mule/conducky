@@ -28,9 +28,9 @@ const ROLE_MAPPING: Record<string, string> = {
 };
 
 /**
- * All supported role names (both legacy and new for backward compatibility)
+ * All supported role names (unified system)
  */
-type RoleName = "SuperAdmin" | "Event Admin" | "Responder" | "Reporter" | "system_admin" | "event_admin" | "responder" | "reporter" | "org_admin" | "org_viewer";
+type RoleName = "system_admin" | "event_admin" | "responder" | "reporter" | "org_admin" | "org_viewer";
 
 /**
  * Middleware to require a user to have one of the allowed roles.
@@ -72,7 +72,7 @@ export function requireRole(allowedRoles: RoleName[]) {
       const mappedRoles = allowedRoles.map(role => ROLE_MAPPING[role] || role);
 
       // Check system admin access first (system admins can access everything)
-      if (mappedRoles.includes('system_admin') || allowedRoles.includes('SuperAdmin')) {
+      if (mappedRoles.includes('system_admin')) {
         const isSystemAdmin = await unifiedRBAC.isSystemAdmin(user.id);
         if (isSystemAdmin) {
           next();

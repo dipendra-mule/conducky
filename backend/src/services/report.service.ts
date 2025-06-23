@@ -455,13 +455,7 @@ export class ReportService {
       // Verify assigned user exists and has appropriate role if assignment is required
       if (assignedToUserId) {
         const assignedUser = await this.prisma.user.findUnique({
-          where: { id: assignedToUserId },
-          include: {
-            userEventRoles: {
-              where: { eventId: eventId },
-              include: { role: true }
-            }
-          }
+          where: { id: assignedToUserId }
         });
 
         if (!assignedUser) {
@@ -471,12 +465,14 @@ export class ReportService {
           };
         }
 
-        const hasResponderOrAdmin = assignedUser.userEventRoles.some((er: any) => 
-                  ['responder', 'event_admin', 'system_admin'].includes(er.role.name) ||
-        ['responder', 'event admin'].includes(er.role.name.toLowerCase())
+        // Check if user has appropriate role using unified RBAC
+        const hasEventRole = await this.unifiedRBAC.hasEventRole(
+          assignedToUserId, 
+          eventId, 
+          ['responder', 'event_admin']
         );
 
-        if (!hasResponderOrAdmin) {
+        if (!hasEventRole) {
           return {
             success: false,
             error: 'Assigned user must have Responder or Event Admin role for this event.'
