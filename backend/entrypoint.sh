@@ -9,12 +9,26 @@ fi
 # Generate Prisma client and run migrations
 echo "Generating Prisma client..."
 npx prisma generate
-echo "Running Prisma migrations..."
-npx prisma migrate deploy
 
-# Always ensure roles are seeded correctly
+echo "Running Prisma migrations..."
+# Try to run migrations, but don't fail the container if they fail
+if npx prisma migrate deploy; then
+  echo "✅ Migrations completed successfully"
+else
+  echo "⚠️ Migrations failed - container will start anyway"
+  echo "⚠️ You may need to run migration fix commands manually"
+  echo "⚠️ Commands to run:"
+  echo "⚠️   npm run migrate:fix-state"
+  echo "⚠️   npm run migrate:unified-roles"
+fi
+
+# Always ensure roles are seeded correctly (but don't fail if it fails)
 echo "Seeding roles..."
-npm run seed:roles
+if npm run seed:roles; then
+  echo "✅ Roles seeded successfully"
+else
+  echo "⚠️ Role seeding failed - may need manual migration"
+fi
 
 # Always ensure email templates are available (needed for both dev and prod)
 echo "Ensuring email templates are available..."
