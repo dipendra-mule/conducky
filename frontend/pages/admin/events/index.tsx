@@ -28,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AuthGuard } from '@/components/shared/AuthGuard';
 
 interface Event {
   id: string;
@@ -204,286 +205,294 @@ export default function SystemEventsManagement() {
         <meta name="description" content="Manage all events in the system" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="mx-auto max-w-7xl">
-          {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Events Management</h1>
-              <p className="text-gray-600">Manage all events in the system</p>
-            </div>
-            <Button onClick={() => router.push('/admin/events/new')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Event
-            </Button>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data?.statistics.totalEvents || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  All events in system
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Events</CardTitle>
-                <Power className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{data?.statistics.activeEvents || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Currently active
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data?.statistics.totalUsers || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Across all events
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{data?.statistics.totalReports || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  All-time reports
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filters and Search */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Events</CardTitle>
-              <CardDescription>
-                Search and filter events
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search events by name or slug..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      Status: {statusFilter === 'all' ? 'All' : statusFilter === 'active' ? 'Active' : 'Inactive'}
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setStatusFilter('all')}>
-                      All Events
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter('active')}>
-                      Active Only
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter('inactive')}>
-                      Inactive Only
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+      <AuthGuard
+        requiredRoles={['system_admin']}
+        loginPromptProps={{
+          title: "System Admin Access Required",
+          message: "You need system administrator privileges to access this page."
+        }}
+      >
+        <div className="min-h-screen bg-gray-50 p-6">
+          <div className="mx-auto max-w-7xl">
+            {/* Header */}
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Events Management</h1>
+                <p className="text-gray-600">Manage all events in the system</p>
               </div>
-            </CardContent>
-          </Card>
+              <Button onClick={() => router.push('/admin/events/new')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Event
+              </Button>
+            </div>
 
-          {/* Desktop Table */}
-          <div className="hidden md:block">
-            <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Event</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Users</TableHead>
-                      <TableHead>Reports</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEvents.map((event) => (
-                      <TableRow key={event.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{event.name}</div>
-                            <div className="text-sm text-muted-foreground">/{event.slug}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {getEventStatusBadge(event.isActive)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-1 text-muted-foreground" />
-                            {event.userCount}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
-                            {event.reportCount}
-                          </div>
-                        </TableCell>
-                        <TableCell>{formatDate(event.createdAt)}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link href={`/events/${event.slug}/dashboard`}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Event
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/admin/events/${event.id}/edit`}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => toggleEventStatus(event.id, event.isActive)}
-                              >
-                                {event.isActive ? (
-                                  <>
-                                    <PowerOff className="h-4 w-4 mr-2" />
-                                    Disable
-                                  </>
-                                ) : (
-                                  <>
-                                    <Power className="h-4 w-4 mr-2" />
-                                    Enable
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="md:hidden space-y-4">
-            {filteredEvents.map((event) => (
-              <Card key={event.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{event.name}</CardTitle>
-                    {getEventStatusBadge(event.isActive)}
-                  </div>
-                  <CardDescription>/{event.slug}</CardDescription>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-1 text-muted-foreground" />
-                      {event.userCount} users
-                    </div>
-                    <div className="flex items-center">
-                      <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
-                      {event.reportCount} reports
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Created {formatDate(event.createdAt)}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/events/${event.slug}/dashboard`}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/admin/events/${event.id}/edit`}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Link>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => toggleEventStatus(event.id, event.isActive)}
-                    >
-                      {event.isActive ? (
-                        <>
-                          <PowerOff className="h-4 w-4 mr-1" />
-                          Disable
-                        </>
-                      ) : (
-                        <>
-                          <Power className="h-4 w-4 mr-1" />
-                          Enable
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data?.statistics.totalEvents || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    All events in system
+                  </p>
                 </CardContent>
               </Card>
-            ))}
-          </div>
 
-          {/* Empty State */}
-          {filteredEvents.length === 0 && !loading && (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No events found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm || statusFilter !== 'all' 
-                    ? 'No events match your current filters.' 
-                    : 'Get started by creating your first event.'}
-                </p>
-                {!searchTerm && statusFilter === 'all' && (
-                  <Button onClick={() => router.push('/admin/events/new')}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Event
-                  </Button>
-                )}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Events</CardTitle>
+                  <Power className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{data?.statistics.activeEvents || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Currently active
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data?.statistics.totalUsers || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Across all events
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{data?.statistics.totalReports || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    All-time reports
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Filters and Search */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Events</CardTitle>
+                <CardDescription>
+                  Search and filter events
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Search events by name or slug..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        Status: {statusFilter === 'all' ? 'All' : statusFilter === 'active' ? 'Active' : 'Inactive'}
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+                        All Events
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStatusFilter('active')}>
+                        Active Only
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStatusFilter('inactive')}>
+                        Inactive Only
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </CardContent>
             </Card>
-          )}
+
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Event</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Users</TableHead>
+                        <TableHead>Reports</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredEvents.map((event) => (
+                        <TableRow key={event.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{event.name}</div>
+                              <div className="text-sm text-muted-foreground">/{event.slug}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getEventStatusBadge(event.isActive)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-1 text-muted-foreground" />
+                              {event.userCount}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
+                              {event.reportCount}
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatDate(event.createdAt)}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/events/${event.slug}/dashboard`}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Event
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/admin/events/${event.id}/edit`}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => toggleEventStatus(event.id, event.isActive)}
+                                >
+                                  {event.isActive ? (
+                                    <>
+                                      <PowerOff className="h-4 w-4 mr-2" />
+                                      Disable
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Power className="h-4 w-4 mr-2" />
+                                      Enable
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-4">
+              {filteredEvents.map((event) => (
+                <Card key={event.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{event.name}</CardTitle>
+                      {getEventStatusBadge(event.isActive)}
+                    </div>
+                    <CardDescription>/{event.slug}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-1 text-muted-foreground" />
+                        {event.userCount} users
+                      </div>
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
+                        {event.reportCount} reports
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Created {formatDate(event.createdAt)}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/events/${event.slug}/dashboard`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/events/${event.id}/edit`}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Link>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => toggleEventStatus(event.id, event.isActive)}
+                      >
+                        {event.isActive ? (
+                          <>
+                            <PowerOff className="h-4 w-4 mr-1" />
+                            Disable
+                          </>
+                        ) : (
+                          <>
+                            <Power className="h-4 w-4 mr-1" />
+                            Enable
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Empty State */}
+            {filteredEvents.length === 0 && !loading && (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No events found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {searchTerm || statusFilter !== 'all' 
+                      ? 'No events match your current filters.' 
+                      : 'Get started by creating your first event.'}
+                  </p>
+                  {!searchTerm && statusFilter === 'all' && (
+                    <Button onClick={() => router.push('/admin/events/new')}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Event
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
-      </div>
+      </AuthGuard>
     </>
   );
 } 
