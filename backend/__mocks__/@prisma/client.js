@@ -206,11 +206,17 @@ class PrismaClient {
     this.role = {
       findUnique: jest.fn(
         ({ where }) =>
-          inMemoryStore.roles.find((r) => r.name === where.name) || null,
+          inMemoryStore.roles.find((r) => 
+            (where.id && r.id === where.id) || 
+            (where.name && r.name === where.name)
+          ) || null,
       ),
       findFirst: jest.fn(
         ({ where }) =>
-          inMemoryStore.roles.find((r) => r.name === where.name) || null,
+          inMemoryStore.roles.find((r) => 
+            (where.id && r.id === where.id) || 
+            (where.name && r.name === where.name)
+          ) || null,
       ),
       findMany: jest.fn(() => [...inMemoryStore.roles]),
       create: jest.fn(({ data }) => {
@@ -224,10 +230,21 @@ class PrismaClient {
     };
     this.user = {
       findUnique: jest.fn(
-        ({ where }) =>
-          inMemoryStore.users.find(
+        ({ where, include }) => {
+          const user = inMemoryStore.users.find(
             (u) => u.id === where.id || u.email === where.email,
-          ) || null,
+          );
+          if (!user) return null;
+          
+          // Add avatarUrl if user has an avatar
+          const userWithAvatar = { ...user };
+          const userAvatar = inMemoryStore.userAvatars.find(a => a.userId === user.id);
+          if (userAvatar) {
+            userWithAvatar.avatarUrl = `/api/users/${user.id}/avatar`;
+          }
+          
+          return userWithAvatar;
+        },
       ),
       count: jest.fn(() => inMemoryStore.users.length),
       create: jest.fn(({ data }) => {
@@ -297,6 +314,19 @@ class PrismaClient {
               const event = inMemoryStore.events.find(e => String(e.id) === String(result.eventId));
               if (event) {
                 enhancedResult.event = event;
+              }
+            }
+            
+            if (include.user) {
+              // Find the user and add avatarUrl if they have an avatar
+              const user = inMemoryStore.users.find(u => u.id === result.userId);
+              if (user) {
+                const userWithAvatar = { ...user };
+                const userAvatar = inMemoryStore.userAvatars.find(a => a.userId === user.id);
+                if (userAvatar) {
+                  userWithAvatar.avatarUrl = `/api/users/${user.id}/avatar`;
+                }
+                enhancedResult.user = userWithAvatar;
               }
             }
             
@@ -428,6 +458,19 @@ class PrismaClient {
           
           if (include.event) {
             result.event = inMemoryStore.events.find((e) => e.id === result.eventId) || result.event;
+          }
+          
+          if (include.user) {
+            // Find the user and add avatarUrl if they have an avatar
+            const user = inMemoryStore.users.find(u => u.id === result.userId);
+            if (user) {
+              const userWithAvatar = { ...user };
+              const userAvatar = inMemoryStore.userAvatars.find(a => a.userId === user.id);
+              if (userAvatar) {
+                userWithAvatar.avatarUrl = `/api/users/${user.id}/avatar`;
+              }
+              result.user = userWithAvatar;
+            }
           }
         }
         
