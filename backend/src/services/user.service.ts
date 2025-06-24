@@ -783,44 +783,140 @@ export class UserService {
   }
 
   /**
-   * Get recent activity for the current user (placeholder with mock data)
+   * Get recent activity for the current user
    */
   async getActivity(userId: string): Promise<ServiceResult<{ activity: ActivityItem[] }>> {
     try {
-      // Mock data - real audit log implementation is a future enhancement
-      const mockActivity = [
-        {
+      // Get user's event IDs for filtering activity
+      const userEventRoles = await this.unifiedRBAC.getUserRoles(userId, 'event');
+      const eventIds = userEventRoles.map((role: any) => role.scopeId);
+
+      // Get recent reports submitted by user
+      const recentReports = await this.prisma.report.findMany({
+        where: { reporterId: userId },
+        include: {
+          event: { select: { name: true, slug: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      });
+
+      // Get recent reports assigned to user
+      const assignedReports = await this.prisma.report.findMany({
+        where: { assignedResponderId: userId },
+        include: {
+          event: { select: { name: true, slug: true } }
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 10
+      });
+
+      // Get recent comments by user
+      const recentComments = await this.prisma.reportComment.findMany({
+        where: { 
+          authorId: userId,
+          report: {
+            eventId: { in: eventIds }
+          }
+        },
+        include: {
+          report: {
+            select: { 
+              title: true, 
+              event: { select: { name: true, slug: true } }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      });
+
+      // Get recent audit logs for user
+      const recentAuditLogs = await this.prisma.auditLog.findMany({
+        where: {
+          userId: userId,
+          eventId: { in: eventIds }
+        },
+        include: {
+          event: { select: { name: true, slug: true } }
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 10
+      });
+
+      // Convert to activity items
+      const activities: ActivityItem[] = [];
+
+      // Add report submissions
+      recentReports.forEach(report => {
+        activities.push({
           type: 'report_submitted',
-          message: 'You submitted a new report in DuckCon.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-          eventSlug: 'duckcon',
-          reportId: 'rpt1',
-        },
-        {
+          message: `You submitted a new report in ${report.event.name}`,
+          timestamp: report.createdAt.toISOString(),
+          eventSlug: report.event.slug,
+          reportId: report.id
+        });
+      });
+
+      // Add report assignments
+      assignedReports.forEach(report => {
+        activities.push({
           type: 'report_assigned',
-          message: 'A report was assigned to you in TechFest.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          eventSlug: 'techfest',
-          reportId: 'rpt2',
-        },
-        {
-          type: 'invited',
-          message: 'You were invited to PyData Chicago.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-          eventSlug: 'pydata-chicago',
-        },
-        {
-          type: 'status_changed',
-          message: 'A report you submitted was marked as resolved.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-          eventSlug: 'duckcon',
-          reportId: 'rpt3',
-        },
-      ];
-      
+          message: `A report was assigned to you in ${report.event.name}`,
+          timestamp: report.updatedAt.toISOString(),
+          eventSlug: report.event.slug,
+          reportId: report.id
+        });
+      });
+
+      // Add comments
+      recentComments.forEach(comment => {
+        activities.push({
+          type: 'comment_posted',
+          message: `You commented on "${comment.report.title}" in ${comment.report.event.name}`,
+          timestamp: comment.createdAt.toISOString(),
+          eventSlug: comment.report.event.slug,
+          reportId: comment.reportId
+        });
+      });
+
+      // Add audit log activities
+      recentAuditLogs.forEach(log => {
+        let message = '';
+        switch (log.action) {
+          case 'report_state_changed':
+            message = `Report status was updated in ${log.event?.name || 'an event'}`;
+            break;
+          case 'user_invited':
+            message = `You were invited to ${log.event?.name || 'an event'}`;
+            break;
+          case 'role_assigned':
+            message = `Your role was updated in ${log.event?.name || 'an event'}`;
+            break;
+          case 'report_created':
+            message = `A new report was created in ${log.event?.name || 'an event'}`;
+            break;
+          default:
+            message = `${log.action.replace('_', ' ')} in ${log.event?.name || 'an event'}`;
+        }
+
+        activities.push({
+          type: log.action,
+          message: message,
+          timestamp: log.timestamp.toISOString(),
+          eventSlug: log.event?.slug,
+          reportId: log.targetType === 'Report' ? log.targetId : undefined
+        });
+      });
+
+      // Sort all activities by timestamp (most recent first) and take top 20
+      const sortedActivities = activities
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 20);
+
       return {
         success: true,
-        data: { activity: mockActivity }
+        data: { activity: sortedActivities }
       };
     } catch (error: any) {
       console.error('Error fetching activity:', error);

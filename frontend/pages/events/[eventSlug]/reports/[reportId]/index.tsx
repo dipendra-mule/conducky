@@ -244,11 +244,11 @@ export default function ReportDetail() {
   useEffect(() => {
     if (!eventSlug || !isResponderOrAbove) return;
 
-    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + `/api/events/slug/${eventSlug}/users?role=Responder&limit=1000`, { credentials: 'include' })
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + `/api/events/slug/${eventSlug}/users?role=responder&limit=1000`, { credentials: 'include' })
       .then(res => res.ok ? res.json() : { users: [] })
       .then(data => {
 
-        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + `/api/events/slug/${eventSlug}/users?role=Event Admin&limit=1000`, { credentials: 'include' })
+        fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + `/api/events/slug/${eventSlug}/users?role=event_admin&limit=1000`, { credentials: 'include' })
           .then(res2 => res2.ok ? res2.json() : { users: [] })
           .then(data2 => {
 
@@ -693,6 +693,10 @@ export default function ReportDetail() {
       stateHistory={stateHistory}
       apiBaseUrl={process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}
       onTitleEdit={handleTitleEdit}
+      onReportUpdate={(updatedReport) => {
+        // Update the report state with the new data from field edits
+        setReport(updatedReport);
+      }}
     />
   );
 }

@@ -5,18 +5,30 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting comprehensive sample data seeding...');
 
-  // Ensure roles exist first
-  console.log('🔑 Creating roles...');
-  const roles = ['Reporter', 'Responder', 'Event Admin', 'System Admin'];
+  // First, ensure unified roles exist
+  console.log('🔑 Creating unified roles...');
+  const unifiedRoles = [
+    { name: 'system_admin', scope: 'system', level: 100, description: 'System administrator with global access' },
+    { name: 'org_admin', scope: 'organization', level: 50, description: 'Organization administrator' },
+    { name: 'org_viewer', scope: 'organization', level: 10, description: 'Organization viewer' },
+    { name: 'event_admin', scope: 'event', level: 40, description: 'Event administrator' },
+    { name: 'responder', scope: 'event', level: 20, description: 'Event responder' },
+    { name: 'reporter', scope: 'event', level: 5, description: 'Event reporter' }
+  ];
+
   const roleMap = {};
-  for (const roleName of roles) {
-    const role = await prisma.role.upsert({
-      where: { name: roleName },
-      update: {},
-      create: { name: roleName },
+  for (const roleData of unifiedRoles) {
+    const role = await prisma.unifiedRole.upsert({
+      where: { name: roleData.name },
+      update: {
+        scope: roleData.scope,
+        level: roleData.level,
+        description: roleData.description
+      },
+      create: roleData,
     });
-    roleMap[roleName] = role;
-    console.log(`✅ Role ensured: ${roleName}`);
+    roleMap[roleData.name] = role;
+    console.log(`✅ Unified role ensured: ${roleData.name} (${roleData.scope}, level ${roleData.level})`);
   }
 
   // Create diverse users with @mattstratton.com emails
@@ -76,21 +88,28 @@ async function main() {
     console.log(`👤 User created: ${u.name} (${u.email})`);
   }
 
-  // Assign SuperAdmin role to Matt (use create since eventId is null)
+  // Assign System Admin role to Matt using unified RBAC
   try {
-    await prisma.userEventRole.create({
-      data: { 
+    await prisma.userRole.upsert({
+      where: {
+        user_role_unique: {
+          userId: userRecords['Matt Stratton'].id,
+          roleId: roleMap['system_admin'].id,
+          scopeType: 'system',
+          scopeId: 'SYSTEM'
+        }
+      },
+      update: {},
+      create: { 
         userId: userRecords['Matt Stratton'].id, 
-        eventId: null, 
-        roleId: roleMap['System Admin'].id 
+        roleId: roleMap['system_admin'].id,
+        scopeType: 'system',
+        scopeId: 'SYSTEM',
+        grantedAt: new Date()
       },
     });
     console.log('👑 System Admin role assigned to Matt Stratton');
   } catch (error) {
-    // Role might already exist, which is fine
-    if (error.code !== 'P2002') { // P2002 is unique constraint violation
-      throw error;
-    }
     console.log('👑 System Admin role already exists for Matt Stratton');
   }
 
@@ -138,7 +157,7 @@ async function main() {
     });
     console.log(`🏢 Organization created: ${org.name}`);
 
-    // Create organization memberships
+    // Create organization memberships (legacy table for compatibility)
     // Admin
     await prisma.organizationMembership.upsert({
       where: { 
@@ -153,6 +172,26 @@ async function main() {
         userId: userRecords[org.adminUser].id,
         role: 'org_admin',
         createdById: userRecords[org.adminUser].id,
+      },
+    });
+
+    // Unified RBAC role for organization admin
+    await prisma.userRole.upsert({
+      where: {
+        user_role_unique: {
+          userId: userRecords[org.adminUser].id,
+          roleId: roleMap['org_admin'].id,
+          scopeType: 'organization',
+          scopeId: orgRecords[org.slug].id
+        }
+      },
+      update: {},
+      create: {
+        userId: userRecords[org.adminUser].id,
+        roleId: roleMap['org_admin'].id,
+        scopeType: 'organization',
+        scopeId: orgRecords[org.slug].id,
+        grantedAt: new Date()
       },
     });
 
@@ -171,6 +210,26 @@ async function main() {
           userId: userRecords[viewerName].id,
           role: 'org_viewer',
           createdById: userRecords[org.adminUser].id,
+        },
+      });
+
+      // Unified RBAC role for organization viewer
+      await prisma.userRole.upsert({
+        where: {
+          user_role_unique: {
+            userId: userRecords[viewerName].id,
+            roleId: roleMap['org_viewer'].id,
+            scopeType: 'organization',
+            scopeId: orgRecords[org.slug].id
+          }
+        },
+        update: {},
+        create: {
+          userId: userRecords[viewerName].id,
+          roleId: roleMap['org_viewer'].id,
+          scopeType: 'organization',
+          scopeId: orgRecords[org.slug].id,
+          grantedAt: new Date()
         },
       });
     }
@@ -272,51 +331,66 @@ async function main() {
     // Assign roles for this event
     // Event Admins
     for (const adminName of event.adminUsers) {
-      await prisma.userEventRole.upsert({
-        where: { userId_eventId_roleId: { 
-          userId: userRecords[adminName].id, 
-          eventId: eventRecords[event.slug].id, 
-          roleId: roleMap['Event Admin'].id 
-        }},
+      await prisma.userRole.upsert({
+        where: {
+          user_role_unique: {
+            userId: userRecords[adminName].id,
+            roleId: roleMap['event_admin'].id,
+            scopeType: 'event',
+            scopeId: eventRecords[event.slug].id
+          }
+        },
         update: {},
         create: { 
           userId: userRecords[adminName].id, 
-          eventId: eventRecords[event.slug].id, 
-          roleId: roleMap['Event Admin'].id 
+          roleId: roleMap['event_admin'].id,
+          scopeType: 'event',
+          scopeId: eventRecords[event.slug].id,
+          grantedAt: new Date()
         },
       });
     }
 
     // Responders
     for (const responderName of event.responderUsers) {
-      await prisma.userEventRole.upsert({
-        where: { userId_eventId_roleId: { 
-          userId: userRecords[responderName].id, 
-          eventId: eventRecords[event.slug].id, 
-          roleId: roleMap['Responder'].id 
-        }},
+      await prisma.userRole.upsert({
+        where: {
+          user_role_unique: {
+            userId: userRecords[responderName].id,
+            roleId: roleMap['responder'].id,
+            scopeType: 'event',
+            scopeId: eventRecords[event.slug].id
+          }
+        },
         update: {},
         create: { 
           userId: userRecords[responderName].id, 
-          eventId: eventRecords[event.slug].id, 
-          roleId: roleMap['Responder'].id 
+          roleId: roleMap['responder'].id,
+          scopeType: 'event',
+          scopeId: eventRecords[event.slug].id,
+          grantedAt: new Date()
         },
       });
     }
 
     // Reporters
     for (const reporterName of event.reporterUsers) {
-      await prisma.userEventRole.upsert({
-        where: { userId_eventId_roleId: { 
-          userId: userRecords[reporterName].id, 
-          eventId: eventRecords[event.slug].id, 
-          roleId: roleMap['Reporter'].id 
-        }},
+      await prisma.userRole.upsert({
+        where: {
+          user_role_unique: {
+            userId: userRecords[reporterName].id,
+            roleId: roleMap['reporter'].id,
+            scopeType: 'event',
+            scopeId: eventRecords[event.slug].id
+          }
+        },
         update: {},
         create: { 
           userId: userRecords[reporterName].id, 
-          eventId: eventRecords[event.slug].id, 
-          roleId: roleMap['Reporter'].id 
+          roleId: roleMap['reporter'].id,
+          scopeType: 'event',
+          scopeId: eventRecords[event.slug].id,
+          grantedAt: new Date()
         },
       });
     }

@@ -542,10 +542,17 @@ describe('Event Reports Export and Bulk Actions', () => {
 
       expect(response.headers['content-type']).toBe('text/csv; charset=utf-8');
       expect(response.headers['content-disposition']).toMatch(new RegExp(`attachment; filename="reports_${testSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}_\\d{4}-\\d{2}-\\d{2}\\.csv"`));
-      expect(response.text).toContain('ID,Title,Type,Status,Severity,Reporter,Assigned,Created,Description');
+      
+      // Verify CSV header includes URL field
+      expect(response.text).toContain('ID,Title,Type,Status,Severity,Reporter,Assigned,Created,Description,URL');
+      
+      // Verify report content
       expect(response.text).toContain('Test Report 1 for Export');
       expect(response.text).toContain('Test Report 2 for Export');
       expect(response.text).toContain('Test Report 3 for Export');
+      
+      // Verify URL field contains actual URLs
+      expect(response.text).toContain(`/events/${testSlug}/reports/`);
     });
 
     test('should export reports as PDF/text', async () => {

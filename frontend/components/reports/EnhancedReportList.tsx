@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
 
 interface Report {
   id: string;
@@ -38,6 +39,8 @@ interface Report {
   severity?: string;
   createdAt: string;
   updatedAt: string;
+  incidentAt?: string;
+  location?: string;
   reporter?: {
     id: string;
     name: string;
@@ -53,6 +56,12 @@ interface Report {
     name: string;
     slug: string;
   };
+  evidenceFiles?: Array<{
+    id: string;
+    filename: string;
+    mimetype: string;
+    size: number;
+  }>;
   _count?: {
     comments: number;
   };
@@ -247,25 +256,135 @@ export function EnhancedReportList({
   const handleExport = async (format: 'csv' | 'pdf') => {
     try {
       const selectedIds = Array.from(selectedReports);
-      const exportUrl = `${apiUrl}/export?format=${format}${selectedIds.length ? `&ids=${selectedIds.join(',')}` : ''}`;
+      const reportsToExport = selectedIds.length > 0 
+        ? reports.filter(report => selectedIds.includes(report.id))
+        : reports;
       
-      const response = await fetch(exportUrl, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Export failed');
+      if (format === 'csv') {
+        // Use backend CSV export
+        const exportUrl = `${apiUrl}/export?format=csv${selectedIds.length ? `&ids=${selectedIds.join(',')}` : ''}`;
+        
+        const response = await fetch(exportUrl, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('CSV export failed');
+        }
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reports_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+      } else if (format === 'pdf') {
+        // Generate PDF client-side using jsPDF
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+        const lineHeight = 6;
+        let yPosition = margin;
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        const title = eventSlug ? `Event Reports - ${eventSlug}` : 'Reports Export';
+        doc.text(title, margin, yPosition);
+        yPosition += lineHeight * 2;
+        
+        // Add generation date
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Generated: ${new Date().toLocaleString()}`, margin, yPosition);
+        yPosition += lineHeight * 2;
+        
+        // Add summary
+        doc.text(`Total Reports: ${reportsToExport.length}`, margin, yPosition);
+        yPosition += lineHeight * 1.5;
+        
+        // Add line separator
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += lineHeight;
+        
+        // Add each report
+        reportsToExport.forEach((report, index) => {
+          // Check if we need a new page
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          
+          // Report header
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${index + 1}. ${report.title}`, margin, yPosition);
+          yPosition += lineHeight;
+          
+          // Report details
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          
+          doc.text(`ID: ${report.id}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          doc.text(`Type: ${report.type}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          doc.text(`Status: ${report.state}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          if (report.severity) {
+            doc.text(`Severity: ${report.severity}`, margin + 5, yPosition);
+            yPosition += lineHeight * 0.8;
+          }
+          
+          if (report.reporter?.name) {
+            doc.text(`Reporter: ${report.reporter.name}`, margin + 5, yPosition);
+            yPosition += lineHeight * 0.8;
+          }
+          
+          if (report.assignedResponder?.name) {
+            doc.text(`Assigned: ${report.assignedResponder.name}`, margin + 5, yPosition);
+            yPosition += lineHeight * 0.8;
+          }
+          
+          doc.text(`Created: ${new Date(report.createdAt).toLocaleString()}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          // Add report URL
+          const reportUrl = `${window.location.origin}/events/${eventSlug || report.event.slug}/reports/${report.id}`;
+          doc.text(`URL: ${reportUrl}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          // Description (with text wrapping)
+          doc.text('Description:', margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          const splitDescription = doc.splitTextToSize(report.description, pageWidth - margin * 2 - 10);
+          doc.text(splitDescription, margin + 10, yPosition);
+          yPosition += lineHeight * 0.8 * splitDescription.length;
+          
+          // Add spacing between reports
+          yPosition += lineHeight;
+          
+          // Add separator line
+          if (index < reportsToExport.length - 1) {
+            doc.setDrawColor(230, 230, 230);
+            doc.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += lineHeight * 0.5;
+          }
+        });
+        
+        // Save the PDF
+        const filename = `reports_${eventSlug || 'export'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
       }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `reports_${new Date().toISOString().split('T')[0]}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Export failed');
@@ -527,11 +646,21 @@ export function EnhancedReportList({
                           </div>
                         </TableHead>
                         <TableHead>Severity</TableHead>
+                        <TableHead>Reporter</TableHead>
                         {canViewAssignments && <TableHead>Assigned</TableHead>}
+                        <TableHead>Incident Date</TableHead>
                         <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                           <div className="flex items-center">
                             Created
                             {sortField === 'createdAt' && (
+                              sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
+                            )}
+                          </div>
+                        </TableHead>
+                        <TableHead className="cursor-pointer" onClick={() => handleSort('updatedAt')}>
+                          <div className="flex items-center">
+                            Updated
+                            {sortField === 'updatedAt' && (
                               sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
                             )}
                           </div>
@@ -579,6 +708,9 @@ export function EnhancedReportList({
                               </Badge>
                             )}
                           </TableCell>
+                          <TableCell>
+                            {report.reporter?.name}
+                          </TableCell>
                           {canViewAssignments && (
                             <TableCell>
                               {report.assignedResponder ? (
@@ -590,7 +722,17 @@ export function EnhancedReportList({
                           )}
                           <TableCell>
                             <span className="text-sm text-muted-foreground">
+                              {report.incidentAt ? new Date(report.incidentAt).toLocaleDateString() : 'Not specified'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
                               {new Date(report.createdAt).toLocaleDateString()}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(report.updatedAt).toLocaleDateString()}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -642,11 +784,21 @@ export function EnhancedReportList({
                         </div>
                       </TableHead>
                       <TableHead>Severity</TableHead>
+                      <TableHead>Reporter</TableHead>
                       {canViewAssignments && <TableHead>Assigned</TableHead>}
+                      <TableHead>Incident Date</TableHead>
                       <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                         <div className="flex items-center">
                           Created
                           {sortField === 'createdAt' && (
+                            sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('updatedAt')}>
+                        <div className="flex items-center">
+                          Updated
+                          {sortField === 'updatedAt' && (
                             sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
                           )}
                         </div>
@@ -661,7 +813,7 @@ export function EnhancedReportList({
                       <TableCell colSpan={
                         (showBulkActions ? 1 : 0) + 
                         (showPinning ? 1 : 0) + 
-                        5 + // Title, Type, Status, Severity, Created
+                        8 + // Title, Type, Status, Severity, Reporter, Incident Date, Created, Updated
                         (canViewAssignments ? 1 : 0) + 
                         1 // Actions column
                       } className="text-center py-8">
@@ -722,6 +874,9 @@ export function EnhancedReportList({
                             </Badge>
                           )}
                         </TableCell>
+                        <TableCell>
+                          {report.reporter?.name}
+                        </TableCell>
                         {canViewAssignments && (
                           <TableCell>
                             {report.assignedResponder ? (
@@ -733,7 +888,17 @@ export function EnhancedReportList({
                         )}
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
+                            {report.incidentAt ? new Date(report.incidentAt).toLocaleDateString() : 'Not specified'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
                             {new Date(report.createdAt).toLocaleDateString()}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(report.updatedAt).toLocaleDateString()}
                           </span>
                         </TableCell>
                         <TableCell>

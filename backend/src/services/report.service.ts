@@ -165,6 +165,27 @@ export class ReportService {
         }
       }
 
+      // Validate incident date if provided - prevent future dates
+      if (data.incidentAt) {
+        const incidentDate = new Date(data.incidentAt);
+        if (isNaN(incidentDate.getTime())) {
+          return {
+            success: false,
+            error: 'Invalid incident date format.'
+          };
+        }
+
+        // Check if date is not too far in the future
+        const now = new Date();
+        const maxFutureDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+        if (incidentDate > maxFutureDate) {
+          return {
+            success: false,
+            error: 'Incident date cannot be more than 24 hours in the future.'
+          };
+        }
+      }
+
       const { eventId, reporterId, type, title, description, incidentAt, parties, location, contactPreference, urgency } = data;
 
       if (typeof title !== 'string' || title.length < 10 || title.length > 70) {
