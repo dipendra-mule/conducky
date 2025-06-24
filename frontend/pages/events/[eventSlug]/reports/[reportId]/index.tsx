@@ -693,6 +693,10 @@ export default function ReportDetail() {
       stateHistory={stateHistory}
       apiBaseUrl={process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}
       onTitleEdit={handleTitleEdit}
+      onReportUpdate={(updatedReport) => {
+        // Update the report state with the new data from field edits
+        setReport(updatedReport);
+      }}
     />
   );
 }

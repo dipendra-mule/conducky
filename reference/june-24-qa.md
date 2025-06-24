@@ -114,9 +114,19 @@
 - **Table Columns Now**: Title, Type, Status, Severity, Reporter, Assigned (conditional), Created, Actions
 
 ### 🔴 Report Detail Page (/events/.../reports/...)
-- **Issue 1**: Field edits don't refresh UI after save (type, description, incident date, location, parties)
-- **Status**: Not started
+### ✅ COMPLETED: Field Edits Don't Refresh UI
+- **Issue**: Field edits don't refresh UI after save (type, description, incident date, location, parties)
+- **Status**: ✅ **COMPLETED**
 - **Priority**: Medium
+- **Root Cause**: Missing `onReportUpdate` callback in report detail page - field edits were calling `onReportUpdate(responseData.report)` but the callback wasn't passed to `ReportDetailView` component
+- **Solution**: Added missing `onReportUpdate` callback that updates the report state when field edits are saved
+- **Implementation**:
+  - ✅ Added `onReportUpdate` prop to `ReportDetailView` component in `/pages/events/[eventSlug]/reports/[reportId]/index.tsx`
+  - ✅ Connected callback to `setReport(updatedReport)` to update parent state with new field values
+  - ✅ All field edit handlers (location, description, type, incident date, parties, contact preference) now properly refresh UI
+  - ✅ All 78 frontend tests passing (100% success rate)
+- **Fields Now Working**: Type, Description, Incident Date, Location, Parties Involved, Contact Preference
+- **User Experience**: Field edits now immediately show updated values without requiring page refresh
 
 - **Issue 2**: Markdown comments not rendered as markdown
 - **Status**: Not started
