@@ -501,17 +501,51 @@ describe("Event endpoints", () => {
       expect(res.body.report).toHaveProperty("parties", null);
     });
 
-    it("should reject invalid report type", async () => {
+    it("should reject future incident dates beyond 24 hours", async () => {
+      // Create a date 48 hours in the future
+      const futureDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      
       const res = await request(app)
         .post("/api/events/1/reports")
         .send({ 
-          type: "invalid_type", 
-          description: "Test report", 
+          type: "harassment", 
+          description: "Test report with future date", 
           title: "A valid report title",
-          urgency: "low"
+          incidentAt: futureDate
         });
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error");
+      expect(res.body.error).toBe("Incident date cannot be more than 24 hours in the future.");
+    });
+
+    it("should accept incident dates within 24 hours in the future", async () => {
+      // Create a date 1 hour in the future (within 24 hour limit)
+      const nearFutureDate = new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString();
+      
+      const res = await request(app)
+        .post("/api/events/1/reports")
+        .send({ 
+          type: "harassment", 
+          description: "Test report with near future date", 
+          title: "A valid report title",
+          incidentAt: nearFutureDate
+        });
+      expect(res.statusCode).toBe(201);
+      expect(res.body.report).toHaveProperty("incidentAt");
+    });
+
+    it("should reject invalid incident date format", async () => {
+      const res = await request(app)
+        .post("/api/events/1/reports")
+        .send({ 
+          type: "harassment", 
+          description: "Test report with invalid date", 
+          title: "A valid report title",
+          incidentAt: "not-a-date"
+        });
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error");
+      expect(res.body.error).toBe("Invalid incident date format.");
     });
 
     // Test edit endpoints

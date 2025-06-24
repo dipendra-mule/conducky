@@ -92,100 +92,6 @@ export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
     } catch {
       setInviteError("Failed to disable invite link");
     }
-import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ClipboardIcon } from "@heroicons/react/24/outline";
-
-interface Invite {
-  id: string;
-  url: string;
-  role: string | { name: string };
-  disabled: boolean;
-  useCount: number;
-  maxUses?: number;
-  expiresAt?: string;
-  note?: string;
-}
-
-interface InviteForm {
-  maxUses: string;
-  expiresAt: string;
-  note: string;
-  role: string;
-}
-
-interface InviteManagerProps {
-  eventSlug: string;
-  rolesList: string[];
-}
-
-export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
-  const [inviteLinks, setInviteLinks] = useState<Invite[]>([]);
-  const [newInvite, setNewInvite] = useState<InviteForm>({ maxUses: "", expiresAt: "", note: "", role: rolesList[0] || "reporter" });
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteError, setInviteError] = useState("");
-  const [inviteSuccess, setInviteSuccess] = useState("");
-
-  const fetchInvites = async () => {
-    setInviteLoading(true);
-    setInviteError("");
-    try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + `/api/events/slug/${eventSlug}/invites`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch invites");
-      const data = await res.json();
-      setInviteLinks(data.invites || []);
-    } catch {
-      setInviteError("Failed to fetch invite links");
-    }
-    setInviteLoading(false);
-  };
-
-  useEffect(() => { fetchInvites(); }, [eventSlug]);
-
-  const handleCreateInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setInviteError("");
-    setInviteSuccess("");
-    setInviteLoading(true);
-    try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + `/events/slug/${eventSlug}/invites`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          maxUses: newInvite.maxUses || undefined,
-          expiresAt: newInvite.expiresAt || undefined,
-          note: newInvite.note || undefined,
-          role: newInvite.role || "reporter",
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to create invite");
-      setInviteSuccess("Invite link created!");
-      setNewInvite({ maxUses: "", expiresAt: "", note: "", role: rolesList[0] || "reporter" });
-      fetchInvites();
-    } catch {
-      setInviteError("Failed to create invite link");
-    }
-    setInviteLoading(false);
-  };
-
-  const handleDisableInvite = async (inviteId: string) => {
-    if (!window.confirm("Are you sure you want to disable this invite link?")) return;
-    setInviteLoading(true);
-    try {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + `/events/slug/${eventSlug}/invites/${inviteId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ disabled: true }),
-      });
-      if (!res.ok) throw new Error("Failed to disable invite");
-      fetchInvites();
-    } catch {
-      setInviteError("Failed to disable invite link");
-    }
     setInviteLoading(false);
   };
 
@@ -287,12 +193,14 @@ export function InviteManager({ eventSlug, rolesList }: InviteManagerProps) {
                   </TableCell>
                   <TableCell>{typeof invite.role === "string" ? formatRoleName(invite.role) : formatRoleName(invite.role.name)}</TableCell>
                   <TableCell>{invite.disabled ? "Disabled" : "Active"}</TableCell>
-                  <TableCell>{invite.useCount}/{invite.maxUses || "∞"}</TableCell>
-                  <TableCell>{invite.expiresAt ? new Date(invite.expiresAt).toLocaleString() : "—"}</TableCell>
-                  <TableCell>{invite.note || "—"}</TableCell>
+                  <TableCell>{invite.useCount}{invite.maxUses ? `/${invite.maxUses}` : ""}</TableCell>
+                  <TableCell>{invite.expiresAt ? new Date(invite.expiresAt).toLocaleDateString() : "Never"}</TableCell>
+                  <TableCell>{invite.note || "-"}</TableCell>
                   <TableCell>
                     {!invite.disabled && (
-                      <Button onClick={() => handleDisableInvite(invite.id)} className="bg-red-600 text-white sm:px-2 sm:py-1 sm:text-sm">Disable</Button>
+                      <Button onClick={() => handleDisableInvite(invite.id)} className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 sm:px-2 sm:py-1 sm:text-sm">
+                        Disable
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>

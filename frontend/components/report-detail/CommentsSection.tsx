@@ -596,16 +596,10 @@ export function CommentsSection({
                       ) : (
                         <div>
                           <div className="prose prose-sm max-w-none dark:prose-invert">
-                            {comment.isMarkdown ? (
-                              <SafeReactMarkdown 
-                                content={highlightSearchTerm(comment.body)}
-                                className="text-foreground"
-                              />
-                            ) : (
-                              <div className="text-foreground whitespace-pre-wrap">
-                                {highlightSearchTerm(comment.body)}
-                              </div>
-                            )}
+                            <SafeReactMarkdown 
+                              content={highlightSearchTerm(comment.body)}
+                              className="text-foreground"
+                            />
                           </div>
                         </div>
                       )}

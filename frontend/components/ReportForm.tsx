@@ -110,6 +110,25 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
       return;
     }
     
+    // Validate incident date if provided - prevent future dates
+    if (incidentAt) {
+      const incidentDate = new Date(incidentAt);
+      if (isNaN(incidentDate.getTime())) {
+        form.setError("incidentAt", { message: "Please enter a valid date and time." });
+        setSubmitting(false);
+        return;
+      }
+
+      // Check if date is not too far in the future
+      const now = new Date();
+      const maxFutureDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+      if (incidentDate > maxFutureDate) {
+        form.setError("incidentAt", { message: "Incident date cannot be more than 24 hours in the future." });
+        setSubmitting(false);
+        return;
+      }
+    }
+    
     const formData = new FormData();
     formData.append("title", title);
     formData.append("type", type);

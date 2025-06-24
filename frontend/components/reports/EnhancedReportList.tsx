@@ -357,6 +357,11 @@ export function EnhancedReportList({
           doc.text(`Created: ${new Date(report.createdAt).toLocaleString()}`, margin + 5, yPosition);
           yPosition += lineHeight * 0.8;
           
+          // Add report URL
+          const reportUrl = `${window.location.origin}/events/${eventSlug || report.event.slug}/reports/${report.id}`;
+          doc.text(`URL: ${reportUrl}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
           // Description (with text wrapping)
           doc.text('Description:', margin + 5, yPosition);
           yPosition += lineHeight * 0.8;
@@ -644,8 +649,6 @@ export function EnhancedReportList({
                         <TableHead>Reporter</TableHead>
                         {canViewAssignments && <TableHead>Assigned</TableHead>}
                         <TableHead>Incident Date</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Evidence</TableHead>
                         <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                           <div className="flex items-center">
                             Created
@@ -724,16 +727,6 @@ export function EnhancedReportList({
                           </TableCell>
                           <TableCell>
                             <span className="text-sm text-muted-foreground">
-                              {report.location || 'Not specified'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground">
-                              {report.evidenceFiles?.length || 0} file{(report.evidenceFiles?.length || 0) === 1 ? '' : 's'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground">
                               {new Date(report.createdAt).toLocaleDateString()}
                             </span>
                           </TableCell>
@@ -794,8 +787,6 @@ export function EnhancedReportList({
                       <TableHead>Reporter</TableHead>
                       {canViewAssignments && <TableHead>Assigned</TableHead>}
                       <TableHead>Incident Date</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Evidence</TableHead>
                       <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                         <div className="flex items-center">
                           Created
@@ -822,7 +813,7 @@ export function EnhancedReportList({
                       <TableCell colSpan={
                         (showBulkActions ? 1 : 0) + 
                         (showPinning ? 1 : 0) + 
-                        10 + // Title, Type, Status, Severity, Reporter, Incident Date, Location, Evidence, Created, Updated
+                        8 + // Title, Type, Status, Severity, Reporter, Incident Date, Created, Updated
                         (canViewAssignments ? 1 : 0) + 
                         1 // Actions column
                       } className="text-center py-8">
@@ -898,16 +889,6 @@ export function EnhancedReportList({
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
                             {report.incidentAt ? new Date(report.incidentAt).toLocaleDateString() : 'Not specified'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {report.location || 'Not specified'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {report.evidenceFiles?.length || 0} file{(report.evidenceFiles?.length || 0) === 1 ? '' : 's'}
                           </span>
                         </TableCell>
                         <TableCell>

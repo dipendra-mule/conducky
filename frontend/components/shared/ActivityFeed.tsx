@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card } from "../ui/card";
 
 // NOTE: This uses mock data from the backend for now. Update to use real AuditLog data when available.
@@ -47,15 +48,39 @@ export function ActivityFeed() {
         <div className="text-center text-muted-foreground py-8">No recent activity.</div>
       ) : (
         <ul className="flex flex-col gap-4">
-          {activity.map((item, idx) => (
-            <li key={idx} className="flex items-start gap-3">
-              <span className="mt-2 w-2 h-2 rounded-full bg-primary flex-shrink-0" aria-hidden="true" />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-foreground leading-relaxed">{item.message}</div>
-                <div className="text-xs text-muted-foreground mt-1">{formatTimeAgo(item.timestamp)}</div>
+          {activity.map((item, idx) => {
+            // Create link if we have both eventSlug and reportId
+            const activityContent = (
+              <div className="flex items-start gap-3">
+                <span className="mt-2 w-2 h-2 rounded-full bg-primary flex-shrink-0" aria-hidden="true" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-foreground leading-relaxed">{item.message}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{formatTimeAgo(item.timestamp)}</div>
+                </div>
               </div>
-            </li>
-          ))}
+            );
+
+            // If we have both eventSlug and reportId, make it clickable
+            if (item.eventSlug && item.reportId) {
+              return (
+                <li key={idx}>
+                  <Link 
+                    href={`/events/${item.eventSlug}/reports/${item.reportId}`}
+                    className="block hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                  >
+                    {activityContent}
+                  </Link>
+                </li>
+              );
+            }
+
+            // Otherwise, render as non-clickable
+            return (
+              <li key={idx}>
+                {activityContent}
+              </li>
+            );
+          })}
         </ul>
       )}
     </Card>

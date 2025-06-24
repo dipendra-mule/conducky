@@ -2,6 +2,7 @@ import React from 'react';
 import { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -306,22 +307,28 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   {stats?.recentActivity && stats.recentActivity.length > 0 ? (
                     stats.recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-center justify-between border-b pb-2 last:border-b-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {activity.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-gray-500">{activity.eventName}</span>
-                            <Badge className={getStateColor(activity.state)}>
-                              {activity.state.replace('_', ' ')}
-                            </Badge>
+                      <Link 
+                        key={activity.id}
+                        href={`/events/${activity.eventSlug}/reports/${activity.id}`}
+                        className="block hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                      >
+                        <div className="flex items-center justify-between border-b pb-2 last:border-b-0">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {activity.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500">{activity.eventName}</span>
+                              <Badge className={getStateColor(activity.state)}>
+                                {activity.state.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500 ml-4">
+                            {formatDate(activity.createdAt)}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 ml-4">
-                          {formatDate(activity.createdAt)}
-                        </div>
-                      </div>
+                      </Link>
                     ))
                   ) : (
                     <p className="text-sm text-gray-500">No recent activity</p>
