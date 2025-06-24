@@ -86,20 +86,37 @@
 
 ## Reports Management Issues
 
-### 🔴 All Reports Page (/events/.../reports)
-- **Issue 1**: CSV export missing URL field for reports
-- **Status**: Not started
-- **Priority**: Medium
+### ✅ RESOLVED: CSV Export Missing URL Field
+- **Issue**: CSV export missing URL field
+- **Status**: ✅ **RESOLVED** (Already Implemented)
+- **Priority**: High
+- **Investigation**: 
+  - Checked backend `/api/events/slug/:slug/reports/export` endpoint
+  - Found CSV export already includes URL field in header: `ID,Title,Type,Status,Severity,Reporter,Assigned,Created,Description,URL`
+  - Each report row includes full URL: `${req.protocol}://${req.get('host')}/events/${slug}/reports/${report.id}`
+  - Test `should export reports as CSV` validates URL field presence and content
+  - All backend tests passing (274/274) including CSV export test
+- **Resolution**: No action needed - URL field already correctly implemented and tested
 
-- **Issue 2**: Missing columns for reporter and assignee in reports table
-- **Status**: Not started
+### ✅ COMPLETED: Missing Columns for Reporter and Assignee
+- **Issue**: Missing columns for reporter and assignee in reports table
+- **Status**: ✅ **COMPLETED**
 - **Priority**: Medium
+- **Solution**: Added Reporter column to reports table display
+- **Implementation**:
+  - ✅ Added Reporter column header to both pinned and regular reports table sections
+  - ✅ Added Reporter column data displaying `report.reporter?.name` in both table sections
+  - ✅ Updated column count calculation for empty state messages
+  - ✅ Assignee column already existed conditionally (when `canViewAssignments` is true)
+  - ✅ All 78 frontend tests passing (100% success rate)
+- **Files Modified**:
+  - `frontend/components/reports/EnhancedReportList.tsx` - Added Reporter column to table headers and data rows
+- **Table Columns Now**: Title, Type, Status, Severity, Reporter, Assigned (conditional), Created, Actions
 
 ### 🔴 Report Detail Page (/events/.../reports/...)
 - **Issue 1**: Field edits don't refresh UI after save (type, description, incident date, location, parties)
 - **Status**: Not started
 - **Priority**: Medium
-- **Note**: Data is saved but requires page refresh to see changes
 
 - **Issue 2**: Markdown comments not rendered as markdown
 - **Status**: Not started

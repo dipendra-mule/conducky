@@ -633,6 +633,7 @@ export function EnhancedReportList({
                           </div>
                         </TableHead>
                         <TableHead>Severity</TableHead>
+                        <TableHead>Reporter</TableHead>
                         {canViewAssignments && <TableHead>Assigned</TableHead>}
                         <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                           <div className="flex items-center">
@@ -684,6 +685,9 @@ export function EnhancedReportList({
                                 {report.severity}
                               </Badge>
                             )}
+                          </TableCell>
+                          <TableCell>
+                            {report.reporter?.name}
                           </TableCell>
                           {canViewAssignments && (
                             <TableCell>
@@ -748,6 +752,7 @@ export function EnhancedReportList({
                         </div>
                       </TableHead>
                       <TableHead>Severity</TableHead>
+                      <TableHead>Reporter</TableHead>
                       {canViewAssignments && <TableHead>Assigned</TableHead>}
                       <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                         <div className="flex items-center">
@@ -767,7 +772,7 @@ export function EnhancedReportList({
                       <TableCell colSpan={
                         (showBulkActions ? 1 : 0) + 
                         (showPinning ? 1 : 0) + 
-                        5 + // Title, Type, Status, Severity, Created
+                        6 + // Title, Type, Status, Severity, Reporter, Created
                         (canViewAssignments ? 1 : 0) + 
                         1 // Actions column
                       } className="text-center py-8">
@@ -827,6 +832,9 @@ export function EnhancedReportList({
                               {report.severity}
                             </Badge>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          {report.reporter?.name}
                         </TableCell>
                         {canViewAssignments && (
                           <TableCell>

@@ -1249,10 +1249,13 @@ router.get('/slug/:slug/reports/export', requireRole(['reporter', 'responder', '
     if (format === 'csv') {
       // Generate CSV
       const csvRows = [
-        'ID,Title,Type,Status,Severity,Reporter,Assigned,Created,Description'
+        'ID,Title,Type,Status,Severity,Reporter,Assigned,Created,Description,URL'
       ];
       
       reports.forEach(report => {
+        // Build the URL for the report
+        const reportUrl = `${req.protocol}://${req.get('host')}/events/${slug}/reports/${report.id}`;
+        
         const row = [
           report.id,
           `"${report.title.replace(/"/g, '""')}"`, // Escape quotes
@@ -1262,7 +1265,8 @@ router.get('/slug/:slug/reports/export', requireRole(['reporter', 'responder', '
           report.reporter?.name || '',
           report.assignedResponder?.name || '',
           new Date(report.createdAt).toISOString(),
-          `"${report.description.replace(/"/g, '""')}"` // Escape quotes
+          `"${report.description.replace(/"/g, '""')}"`, // Escape quotes
+          reportUrl
         ].join(',');
         csvRows.push(row);
       });
