@@ -129,8 +129,20 @@
 - **User Experience**: Field edits now immediately show updated values without requiring page refresh
 
 - **Issue 2**: Markdown comments not rendered as markdown
-- **Status**: Not started
+- **Status**: ✅ **COMPLETED**
 - **Priority**: Medium
+- **Root Cause**: Wrong markdown component used - `SecureMarkdown` (for HTML sanitization) instead of `SafeReactMarkdown` (for markdown rendering)
+- **Solution**: Fixed comment rendering to use correct markdown components:
+  - Updated `CommentsSection.tsx` to check `comment.isMarkdown` field
+  - Use `SafeReactMarkdown` for comments with `isMarkdown: true` to properly convert markdown to HTML
+  - Use plain text rendering for comments with `isMarkdown: false`
+  - Added proper conditional logic to handle both markdown and plain text comments
+- **Implementation**:
+  - ✅ Updated `CommentsSection.tsx` to check `comment.isMarkdown` field
+  - ✅ Use `SafeReactMarkdown` for comments with `isMarkdown: true` to properly convert markdown to HTML
+  - ✅ Use plain text rendering for comments with `isMarkdown: false`
+  - ✅ Added proper conditional logic to handle both markdown and plain text comments
+- **Results**: All 78 frontend tests passing, proper markdown formatting in comments
 
 ### 🔴 New Report Creation (/events/.../reports/new)
 - **Issue**: Allows submitting reports with future dates

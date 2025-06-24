@@ -39,6 +39,8 @@ interface Report {
   severity?: string;
   createdAt: string;
   updatedAt: string;
+  incidentAt?: string;
+  location?: string;
   reporter?: {
     id: string;
     name: string;
@@ -54,6 +56,12 @@ interface Report {
     name: string;
     slug: string;
   };
+  evidenceFiles?: Array<{
+    id: string;
+    filename: string;
+    mimetype: string;
+    size: number;
+  }>;
   _count?: {
     comments: number;
   };
@@ -635,10 +643,21 @@ export function EnhancedReportList({
                         <TableHead>Severity</TableHead>
                         <TableHead>Reporter</TableHead>
                         {canViewAssignments && <TableHead>Assigned</TableHead>}
+                        <TableHead>Incident Date</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Evidence</TableHead>
                         <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                           <div className="flex items-center">
                             Created
                             {sortField === 'createdAt' && (
+                              sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
+                            )}
+                          </div>
+                        </TableHead>
+                        <TableHead className="cursor-pointer" onClick={() => handleSort('updatedAt')}>
+                          <div className="flex items-center">
+                            Updated
+                            {sortField === 'updatedAt' && (
                               sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
                             )}
                           </div>
@@ -700,7 +719,27 @@ export function EnhancedReportList({
                           )}
                           <TableCell>
                             <span className="text-sm text-muted-foreground">
+                              {report.incidentAt ? new Date(report.incidentAt).toLocaleDateString() : 'Not specified'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {report.location || 'Not specified'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {report.evidenceFiles?.length || 0} file{(report.evidenceFiles?.length || 0) === 1 ? '' : 's'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
                               {new Date(report.createdAt).toLocaleDateString()}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(report.updatedAt).toLocaleDateString()}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -754,10 +793,21 @@ export function EnhancedReportList({
                       <TableHead>Severity</TableHead>
                       <TableHead>Reporter</TableHead>
                       {canViewAssignments && <TableHead>Assigned</TableHead>}
+                      <TableHead>Incident Date</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Evidence</TableHead>
                       <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
                         <div className="flex items-center">
                           Created
                           {sortField === 'createdAt' && (
+                            sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
+                          )}
+                        </div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer" onClick={() => handleSort('updatedAt')}>
+                        <div className="flex items-center">
+                          Updated
+                          {sortField === 'updatedAt' && (
                             sortOrder === 'asc' ? <SortAsc className="h-4 w-4 ml-1" /> : <SortDesc className="h-4 w-4 ml-1" />
                           )}
                         </div>
@@ -772,7 +822,7 @@ export function EnhancedReportList({
                       <TableCell colSpan={
                         (showBulkActions ? 1 : 0) + 
                         (showPinning ? 1 : 0) + 
-                        6 + // Title, Type, Status, Severity, Reporter, Created
+                        10 + // Title, Type, Status, Severity, Reporter, Incident Date, Location, Evidence, Created, Updated
                         (canViewAssignments ? 1 : 0) + 
                         1 // Actions column
                       } className="text-center py-8">
@@ -847,7 +897,27 @@ export function EnhancedReportList({
                         )}
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
+                            {report.incidentAt ? new Date(report.incidentAt).toLocaleDateString() : 'Not specified'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {report.location || 'Not specified'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {report.evidenceFiles?.length || 0} file{(report.evidenceFiles?.length || 0) === 1 ? '' : 's'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
                             {new Date(report.createdAt).toLocaleDateString()}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(report.updatedAt).toLocaleDateString()}
                           </span>
                         </TableCell>
                         <TableCell>
