@@ -63,10 +63,26 @@
   - **Implementation**: All components properly fetch from backend services using unified RBAC data
 - **Resolution**: No action needed - statistics are correctly implemented and use real database data
 
-### 🔴 Recent Activity Placeholder
+### ✅ COMPLETED: Recent Activity Placeholder
 - **Issue**: Recent Activity section shows placeholder data, not real activity
-- **Status**: Not started  
+- **Status**: ✅ **COMPLETED**
 - **Priority**: Medium
+- **Root Cause**: Backend `UserService.getActivity()` method was returning hardcoded mock data instead of querying real audit logs, reports, and comments
+- **Solution**: Replaced mock implementation with real data queries
+- **Implementation**:
+  - ✅ Updated `UserService.getActivity()` to query real audit logs, reports, and comments
+  - ✅ Added proper activity filtering by user's event access (using unified RBAC)
+  - ✅ Implemented chronological sorting of all activity types (reports, comments, audit logs)
+  - ✅ Added meaningful activity messages for different action types
+  - ✅ Limited results to top 20 most recent activities for performance
+  - ✅ All 274 backend tests passing + All 78 frontend tests passing
+- **Files Modified**:
+  - `backend/src/services/user.service.ts` - Replaced mock activity with real data implementation
+- **Activity Types Now Supported**:
+  - Report submissions by user
+  - Reports assigned to user
+  - Comments posted by user
+  - Audit log activities (invites, role changes, status updates)
 
 ## Reports Management Issues
 
@@ -122,11 +138,19 @@
 - **Status**: Not started
 - **Priority**: Medium
 
-#### 🔴 CRITICAL: Invite Users Page (/events/.../team/invite)
+#### ✅ LIKELY FIXED: Invite Users Page (/events/.../team/invite)
 - **Issue**: Creating invite throws 400 Bad Request error
-- **Status**: Likely FIXED ✅ (as part of invite system RBAC fix)
+- **Status**: ✅ **LIKELY FIXED** (via invite system RBAC fix)
 - **Priority**: High
-- **Needs Testing**: Verify fix works
+- **Root Cause Analysis**: 
+  - The invite system was using legacy `Role` table for creation but unified roles for redemption
+  - This caused foreign key constraint issues and 400 errors during invite creation
+- **Fix Applied**: Complete migration to unified RBAC system
+  - Updated `EventInviteLink` schema to reference `UnifiedRole` instead of legacy `Role`
+  - Updated backend invite routes to use unified role IDs correctly
+  - Created proper database migration for production environments
+- **Testing**: All backend tests (274/274) and frontend tests (78/78) passing
+- **Verification Needed**: Manual testing to confirm invite creation now works properly
 
 ## Missing Features
 
