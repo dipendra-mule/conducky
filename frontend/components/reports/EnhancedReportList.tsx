@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
 
 interface Report {
   id: string;
@@ -247,25 +248,130 @@ export function EnhancedReportList({
   const handleExport = async (format: 'csv' | 'pdf') => {
     try {
       const selectedIds = Array.from(selectedReports);
-      const exportUrl = `${apiUrl}/export?format=${format}${selectedIds.length ? `&ids=${selectedIds.join(',')}` : ''}`;
+      const reportsToExport = selectedIds.length > 0 
+        ? reports.filter(report => selectedIds.includes(report.id))
+        : reports;
       
-      const response = await fetch(exportUrl, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Export failed');
+      if (format === 'csv') {
+        // Use backend CSV export
+        const exportUrl = `${apiUrl}/export?format=csv${selectedIds.length ? `&ids=${selectedIds.join(',')}` : ''}`;
+        
+        const response = await fetch(exportUrl, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('CSV export failed');
+        }
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reports_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+      } else if (format === 'pdf') {
+        // Generate PDF client-side using jsPDF
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 20;
+        const lineHeight = 6;
+        let yPosition = margin;
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        const title = eventSlug ? `Event Reports - ${eventSlug}` : 'Reports Export';
+        doc.text(title, margin, yPosition);
+        yPosition += lineHeight * 2;
+        
+        // Add generation date
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Generated: ${new Date().toLocaleString()}`, margin, yPosition);
+        yPosition += lineHeight * 2;
+        
+        // Add summary
+        doc.text(`Total Reports: ${reportsToExport.length}`, margin, yPosition);
+        yPosition += lineHeight * 1.5;
+        
+        // Add line separator
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += lineHeight;
+        
+        // Add each report
+        reportsToExport.forEach((report, index) => {
+          // Check if we need a new page
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          
+          // Report header
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${index + 1}. ${report.title}`, margin, yPosition);
+          yPosition += lineHeight;
+          
+          // Report details
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          
+          doc.text(`ID: ${report.id}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          doc.text(`Type: ${report.type}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          doc.text(`Status: ${report.state}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          if (report.severity) {
+            doc.text(`Severity: ${report.severity}`, margin + 5, yPosition);
+            yPosition += lineHeight * 0.8;
+          }
+          
+          if (report.reporter?.name) {
+            doc.text(`Reporter: ${report.reporter.name}`, margin + 5, yPosition);
+            yPosition += lineHeight * 0.8;
+          }
+          
+          if (report.assignedResponder?.name) {
+            doc.text(`Assigned: ${report.assignedResponder.name}`, margin + 5, yPosition);
+            yPosition += lineHeight * 0.8;
+          }
+          
+          doc.text(`Created: ${new Date(report.createdAt).toLocaleString()}`, margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          // Description (with text wrapping)
+          doc.text('Description:', margin + 5, yPosition);
+          yPosition += lineHeight * 0.8;
+          
+          const splitDescription = doc.splitTextToSize(report.description, pageWidth - margin * 2 - 10);
+          doc.text(splitDescription, margin + 10, yPosition);
+          yPosition += lineHeight * 0.8 * splitDescription.length;
+          
+          // Add spacing between reports
+          yPosition += lineHeight;
+          
+          // Add separator line
+          if (index < reportsToExport.length - 1) {
+            doc.setDrawColor(230, 230, 230);
+            doc.line(margin, yPosition, pageWidth - margin, yPosition);
+            yPosition += lineHeight * 0.5;
+          }
+        });
+        
+        // Save the PDF
+        const filename = `reports_${eventSlug || 'export'}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(filename);
       }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `reports_${new Date().toISOString().split('T')[0]}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Export failed');
