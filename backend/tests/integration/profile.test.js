@@ -27,7 +27,7 @@ describe("Profile Management API", () => {
       { id: "event1", name: "Test Event", slug: "test-event", description: "Test event description" }
     ];
     inMemoryStore.userEventRoles = [];
-    inMemoryStore.eventInviteLinks = [];
+    inMemoryStore.eventInvites = [];
   });
 
   describe("PATCH /users/me/profile", () => {
@@ -353,12 +353,26 @@ describe("Profile Management API", () => {
       mockInvite = {
         code: "ABC123",
         eventId: mockEvent.id,
-        roleId: "role1",
+        roleId: "4", // Use valid unified reporter role ID
         disabled: false,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
         maxUses: 10,
         useCount: 5
       };
+
+      // Ensure both legacy and unified roles are available
+      inMemoryStore.roles = [
+        { id: "1", name: "System Admin" },
+        { id: "2", name: "Event Admin" },
+        { id: "3", name: "Responder" },
+        { id: "4", name: "Reporter" },
+      ];
+      inMemoryStore.unifiedRoles = [
+        { id: "1", name: "system_admin", description: "System Administrator", level: 100 },
+        { id: "2", name: "event_admin", description: "Event Administrator", level: 80 },
+        { id: "3", name: "responder", description: "Incident Responder", level: 60 },
+        { id: "4", name: "reporter", description: "Report Creator", level: 40 },
+      ];
     });
 
     it("should redeem invite successfully", async () => {
@@ -366,6 +380,7 @@ describe("Profile Management API", () => {
       inMemoryStore.eventInvites = [mockInvite];
       inMemoryStore.events = [mockEvent];
       inMemoryStore.userEventRoles = []; // User not already member
+      inMemoryStore.userRoles = []; // Clear unified roles too
 
       const res = await request(app)
         .post("/api/invites/ABC123/redeem");
@@ -374,12 +389,16 @@ describe("Profile Management API", () => {
       expect(res.body.message).toContain("Joined event successfully");
       expect(res.body.eventSlug).toBe(mockEvent.slug);
       
-      // Check that user was added to event
-      const userRole = inMemoryStore.userEventRoles.find(
-        uer => uer.userId === mockUser.id && uer.eventId === mockInvite.eventId
+      // Check that user was added to event in unified RBAC system
+      const userRole = inMemoryStore.userRoles.find(
+        ur => ur.userId === mockUser.id && ur.scopeId === mockInvite.eventId && ur.scopeType === 'event'
       );
       expect(userRole).toBeDefined();
-      expect(userRole.roleId).toBe(mockInvite.roleId);
+      
+      // Check the role by looking up the roleId in unifiedRoles
+      const role = inMemoryStore.unifiedRoles.find(r => r.id === userRole.roleId);
+      expect(role).toBeDefined();
+      expect(role.name).toBe('reporter'); // The unified role name for roleId "4"
     });
 
     it("should reject invalid invite code", async () => {
@@ -436,7 +455,7 @@ describe("Profile Management API", () => {
           id: "existing",
           userId: mockUser.id,
           eventId: mockInvite.eventId,
-          roleId: "2"
+          roleId: "3"
         }
       ];
 

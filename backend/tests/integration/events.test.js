@@ -877,11 +877,11 @@ describe("Slug-based Event/User Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to update", async () => {
-    // Remove all System Admin roles for this user (across all events)
+    // Remove all System Admin roles for this user (across all events) - legacy
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) => !(uer.userId === "1" && uer.role.name === "System Admin"),
     );
-    // Remove all Event Admin roles for this event
+    // Remove all Event Admin roles for this event - legacy
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
@@ -890,12 +890,28 @@ describe("Slug-based Event/User Endpoints", () => {
           uer.role.name === "Event Admin"
         ),
     );
-    // Add only Reporter role
+    // Remove all System Admin and Event Admin roles for this user - unified
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) =>
+        !(
+          ur.userId === "1" && ["system_admin", "event_admin"].includes(ur.role.name)
+        ),
+    );
+    // Add only Reporter role - legacy
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "3",
       role: { name: "Reporter" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    });
+    // Add only Reporter role - unified
+    inMemoryStore.userRoles.push({
+      userId: "1",
+      scopeType: "event",
+      scopeId: "2",
+      roleId: "4",
+      role: { name: "reporter" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
     const res = await request(app)
@@ -929,11 +945,11 @@ describe("Slug-based Event/User Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to delete", async () => {
-    // Remove all System Admin roles for this user (across all events)
+    // Remove all System Admin roles for this user (across all events) - legacy
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) => !(uer.userId === "1" && uer.role.name === "System Admin"),
     );
-    // Remove all Event Admin roles for this event
+    // Remove all Event Admin roles for this event - legacy
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
@@ -942,12 +958,28 @@ describe("Slug-based Event/User Endpoints", () => {
           uer.role.name === "Event Admin"
         ),
     );
-    // Add only Reporter role
+    // Remove all System Admin and Event Admin roles for this user - unified
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) =>
+        !(
+          ur.userId === "1" && ["system_admin", "event_admin"].includes(ur.role.name)
+        ),
+    );
+    // Add only Reporter role - legacy
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "3",
       role: { name: "Reporter" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    });
+    // Add only Reporter role - unified
+    inMemoryStore.userRoles.push({
+      userId: "1",
+      scopeType: "event",
+      scopeId: "2",
+      roleId: "4",
+      role: { name: "reporter" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
     const res = await request(app).delete(`/api/events/slug/${slug}/users/3`);
@@ -1034,19 +1066,35 @@ describe("Slug-based Event Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to update event", async () => {
-    // Remove all System Admin and Event Admin roles for this user
+    // Remove all System Admin and Event Admin roles for this user (legacy)
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
           uer.userId === "1" && ["System Admin", "Event Admin"].includes(uer.role.name)
         ),
     );
-    // Add only Reporter role
+    // Remove all System Admin and Event Admin roles for this user (unified)
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) =>
+        !(
+          ur.userId === "1" && ["system_admin", "event_admin"].includes(ur.role.name)
+        ),
+    );
+    // Add only Reporter role (legacy)
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "3",
       role: { name: "Reporter" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    });
+    // Add only Reporter role (unified)
+    inMemoryStore.userRoles.push({
+      userId: "1",
+      scopeType: "event",
+      scopeId: "2",
+      roleId: "4",
+      role: { name: "reporter" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
     const res = await request(app)
@@ -1078,19 +1126,35 @@ describe("Slug-based Event Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role to upload logo", async () => {
-    // Remove all System Admin and Event Admin roles for this user
+    // Remove all System Admin and Event Admin roles for this user (legacy)
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
           uer.userId === "1" && ["System Admin", "Event Admin"].includes(uer.role.name)
         ),
     );
-    // Add only Reporter role
+    // Remove all System Admin and Event Admin roles for this user (unified)
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) =>
+        !(
+          ur.userId === "1" && ["system_admin", "event_admin"].includes(ur.role.name)
+        ),
+    );
+    // Add only Reporter role (legacy)
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "3",
       role: { name: "Reporter" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    });
+    // Add only Reporter role (unified)
+    inMemoryStore.userRoles.push({
+      userId: "1",
+      scopeType: "event",
+      scopeId: "2",
+      roleId: "4",
+      role: { name: "reporter" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
     const res = await request(app)
@@ -1160,19 +1224,35 @@ describe("Slug-based Invite Endpoints", () => {
   });
 
   it("should return 403 if user does not have sufficient role", async () => {
-    // Remove all System Admin and Event Admin roles for this user
+    // Remove all System Admin and Event Admin roles for this user (legacy)
     inMemoryStore.userEventRoles = inMemoryStore.userEventRoles.filter(
       (uer) =>
         !(
           uer.userId === "1" && ["System Admin", "Event Admin"].includes(uer.role.name)
         ),
     );
-    // Add only Reporter role
+    // Remove all System Admin and Event Admin roles for this user (unified)
+    inMemoryStore.userRoles = inMemoryStore.userRoles.filter(
+      (ur) =>
+        !(
+          ur.userId === "1" && ["system_admin", "event_admin"].includes(ur.role.name)
+        ),
+    );
+    // Add only Reporter role (legacy)
     inMemoryStore.userEventRoles.push({
       userId: "1",
       eventId: "2",
       roleId: "3",
       role: { name: "Reporter" },
+      user: { id: "1", email: "admin@example.com", name: "Admin" },
+    });
+    // Add only Reporter role (unified)
+    inMemoryStore.userRoles.push({
+      userId: "1",
+      scopeType: "event",
+      scopeId: "2",
+      roleId: "4",
+      role: { name: "reporter" },
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
     const res = await request(app)
@@ -1290,6 +1370,19 @@ describe("User Avatar endpoints", () => {
     expect(sessionRes.body.user).toHaveProperty("avatarUrl");
     // /api/events/slug/:slug/users
     inMemoryStore.events[0].slug = "event1";
+    
+    // Set up user-event relationship in unified RBAC system so the user appears in the event users list
+    inMemoryStore.userRoles.push({
+      id: "ur_avatar_test",
+      userId: userId,
+      roleId: "2", // event_admin role
+      scopeType: "event",
+      scopeId: inMemoryStore.events[0].id,
+      grantedAt: new Date(),
+      role: { id: "2", name: "event_admin" },
+      user: { id: userId, email: "admin@example.com", name: "Admin" }
+    });
+    
     const usersRes = await request(app).get("/api/events/slug/event1/users");
     expect(usersRes.statusCode).toBe(200);
     expect(usersRes.body.users[0]).toHaveProperty("avatarUrl");

@@ -1743,13 +1743,17 @@ export class ReportService {
         };
       }
 
-      // Check user's role to determine comment visibility
+      // Check user's role to determine comment visibility and report filtering
       const isResponderOrAbove = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
+      
+      // For reporters, only show their own reports unless a specific user filter is applied
+      const reporterFilter = !isResponderOrAbove && !filterUserId ? { reporterId: userId } : {};
 
       // Get reports with includes
       const reports = await this.prisma.report.findMany({
         where: {
           eventId,
+          ...reporterFilter,
           ...(search ? {
             OR: [
               { title: { contains: search, mode: 'insensitive' } },
@@ -1845,6 +1849,7 @@ export class ReportService {
       const total = await this.prisma.report.count({
         where: {
           eventId,
+          ...reporterFilter,
           ...(search ? {
             OR: [
               { title: { contains: search, mode: 'insensitive' } },
@@ -1876,6 +1881,7 @@ export class ReportService {
             by: ['state'],
             where: {
               eventId,
+              ...reporterFilter,
               ...(search ? {
                 OR: [
                   { title: { contains: search, mode: 'insensitive' } },
