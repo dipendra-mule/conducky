@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { Card } from "../../../../components/ui/card";
 import { EventMetaEditor } from "../../../../components/EventMetaEditor";
-import { UserManager } from "../../../../components/UserManager";
 
 interface User {
   id: string;
@@ -32,7 +31,6 @@ export default function EventAdminPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [userEventRoles, setUserEventRoles] = useState<string[]>([]);
-  const [rolesList] = useState<string[]>(["event_admin", "responder", "reporter"]);
   const [page, setPage] = useState(1);
   const [logoUploadLoading, setLogoUploadLoading] = useState(false);
   const [logoExists, setLogoExists] = useState(false);
@@ -182,6 +180,7 @@ export default function EventAdminPage() {
                   setMetaEditSuccess("Logo uploaded!");
                   const data = await res.json();
                   setEvent(data.event);
+                  setLogoExists(true);
                   setLogoUploadLoading(false);
                   return;
                 } else {
@@ -208,10 +207,6 @@ export default function EventAdminPage() {
             logoExists={logoExists}
             logoUploadLoading={logoUploadLoading}
           />
-        )}
-        {/* User Management */}
-        {event && (
-          <UserManager eventSlug={event.slug} rolesList={rolesList} />
         )}
         <Link href={`/events/${eventSlug}/dashboard`} className="text-blue-600 hover:underline">← Back to Event</Link>
       </Card>

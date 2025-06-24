@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Card } from "./ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PencilIcon, CheckIcon, XMarkIcon, LinkIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { SecureMarkdown } from "@/components/ui/secure-markdown";
 import { isValidEmail } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export interface EventMeta {
   name: string;
@@ -54,12 +57,14 @@ export function EventMetaEditor({
     setEditingField(field);
     setEditValue(value || "");
     if (field === "logo") setLogoFile(null);
+    setEmailError(null);
   };
 
   const cancelEdit = () => {
     setEditingField(null);
     setEditValue("");
     setLogoFile(null);
+    setEmailError(null);
   };
 
   const saveEdit = async () => {
@@ -105,209 +110,238 @@ export function EventMetaEditor({
     window.open(url, '_blank');
   };
 
-  return (
-    <Card className="mb-6 max-w-4xl mx-auto p-4 sm:p-8">
-      <div className="flex flex-col gap-4">
-        {/* Name */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Name:</span>
-          {editingField === "name" ? (
-            <>
-              <Input
-                value={editValue}
-                onChange={e => setEditValue(e.target.value)}
-                className="w-64"
-              />
-              <Button onClick={saveEdit} className="text-green-600" aria-label="Save name"><CheckIcon className="h-5 w-5" /></Button>
-              <Button onClick={cancelEdit} className="text-gray-500" aria-label="Cancel edit"><XMarkIcon className="h-5 w-5" /></Button>
-            </>
-          ) : (
-            <>
-              <span>{event.name}</span>
-              <Button onClick={() => startEdit("name", event.name)} className="text-blue-600" aria-label="Edit name"><PencilIcon className="h-5 w-5" /></Button>
-            </>
+  const renderEditableField = (
+    field: keyof EventMeta,
+    label: string,
+    type: 'text' | 'date' | 'email' | 'url' | 'textarea' | 'logo' | 'code' = 'text',
+    placeholder?: string
+  ) => {
+    const isEditing = editingField === field;
+    const value = event[field] || "";
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</Label>
+          {!isEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => startEdit(field, value as string)}
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+            >
+              <PencilIcon className="h-4 w-4" />
+            </Button>
           )}
         </div>
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Logo:</span>
-          {logoSrc && <img src={logoSrc} alt="Event Logo" className="w-16 h-16 object-contain rounded bg-white border border-gray-200 dark:border-gray-700" />}
-          {editingField === "logo" ? (
-            <div className="flex flex-col gap-1">
-              <input type="file" accept="image/*" onChange={handleLogoFileChange} />
-              <span className="text-xs text-gray-500 dark:text-gray-400">or</span>
-              <Input value={editValue} onChange={e => setEditValue(e.target.value)} className="w-64" placeholder="Logo URL" disabled={!!logoFile} />
-              <div className="flex gap-1 mt-2">
-                <Button onClick={saveEdit} className="text-green-600" aria-label="Save logo" disabled={logoUploadLoading}><CheckIcon className="h-5 w-5" /></Button>
-                <Button onClick={cancelEdit} className="text-gray-500" aria-label="Cancel edit" disabled={logoUploadLoading}><XMarkIcon className="h-5 w-5" /></Button>
+
+        {isEditing ? (
+          <div className="space-y-2">
+            {type === 'logo' && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Upload image file</Label>
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleLogoFileChange}
+                    className="cursor-pointer"
+                  />
+                </div>
+                <div className="text-center text-xs text-muted-foreground">or</div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Image URL</Label>
+                  <Input 
+                    value={editValue} 
+                    onChange={e => setEditValue(e.target.value)} 
+                    placeholder="https://example.com/logo.png" 
+                    disabled={!!logoFile}
+                    className="w-full"
+                  />
+                </div>
               </div>
-              {logoUploadLoading && <span className="text-xs text-gray-500 mt-1">Uploading...</span>}
-            </div>
-          ) : (
-            <>
-              <span className="ml-2 text-gray-700 dark:text-gray-200">{event.logo || <span className="italic text-gray-400">(none)</span>}</span>
-              <Button onClick={() => startEdit("logo", event.logo || "")} className="text-blue-600" aria-label="Edit logo"><PencilIcon className="h-5 w-5" /></Button>
-            </>
-          )}
-        </div>
-        {/* Start Date */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Start Date:</span>
-          {editingField === "startDate" ? (
-            <>
-              <Input type="date" value={editValue} onChange={e => setEditValue(e.target.value)} className="w-48" />
-              <Button onClick={saveEdit} className="text-green-600" aria-label="Save start date"><CheckIcon className="h-5 w-5" /></Button>
-              <Button onClick={cancelEdit} className="text-gray-500" aria-label="Cancel edit"><XMarkIcon className="h-5 w-5" /></Button>
-            </>
-          ) : (
-            <>
-              <span className="ml-2 text-gray-700 dark:text-gray-200">{event.startDate ? new Date(event.startDate).toLocaleDateString() : <span className="italic text-gray-400">(none)</span>}</span>
-              <Button onClick={() => startEdit("startDate", event.startDate || "")} className="text-blue-600" aria-label="Edit start date"><PencilIcon className="h-5 w-5" /></Button>
-            </>
-          )}
-        </div>
-        {/* End Date */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">End Date:</span>
-          {editingField === "endDate" ? (
-            <>
-              <Input type="date" value={editValue} onChange={e => setEditValue(e.target.value)} className="w-48" />
-              <Button onClick={saveEdit} className="text-green-600" aria-label="Save end date"><CheckIcon className="h-5 w-5" /></Button>
-              <Button onClick={cancelEdit} className="text-gray-500" aria-label="Cancel edit"><XMarkIcon className="h-5 w-5" /></Button>
-            </>
-          ) : (
-            <>
-              <span className="ml-2 text-gray-700 dark:text-gray-200">{event.endDate ? new Date(event.endDate).toLocaleDateString() : <span className="italic text-gray-400">(none)</span>}</span>
-              <Button onClick={() => startEdit("endDate", event.endDate || "")} className="text-blue-600" aria-label="Edit end date"><PencilIcon className="h-5 w-5" /></Button>
-            </>
-          )}
-        </div>
-        {/* Website */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Website:</span>
-          {editingField === "website" ? (
-            <>
-              <Input value={editValue} onChange={e => setEditValue(e.target.value)} className="w-64" />
-              <Button onClick={saveEdit} className="text-green-600" aria-label="Save website"><CheckIcon className="h-5 w-5" /></Button>
-              <Button onClick={cancelEdit} className="text-gray-500" aria-label="Cancel edit"><XMarkIcon className="h-5 w-5" /></Button>
-            </>
-          ) : (
-            <>
-              <span className="ml-2 text-gray-700 dark:text-gray-200">{event.website || <span className="italic text-gray-400">(none)</span>}</span>
-              <Button onClick={() => startEdit("website", event.website || "")} className="text-blue-600" aria-label="Edit website"><PencilIcon className="h-5 w-5" /></Button>
-            </>
-          )}
-        </div>
-        {/* Description */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Description:</span>
-          {editingField === "description" ? (
-            <>
-              <textarea value={editValue} onChange={e => setEditValue(e.target.value)} className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full min-h-[60px]" style={{ minWidth: 180 }} />
-              <Button onClick={saveEdit} className="ml-2 text-green-600" aria-label="Save description"><CheckIcon className="h-5 w-5" /></Button>
-              <Button onClick={cancelEdit} className="ml-1 text-gray-500" aria-label="Cancel edit"><XMarkIcon className="h-5 w-5" /></Button>
-            </>
-          ) : (
-            <span className="ml-2 text-gray-800 dark:text-gray-100">{event.description || <span className="italic text-gray-400">(none)</span>}</span>
-          )}
-          <Button onClick={() => startEdit("description", event.description || "")} className="ml-2 text-blue-600" aria-label="Edit description"><PencilIcon className="h-5 w-5" /></Button>
-        </div>
-        {/* Code of Conduct */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Code of Conduct:</span>
-          {editingField === "codeOfConduct" ? (
-            <>
-              <textarea value={editValue} onChange={e => setEditValue(e.target.value)} className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-full min-h-[100px] font-mono" style={{ minWidth: 180 }} placeholder="Enter code of conduct in markdown..." />
-              <Button onClick={saveEdit} className="ml-2 text-green-600" aria-label="Save code of conduct"><CheckIcon className="h-5 w-5" /></Button>
-              <Button onClick={cancelEdit} className="ml-1 text-gray-500" aria-label="Cancel edit"><XMarkIcon className="h-5 w-5" /></Button>
-            </>
-          ) : (
-            <>
-              {event.codeOfConduct ? (
-                <Sheet open={showCodeSheet} onOpenChange={setShowCodeSheet}>
-                  <SheetTrigger asChild>
-                    <Button className="text-blue-600 dark:text-blue-400 underline font-medium ml-2">View Code of Conduct</Button>
-                  </SheetTrigger>
-                  <SheetContent side="right" className="w-full sm:max-w-2xl">
-                    <SheetHeader className="space-y-4">
-                      <SheetTitle>Code of Conduct</SheetTitle>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={copyCodeOfConductLink}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2"
-                        >
-                          <LinkIcon className="h-4 w-4" />
-                          Copy Link
-                        </Button>
-                        <Button 
-                          onClick={openCodeOfConductPage}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2"
-                        >
-                          <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                          Open Page
-                        </Button>
-                      </div>
-                    </SheetHeader>
-                    <div className="mt-6 prose dark:prose-invert max-h-[70vh] overflow-y-auto">
-                      <SecureMarkdown type="event">{event.codeOfConduct || "No code of conduct provided for this event."}</SecureMarkdown>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              ) : (
-                <span className="italic text-gray-400 ml-2">No code of conduct added. Please add one.</span>
-              )}
-              <Button onClick={() => startEdit("codeOfConduct", event.codeOfConduct || "")} className="ml-2 text-blue-600" aria-label="Edit code of conduct"><PencilIcon className="h-5 w-5" /></Button>
-            </>
-          )}
-        </div>
-        {/* Contact Email */}
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Contact Email:</span>
-          {editingField === "contactEmail" ? (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
+            )}
+            {type === 'textarea' && (
+              <Textarea 
+                value={editValue} 
+                onChange={e => setEditValue(e.target.value)} 
+                placeholder={placeholder}
+                className="min-h-[80px] resize-none"
+              />
+            )}
+            {type === 'code' && (
+              <Textarea 
+                value={editValue} 
+                onChange={e => setEditValue(e.target.value)} 
+                placeholder={placeholder || "Enter code of conduct in markdown..."}
+                className="min-h-[120px] font-mono text-sm resize-none"
+              />
+            )}
+            {type === 'email' && (
+              <div className="space-y-2">
                 <Input 
                   type="email" 
                   value={editValue} 
                   onChange={e => {
                     const value = e.target.value;
                     setEditValue(value);
-                    // Validate email in real-time
                     if (value && !isValidEmail(value)) {
                       setEmailError("Please enter a valid email address");
                     } else {
                       setEmailError(null);
                     }
                   }} 
-                  className={`w-64 ${emailError ? 'border-red-500 focus:border-red-500' : ''}`}
-                  placeholder="contact@example.com" 
+                  placeholder={placeholder || "contact@example.com"}
+                  className={emailError ? 'border-destructive focus:border-destructive' : ''}
                 />
-                <Button onClick={saveEdit} className="text-green-600" aria-label="Save contact email" disabled={!!emailError}><CheckIcon className="h-5 w-5" /></Button>
-                <Button onClick={cancelEdit} className="text-gray-500" aria-label="Cancel edit"><XMarkIcon className="h-5 w-5" /></Button>
+                {emailError && (
+                  <p className="text-sm text-destructive">{emailError}</p>
+                )}
               </div>
-              {emailError && (
-                <p className="text-sm text-red-600">{emailError}</p>
-              )}
+            )}
+            {!['logo', 'textarea', 'code', 'email'].includes(type) && (
+              <Input 
+                type={type}
+                value={editValue} 
+                onChange={e => setEditValue(e.target.value)} 
+                placeholder={placeholder}
+                className="w-full"
+              />
+            )}
+            
+            <div className="flex items-center gap-2 pt-1">
+              <Button 
+                onClick={saveEdit} 
+                size="sm" 
+                disabled={logoUploadLoading || !!emailError}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckIcon className="h-4 w-4 mr-1" />
+                Save
+              </Button>
+              <Button 
+                onClick={cancelEdit} 
+                variant="outline" 
+                size="sm"
+                disabled={logoUploadLoading}
+              >
+                <XMarkIcon className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+              {logoUploadLoading && <span className="text-xs text-muted-foreground">Uploading...</span>}
             </div>
-          ) : (
-            <>
-              <span>{event.contactEmail || <span className="italic text-gray-400">(none)</span>}</span>
-              <Button onClick={() => startEdit("contactEmail", event.contactEmail || "")} className="ml-2 text-blue-600" aria-label="Edit contact email"><PencilIcon className="h-5 w-5" /></Button>
-            </>
-          )}
-        </div>
-        {/* Success/Error messages */}
-        {(metaEditSuccess || metaEditError) && (
-          <div className="mt-2">
-            {metaEditSuccess && <span className="text-green-600 dark:text-green-400">{metaEditSuccess}</span>}
-            {metaEditError && <span className="text-red-600 dark:text-red-400 ml-4">{metaEditError}</span>}
+          </div>
+        ) : (
+          <div className="min-h-[40px] flex items-center">
+            {field === 'logo' ? (
+              <div className="flex items-center gap-4">
+                {logoSrc && (
+                  <img 
+                    src={logoSrc} 
+                    alt="Event Logo" 
+                    className="w-16 h-16 object-contain rounded-md bg-background border border-border shadow-sm" 
+                  />
+                )}
+                <div className="text-sm text-muted-foreground">
+                  {value || <span className="italic">No logo uploaded</span>}
+                </div>
+              </div>
+            ) : field === 'codeOfConduct' ? (
+              <div className="flex items-center gap-2">
+                {value ? (
+                  <Sheet open={showCodeSheet} onOpenChange={setShowCodeSheet}>
+                    <SheetTrigger asChild>
+                      <Button variant="link" className="p-0 h-auto text-primary font-medium">
+                        View Code of Conduct
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-full sm:max-w-2xl">
+                      <SheetHeader className="space-y-4">
+                        <SheetTitle>Code of Conduct</SheetTitle>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={copyCodeOfConductLink}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                            Copy Link
+                          </Button>
+                          <Button 
+                            onClick={openCodeOfConductPage}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                            Open Page
+                          </Button>
+                        </div>
+                      </SheetHeader>
+                      <div className="mt-6 prose dark:prose-invert max-h-[70vh] overflow-y-auto">
+                        <SecureMarkdown content={value || "No code of conduct provided for this event."} type="event" />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                ) : (
+                  <span className="text-sm text-muted-foreground italic">No code of conduct added</span>
+                )}
+              </div>
+            ) : field === 'startDate' || field === 'endDate' ? (
+              <span className="text-sm text-foreground">
+                {value ? new Date(value).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                }) : <span className="italic text-muted-foreground">Not set</span>}
+              </span>
+            ) : (
+              <span className="text-sm text-foreground">
+                {value || <span className="italic text-muted-foreground">Not set</span>}
+              </span>
+            )}
           </div>
         )}
       </div>
+    );
+  };
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="text-xl font-semibold">Event Settings</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {renderEditableField("name", "Event Name", "text", "Enter event name")}
+        {renderEditableField("logo", "Event Logo", "logo")}
+        {renderEditableField("startDate", "Start Date", "date")}
+        {renderEditableField("endDate", "End Date", "date")}
+        {renderEditableField("website", "Website", "url", "https://example.com")}
+        {renderEditableField("contactEmail", "Contact Email", "email", "contact@example.com")}
+        {renderEditableField("description", "Description", "textarea", "Enter a brief description of the event")}
+        {renderEditableField("codeOfConduct", "Code of Conduct", "code", "Enter code of conduct in markdown format")}
+        
+        {/* Success/Error messages */}
+        {(metaEditSuccess || metaEditError) && (
+          <div className="space-y-2">
+            {metaEditSuccess && (
+              <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                <AlertDescription className="text-green-800 dark:text-green-200">
+                  {metaEditSuccess}
+                </AlertDescription>
+              </Alert>
+            )}
+            {metaEditError && (
+              <Alert className="border-destructive bg-destructive/10">
+                <AlertDescription className="text-destructive">
+                  {metaEditError}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }
