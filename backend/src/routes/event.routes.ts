@@ -1626,17 +1626,26 @@ router.post('/slug/:slug/invites', requireRole(['event_admin', 'system_admin']),
       return;
     }
     
-    // Get role ID from role name
-    const roleRecord = await prisma.role.findUnique({ where: { name: role || 'reporter' } });
-    if (!roleRecord) {
-      res.status(400).json({ error: 'Invalid role specified.' });
+    // Validate role name and get unified role ID
+    const validRoles = ['reporter', 'responder', 'event_admin'];
+    const roleName = role || 'reporter';
+    
+    if (!validRoles.includes(roleName)) {
+      res.status(400).json({ error: 'Invalid role specified. Must be one of: reporter, responder, event_admin' });
+      return;
+    }
+    
+    // Get unified role record
+    const unifiedRole = await prisma.unifiedRole.findUnique({ where: { name: roleName } });
+    if (!unifiedRole) {
+      res.status(400).json({ error: 'Role not found in unified system' });
       return;
     }
     
     const inviteData = {
       eventId,
       createdByUserId: user.id,
-      roleId: roleRecord.id,
+      roleId: unifiedRole.id,
       maxUses: maxUses ? parseInt(maxUses) : null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       note
@@ -1684,6 +1693,134 @@ router.patch('/slug/:slug/invites/:inviteId', requireRole(['event_admin', 'syste
   } catch (error: any) {
     console.error('Update invite error:', error);
     res.status(500).json({ error: 'Failed to update invite.' });
+  }
+});
+
+// Update report incident date by slug
+router.patch('/slug/:slug/reports/:reportId/incident-date', requireRole(['event_admin', 'system_admin', 'reporter', 'responder']), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { slug, reportId } = req.params;
+    const { incidentAt } = req.body;
+    
+    // Check if event exists by slug
+    const eventId = await eventService.getEventIdBySlug(slug);
+    if (!eventId) {
+      res.status(404).json({ error: 'Event not found.' });
+      return;
+    }
+    
+    const user = req.user as any;
+    const result = await reportService.updateReportIncidentDate(eventId, reportId, incidentAt, user?.id);
+    
+    if (!result.success) {
+      if (result.error?.includes('Insufficient permissions')) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    
+    res.json(result.data);
+  } catch (error) {
+    console.error('Error updating report incident date by slug:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Update report parties involved by slug
+router.patch('/slug/:slug/reports/:reportId/parties', requireRole(['event_admin', 'system_admin', 'reporter', 'responder']), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { slug, reportId } = req.params;
+    const { parties } = req.body;
+    
+    // Check if event exists by slug
+    const eventId = await eventService.getEventIdBySlug(slug);
+    if (!eventId) {
+      res.status(404).json({ error: 'Event not found.' });
+      return;
+    }
+    
+    const user = req.user as any;
+    const result = await reportService.updateReportParties(eventId, reportId, parties, user?.id);
+    
+    if (!result.success) {
+      if (result.error?.includes('Insufficient permissions')) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    
+    res.json(result.data);
+  } catch (error) {
+    console.error('Error updating report parties by slug:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Update report description by slug
+router.patch('/slug/:slug/reports/:reportId/description', requireRole(['event_admin', 'system_admin', 'reporter', 'responder']), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { slug, reportId } = req.params;
+    const { description } = req.body;
+    
+    // Check if event exists by slug
+    const eventId = await eventService.getEventIdBySlug(slug);
+    if (!eventId) {
+      res.status(404).json({ error: 'Event not found.' });
+      return;
+    }
+    
+    const user = req.user as any;
+    const result = await reportService.updateReportDescription(eventId, reportId, description, user?.id);
+    
+    if (!result.success) {
+      if (result.error?.includes('Insufficient permissions')) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    
+    res.json(result.data);
+  } catch (error) {
+    console.error('Error updating report description by slug:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Update report type by slug
+router.patch('/slug/:slug/reports/:reportId/type', requireRole(['event_admin', 'system_admin', 'reporter', 'responder']), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { slug, reportId } = req.params;
+    const { type } = req.body;
+    
+    // Check if event exists by slug
+    const eventId = await eventService.getEventIdBySlug(slug);
+    if (!eventId) {
+      res.status(404).json({ error: 'Event not found.' });
+      return;
+    }
+    
+    const user = req.user as any;
+    const result = await reportService.updateReportType(eventId, reportId, type, user?.id);
+    
+    if (!result.success) {
+      if (result.error?.includes('Insufficient permissions')) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    
+    res.json(result.data);
+  } catch (error) {
+    console.error('Error updating report type by slug:', error);
+    res.status(500).json({ error: 'Internal server error.' });
   }
 });
 

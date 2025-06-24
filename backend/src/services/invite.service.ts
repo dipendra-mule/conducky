@@ -183,8 +183,8 @@ export class InviteService {
     try {
       const { eventId, createdByUserId, roleId, maxUses, expiresAt, note } = data;
 
-      // Verify role exists
-      const role = await this.prisma.role.findUnique({
+      // Verify unified role exists
+      const role = await this.prisma.unifiedRole.findUnique({
         where: { id: roleId }
       });
 
@@ -369,8 +369,8 @@ export class InviteService {
         };
       }
 
-      // Get role name from legacy role ID for unified RBAC
-      const role = await this.prisma.role.findUnique({
+      // Get unified role name directly from unified role ID
+      const role = await this.prisma.unifiedRole.findUnique({
         where: { id: invite.roleId },
         select: { name: true }
       });
@@ -382,16 +382,7 @@ export class InviteService {
         };
       }
 
-      // Map legacy role name to unified role name
-      const roleMapping: { [key: string]: string } = {
-        'System Admin': 'system_admin',
-        'Event Admin': 'event_admin',
-        'Admin': 'event_admin',
-        'Responder': 'responder',
-        'Reporter': 'reporter'
-      };
-
-      const unifiedRoleName = roleMapping[role.name] || role.name.toLowerCase().replace(' ', '_');
+      const unifiedRoleName = role.name;
 
       // Assign role using unified RBAC
       await this.unifiedRBAC.grantRole(userId, unifiedRoleName, 'event', invite.eventId);
@@ -490,8 +481,8 @@ export class InviteService {
         data: { email, passwordHash, name: name || null }
       });
 
-      // Get role name from legacy role ID for unified RBAC
-      const role = await this.prisma.role.findUnique({
+      // Get unified role name directly from unified role ID
+      const role = await this.prisma.unifiedRole.findUnique({
         where: { id: invite.roleId },
         select: { name: true }
       });
@@ -503,16 +494,7 @@ export class InviteService {
         };
       }
 
-      // Map legacy role name to unified role name
-      const roleMapping: { [key: string]: string } = {
-        'System Admin': 'system_admin',
-        'Event Admin': 'event_admin',
-        'Admin': 'event_admin',
-        'Responder': 'responder',
-        'Reporter': 'reporter'
-      };
-
-      const unifiedRoleName = roleMapping[role.name] || role.name.toLowerCase().replace(' ', '_');
+      const unifiedRoleName = role.name;
 
       // Assign role using unified RBAC
       await this.unifiedRBAC.grantRole(user.id, unifiedRoleName, 'event', invite.eventId);
