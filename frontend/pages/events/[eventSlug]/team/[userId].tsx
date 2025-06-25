@@ -47,6 +47,7 @@ interface Report {
 export default function TeamMemberProfile() {
   const router = useRouter();
   const { eventSlug, userId } = router.query;
+  const [event, setEvent] = useState<{ id: string; name: string; slug: string; description?: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
@@ -63,6 +64,16 @@ export default function TeamMemberProfile() {
         setError(null);
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+        // Fetch event details for context
+        const eventRes = await fetch(`${apiUrl}/api/events/slug/${eventSlug}`, {
+          credentials: 'include'
+        });
+
+        if (eventRes.ok) {
+          const eventData = await eventRes.json();
+          setEvent(eventData.event);
+        }
 
         // Fetch user profile
         const profileRes = await fetch(`${apiUrl}/api/events/slug/${eventSlug}/users/${userId}`, {
@@ -214,6 +225,24 @@ export default function TeamMemberProfile() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="w-full max-w-6xl mx-auto">
         <AppBreadcrumbs />
+
+        {/* Event Context */}
+        {event && (
+          <Card className="mt-6">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <span>Event:</span>
+                <span className="font-medium text-foreground">{event.name}</span>
+                {event.description && (
+                  <>
+                    <span>•</span>
+                    <span className="truncate">{event.description}</span>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* User Profile Header */}
         <Card className="mt-6">
