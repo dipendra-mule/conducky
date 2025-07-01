@@ -14,13 +14,13 @@ Development environment is in `docker compose`. Run all commands for the backend
 - Mobile-first design is critical - most reporters and responders use mobile devices
 - Multi-tenancy with event-scoped data isolation is fundamental to the architecture
 - Role-based access control must be enforced at all levels (UI, API, database)
-- SuperAdmins manage the system but cannot access event data without explicit permission
 
 ### Technology Stack Requirements
 - Frontend: Next.js 14, React, TypeScript, Tailwind CSS, Shadcn/ui components
 - Backend: Node.js, Express, TypeScript, Prisma ORM, PostgreSQL
 - Always use TypeScript with strict mode enabled
 - Use Shadcn/ui components when available before creating custom components
+- when installing a missing Shadcn/ui component, install with the command line
 - Follow existing patterns in the codebase for consistency
 
 ## Code Style and Patterns
@@ -122,15 +122,6 @@ Development environment is in `docker compose`. Run all commands for the backend
 - Log detailed error information for debugging
 - Use loading states to prevent user confusion during async operations
 
-## Testing and Quality Assurance
-
-### Testing Requirements
-- Write unit tests for all utility functions and custom hooks
-- Test API endpoints with proper authentication and authorization
-- Implement integration tests for critical user workflows
-- Test mobile functionality on actual devices
-- Verify accessibility with screen readers and keyboard navigation
-
 ### Code Quality Standards
 - Use ESLint and Prettier for consistent code formatting
 - Remove console.log statements before committing code
@@ -153,29 +144,6 @@ Development environment is in `docker compose`. Run all commands for the backend
 - Use camelCase for variables, functions, and object properties
 - Use UPPER_CASE for constants and environment variables
 - Use descriptive names that explain the purpose
-
-## Development Workflow
-
-### Git and Version Control
-- Write clear, descriptive commit messages
-- Use feature branches for all new development
-- Keep commits focused on a single change or fix
-- Add proper documentation for new features
-- Update relevant tests when modifying functionality
-
-### Environment and Configuration
-- Use environment variables for all configuration
-- Never commit sensitive data like API keys or passwords
-- Use docker-compose for consistent local development
-- Keep development and production configurations separate
-- Document all required environment variables
-
-### Performance and Optimization
-- Use React Developer Tools to identify performance bottlenecks
-- Implement proper memoization for expensive computations
-- Optimize database queries with proper indexes
-- Use CDN for static assets in production
-- Monitor and optimize Core Web Vitals metrics
 
 ## Specific Implementation Guidelines
 
