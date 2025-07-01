@@ -182,7 +182,10 @@ describe('GlobalDashboard Submit Report Feature', () => {
   });
 
   it('shows loading state while fetching events', () => {
-    // Don't mock fetch to simulate loading state
+    // Mock fetch to return a promise that never resolves to simulate loading state
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((global as any).fetch).mockImplementation(() => new Promise(() => {}));
+    
     renderWithContext(mockUserWithSingleEvent);
 
     expect(screen.getByText('Loading your events...')).toBeInTheDocument();

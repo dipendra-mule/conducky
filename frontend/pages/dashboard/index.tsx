@@ -9,7 +9,7 @@ import { QuickStats } from "../../components/shared/QuickStats";
 import { EventCard } from "../../components/shared/EventCard";
 import { ActivityFeed } from "../../components/shared/ActivityFeed";
 import { JoinEventWidget } from "../../components/shared/JoinEventWidget";
-import { Plus, AlertTriangle, ChevronDown } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -158,11 +158,14 @@ export default function GlobalDashboard() {
                       Select an event to submit a report:
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Select onValueChange={(eventSlug) => {
-                        if (eventSlug) {
-                          router.push(`/events/${eventSlug}/reports/new`);
-                        }
-                      }}>
+                      <Select 
+                        value=""
+                        onValueChange={(eventSlug) => {
+                          if (eventSlug) {
+                            router.push(`/events/${eventSlug}/reports/new`);
+                          }
+                        }}
+                      >
                         <SelectTrigger className="w-full sm:w-64">
                           <SelectValue placeholder="Choose an event..." />
                         </SelectTrigger>
@@ -179,10 +182,6 @@ export default function GlobalDashboard() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button variant="outline" size="sm" className="whitespace-nowrap">
-                        <ChevronDown className="h-4 w-4 mr-1" />
-                        Quick Submit
-                      </Button>
                     </div>
                   </div>
                 )}

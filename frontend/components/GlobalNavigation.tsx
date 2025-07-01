@@ -128,7 +128,7 @@ function NavigationControls({ user }: NavigationControlsProps) {
           name: item.title.replace(' Dashboard', '') 
         } : null;
       })
-      .filter(Boolean) as Array<{ slug: string; name: string; }>;
+      .filter((event): event is { slug: string; name: string } => event !== null);
   }, [quickJumpItems]);
 
   const handleQuickReportOpen = React.useCallback(() => {
