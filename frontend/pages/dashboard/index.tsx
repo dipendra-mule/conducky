@@ -4,10 +4,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { UserContext } from '../_app';
 import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import { QuickStats } from "../../components/shared/QuickStats";
 import { EventCard } from "../../components/shared/EventCard";
 import { ActivityFeed } from "../../components/shared/ActivityFeed";
 import { JoinEventWidget } from "../../components/shared/JoinEventWidget";
+import { Plus, AlertTriangle, ChevronDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 
 // Define the user type based on how it's used in the component
 interface User {
@@ -118,6 +127,67 @@ export default function GlobalDashboard() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2 text-foreground">Your Global Dashboard</h1>
             <p className="text-muted-foreground">Overview of your events and recent activity</p>
+          </div>
+
+          {/* Submit Report CTA Section - Prominent placement */}
+          <div className="mb-8">
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <AlertTriangle className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-foreground">Need to Report an Incident?</h2>
+                    <p className="text-muted-foreground">Submit a report quickly and securely</p>
+                  </div>
+                </div>
+                
+                {userEvents.length === 1 ? (
+                  // Single event - direct link
+                  <Link href={`/events/${userEvents[0].slug}/reports/new`}>
+                    <Button size="lg" className="w-full sm:w-auto flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Submit Report for {userEvents[0].name}
+                    </Button>
+                  </Link>
+                ) : (
+                  // Multiple events - dropdown selector
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Select an event to submit a report:
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Select onValueChange={(eventSlug) => {
+                        if (eventSlug) {
+                          router.push(`/events/${eventSlug}/reports/new`);
+                        }
+                      }}>
+                        <SelectTrigger className="w-full sm:w-64">
+                          <SelectValue placeholder="Choose an event..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {userEvents.map(event => (
+                            <SelectItem key={event.id} value={event.slug}>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{event.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  ({event.roles.join(', ')})
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" className="whitespace-nowrap">
+                        <ChevronDown className="h-4 w-4 mr-1" />
+                        Quick Submit
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
           </div>
 
           {/* Quick Stats Section - Full width */}

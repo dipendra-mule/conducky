@@ -12,16 +12,33 @@ interface KeyboardShortcut {
 
 interface UseKeyboardShortcutsProps {
   onQuickJumpOpen?: () => void;
+  onQuickReportOpen?: () => void;
   enabled?: boolean;
   enableSwipeNavigation?: boolean;
+  userEvents?: Array<{ slug: string; name: string; }>;
 }
 
 export function useKeyboardShortcuts({ 
   onQuickJumpOpen, 
+  onQuickReportOpen,
   enabled = true,
-  enableSwipeNavigation = true
+  enableSwipeNavigation = true,
+  userEvents = []
 }: UseKeyboardShortcutsProps = {}) {
   const router = useRouter();
+
+  const handleQuickReport = useCallback(() => {
+    if (userEvents.length === 0) {
+      // No events - could show a message or do nothing
+      return;
+    } else if (userEvents.length === 1) {
+      // Single event - navigate directly
+      router.push(`/events/${userEvents[0].slug}/reports/new`);
+    } else {
+      // Multiple events - open quick jump with "new report" query
+      onQuickReportOpen?.();
+    }
+  }, [userEvents, router, onQuickReportOpen]);
 
   const shortcuts: KeyboardShortcut[] = [
     {
@@ -40,6 +57,24 @@ export function useKeyboardShortcuts({
       key: '/',
       action: () => onQuickJumpOpen?.(),
       description: 'Open quick jump'
+    },
+    {
+      key: 'r',
+      ctrlKey: true,
+      shiftKey: true,
+      action: () => handleQuickReport(),
+      description: userEvents.length === 1 
+        ? `Submit report for ${userEvents[0]?.name || 'event'}` 
+        : 'Quick submit report'
+    },
+    {
+      key: 'r',
+      metaKey: true, // For Mac users
+      shiftKey: true,
+      action: () => handleQuickReport(),
+      description: userEvents.length === 1 
+        ? `Submit report for ${userEvents[0]?.name || 'event'}` 
+        : 'Quick submit report'
     },
     {
       key: 'h',
@@ -105,7 +140,7 @@ export function useKeyboardShortcuts({
       event.stopPropagation();
       shortcut.action();
     }
-  }, [shortcuts, onQuickJumpOpen, router]);
+  }, [shortcuts, onQuickJumpOpen, router, handleQuickReport]);
 
   // Swipe navigation for mobile
   useEffect(() => {
