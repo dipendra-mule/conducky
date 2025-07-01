@@ -16,13 +16,15 @@ import {
   User, 
   Settings,
   Users,
-  Shield
+  Shield,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface QuickJumpProps {
   isOpen: boolean;
   onClose: () => void;
+  initialQuery?: string;
 }
 
 const categoryIcons = {
@@ -43,10 +45,10 @@ const contextColors = {
   admin: 'bg-red-500/10 text-red-700 dark:text-red-300',
 };
 
-export function QuickJump({ isOpen, onClose }: QuickJumpProps) {
+export function QuickJump({ isOpen, onClose, initialQuery }: QuickJumpProps) {
   const { searchQuickJump } = useNavigation();
   const router = useRouter();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery || '');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -80,14 +82,14 @@ export function QuickJump({ isOpen, onClose }: QuickJumpProps) {
   // Reset state when dialog opens
   useEffect(() => {
     if (isOpen) {
-      setQuery('');
+      setQuery(initialQuery || '');
       setSelectedIndex(0);
       // Focus input after a brief delay to ensure dialog is fully rendered
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, initialQuery]);
 
   // Update selected index when results change
   useEffect(() => {
@@ -138,6 +140,7 @@ export function QuickJump({ isOpen, onClose }: QuickJumpProps) {
   // Get icon for item based on context or default
   const getItemIcon = (item: typeof searchResults[0]) => {
     if (item.href === '/dashboard') return Home;
+    if (item.href.includes('/reports/new') || item.title.includes('🚨 Submit Report')) return AlertTriangle;
     if (item.href.includes('/reports')) return ClipboardList;
     if (item.href.includes('/notifications')) return Bell;
     if (item.href.includes('/profile')) return User;

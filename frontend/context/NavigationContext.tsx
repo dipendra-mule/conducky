@@ -171,7 +171,28 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
   const quickJumpItems = React.useMemo((): QuickJumpItem[] => {
     const items: QuickJumpItem[] = [];
 
-    // Add shortcuts
+    // Add critical shortcuts first - report submission has highest priority
+    if (events.length === 1) {
+      items.push({
+        title: `🚨 Submit Report for ${events[0].name}`,
+        href: `/events/${events[0].slug}/reports/new`,
+        category: 'shortcut',
+        description: `Quick incident report submission (Ctrl+Shift+R)`,
+        context: 'event'
+      });
+    } else if (events.length > 1) {
+      events.forEach(event => {
+        items.push({
+          title: `🚨 Submit Report: ${event.name}`,
+          href: `/events/${event.slug}/reports/new`,
+          category: 'shortcut',
+          description: `Report incident for ${event.name}`,
+          context: 'event'
+        });
+      });
+    }
+
+    // Add other shortcuts after report submission
     items.push(
       { title: 'Dashboard', href: '/dashboard', category: 'shortcut', description: 'Global dashboard' },
       { title: 'All Reports', href: '/dashboard/reports', category: 'shortcut', description: 'Cross-event reports' },

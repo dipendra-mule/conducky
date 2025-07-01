@@ -5,6 +5,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Button } from '@/components/ui/button';
 import { Search, Keyboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigation } from '../context/NavigationContext';
 
 interface User {
   id: string;
@@ -107,12 +108,39 @@ interface NavigationControlsProps {
 
 function NavigationControls({ user }: NavigationControlsProps) {
   const [quickJumpOpen, setQuickJumpOpen] = useState(false);
+  const [reportJumpOpen, setReportJumpOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showDiscoveryHint, setShowDiscoveryHint] = useState(false);
+  const { quickJumpItems } = useNavigation();
+
+  // Get user events from navigation context for keyboard shortcuts
+  const userEvents = React.useMemo(() => {
+    interface QuickJumpItem {
+      title: string;
+      href: string;
+    }
+    return quickJumpItems
+      .filter((item: QuickJumpItem) => item.href.startsWith('/events/') && item.href.endsWith('/dashboard'))
+      .map((item: QuickJumpItem) => {
+        const match = item.href.match(/\/events\/([^/]+)\/dashboard/);
+        return match ? { 
+          slug: match[1], 
+          name: item.title.replace(' Dashboard', '') 
+        } : null;
+      })
+      .filter((event): event is { slug: string; name: string } => event !== null);
+  }, [quickJumpItems]);
+
+  const handleQuickReportOpen = React.useCallback(() => {
+    // Open quick jump with "submit report" pre-filled to show report options
+    setReportJumpOpen(true);
+  }, []);
 
   // Only initialize keyboard shortcuts if user is authenticated
   useKeyboardShortcuts({ 
     onQuickJumpOpen: () => setQuickJumpOpen(true),
+    onQuickReportOpen: handleQuickReportOpen,
+    userEvents: userEvents,
     enabled: !!user
   });
 
@@ -178,7 +206,7 @@ function NavigationControls({ user }: NavigationControlsProps) {
             <div className="flex-1">
               <p id="discovery-hint-title" className="text-sm font-medium">Quick Navigation Available!</p>
               <p className="text-xs text-blue-100 mt-1">
-                Press <kbd className="px-1 py-0.5 bg-blue-700 rounded text-xs">Ctrl+K</kbd> or <kbd className="px-1 py-0.5 bg-blue-700 rounded text-xs">/</kbd> to quickly jump to any page
+                Press <kbd className="px-1 py-0.5 bg-blue-700 rounded text-xs">Ctrl+K</kbd> to search or <kbd className="px-1 py-0.5 bg-blue-700 rounded text-xs">Ctrl+Shift+R</kbd> to quickly submit a report
               </p>
             </div>
             <Button
@@ -222,6 +250,13 @@ function NavigationControls({ user }: NavigationControlsProps) {
       <QuickJump 
         isOpen={quickJumpOpen} 
         onClose={() => setQuickJumpOpen(false)} 
+      />
+
+      {/* Quick Report Modal */}
+      <QuickJump 
+        isOpen={reportJumpOpen} 
+        onClose={() => setReportJumpOpen(false)}
+        initialQuery="🚨 Submit Report"
       />
 
       {/* Help Modal */}
