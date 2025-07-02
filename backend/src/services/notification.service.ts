@@ -348,7 +348,7 @@ export class NotificationService {
         title,
         message,
         eventId = null,
-        reportId = null,
+        incidentId = null,
         actionData = null,
         actionUrl = null
       } = data;
@@ -361,7 +361,7 @@ export class NotificationService {
           title,
           message,
           eventId,
-          incidentId: reportId,
+          incidentId: incidentId,
           actionData,
           actionUrl,
           isRead: false

@@ -662,7 +662,7 @@ describe("Event endpoints", () => {
       });
       const res = await request(app).get("/api/events/1/incidents");
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty("reports");
+      expect(res.body).toHaveProperty("incidents");
       expect(Array.isArray(res.body.incidents)).toBe(true);
       expect(res.body.incidents.length).toBeGreaterThan(0);
     });

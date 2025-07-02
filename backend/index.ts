@@ -297,10 +297,10 @@ app.get('/api/evidence/:evidenceId/download', async (req: any, res: any) => {
       return res.status(404).json({ error: 'Evidence file not found.' });
     }
 
-    // Check if user has access to this evidence file's report
+    // Check if user has access to this evidence file's incident
             const { IncidentService } = await import('./src/services/incident.service');
         const incidentService = new IncidentService(prisma);
-        const accessResult = await incidentService.checkIncidentAccess(req.user.id, evidence.incidentId, evidence.incidentId);
+        const accessResult = await incidentService.checkIncidentAccess(req.user.id, evidence.incidentId, evidence.incident.eventId);
     
     if (!accessResult.success) {
       return res.status(500).json({ error: accessResult.error });

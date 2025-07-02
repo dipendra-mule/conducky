@@ -146,7 +146,7 @@ router.get('/slug/:slug/users/:userId/incidents', requireRole(['responder', 'eve
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get user reports error:', error);
+    console.error('Get user incidents error:', error);
     res.status(500).json({ error: 'Failed to fetch user incidents.' });
   }
 });
@@ -519,7 +519,7 @@ router.post('/:eventId/incidents', requireRole(['reporter', 'responder', 'event_
         await notifyReportEvent(result.data.incident.id, 'incident_submitted', user.id);
       }
     } catch (notificationError) {
-      console.error('Failed to send notifications for new report:', notificationError);
+      console.error('Failed to send notifications for new incident:', notificationError);
       // Don't fail the main operation if notifications fail
     }
 
@@ -558,7 +558,7 @@ router.get('/:eventId/incidents', async (req: Request, res: Response): Promise<v
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get reports error:', error);
+    console.error('Get incidents error:', error);
     res.status(500).json({ error: 'Failed to fetch incidents.' });
   }
 });
@@ -577,7 +577,7 @@ router.get('/:eventId/incidents/:incidentId', async (req: Request, res: Response
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get report error:', error);
+    console.error('Get incident error:', error);
     res.status(500).json({ error: 'Failed to fetch incident.' });
   }
 });
@@ -1438,7 +1438,7 @@ router.post('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'even
         await notifyReportEvent(result.data.incident.id, 'incident_submitted', user.id);
       }
     } catch (notificationError) {
-      console.error('Failed to send notifications for new report:', notificationError);
+      console.error('Failed to send notifications for new incident:', notificationError);
       // Don't fail the main operation if notifications fail
     }
 

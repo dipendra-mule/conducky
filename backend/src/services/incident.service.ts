@@ -204,8 +204,8 @@ export class IncidentService {
         };
       }
 
-      // Create report first
-      const reportData: any = {
+      // Create incident first
+      const incidentData: any = {
         eventId,
         reporterId,
         type,
@@ -215,17 +215,17 @@ export class IncidentService {
         contactPreference: contactPreference || 'email', // default to email
       };
 
-      if (incidentAt !== undefined) reportData.incidentAt = incidentAt;
-      if (parties !== undefined) reportData.parties = parties;
-      if (location !== undefined) reportData.location = location;
+      if (incidentAt !== undefined) incidentData.incidentAt = incidentAt;
+      if (parties !== undefined) incidentData.parties = parties;
+      if (location !== undefined) incidentData.location = location;
       
       // Map urgency to severity (frontend uses urgency, backend uses severity)
       if (urgency) {
-        reportData.severity = urgency;
+        incidentData.severity = urgency;
       }
 
       const incident = await this.prisma.incident.create({
-        data: reportData,
+        data: incidentData,
       });
 
       // If evidence files are provided, store in DB
