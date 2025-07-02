@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { ReportForm } from "./ReportForm";
+import { ReportForm } from './IncidentForm';
 
 jest.mock("next/router", () => ({
   useRouter: () => ({
@@ -22,7 +22,7 @@ describe("ReportForm", () => {
   });
 
   it("renders all basic input fields", () => {
-    render(<ReportForm {...baseProps} />);
+    render(<IncidentForm {...baseProps} />);
     
     // Check for basic form fields that work reliably
     expect(screen.getByLabelText(/report title/i)).toBeInTheDocument();
@@ -36,16 +36,16 @@ describe("ReportForm", () => {
   });
 
   it("displays event context", () => {
-    render(<ReportForm {...baseProps} />);
+    render(<IncidentForm {...baseProps} />);
     expect(screen.getByText(/for event:/i)).toBeInTheDocument();
     expect(screen.getByText("Test Event")).toBeInTheDocument();
   });
 
   it("shows form labels and structure", () => {
-    render(<ReportForm {...baseProps} />);
+    render(<IncidentForm {...baseProps} />);
     
     // Check for the main heading
-    expect(screen.getByText("Submit a Report")).toBeInTheDocument();
+    expect(screen.getByText("Submit an Incident")).toBeInTheDocument();
     
     // Check for required field indicators
     expect(screen.getByText("Report Title *")).toBeInTheDocument();
@@ -59,7 +59,7 @@ describe("ReportForm", () => {
   });
 
   it("has file upload functionality", () => {
-    render(<ReportForm {...baseProps} />);
+    render(<IncidentForm {...baseProps} />);
     
     // Check for file upload area
     expect(screen.getByText(/drop files here or click to upload/i)).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("ReportForm", () => {
   });
 
   it("shows evidence files section", () => {
-    render(<ReportForm {...baseProps} />);
+    render(<IncidentForm {...baseProps} />);
     
     // Check for evidence files label
     expect(screen.getByText("Evidence Files")).toBeInTheDocument();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { ReportForm } from '@/components/ReportForm';
+import { ReportForm } from '@/components/IncidentForm';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, FileText } from 'lucide-react';
@@ -13,7 +13,7 @@ interface Event {
   description?: string;
 }
 
-export default function NewReport() {
+export default function NewIncident() {
   const router = useRouter();
   const { eventSlug } = router.query;
   const [event, setEvent] = useState<Event | null>(null);
@@ -57,7 +57,7 @@ export default function NewReport() {
   const handleSuccess = () => {
     // Navigate to the user's reports page after successful submission
     // This shows them their newly created report in context
-    router.push(`/events/${eventSlug}/my-reports`);
+    router.push(`/events/${eventSlug}/my-incidents`);
   };
 
   if (loading) {
@@ -137,7 +137,7 @@ export default function NewReport() {
         </div>
 
         {/* Report Form */}
-        <ReportForm
+        <IncidentForm
           eventSlug={eventSlug as string}
           eventName={event.name}
           onSuccess={handleSuccess}

@@ -77,7 +77,7 @@ export function AppBreadcrumbs({ eventName, className }: AppBreadcrumbsProps) {
         
         if (pathname.includes('/new')) {
           breadcrumbs.push({ label: 'New Report' });
-        } else if (query.reportId) {
+        } else if (query.incidentId) {
           breadcrumbs.push({ label: 'Report Details' });
         }
       } else if (pathname.includes('/team')) {
@@ -108,7 +108,7 @@ export function AppBreadcrumbs({ eventName, className }: AppBreadcrumbsProps) {
     }
   } else if (pathname.startsWith('/dashboard')) {
     // Global dashboard routes
-    if (pathname === '/dashboard/reports') {
+    if (pathname === '/dashboard/incidents') {
       breadcrumbs.push({ label: 'All Reports' });
     } else if (pathname === '/dashboard/notifications') {
       breadcrumbs.push({ label: 'Notifications' });

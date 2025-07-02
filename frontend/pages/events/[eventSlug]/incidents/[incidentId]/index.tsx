@@ -1,7 +1,7 @@
 import React from "react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { ReportDetailView } from "../../../../../components/ReportDetailView";
+import { ReportDetailView } from '../../../../../components/IncidentDetailView';
 
 // Define interfaces
 interface User {
@@ -12,7 +12,7 @@ interface User {
   roles?: string[];
 }
 
-interface Report {
+interface Incident {
   id: string;
   title: string;
   description: string;
@@ -31,7 +31,7 @@ interface Comment {
   id: string;
   body: string;
   userId: string;
-  reportId: string;
+  incidentId: string;
   visibility: string;
   isMarkdown: boolean;
   createdAt: string;
@@ -46,7 +46,7 @@ interface EvidenceFile {
   path: string;
   mimetype: string;
   size: number;
-  reportId: string;
+  incidentId: string;
   createdAt: string;
 }
 
@@ -75,11 +75,11 @@ export default function ReportDetail() {
   const eventSlug = Array.isArray(router.query.eventSlug) 
     ? router.query.eventSlug[0] 
     : router.query.eventSlug;
-  const reportId = Array.isArray(router.query.reportId) 
-    ? router.query.reportId[0] 
-    : router.query.reportId;
+  const incidentId = Array.isArray(router.query.incidentId) 
+    ? router.query.incidentId[0] 
+    : router.query.incidentId;
 
-  const [report, setReport] = useState<Report | null>(null);
+  const [incident, setIncident] = useState<Incident | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string | undefined>(undefined);
   const [user, setUser] = useState<User | null>(null);
@@ -133,37 +133,37 @@ export default function ReportDetail() {
 
   // Fetch report data
   useEffect(() => {
-    if (!eventSlug || !reportId) return;
+    if (!eventSlug || !incidentId) return;
     
     setLoading(true);
     fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
-      `/events/slug/${eventSlug}/reports/${reportId}`,
+      `/events/slug/${eventSlug}/incidents/${incidentId}`,
       { credentials: "include" }
     )
       .then((res) => {
         if (!res.ok) {
           if (res.status === 403) {
-            throw new Error("You are not authorized to view this report.");
+            throw new Error("You are not authorized to view this incident.");
           } else if (res.status === 404) {
             throw new Error("Report not found.");
           } else if (res.status === 401) {
-            throw new Error("You must be logged in to view this report.");
+            throw new Error("You must be logged in to view this incident.");
           } else {
-            throw new Error(`Failed to fetch report: ${res.status}`);
+            throw new Error(`Failed to fetch incident: ${res.status}`);
           }
         }
         return res.json();
       })
       .then((data) => {
-        setReport(data.report);
-        if (data.report.evidenceFiles) {
-          setEvidenceFiles(data.report.evidenceFiles);
+        setIncident(data.incident);
+        if (data.incident.evidenceFiles) {
+          setEvidenceFiles(data.incident.evidenceFiles);
         }
         setAssignmentFields({
-          assignedResponderId: data.report.assignedResponderId || '',
-          severity: data.report.severity || '',
-          resolution: data.report.resolution || '',
+          assignedResponderId: data.incident.assignedResponderId || '',
+          severity: data.incident.severity || '',
+          resolution: data.incident.resolution || '',
         });
         setFetchError(undefined);
       })
@@ -173,7 +173,7 @@ export default function ReportDetail() {
       .finally(() => {
         setLoading(false);
       });
-  }, [eventSlug, reportId]);
+  }, [eventSlug, incidentId]);
 
   // Fetch user info
   useEffect(() => {
@@ -204,27 +204,27 @@ export default function ReportDetail() {
 
   // Fetch comments for this report
   useEffect(() => {
-    if (!eventSlug || !reportId) return;
+    if (!eventSlug || !incidentId) return;
     setCommentsLoading(true);
     fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/api/events/slug/${eventSlug}/reports/${reportId}/comments`,
+        `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
       { credentials: "include" },
     )
       .then((res) => (res.ok ? res.json() : { comments: [] }))
       .then((data) => setComments(data.comments || []))
       .catch(() => setComments([]))
       .finally(() => setCommentsLoading(false));
-  }, [eventSlug, reportId]);
+  }, [eventSlug, incidentId]);
 
   useEffect(() => {
-    if (report && report.createdAt) {
-      setCreatedAtLocal(new Date(report.createdAt).toLocaleString());
+    if (incident && incident.createdAt) {
+      setCreatedAtLocal(new Date(incident.createdAt).toLocaleString());
     }
-    if (report && report.updatedAt) {
-      setUpdatedAtLocal(new Date(report.updatedAt).toLocaleString());
+    if (incident && incident.updatedAt) {
+      setUpdatedAtLocal(new Date(incident.updatedAt).toLocaleString());
     }
-  }, [report?.createdAt, report?.updatedAt]);
+  }, [incident?.createdAt, incident?.updatedAt]);
 
   const isSystemAdmin =
     user && user.roles && user.roles.includes("system_admin");
@@ -265,11 +265,11 @@ export default function ReportDetail() {
 
   // Fetch state history for the report
   useEffect(() => {
-    if (!report?.eventId || !reportId) return;
+    if (!incident?.eventId || !incidentId) return;
     
     fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
-      `/api/events/${report.eventId}/reports/${reportId}/state-history`,
+      `/api/events/${incident.eventId}/incidents/${incidentId}/state-history`,
       { credentials: "include" }
     )
       .then((res) => res.ok ? res.json() : { history: [] })
@@ -279,7 +279,7 @@ export default function ReportDetail() {
       .catch(() => {
         setStateHistory([]);
       });
-  }, [report?.eventId, reportId]);
+  }, [incident?.eventId, incidentId]);
 
   // Enhanced state change handler to support notes and assignments
   const handleStateChange = async (newState: string, notes?: string, assignedToUserId?: string) => {
@@ -295,7 +295,7 @@ export default function ReportDetail() {
       
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/${report?.eventId}/reports/${reportId}/state`,
+          `/api/events/${incident?.eventId}/incidents/${incidentId}/state`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -308,7 +308,7 @@ export default function ReportDetail() {
         setStateChangeError(data.error || "Failed to change state");
       } else {
         const data = await res.json();
-        setReport(data.report);
+        setIncident(data.incident);
         
         // Update assignment fields if assignment changed
         if (assignedToUserId !== undefined) {
@@ -319,23 +319,23 @@ export default function ReportDetail() {
         }
         
         // Also update assignment fields from the returned report data
-        if (data.report) {
+        if (data.incident) {
           setAssignmentFields(prev => ({
             ...prev,
-            assignedResponderId: data.report.assignedResponderId || '',
-            severity: data.report.severity || prev.severity,
-            resolution: data.report.resolution || prev.resolution,
-            state: data.report.state
+            assignedResponderId: data.incident.assignedResponderId || '',
+            severity: data.incident.severity || prev.severity,
+            resolution: data.incident.resolution || prev.resolution,
+            state: data.incident.state
           }));
         }
         
         setStateChangeSuccess("State updated successfully!");
         
         // Refetch state history after state change
-        if (data.report?.eventId) {
+        if (data.incident?.eventId) {
           fetch(
             (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
-            `/api/events/${data.report.eventId}/reports/${reportId}/state-history`,
+            `/api/events/${data.incident.eventId}/incidents/${incidentId}/state-history`,
             { credentials: "include" }
           )
             .then((res) => res.ok ? res.json() : { history: [] })
@@ -370,7 +370,7 @@ export default function ReportDetail() {
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/reports/${reportId}/comments`,
+          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -391,7 +391,7 @@ export default function ReportDetail() {
         // Refetch comments
         fetch(
           (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-            `/api/events/slug/${eventSlug}/reports/${reportId}/comments`,
+            `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
           { credentials: "include" },
         )
           .then((res) => (res.ok ? res.json() : { comments: [] }))
@@ -416,7 +416,7 @@ export default function ReportDetail() {
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/reports/${reportId}/comments/${comment.id}`,
+          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments/${comment.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -438,7 +438,7 @@ export default function ReportDetail() {
         // Refetch comments
         fetch(
           (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-            `/api/events/slug/${eventSlug}/reports/${reportId}/comments`,
+            `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
           { credentials: "include" },
         )
           .then((res) => (res.ok ? res.json() : { comments: [] }))
@@ -454,7 +454,7 @@ export default function ReportDetail() {
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/reports/${reportId}/comments/${comment.id}`,
+          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments/${comment.id}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -467,7 +467,7 @@ export default function ReportDetail() {
       // Refetch comments
       fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/reports/${reportId}/comments`,
+          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
         { credentials: "include" },
       )
         .then((res) => (res.ok ? res.json() : { comments: [] }))
@@ -481,8 +481,8 @@ export default function ReportDetail() {
   const canUploadEvidence =
     user &&
     report &&
-    report.reporterId &&
-    (user.id === report.reporterId || isAdminOrSystemAdmin);
+    incident.reporterId &&
+    (user.id === incident.reporterId || isAdminOrSystemAdmin);
     
   const handleEvidenceUpload = async (filesOrEvent: File[] | React.FormEvent<HTMLFormElement>) => {
     let files: File[];
@@ -501,7 +501,7 @@ export default function ReportDetail() {
     }
     const res = await fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/api/events/slug/${eventSlug}/reports/${report!.id}/evidence`,
+        `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence`,
       {
         method: "POST",
         body: formData,
@@ -514,7 +514,7 @@ export default function ReportDetail() {
       // Refetch evidence files
       const filesRes = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/reports/${report!.id}/evidence`,
+          `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence`,
         { credentials: "include" },
       );
       if (filesRes.ok) {
@@ -524,12 +524,12 @@ export default function ReportDetail() {
       // Refetch the full report to update evidenceFiles and any other fields
       const reportRes = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/events/slug/${eventSlug}/reports/${reportId}`,
+          `/events/slug/${eventSlug}/incidents/${incidentId}`,
         { credentials: "include" },
       );
       if (reportRes.ok) {
         const data = await reportRes.json();
-        setReport(data.report);
+        setIncident(data.incident);
       }
     } else {
       setEvidenceUploadMsg("Failed to upload evidence.");
@@ -542,7 +542,7 @@ export default function ReportDetail() {
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/reports/${report!.id}/evidence/${file.id}`,
+          `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence/${file.id}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -555,7 +555,7 @@ export default function ReportDetail() {
       // Refetch evidence files
       const filesRes = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/reports/${report!.id}/evidence`,
+          `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence`,
         { credentials: "include" },
       );
       if (filesRes.ok) {
@@ -595,7 +595,7 @@ export default function ReportDetail() {
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + 
-        `/events/slug/${eventSlug}/reports/${reportId}`,
+        `/events/slug/${eventSlug}/incidents/${incidentId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -606,13 +606,13 @@ export default function ReportDetail() {
       
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setAssignmentError(data.error || 'Failed to update report.');
+        setAssignmentError(data.error || 'Failed to update incident.');
         setAssignmentLoading(false);
         return;
       }
       
       const data = await res.json();
-      setReport(data.report);
+      setIncident(data.incident);
       setAssignmentSuccess('Updated!');
     } catch (err) {
       setAssignmentError('Network error');
@@ -628,7 +628,7 @@ export default function ReportDetail() {
     }
     const res = await fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/events/slug/${eventSlug}/reports/${reportId}/title`,
+        `/events/slug/${eventSlug}/incidents/${incidentId}/title`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -641,7 +641,7 @@ export default function ReportDetail() {
       throw new Error(data.error || "Failed to update title.");
     }
     const data = await res.json();
-    setReport(data.report);
+    setIncident(data.incident);
   };
 
   // Early return for missing router params (better UX)
@@ -649,7 +649,7 @@ export default function ReportDetail() {
     return <div>Loading...</div>;
   }
   
-  if (!eventSlug || !reportId) {
+  if (!eventSlug || !incidentId) {
     return <div className="max-w-2xl mx-auto mt-12 p-6 bg-red-100 text-red-800 rounded shadow text-center">
       Invalid URL: Missing event or report ID
     </div>;
@@ -663,7 +663,7 @@ export default function ReportDetail() {
   }
 
   return (
-    <ReportDetailView
+    <IncidentDetailView
       report={report}
       user={user}
       userRoles={userRoles}
@@ -695,7 +695,7 @@ export default function ReportDetail() {
       onTitleEdit={handleTitleEdit}
       onReportUpdate={(updatedReport) => {
         // Update the report state with the new data from field edits
-        setReport(updatedReport);
+        setIncident(updatedReport);
       }}
     />
   );

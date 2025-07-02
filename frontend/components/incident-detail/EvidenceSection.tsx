@@ -5,7 +5,7 @@ import { FileText, Image, Download, Trash2, Upload } from "lucide-react";
 interface EvidenceSectionProps {
   evidenceFiles: any[];
   apiBaseUrl: string;
-  report: any;
+  incident: any;
   isResponderOrAbove: boolean;
   deletingEvidenceId: string | null;
   setDeletingEvidenceId: (id: string | null) => void;

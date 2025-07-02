@@ -42,7 +42,7 @@ interface Event {
   organizationId: string;
   createdAt: string;
   _count: {
-    reports: number;
+    incidents: number;
   };
 }
 
@@ -170,8 +170,8 @@ export default function OrganizationDashboard() {
     return null;
   }
 
-  const activeEvents = events.filter(event => event._count.reports > 0);
-  const totalReports = events.reduce((sum, event) => sum + event._count.reports, 0);
+  const activeEvents = events.filter(event => event._count.incidents > 0);
+  const totalReports = events.reduce((sum, event) => sum + event._count.incidents, 0);
 
   return (
     <>
@@ -286,13 +286,13 @@ export default function OrganizationDashboard() {
                     <div>
                       <h4 className="font-medium">{event.name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {event._count.reports} reports
+                        {event._count.incidents} reports
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {event._count.reports > 0 && (
+                      {event._count.incidents > 0 && (
                         <Badge variant="secondary">
-                          {event._count.reports} pending
+                          {event._count.incidents} pending
                         </Badge>
                       )}
                       <Button asChild size="sm" variant="outline">

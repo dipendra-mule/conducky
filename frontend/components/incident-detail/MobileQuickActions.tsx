@@ -12,10 +12,10 @@ import {
 interface MobileQuickActionsProps {
   canAddComment?: boolean;
   canUploadEvidence?: boolean;
-  canEditReport?: boolean;
+  canEditIncident?: boolean;
   onAddComment?: () => void;
   onUploadEvidence?: () => void;
-  onEditReport?: () => void;
+  onEditIncident?: () => void;
   onShare?: () => void;
   className?: string;
 }
@@ -23,10 +23,10 @@ interface MobileQuickActionsProps {
 export function MobileQuickActions({
   canAddComment = false,
   canUploadEvidence = false,
-  canEditReport = false,
+  canEditIncident = false,
   onAddComment,
   onUploadEvidence,
-  onEditReport,
+  onEditIncident,
   onShare,
   className = ""
 }: MobileQuickActionsProps) {
@@ -51,8 +51,8 @@ export function MobileQuickActions({
       id: 'edit',
       label: 'Edit Report',
       icon: Edit,
-      onClick: onEditReport,
-      show: canEditReport
+      onClick: onEditIncident,
+      show: canEditIncident
     },
     {
       id: 'share',

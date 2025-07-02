@@ -30,7 +30,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 
-interface Report {
+interface Incident {
   id: string;
   title: string;
   description: string;
@@ -86,7 +86,7 @@ interface EnhancedReportListProps {
   className?: string;
 }
 
-export function EnhancedReportList({
+export function EnhancedIncidentList({
   eventSlug,
   userId,
   showBulkActions = true,
@@ -96,7 +96,7 @@ export function EnhancedReportList({
 }: EnhancedReportListProps) {
   
   // State management
-  const [reports, setReports] = useState<Report[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -159,11 +159,11 @@ export function EnhancedReportList({
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch reports: ${response.statusText}`);
+        throw new Error(`Failed to fetch incidents: ${response.statusText}`);
       }
       
       const data = await response.json();
-      setReports(data.reports || []);
+      setIncidents(data.incidents || []);
       setStats(data.stats || null);
       setTotalPages(data.totalPages || 1);
       setTotalReports(data.total || 0);
@@ -213,26 +213,26 @@ export function EnhancedReportList({
   }, [canViewAssignments, assignedFilter]);
 
   // Handle pinning
-  const togglePin = (reportId: string) => {
+  const togglePin = (incidentId: string) => {
     setPinnedReports(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(reportId)) {
-        newSet.delete(reportId);
+      if (newSet.has(incidentId)) {
+        newSet.delete(incidentId);
       } else {
-        newSet.add(reportId);
+        newSet.add(incidentId);
       }
       return newSet;
     });
   };
 
   // Handle selection
-  const toggleSelection = (reportId: string) => {
+  const toggleSelection = (incidentId: string) => {
     setSelectedReports(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(reportId)) {
-        newSet.delete(reportId);
+      if (newSet.has(incidentId)) {
+        newSet.delete(incidentId);
       } else {
-        newSet.add(reportId);
+        newSet.add(incidentId);
       }
       return newSet;
     });
@@ -257,8 +257,8 @@ export function EnhancedReportList({
     try {
       const selectedIds = Array.from(selectedReports);
       const reportsToExport = selectedIds.length > 0 
-        ? reports.filter(report => selectedIds.includes(report.id))
-        : reports;
+        ? incidents.filter(incident => selectedIds.includes(incident.id))
+        : incidents;
       
       if (format === 'csv') {
         // Use backend CSV export
@@ -358,7 +358,7 @@ export function EnhancedReportList({
           yPosition += lineHeight * 0.8;
           
           // Add report URL
-          const reportUrl = `${window.location.origin}/events/${eventSlug || report.event.slug}/reports/${report.id}`;
+          const reportUrl = `${window.location.origin}/events/${eventSlug || report.event.slug}/incidents/${report.id}`;
           doc.text(`URL: ${reportUrl}`, margin + 5, yPosition);
           yPosition += lineHeight * 0.8;
           
@@ -393,10 +393,10 @@ export function EnhancedReportList({
 
   // Separate pinned and regular reports
   const { pinnedReportsList, regularReportsList } = useMemo(() => {
-    const pinned = reports.filter(report => pinnedReports.has(report.id));
-    const regular = reports.filter(report => !pinnedReports.has(report.id));
+    const pinned = incidents.filter(incident => pinnedReports.has(incident.id));
+    const regular = incidents.filter(incident => !pinnedReports.has(incident.id));
     return { pinnedReportsList: pinned, regularReportsList: regular };
-  }, [reports, pinnedReports]);
+  }, [incidents, pinnedReports]);
 
   // Get state badge color
   const getStateBadgeColor = (state: string) => {
@@ -684,7 +684,7 @@ export function EnhancedReportList({
                           </TableCell>
                           <TableCell>
                             <Link 
-                              href={`/events/${eventSlug || report.event.slug}/reports/${report.id}`}
+                              href={`/events/${eventSlug || report.event.slug}/incidents/${report.id}`}
                               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 font-medium"
                             >
                               {report.title}
@@ -850,7 +850,7 @@ export function EnhancedReportList({
                         )}
                         <TableCell>
                           <Link 
-                            href={`/events/${eventSlug || report.event.slug}/reports/${report.id}`}
+                            href={`/events/${eventSlug || report.event.slug}/incidents/${report.id}`}
                             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 font-medium"
                           >
                             {report.title}

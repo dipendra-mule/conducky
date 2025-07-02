@@ -140,7 +140,7 @@ export function QuickJump({ isOpen, onClose, initialQuery }: QuickJumpProps) {
   // Get icon for item based on context or default
   const getItemIcon = (item: typeof searchResults[0]) => {
     if (item.href === '/dashboard') return Home;
-    if (item.href.includes('/reports/new') || item.title.includes('🚨 Submit Report')) return AlertTriangle;
+    if (item.href.includes('/incidents/new') || item.title.includes('🚨 Submit Report')) return AlertTriangle;
     if (item.href.includes('/reports')) return ClipboardList;
     if (item.href.includes('/notifications')) return Bell;
     if (item.href.includes('/profile')) return User;
@@ -166,7 +166,7 @@ export function QuickJump({ isOpen, onClose, initialQuery }: QuickJumpProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search pages, events, reports..."
+            placeholder="Search pages, events, incidents..."
             className="border-0 shadow-none focus-visible:ring-0 text-base"
           />
           <div className="ml-2 flex gap-1">

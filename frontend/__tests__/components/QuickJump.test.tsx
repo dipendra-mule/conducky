@@ -37,7 +37,7 @@ describe('QuickJump', () => {
       <QuickJump isOpen={true} onClose={mockOnClose} />
     );
 
-    expect(screen.getByPlaceholderText('Search pages, events, reports...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search pages, events, incidents...')).toBeInTheDocument();
     expect(screen.getByText('↑↓ Navigate')).toBeInTheDocument();
     expect(screen.getByText('↵ Select')).toBeInTheDocument();
     expect(screen.getByText('Esc Close')).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe('QuickJump', () => {
       <QuickJump isOpen={false} onClose={mockOnClose} />
     );
 
-    expect(screen.queryByPlaceholderText('Search pages, events, reports...')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Search pages, events, incidents...')).not.toBeInTheDocument();
   });
 
   it('shows quick access shortcuts when no query', () => {
@@ -65,7 +65,7 @@ describe('QuickJump', () => {
       <QuickJump isOpen={true} onClose={mockOnClose} />
     );
 
-    const input = screen.getByPlaceholderText('Search pages, events, reports...');
+    const input = screen.getByPlaceholderText('Search pages, events, incidents...');
     fireEvent.change(input, { target: { value: 'dashboard' } });
 
     await waitFor(() => {
@@ -78,7 +78,7 @@ describe('QuickJump', () => {
       <QuickJump isOpen={true} onClose={mockOnClose} />
     );
 
-    const input = screen.getByPlaceholderText('Search pages, events, reports...');
+    const input = screen.getByPlaceholderText('Search pages, events, incidents...');
     
     // Test Escape key
     fireEvent.keyDown(input, { key: 'Escape' });

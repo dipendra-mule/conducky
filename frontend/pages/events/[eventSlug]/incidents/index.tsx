@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/router";
 import { Card } from "../../../../components/ui/card";
 import { UserContext } from "../../../_app";
-import { EnhancedReportList } from "../../../../components/reports/EnhancedReportList";
+import { EnhancedIncidentList } from "../../../../components/incidents/EnhancedReportList";
 
 // Define UserContext type
 interface UserContextType {
@@ -13,7 +13,7 @@ interface UserContextType {
   } | null;
 }
 
-export default function EventReportsPage() {
+export default function EventIncidentsPage() {
   const router = useRouter();
   const { eventSlug } = router.query;
   const { user } = useContext(UserContext) as UserContextType;
@@ -92,7 +92,7 @@ export default function EventReportsPage() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-8 mt-8">
       <h1 className="text-3xl font-bold mb-8">All Event Reports</h1>
-      <EnhancedReportList
+      <EnhancedIncidentList
         eventSlug={eventSlug as string}
         showBulkActions={true}
         showPinning={true}

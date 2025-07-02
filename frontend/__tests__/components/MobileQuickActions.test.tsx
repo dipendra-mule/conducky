@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MobileQuickActions } from '@/components/report-detail/MobileQuickActions';
+import { MobileQuickActions } from '@/components/incident-detail/MobileQuickActions';
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -40,7 +40,7 @@ describe('MobileQuickActions', () => {
       <MobileQuickActions
         canAddComment={false}
         canUploadEvidence={false}
-        canEditReport={false}
+        canEditIncident={false}
         // Note: share action is always available by default, so component will render
       />
     );
@@ -79,10 +79,10 @@ describe('MobileQuickActions', () => {
       <MobileQuickActions
         canAddComment={true}
         canUploadEvidence={true}
-        canEditReport={true}
+        canEditIncident={true}
         onAddComment={mockOnAddComment}
         onUploadEvidence={mockOnUploadEvidence}
-        onEditReport={mockOnEditReport}
+        onEditIncident={mockOnEditReport}
         onShare={mockOnShare}
       />
     );
@@ -142,10 +142,10 @@ describe('MobileQuickActions', () => {
       <MobileQuickActions
         canAddComment={true}
         canUploadEvidence={false}
-        canEditReport={false}
+        canEditIncident={false}
         onAddComment={mockOnAddComment}
         onUploadEvidence={mockOnUploadEvidence}
-        onEditReport={mockOnEditReport}
+        onEditIncident={mockOnEditReport}
       />
     );
 
@@ -233,7 +233,7 @@ describe('MobileQuickActions', () => {
       <MobileQuickActions
         canAddComment={false}
         canUploadEvidence={false}
-        canEditReport={false}
+        canEditIncident={false}
         // onShare is undefined, but share action should still show
       />
     );

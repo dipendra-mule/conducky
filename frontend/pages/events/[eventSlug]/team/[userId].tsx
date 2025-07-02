@@ -35,7 +35,7 @@ interface Activity {
   timestamp: string;
 }
 
-interface Report {
+interface Incident {
   id: string;
   title: string;
   type: string;
@@ -50,7 +50,7 @@ export default function TeamMemberProfile() {
   const [event, setEvent] = useState<{ id: string; name: string; slug: string; description?: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [reports, setReports] = useState<Report[]>([]);
+  const [incidents, setIncidents] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -112,7 +112,7 @@ export default function TeamMemberProfile() {
 
         if (reportsRes.ok) {
           const reportsData = await reportsRes.json();
-          setReports(reportsData.reports || []);
+          setReports(reportsData.incidents || []);
         }
 
       } catch (err) {
@@ -384,7 +384,7 @@ export default function TeamMemberProfile() {
                   <div className="space-y-4">
                     {reports.map((report) => (
                       <div key={report.id} className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                           onClick={() => router.push(`/events/${eventSlug}/reports/${report.id}`)}>
+                           onClick={() => router.push(`/events/${eventSlug}/incidents/${report.id}`)}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h3 className="font-medium">{report.title}</h3>

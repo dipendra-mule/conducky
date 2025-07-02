@@ -5,7 +5,7 @@ import { ModalContext } from "../context/ModalContext";
 import { Button } from "@/components/ui/button";
 import Head from "next/head";
 import type { AppProps } from "next/app";
-import { ReportForm } from "@/components/ReportForm";
+import { ReportForm } from '@/components/IncidentForm';
 import { ThemeProvider } from "next-themes";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -245,7 +245,7 @@ const MyApp: React.FC<AppProps> = ({ Component, pageProps }) => {
                   <div className="text-sm mb-2 text-gray-500">
                     For event: <b>{eventName || eventSlugForModal}</b>
                   </div>
-                  <ReportForm
+                  <IncidentForm
                     eventSlug={eventSlugForModal}
                     eventName={eventName}
                     onSuccess={() => {

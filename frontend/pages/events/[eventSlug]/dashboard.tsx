@@ -19,7 +19,7 @@ const validStates = [
   "closed",
 ] as const;
 
-type ReportState = typeof validStates[number];
+type IncidentState = typeof validStates[number];
 
 interface User {
   id: string;
@@ -32,11 +32,11 @@ interface Reporter {
   email?: string;
 }
 
-interface Report {
+interface Incident {
   id: string;
   type: string;
   description: string;
-  state: ReportState;
+  state: IncidentState;
   reporter?: Reporter;
 }
 
@@ -55,7 +55,7 @@ interface StateChangeStatus {
 }
 
 type StateChangeMap = {
-  [reportId: string]: StateChangeStatus;
+  [incidentId: string]: StateChangeStatus;
 };
 
 export default function EventDashboard() {
@@ -190,7 +190,7 @@ export default function EventDashboard() {
               As a reporter, you can submit new incident reports and view the status of your submissions.
             </p>
             <div className="flex gap-4">
-              <Link href={`/events/${eventSlug}/reports/new`}>
+              <Link href={`/events/${eventSlug}/incidents/new`}>
                 <Button>Submit New Report</Button>
               </Link>
               <Link href={`/events/${eventSlug}/reports`}>

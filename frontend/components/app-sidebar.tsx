@@ -201,8 +201,8 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
         isActive: router.asPath === "/dashboard",
       },
       {
-        title: "All Reports",
-        url: "/dashboard/reports",
+        title: "All Incidents",
+        url: "/dashboard/incidents",
         icon: ClipboardList,
       },
       {
@@ -366,17 +366,17 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
             icon: ClipboardList,
             items: [
               {
-                title: "My Reports",
-                url: `/events/${targetEventSlug}/my-reports`,
+                title: "My Incidents",
+                url: `/events/${targetEventSlug}/my-incidents`,
               },
-              // Add "All Reports" for Responders and Admins
+              // Add "All Incidents" for Responders and Admins
               ...(isEventResponder ? [{
-                title: "All Reports",
+                title: "All Incidents",
                 url: `/events/${targetEventSlug}/reports`,
               }] : []),
               {
-                title: "Submit Report",
-                url: `/events/${targetEventSlug}/reports/new`,
+                title: "Submit Incident",
+                url: `/events/${targetEventSlug}/incidents/new`,
               },
             ],
           },

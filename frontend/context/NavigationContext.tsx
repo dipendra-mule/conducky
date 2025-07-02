@@ -36,7 +36,7 @@ interface NavigationContextType {
   
   // Navigation helpers
   navigateToEvent: (eventSlug: string) => void;
-  navigateToReport: (eventSlug: string, reportId: string) => void;
+  navigateToReport: (eventSlug: string, incidentId: string) => void;
   goBack: () => void;
 }
 
@@ -175,7 +175,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     if (events.length === 1) {
       items.push({
         title: `🚨 Submit Report for ${events[0].name}`,
-        href: `/events/${events[0].slug}/reports/new`,
+        href: `/events/${events[0].slug}/incidents/new`,
         category: 'shortcut',
         description: `Quick incident report submission (Ctrl+Shift+R)`,
         context: 'event'
@@ -184,7 +184,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
       events.forEach(event => {
         items.push({
           title: `🚨 Submit Report: ${event.name}`,
-          href: `/events/${event.slug}/reports/new`,
+          href: `/events/${event.slug}/incidents/new`,
           category: 'shortcut',
           description: `Report incident for ${event.name}`,
           context: 'event'
@@ -195,7 +195,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     // Add other shortcuts after report submission
     items.push(
       { title: 'Dashboard', href: '/dashboard', category: 'shortcut', description: 'Global dashboard' },
-      { title: 'All Reports', href: '/dashboard/reports', category: 'shortcut', description: 'Cross-event reports' },
+      { title: 'All Reports', href: '/dashboard/incidents', category: 'shortcut', description: 'Cross-event reports' },
       { title: 'Notifications', href: '/dashboard/notifications', category: 'shortcut', description: 'Your notifications' },
       { title: 'Profile', href: '/profile', category: 'shortcut', description: 'Your profile settings' }
     );
@@ -258,8 +258,8 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     router.push(`/events/${eventSlug}/dashboard`);
   }, [router]);
 
-  const navigateToReport = useCallback((eventSlug: string, reportId: string) => {
-    router.push(`/events/${eventSlug}/reports/${reportId}`);
+  const navigateToReport = useCallback((eventSlug: string, incidentId: string) => {
+    router.push(`/events/${eventSlug}/incidents/${incidentId}`);
   }, [router]);
 
   const goBack = useCallback(() => {
@@ -342,8 +342,8 @@ function getPageTitle(pathname: string, query: Record<string, string | string[] 
 
   if (pathname.startsWith('/events/') && eventName) {
     if (pathname.includes('/dashboard')) return `${eventName} Dashboard`;
-    if (pathname.includes('/reports/new')) return `${eventName} - New Report`;
-    if (pathname.includes('/reports/') && query.reportId) return `${eventName} - Report #${query.reportId}`;
+    if (pathname.includes('/incidents/new')) return `${eventName} - New Report`;
+    if (pathname.includes('/reports/') && query.incidentId) return `${eventName} - Report #${query.incidentId}`;
     if (pathname.includes('/reports')) return `${eventName} Reports`;
     if (pathname.includes('/team/invite')) return `${eventName} - Invite Team`;
     if (pathname.includes('/team/') && query.userId) return `${eventName} - Team Member`;
@@ -354,7 +354,7 @@ function getPageTitle(pathname: string, query: Record<string, string | string[] 
   }
 
   if (pathname === '/dashboard') return 'Dashboard';
-  if (pathname === '/dashboard/reports') return 'All Reports';
+  if (pathname === '/dashboard/incidents') return 'All Reports';
   if (pathname === '/dashboard/notifications') return 'Notifications';
   if (pathname === '/profile') return 'Profile';
   if (pathname === '/profile/settings') return 'Profile Settings';

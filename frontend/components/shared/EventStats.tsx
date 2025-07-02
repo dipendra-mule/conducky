@@ -86,7 +86,7 @@ export function EventStats({ eventSlug, userRoles }: EventStatsProps) {
       ];
     } else if (isReporter) {
       return [
-        { label: "My Reports", value: stats.myReports || 0, color: "text-blue-600" },
+        { label: "My Incidents", value: stats.myReports || 0, color: "text-blue-600" },
         { label: "Resolved", value: stats.resolvedReports || 0, color: "text-green-600" },
         { label: "Total Reports", value: stats.totalReports, color: "text-gray-600" },
       ];

@@ -1,18 +1,18 @@
 import React, { useState, ChangeEvent } from "react";
 import { Card } from "./ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { TitleEditForm } from "./report-detail/TitleEditForm";
-import { ReportStateSelector } from "./report-detail/ReportStateSelector";
-import { StateManagementSection } from "./report-detail/StateManagementSection";
-import { AssignmentSection } from "./report-detail/AssignmentSection";
-import { EvidenceSection } from "./report-detail/EvidenceSection";
-import { CommentsSection } from "./report-detail/CommentsSection";
-import { ReportMetaTable } from "./report-detail/ReportMetaTable";
-import { MobileQuickActions } from "./report-detail/MobileQuickActions";
+import { TitleEditForm } from './incident-detail/TitleEditForm';
+import { ReportStateSelector } from './incident-detail/ReportStateSelector';
+import { StateManagementSection } from './incident-detail/StateManagementSection';
+import { AssignmentSection } from './incident-detail/AssignmentSection';
+import { EvidenceSection } from './incident-detail/EvidenceSection';
+import { CommentsSection } from './incident-detail/CommentsSection';
+import { ReportMetaTable } from './incident-detail/ReportMetaTable';
+import { MobileQuickActions } from './incident-detail/MobileQuickActions';
 import { Pencil, ChevronDown } from "lucide-react";
 
 export interface ReportDetailViewProps {
-  report: any;
+  incident: any;
   user: any;
   userRoles?: string[];
   comments?: any[]; // Deprecated - now fetched internally in CommentsSection
@@ -214,7 +214,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               canEditType={isResponderOrAbove || (user && user.id === report.reporterId)}
               onLocationEdit={async (location) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/reports/${report.id}/location`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/location`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -230,8 +230,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.report) {
-                    onReportUpdate(responseData.report);
+                  if (onReportUpdate && responseData.incident) {
+                    onReportUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update location:', error);
@@ -241,7 +241,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onContactPreferenceEdit={async (contactPreference) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/reports/${report.id}/contact-preference`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/contact-preference`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -257,8 +257,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.report) {
-                    onReportUpdate(responseData.report);
+                  if (onReportUpdate && responseData.incident) {
+                    onReportUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update contact preference:', error);
@@ -268,7 +268,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onIncidentAtEdit={async (incidentAt) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/reports/${report.id}/incident-date`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/incident-date`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -284,8 +284,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.report) {
-                    onReportUpdate(responseData.report);
+                  if (onReportUpdate && responseData.incident) {
+                    onReportUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update incident date:', error);
@@ -295,7 +295,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onPartiesEdit={async (parties) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/reports/${report.id}/parties`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/parties`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -311,8 +311,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.report) {
-                    onReportUpdate(responseData.report);
+                  if (onReportUpdate && responseData.incident) {
+                    onReportUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update parties involved:', error);
@@ -322,7 +322,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onDescriptionEdit={async (description) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/reports/${report.id}/description`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/description`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -338,8 +338,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.report) {
-                    onReportUpdate(responseData.report);
+                  if (onReportUpdate && responseData.incident) {
+                    onReportUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update description:', error);
@@ -349,7 +349,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onTypeEdit={async (type) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/reports/${report.id}/type`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/type`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -365,8 +365,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.report) {
-                    onReportUpdate(responseData.report);
+                  if (onReportUpdate && responseData.incident) {
+                    onReportUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update type:', error);
@@ -513,7 +513,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
             {eventSlug && (
               <CommentsSection
-                reportId={report.id}
+                incidentId={report.id}
                 eventSlug={eventSlug}
                 user={user}
                 isResponderOrAbove={isResponderOrAbove}
@@ -540,7 +540,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
       <MobileQuickActions
         canAddComment={!!eventSlug}
         canUploadEvidence={isResponderOrAbove || (user && user.id === report.reporterId)}
-        canEditReport={canEditTitle}
+        canEditIncident={canEditTitle}
         onAddComment={() => {
           // Scroll to comments section and focus input
           const commentsSection = document.querySelector('[data-section="comments"]');
@@ -569,7 +569,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
             }, 500);
           }
         }}
-        onEditReport={() => {
+        onEditIncident={() => {
           // Scroll to title and enable editing
           window.scrollTo({ top: 0, behavior: 'smooth' });
           setTimeout(() => {

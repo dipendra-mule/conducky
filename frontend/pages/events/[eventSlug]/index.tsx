@@ -323,7 +323,7 @@ export default function PublicEventPage() {
                             Submit a detailed report through our secure system. You can track progress and receive updates.
                           </p>
                           <Button 
-                            onClick={() => router.push(`/events/${event.slug}/reports/new`)}
+                            onClick={() => router.push(`/events/${event.slug}/incidents/new`)}
                             size="sm"
                             className="w-full"
                           >

@@ -36,7 +36,7 @@ interface CommentListResponse {
 }
 
 interface CommentsSectionProps {
-  reportId: string;
+  incidentId: string;
   eventSlug: string;
   user: User;
   isResponderOrAbove: boolean;
@@ -64,7 +64,7 @@ const highlightSearchTerm = (text: string) => {
 };
 
 export function CommentsSection({
-  reportId,
+  incidentId,
   eventSlug,
   user,
   isResponderOrAbove,
@@ -125,8 +125,8 @@ export function CommentsSection({
     }
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-    return `${apiUrl}/api/events/slug/${eventSlug}/reports/${reportId}/comments?${params}`;
-  }, [reportId, eventSlug, searchTerm, visibilityFilter, sortBy, sortOrder, pagination.limit]);
+    return `${apiUrl}/api/events/slug/${eventSlug}/incidents/${incidentId}/comments?${params}`;
+  }, [incidentId, eventSlug, searchTerm, visibilityFilter, sortBy, sortOrder, pagination.limit]);
 
   // Function to find which page a comment is on
   const findCommentPage = useCallback(async (commentId: string): Promise<number | null> => {
@@ -145,7 +145,7 @@ export function CommentsSection({
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
       const baseResponse = await fetch(
-        `${apiUrl}/api/events/slug/${eventSlug}/reports/${reportId}/comments?${baseParams}`,
+        `${apiUrl}/api/events/slug/${eventSlug}/incidents/${incidentId}/comments?${baseParams}`,
         { credentials: "include" }
       );
 
@@ -168,7 +168,7 @@ export function CommentsSection({
         }
 
         const response = await fetch(
-          `${apiUrl}/api/events/slug/${eventSlug}/reports/${reportId}/comments?${pageParams}`,
+          `${apiUrl}/api/events/slug/${eventSlug}/incidents/${incidentId}/comments?${pageParams}`,
           { credentials: "include" }
         );
 
@@ -185,7 +185,7 @@ export function CommentsSection({
       console.error("Error finding comment page:", error);
       return null;
     }
-  }, [reportId, eventSlug, visibilityFilter, sortBy, sortOrder, pagination.limit]);
+  }, [incidentId, eventSlug, visibilityFilter, sortBy, sortOrder, pagination.limit]);
 
   // Fetch comments function
   const fetchComments = useCallback(async (page = 1) => {

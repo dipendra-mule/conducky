@@ -171,7 +171,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
       }
     } else {
       const errorText = await res.text().catch(() => "Unknown error");
-      setMessage(`Failed to submit report: ${res.status} ${errorText}`);
+      setMessage(`Failed to submit incident: ${res.status} ${errorText}`);
     }
     setSubmitting(false);
   };
@@ -531,7 +531,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
             {/* Submit Button */}
             <div className="flex flex-col gap-4">
               <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? "Submitting..." : "Submit Report"}
+                {submitting ? "Submitting..." : "Submit Incident"}
               </Button>
               
               {message && (

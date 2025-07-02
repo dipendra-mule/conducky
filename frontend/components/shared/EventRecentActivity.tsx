@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-interface Report {
+interface Incident {
   id: string;
   title?: string;
   type: string;
@@ -23,7 +23,7 @@ interface EventRecentActivityProps {
 }
 
 export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivityProps) {
-  const [reports, setReports] = useState<Report[]>([]);
+  const [incidents, setIncidents] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -42,7 +42,7 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
         );
         if (!res.ok) throw new Error("Failed to fetch reports");
         const data = await res.json();
-        setReports(data.reports || []);
+        setReports(data.incidents || []);
       } catch {
         setError("Could not load recent activity.");
       } finally {
@@ -130,7 +130,7 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
                 </div>
               </div>
               <Button asChild variant="ghost" size="sm">
-                <Link href={`/events/${eventSlug}/reports/${report.id}`}>
+                <Link href={`/events/${eventSlug}/incidents/${report.id}`}>
                   View
                 </Link>
               </Button>

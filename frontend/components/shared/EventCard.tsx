@@ -160,7 +160,7 @@ export function EventCard({ event }: EventCardProps) {
             <>
               {/* Reporter actions available to Admin */}
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports/new`} className="flex items-center gap-2">
+                <Link href={`/events/${slug}/incidents/new`} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Submit Report
                 </Link>
@@ -189,7 +189,7 @@ export function EventCard({ event }: EventCardProps) {
             <>
               {/* Reporter actions available to Responder */}
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports/new`} className="flex items-center gap-2">
+                <Link href={`/events/${slug}/incidents/new`} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Submit Report
                 </Link>
@@ -214,7 +214,7 @@ export function EventCard({ event }: EventCardProps) {
           {isReporter && !isResponder && !isAdmin && (
             <>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports/new`} className="flex items-center gap-2">
+                <Link href={`/events/${slug}/incidents/new`} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Submit Report
                 </Link>

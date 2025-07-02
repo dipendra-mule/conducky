@@ -1,7 +1,7 @@
 /* global jest, describe, it, expect */
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import ReportDetailView from "./ReportDetailView";
+import ReportDetailView from './IncidentDetailView';
 
 // Mock Card, Table, Button, Avatar for isolation
 jest.mock("./ui/card", () => ({
@@ -40,7 +40,7 @@ describe("ReportDetailView", () => {
 
   it("renders report details", () => {
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}
@@ -55,7 +55,7 @@ describe("ReportDetailView", () => {
   it("shows state dropdown for allowed user", () => {
     const onStateChange = jest.fn();
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={baseReport}
         user={user}
         userRoles={userRoles}
@@ -72,7 +72,7 @@ describe("ReportDetailView", () => {
   it("shows admin fields in adminMode", () => {
     const setAssignmentFields = jest.fn();
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={baseReport}
         user={user}
         userRoles={["event_admin"]}
@@ -94,7 +94,7 @@ describe("ReportDetailView", () => {
   it("shows evidence and allows delete for responder", () => {
     const onEvidenceDelete = jest.fn();
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={baseReport}
         user={user}
         userRoles={userRoles}
@@ -138,7 +138,7 @@ describe("ReportDetailView", () => {
     const onCommentEdit = jest.fn();
     const onCommentDelete = jest.fn();
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={baseReport}
         user={user}
         userRoles={userRoles}
@@ -160,7 +160,7 @@ describe("ReportDetailView", () => {
   it("shows add comment form and calls onCommentSubmit", () => {
     const onCommentSubmit = jest.fn();
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={baseReport}
         user={user}
         userRoles={userRoles}
@@ -177,7 +177,7 @@ describe("ReportDetailView", () => {
   it("renders evidence file download link with correct apiBaseUrl", () => {
     const apiBaseUrl = "https://api.example.com";
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={baseReport}
         user={user}
         userRoles={userRoles}
@@ -204,7 +204,7 @@ describe("ReportDetailView", () => {
   it("shows evidence upload form for the reporter", () => {
     const reporterUser = { id: "u1", name: "Alice", email: "alice@example.com", roles: [] };
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={{ ...baseReport, reporterId: "u1" }}
         user={reporterUser}
         userRoles={[]}
@@ -218,7 +218,7 @@ describe("ReportDetailView", () => {
 
   it("shows the report title as the heading", () => {
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}
@@ -229,7 +229,7 @@ describe("ReportDetailView", () => {
 
   it("shows edit button for reporter", () => {
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}
@@ -240,7 +240,7 @@ describe("ReportDetailView", () => {
 
   it("shows edit button for admin", () => {
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={{ ...baseReport, title: "Test Title", reporterId: "u2" }}
         user={{ id: "admin", name: "Admin", roles: ["event_admin"] }}
         userRoles={["event_admin"]}
@@ -252,7 +252,7 @@ describe("ReportDetailView", () => {
   it("allows editing the title and validates length", async () => {
     const onTitleEdit = jest.fn(() => Promise.resolve());
     render(
-      <ReportDetailView
+      <IncidentDetailView
         report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}

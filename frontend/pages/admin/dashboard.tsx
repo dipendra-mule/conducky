@@ -309,7 +309,7 @@ export default function AdminDashboard() {
                     stats.recentActivity.map((activity) => (
                       <Link 
                         key={activity.id}
-                        href={`/events/${activity.eventSlug}/reports/${activity.id}`}
+                        href={`/events/${activity.eventSlug}/incidents/${activity.id}`}
                         className="block hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
                       >
                         <div className="flex items-center justify-between border-b pb-2 last:border-b-0">
