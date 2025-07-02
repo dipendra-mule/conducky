@@ -79,7 +79,10 @@ export function encryptField(text: string): string {
     // Return format: iv:encrypted:authTag (all hex encoded)
     return `${iv.toString('hex')}:${encrypted}:${authTag.toString('hex')}`;
   } catch (error) {
-    console.error('Encryption error:', error);
+    // Don't log sensitive encryption errors in production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Encryption error:', error);
+    }
     throw new Error('Failed to encrypt field');
   }
 }
@@ -115,7 +118,10 @@ export function decryptField(encryptedText: string): string {
     
     return decrypted;
   } catch (error) {
-    console.error('Decryption error:', error);
+    // Don't log sensitive decryption errors in production
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Decryption error:', error);
+    }
     throw new Error('Failed to decrypt field');
   }
 }

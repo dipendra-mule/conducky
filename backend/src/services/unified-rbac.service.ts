@@ -6,15 +6,66 @@ const defaultPrisma = new PrismaClient();
 // Type for RoleScope enum (until Prisma types are updated)
 type RoleScope = 'system' | 'organization' | 'event';
 
+// Simple cache for user roles to improve performance
+interface UserRoleCache {
+  roles: any[];
+  timestamp: number;
+}
+
 /**
  * Unified RBAC Service
  * Handles all role-based access control using the new unified role system
  */
 export class UnifiedRBACService {
   private prisma: PrismaClient;
+  private userRoleCache = new Map<string, UserRoleCache>();
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
 
   constructor(prismaClient?: PrismaClient) {
     this.prisma = prismaClient || defaultPrisma;
+  }
+
+  /**
+   * Get user roles with caching for performance optimization
+   */
+  private async getCachedUserRoles(userId: string): Promise<any[]> {
+    const now = Date.now();
+    const cached = this.userRoleCache.get(userId);
+    
+    // Return cached roles if still valid
+    if (cached && (now - cached.timestamp) < this.CACHE_TTL_MS) {
+      return cached.roles;
+    }
+
+    // Fetch fresh roles from database
+    const roles = await (this.prisma as any).userRole.findMany({
+      where: { userId },
+      include: {
+        role: true
+      }
+    });
+
+    // Cache the results
+    this.userRoleCache.set(userId, {
+      roles,
+      timestamp: now
+    });
+
+    return roles;
+  }
+
+  /**
+   * Clear cache for a specific user (call this when user roles change)
+   */
+  clearUserCache(userId: string): void {
+    this.userRoleCache.delete(userId);
+  }
+
+  /**
+   * Clear all cached user roles
+   */
+  clearAllCache(): void {
+    this.userRoleCache.clear();
   }
 
   /**
@@ -30,7 +81,10 @@ export class UnifiedRBACService {
       const userRoles = await this.getUserRoles(userId, scopeType, scopeId);
       return userRoles.some((userRole: any) => roleNames.includes(userRole.role.name));
     } catch (error) {
-      console.error('[UnifiedRBAC] Error checking role:', error);
+      // Log error safely without exposing sensitive details
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[UnifiedRBAC] Error checking role:', error);
+      }
       return false;
     }
   }
@@ -60,37 +114,65 @@ export class UnifiedRBACService {
   }
 
   /**
-   * Check if user has event role (with role inheritance)
+   * Check if user has event role (with role inheritance) - Optimized version
    */
   async hasEventRole(
     userId: string,
     eventId: string,
     roleNames: string[] = ['event_admin', 'responder', 'reporter']
   ): Promise<boolean> {
-    // System admins have access to all events
-    const isSystemAdmin = await this.isSystemAdmin(userId);
-    if (isSystemAdmin) {
-      return true;
-    }
+    try {
+      // Optimized: Use cached user roles and fetch event data in parallel
+      const [userRoles, event] = await Promise.all([
+        // Get cached user roles for performance
+        this.getCachedUserRoles(userId),
+        // Get event with organization data
+        (this.prisma as any).event.findUnique({
+          where: { id: eventId },
+          select: { organizationId: true }
+        })
+      ]);
 
-    // Check direct event role
-    const hasDirectRole = await this.hasRole(userId, roleNames, 'event', eventId);
-    if (hasDirectRole) {
-      return true;
-    }
+      // Check if user is system admin (from cached roles)
+      const isSystemAdmin = userRoles.some((ur: any) => 
+        ur.role.name === 'system_admin' && ur.scopeType === 'system'
+      );
+      
+      if (isSystemAdmin) {
+        return true;
+      }
 
-    // Check if user has org_admin role for the event's organization (role inheritance)
-    const event = await (this.prisma as any).event.findUnique({
-      where: { id: eventId },
-      select: { organizationId: true }
-    });
-    
-    let hasOrgAdminRole = false;
-    if (event?.organizationId) {
-      hasOrgAdminRole = await this.hasRole(userId, ['org_admin'], 'organization', event.organizationId);
+      // Check direct event roles (from cached roles)
+      const hasDirectRole = userRoles.some((ur: any) => 
+        ur.scopeType === 'event' && 
+        ur.scopeId === eventId && 
+        roleNames.includes(ur.role.name)
+      );
+      
+      if (hasDirectRole) {
+        return true;
+      }
+
+      // Check organization admin role inheritance (from cached roles)
+      if (event?.organizationId) {
+        const hasOrgAdminRole = userRoles.some((ur: any) => 
+          ur.scopeType === 'organization' && 
+          ur.scopeId === event.organizationId && 
+          ur.role.name === 'org_admin'
+        );
+        
+        if (hasOrgAdminRole) {
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[UnifiedRBAC] Error checking event role:', error);
+      }
+      return false;
     }
-    
-    return hasDirectRole || isSystemAdmin || hasOrgAdminRole;
   }
 
   /**
@@ -177,7 +259,10 @@ export class UnifiedRBACService {
       });
 
       if (!role) {
-        console.error(`[UnifiedRBAC] Role not found: ${roleName}`);
+        // Don't log the role name to prevent information disclosure
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[UnifiedRBAC] Role not found: ${roleName}`);
+        }
         return false;
       }
 
@@ -204,9 +289,14 @@ export class UnifiedRBACService {
         }
       });
 
+      // Clear cache for this user since their roles have changed
+      this.clearUserCache(userId);
+
       return true;
     } catch (error) {
-      console.error('[UnifiedRBAC] Error granting role:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[UnifiedRBAC] Error granting role:', error);
+      }
       return false;
     }
   }
@@ -226,7 +316,10 @@ export class UnifiedRBACService {
       });
 
       if (!role) {
-        console.error(`[UnifiedRBAC] Role not found: ${roleName}`);
+        // Don't log the role name to prevent information disclosure
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`[UnifiedRBAC] Role not found: ${roleName}`);
+        }
         return false;
       }
 
@@ -239,9 +332,14 @@ export class UnifiedRBACService {
         }
       });
 
+      // Clear cache for this user since their roles have changed
+      this.clearUserCache(userId);
+
       return true;
     } catch (error) {
-      console.error('[UnifiedRBAC] Error revoking role:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[UnifiedRBAC] Error revoking role:', error);
+      }
       return false;
     }
   }
@@ -256,7 +354,9 @@ export class UnifiedRBACService {
       });
       return role?.level || 0;
     } catch (error) {
-      console.error('[UnifiedRBAC] Error getting role level:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[UnifiedRBAC] Error getting role level:', error);
+      }
       return 0;
     }
   }
@@ -275,7 +375,9 @@ export class UnifiedRBACService {
       const maxLevel = Math.max(...userRoles.map((ur: any) => ur.role.level));
       return maxLevel >= minLevel;
     } catch (error) {
-      console.error('[UnifiedRBAC] Error checking minimum level:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[UnifiedRBAC] Error checking minimum level:', error);
+      }
       return false;
     }
   }
