@@ -327,7 +327,7 @@ const config = {
           autoCollapseCategories: true,
         },
       },
-    }),
+    copyright: `Copyright © ${new Date().getFullYear()} Matty Stratton. Built with Docusaurus.`,
 };
 
 export default config;
