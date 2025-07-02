@@ -1,107 +1,47 @@
 ---
 id: conducky-api
-title: "Conducky API"
-description: "API for Conducky - Code of Conduct incident management system"
-sidebar_label: Introduction
-sidebar_position: 0
-hide_title: true
-custom_edit_url: null
+title: Conducky API
+description: API documentation for Conducky
+sidebar_label: API Reference
 ---
 
-import ApiLogo from "@theme/ApiLogo";
-import Heading from "@theme/Heading";
-import SchemaTabs from "@theme/SchemaTabs";
-import TabItem from "@theme/TabItem";
-import Export from "@theme/ApiExplorer/Export";
+# Conducky API Documentation
 
-<span
-  className={"theme-doc-version-badge badge badge--secondary"}
-  children={"Version: 1.0.0"}
->
-</span>
+The API documentation is currently being generated. Please check back later or refer to the [Developer Documentation](/developer-docs/api-documentation) for setup instructions.
 
-<Export
-  url={"/api-docs.json"}
-  proxy={undefined}
->
-  
-</Export>
+## Available Endpoints
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"Conducky API"}
->
-</Heading>
+The Conducky API provides the following main endpoint categories:
 
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout  
+- `GET /api/auth/session` - Get session status
 
+### Events
+- `GET /api/events` - List events
+- `POST /api/events` - Create event
+- `GET /api/events/{slug}` - Get event details
 
-API for Conducky - Code of Conduct incident management system
+### Reports
+- `GET /api/events/{slug}/reports` - List reports for event
+- `POST /api/events/{slug}/reports` - Create new report
+- `GET /api/reports/{id}` - Get report details
 
-<div
-  style={{"marginBottom":"2rem"}}
->
-  <Heading
-    id={"authentication"}
-    as={"h2"}
-    className={"openapi-tabs__heading"}
-    children={"Authentication"}
-  >
-  </Heading><SchemaTabs
-    className={"openapi-tabs__security-schemes"}
-  >
-    <TabItem
-      label={"API Key: sessionAuth"}
-      value={"sessionAuth"}
-    >
-      
-      
-      Session-based authentication
-      
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <th>
-                Security Scheme Type:
-              </th><td>
-                apiKey
-              </td>
-            </tr><tr>
-              <th>
-                Header parameter name:
-              </th><td>
-                connect.sid
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </TabItem>
-  </SchemaTabs>
-</div><div
-  style={{"display":"flex","flexDirection":"column","marginBottom":"var(--ifm-paragraph-margin-bottom)"}}
->
-  <h3
-    style={{"marginBottom":"0.25rem"}}
-  >
-    Contact
-  </h3><span>
-    Conducky Support: [support@conducky.com](mailto:support@conducky.com)
-  </span><span>
-    URL: [https://conducky.com](https://conducky.com)
-  </span>
-</div><div
-  style={{"marginBottom":"var(--ifm-paragraph-margin-bottom)"}}
->
-  <h3
-    style={{"marginBottom":"0.25rem"}}
-  >
-    License
-  </h3><a
-    href={"https://opensource.org/licenses/MIT"}
-  >
-    MIT
-  </a>
-</div>
-      
+### Users
+- `GET /api/users` - List users (SuperAdmin only)
+- `POST /api/users` - Create user
+- `GET /api/users/{id}` - Get user details
+
+For detailed API documentation with interactive examples, please ensure the backend OpenAPI specification is available during the build process.
+
+## Setup
+
+To generate complete API documentation:
+
+1. Ensure the backend server is configured with OpenAPI/Swagger
+2. Run `npm run generate-docs` in the backend directory
+3. Run `npm run gen-api-docs conducky` in the website directory
+4. Rebuild the documentation site
+
+For more information, see the [API Documentation Setup Guide](/developer-docs/api-documentation).

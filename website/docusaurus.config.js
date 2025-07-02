@@ -20,7 +20,7 @@ const baseUrl = isReadTheDocs
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Conducky',
-  tagline: 'Conducky is a platform for managing Code of Conduct reports',
+  tagline: 'Code of Conduct incident management platform for conferences and events',
   favicon: 'img/favicon.ico',
 
   future: {
@@ -49,10 +49,23 @@ const config = {
           editUrl: 'https://github.com/mattstratton/conducky/tree/main/website/',
           docRootComponent: "@theme/DocRoot",
           docItemComponent: "@theme/ApiItem",
+          // Enhanced navigation
+          showLastUpdateAuthor: false,
+          showLastUpdateTime: false,
+          breadcrumbs: true,
+          // Enable doc versioning for future use
+          includeCurrentVersion: true,
         },
         blog: false,
         theme: {
           customCss: './src/css/custom.css',
+        },
+        // Enable sitemap generation
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/tags/**'],
+          filename: 'sitemap.xml',
         },
       }),
     ],
@@ -75,11 +88,69 @@ const config = {
             downloadUrl: '/api-docs.json',
             hideSendButton: false,
             showSchemas: true,
+            // Enhanced API documentation
+            template: 'api.mustache',
+            markdownGenerators: {
+              createApiPageMD: ({
+                baseURL,
+                frontMatter,
+                imports,
+                infoMD,
+                securitySchemes,
+                servers,
+                contentType,
+              }) => {
+                return [
+                  `---`,
+                  `${frontMatter}`,
+                  `---`,
+                  ``,
+                  `import ApiLogo from "@theme/ApiLogo";`,
+                  `import Tabs from "@theme/Tabs";`,
+                  `import TabItem from "@theme/TabItem";`,
+                  `import Export from "@theme/ApiDemoPanel/Export";`,
+                  ``,
+                  `<ApiLogo />`,
+                  ``,
+                  `${infoMD}`,
+                  ``,
+                  `## Authentication`,
+                  ``,
+                  `All API endpoints require proper authentication. See the [Authentication Guide](/developer-docs/api-documentation#authentication) for details.`,
+                  ``,
+                  `${imports}`,
+                  ``,
+                  `${servers}`,
+                  ``,
+                  `${securitySchemes}`,
+                ].join('\n');
+              },
+            },
           },
         },
       },
     ],
-
+    // Enhanced search functionality
+    [
+      require.resolve('@docusaurus/plugin-client-redirects'),
+      {
+        redirects: [
+          // Redirect old URLs to new ones for better SEO
+          {
+            to: '/user-guide/intro',
+            from: '/docs/user-guide',
+          },
+          {
+            to: '/admin-guide/intro',
+            from: '/docs/admin-guide',
+          },
+          {
+            to: '/developer-docs/intro',
+            from: '/docs/developer-docs',
+          },
+        ],
+      },
+    ],
   ],
 
   themes: ["docusaurus-theme-openapi-docs"],
@@ -87,19 +158,64 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/docusaurus-social-card.jpg',
+      image: 'img/conducky-social-card.jpg',
+      // Enhanced metadata
       metadata: [
         {
           name: 'canonical',
           content: canonicalUrl,
         },
+        {
+          name: 'robots',
+          content: 'index, follow',
+        },
+        {
+          name: 'description',
+          content: 'Comprehensive documentation for Conducky, a code of conduct incident management platform designed for conferences and events. Learn how to set up, manage, and use Conducky effectively.',
+        },
+        {
+          name: 'keywords',
+          content: 'code of conduct, incident management, conference safety, event management, harassment reporting, Conducky',
+        },
+        {
+          property: 'og:type',
+          content: 'website',
+        },
+        {
+          property: 'og:title',
+          content: 'Conducky Documentation - Code of Conduct Management',
+        },
+        {
+          property: 'og:description',
+          content: 'Complete guide for using Conducky, the comprehensive incident management platform for conference and event safety.',
+        },
+        {
+          name: 'twitter:card',
+          content: 'summary_large_image',
+        },
       ],
+      
+      // Enhanced search configuration (placeholder - requires actual Algolia setup)
+      // algolia: {
+      //   appId: 'YOUR_APP_ID',
+      //   apiKey: 'YOUR_SEARCH_API_KEY',
+      //   indexName: 'conducky',
+      //   contextualSearch: true,
+      //   searchPagePath: 'search',
+      //   searchParameters: {},
+      //   facetFilters: [],
+      // },
+
       navbar: {
         title: 'Conducky',
         logo: {
           alt: 'Conducky Logo',
           src: 'img/conducky-logo.svg',
+          srcDark: 'img/conducky-logo-dark.svg', // Dark mode logo
+          width: 32,
+          height: 32,
         },
+        hideOnScroll: false,
         items: [
           {
             type: 'docSidebar',
@@ -125,19 +241,31 @@ const config = {
             position: 'left',
             label: 'API Reference',
           },
+          // Enhanced search bar (commented out until Algolia is configured)
+          // {
+          //   type: 'search',
+          //   position: 'right',
+          // },
           {
             href: 'https://github.com/mattstratton/conducky',
             label: 'GitHub',
             position: 'right',
+            className: 'header-github-link',
+            'aria-label': 'GitHub repository',
           },
         ],
       },
+      
       footer: {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Documentation',
             items: [
+              {
+                label: 'Get Started',
+                to: '/user-guide/getting-started',
+              },
               {
                 label: 'User Guide',
                 to: '/user-guide/intro',
@@ -147,7 +275,7 @@ const config = {
                 to: '/admin-guide/intro',
               },
               {
-                                label: 'Developer Docs',
+                label: 'Developer Docs',
                 to: '/developer-docs/intro',
               },
               {
@@ -157,30 +285,85 @@ const config = {
             ],
           },
           {
-            title: 'Community',
-            items: [],
+            title: 'Help & Support',
+            items: [
+              {
+                label: 'Troubleshooting',
+                to: '/user-guide/troubleshooting',
+              },
+              {
+                label: 'FAQ',
+                to: '/user-guide/faq',
+              },
+              {
+                label: 'Community',
+                href: 'https://github.com/mattstratton/conducky/discussions',
+              },
+              {
+                label: 'Report Issues',
+                href: 'https://github.com/mattstratton/conducky/issues',
+              },
+            ],
           },
           {
-            title: 'More',
+            title: 'Project',
             items: [
               {
                 label: 'GitHub',
                 href: 'https://github.com/mattstratton/conducky',
               },
+              {
+                label: 'Releases',
+                href: 'https://github.com/mattstratton/conducky/releases',
+              },
+              {
+                label: 'License',
+                href: 'https://github.com/mattstratton/conducky/blob/main/LICENSE',
+              },
+              {
+                label: 'Contributing',
+                href: 'https://github.com/mattstratton/conducky/blob/main/CONTRIBUTING.md',
+              },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Matty Stratton. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Matty Stratton. Built with Docusaurus. <br/> <a href="/privacy-policy" style="color: #9ca3af;">Privacy Policy</a> | <a href="/terms-of-service" style="color: #9ca3af;">Terms of Service</a>`,
       },
+      
       prism: {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
-        additionalLanguages: ['bash', 'diff', 'json'],
+        additionalLanguages: ['bash', 'diff', 'json', 'yaml', 'docker', 'sql'],
       },
+      
       colorMode: {
         defaultMode: 'light',
         disableSwitch: false,
         respectPrefersColorScheme: true,
+      },
+
+      // Enhanced table of contents
+      tableOfContents: {
+        minHeadingLevel: 2,
+        maxHeadingLevel: 4,
+      },
+
+      // Enhanced announcement bar for important updates
+      announcementBar: {
+        id: 'support_conducky',
+        content:
+          '⭐ If you find Conducky useful, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/mattstratton/conducky">GitHub</a>! ⭐',
+        backgroundColor: '#fafbfc',
+        textColor: '#091E42',
+        isCloseable: true,
+      },
+
+      // Enhanced docs configuration
+      docs: {
+        sidebar: {
+          hideable: true,
+          autoCollapseCategories: true,
+        },
       },
     }),
 };
