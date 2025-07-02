@@ -16,7 +16,7 @@ Get up and running with Conducky quickly! This guide helps you understand the ba
 3. Accept the invitation to join the event
 
 **If you're starting fresh:**
-1. Visit your organization's Conducky instance
+1. Visit your organization's Conducky instance (check with your admin for the URL)
 2. Click "Register" to create a new account
 3. The first account automatically becomes a SuperAdmin
 
