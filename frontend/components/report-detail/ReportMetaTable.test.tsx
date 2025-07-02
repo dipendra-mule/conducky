@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { ReportMetaTable } from './ReportMetaTable';
 
 // Mock the edit form components
@@ -127,7 +127,7 @@ describe('ReportMetaTable', () => {
     expect(editButtons).toHaveLength(0);
   });
 
-  it('opens location edit form when edit button is clicked', () => {
+  it('opens location edit form when edit button is clicked', async () => {
     const propsWithLocationEdit = {
       ...defaultProps,
       canEditLocation: true,
@@ -138,13 +138,16 @@ describe('ReportMetaTable', () => {
 
     // Find and click the edit button for location
     const editButtons = screen.getAllByRole('button');
-    fireEvent.click(editButtons[0]); // Assuming first button is for location
+    
+    await act(async () => {
+      fireEvent.click(editButtons[0]); // Assuming first button is for location
+    });
 
     expect(screen.getByTestId('location-edit-form')).toBeInTheDocument();
   });
 
-  it('calls onLocationEdit when location is saved', () => {
-    const mockOnLocationEdit = jest.fn();
+  it('calls onLocationEdit when location is saved', async () => {
+    const mockOnLocationEdit = jest.fn().mockResolvedValue(undefined);
     const propsWithLocationEdit = {
       ...defaultProps,
       canEditLocation: true,
@@ -155,16 +158,22 @@ describe('ReportMetaTable', () => {
 
     // Open edit form
     const editButtons = screen.getAllByRole('button');
-    fireEvent.click(editButtons[0]);
+    
+    await act(async () => {
+      fireEvent.click(editButtons[0]);
+    });
 
     // Save new location
     const saveButton = screen.getByText('Save Location');
-    fireEvent.click(saveButton);
+    
+    await act(async () => {
+      fireEvent.click(saveButton);
+    });
 
     expect(mockOnLocationEdit).toHaveBeenCalledWith('New location');
   });
 
-  it('closes edit form when cancel is clicked', () => {
+  it('closes edit form when cancel is clicked', async () => {
     const propsWithLocationEdit = {
       ...defaultProps,
       canEditLocation: true,
@@ -175,13 +184,19 @@ describe('ReportMetaTable', () => {
 
     // Open edit form
     const editButtons = screen.getAllByRole('button');
-    fireEvent.click(editButtons[0]);
+    
+    await act(async () => {
+      fireEvent.click(editButtons[0]);
+    });
 
     expect(screen.getByTestId('location-edit-form')).toBeInTheDocument();
 
     // Cancel editing
     const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
+    
+    await act(async () => {
+      fireEvent.click(cancelButton);
+    });
 
     expect(screen.queryByTestId('location-edit-form')).not.toBeInTheDocument();
   });
