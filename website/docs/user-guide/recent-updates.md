@@ -80,7 +80,7 @@ Enhanced multi-event incident management with advanced filtering and quick actio
 - Status change quick actions
 - Advanced search and filtering capabilities
 
-See the [Cross-Event Incidents Guide](./cross-event-reports.md) for details.
+See the [Cross-Event Incidents Guide](./cross-event-incidents.md) for details.
 
 ### 🎨 UI/UX Improvements
 

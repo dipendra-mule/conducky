@@ -42,8 +42,8 @@ This section is for **all users** of Conducky, including event attendees, Code o
 
 ### Incident Management
 - **[Report Submission](./getting-started#your-first-event)** - How to submit incident reports
-- **[Report Comments](./report-comments)** - Communication and collaboration on incidents
-- **[Cross-Event Incidents](./cross-event-reports)** - Managing incidents across multiple events
+- **[Incident Comments](./incident-comments)** - Communication and collaboration on incidents
+- **[Cross-Event Incidents](./cross-event-incidents)** - Managing incidents across multiple events
 
 ### Communication & Updates
 - **[Notification Center](./notification-center)** - Managing alerts and updates
@@ -75,7 +75,7 @@ If you manage events and their safety teams:
 
 ### System Users (Multi-Event)
 If you participate in multiple events with different roles:
-- **Start with**: [Navigation](./navigation) → [Cross-Event Incidents](./cross-event-reports)
+- **Start with**: [Navigation](./navigation) → [Cross-Event Incidents](./cross-event-incidents)
 - **Key sections**: Profile Management, Notification Center, Event Management
 - **Your role**: Efficiently manage multiple event contexts and responsibilities
 
@@ -98,8 +98,8 @@ Understanding your role helps you focus on the most relevant documentation:
 - **I need to submit an incident** → [Quick Start](./quick-start) → [Getting Started](./getting-started#your-first-event)
 - **I can't access something** → [Troubleshooting](./troubleshooting) → [FAQ](./faq)
 - **I need to invite someone** → [Invite Links](./invite-links) → [User Management](./user-management)
-- **I'm managing multiple events** → [Cross-Event Incidents](./cross-event-reports) → [Navigation](./navigation)
-- **I need to train my team** → [Quick Start](./quick-start) → [Navigation](./navigation) → [Report Comments](./report-comments)
+- **I'm managing multiple events** → [Cross-Event Incidents](./cross-event-incidents) → [Navigation](./navigation)
+- **I need to train my team** → [Quick Start](./quick-start) → [Navigation](./navigation) → [Incident Comments](./incident-comments)
 
 ### By Experience Level
 - **Brand new to Conducky** → [Quick Start](./quick-start)
