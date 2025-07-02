@@ -129,7 +129,7 @@ Once in an event, explore the key features:
 - User management across all events
 - Access to admin interface
 
-**Note**: SuperAdmins need explicit event roles to access event data!
+**Important**: SuperAdmins need explicit event roles to access event data! Being a SuperAdmin doesn't automatically grant access to event content - you must be added as an Event Admin, Responder, or Reporter for each event.
 
 ---
 
