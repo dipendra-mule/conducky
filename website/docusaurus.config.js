@@ -88,44 +88,6 @@ const config = {
             downloadUrl: '/api-docs.json',
             hideSendButton: false,
             showSchemas: true,
-            // Enhanced API documentation
-            template: 'api.mustache',
-            markdownGenerators: {
-              createApiPageMD: ({
-                baseURL,
-                frontMatter,
-                imports,
-                infoMD,
-                securitySchemes,
-                servers,
-                contentType,
-              }) => {
-                return [
-                  `---`,
-                  `${frontMatter}`,
-                  `---`,
-                  ``,
-                  `import ApiLogo from "@theme/ApiLogo";`,
-                  `import Tabs from "@theme/Tabs";`,
-                  `import TabItem from "@theme/TabItem";`,
-                  `import Export from "@theme/ApiDemoPanel/Export";`,
-                  ``,
-                  `<ApiLogo />`,
-                  ``,
-                  `${infoMD}`,
-                  ``,
-                  `## Authentication`,
-                  ``,
-                  `All API endpoints require proper authentication. See the [Authentication Guide](/developer-docs/api-documentation#authentication) for details.`,
-                  ``,
-                  `${imports}`,
-                  ``,
-                  `${servers}`,
-                  ``,
-                  `${securitySchemes}`,
-                ].join('\n');
-              },
-            },
           },
         },
       },
@@ -211,7 +173,7 @@ const config = {
         logo: {
           alt: 'Conducky Logo',
           src: 'img/conducky-logo.svg',
-          srcDark: 'img/conducky-logo-dark.svg', // Dark mode logo
+          srcDark: 'img/conducky-logo-dark.svg',
           width: 32,
           height: 32,
         },
