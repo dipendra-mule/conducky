@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 
-export interface ReportCreateData {
+export interface IncidentCreateData {
   eventId: string;
   reporterId?: string | null;
   type: string;
@@ -15,7 +15,7 @@ export interface ReportCreateData {
   urgency?: string;
 }
 
-export interface ReportUpdateData {
+export interface IncidentUpdateData {
   assignedResponderId?: string | null;
   severity?: string | null;
   resolution?: string | null;
@@ -23,7 +23,7 @@ export interface ReportUpdateData {
   title?: string;
 }
 
-export interface ReportQuery {
+export interface IncidentQuery {
   userId?: string;
   page?: number;
   limit?: number;
@@ -34,7 +34,7 @@ export interface ReportQuery {
   assigned?: string;
   sort?: string;
   order?: string;
-  reportIds?: string[];
+  incidentIds?: string[];
 }
 
 export interface EvidenceFile {
@@ -45,7 +45,7 @@ export interface EvidenceFile {
   uploaderId?: string | null;
 }
 
-export interface ReportWithDetails {
+export interface IncidentWithDetails {
   id: string;
   title: string;
   description: string;
@@ -95,15 +95,15 @@ export interface ReportWithDetails {
   };
 }
 
-export interface UserReportsResponse {
-  reports: ReportWithDetails[];
+export interface UserIncidentsResponse {
+  incidents: IncidentWithDetails[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
-export class ReportService {
+export class IncidentService {
   private unifiedRBAC: UnifiedRBACService;
 
   constructor(private prisma: PrismaClient) {
@@ -113,7 +113,7 @@ export class ReportService {
   /**
    * Helper method to check if user can edit a report
    */
-  private async canUserEditReport(userId: string, eventId: string, isReporter: boolean, requiredRoles: string[] = ['responder', 'event_admin', 'system_admin']): Promise<boolean> {
+  private async canUserEditIncident(userId: string, eventId: string, isReporter: boolean, requiredRoles: string[] = ['responder', 'event_admin', 'system_admin']): Promise<boolean> {
     if (isReporter) {
       return true;
     }
@@ -122,9 +122,9 @@ export class ReportService {
   }
 
   /**
-   * Create a new report with optional evidence files
+   * Create a new incident with optional evidence files
    */
-  async createReport(data: ReportCreateData, evidenceFiles?: EvidenceFile[]): Promise<ServiceResult<{ report: any }>> {
+  async createIncident(data: IncidentCreateData, evidenceFiles?: EvidenceFile[]): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Validate required fields
       if (!data.eventId || !data.type || !data.description || !data.title) {
@@ -224,7 +224,7 @@ export class ReportService {
         reportData.severity = urgency;
       }
 
-      const report = await this.prisma.report.create({
+      const incident = await this.prisma.incident.create({
         data: reportData,
       });
 
@@ -233,7 +233,7 @@ export class ReportService {
         for (const file of evidenceFiles) {
           await this.prisma.evidenceFile.create({
             data: {
-              reportId: report.id,
+              incidentId: incident.id,
               filename: file.filename,
               mimetype: file.mimetype,
               size: file.size,
@@ -246,13 +246,13 @@ export class ReportService {
 
       return {
         success: true,
-        data: { report }
+        data: { incident }
       };
     } catch (error: any) {
-      console.error('Error creating report:', error);
+      console.error('Error creating incident:', error);
       return {
         success: false,
-        error: 'Failed to submit report.'
+        error: 'Failed to submit incident.'
       };
     }
   }
@@ -260,7 +260,7 @@ export class ReportService {
   /**
    * List reports for an event
    */
-  async getReportsByEventId(eventId: string, query?: ReportQuery): Promise<ServiceResult<{ reports: ReportWithDetails[] }>> {
+  async getIncidentsByEventId(eventId: string, query?: IncidentQuery): Promise<ServiceResult<{ incidents: IncidentWithDetails[] }>> {
     try {
       // Check if event exists first
       const event = await this.prisma.event.findUnique({ where: { id: eventId } });
@@ -293,7 +293,7 @@ export class ReportService {
       const take = limit ? Math.min(Math.max(1, limit), 100) : undefined; // limit between 1-100
       const skip = (page && limit) ? (page - 1) * limit : undefined;
 
-      const reports = await this.prisma.report.findMany({
+      const incidents = await this.prisma.incident.findMany({
         where,
         include: {
           reporter: true,
@@ -311,13 +311,13 @@ export class ReportService {
 
       return {
         success: true,
-        data: { reports }
+        data: { incidents }
       };
     } catch (error: any) {
-      console.error('Error fetching reports:', error);
+      console.error('Error fetching incidents:', error);
       return {
         success: false,
-        error: 'Failed to fetch reports.'
+        error: 'Failed to fetch incidents.'
       };
     }
   }
@@ -325,7 +325,7 @@ export class ReportService {
   /**
    * List reports for an event by slug
    */
-  async getReportsByEventSlug(slug: string, query?: ReportQuery): Promise<ServiceResult<{ reports: ReportWithDetails[] }>> {
+  async getIncidentsByEventSlug(slug: string, query?: IncidentQuery): Promise<ServiceResult<{ incidents: IncidentWithDetails[] }>> {
     try {
       // Get event ID from slug
       const event = await this.prisma.event.findUnique({ where: { slug } });
@@ -336,12 +336,12 @@ export class ReportService {
         };
       }
 
-      return this.getReportsByEventId(event.id, query);
+      return this.getIncidentsByEventId(event.id, query);
     } catch (error: any) {
       console.error('Error fetching reports by slug:', error);
       return {
         success: false,
-        error: 'Failed to fetch reports.'
+        error: 'Failed to fetch incidents.'
       };
     }
   }
@@ -349,10 +349,10 @@ export class ReportService {
   /**
    * Get a single report by ID
    */
-  async getReportById(reportId: string, eventId?: string): Promise<ServiceResult<{ report: ReportWithDetails }>> {
+  async getIncidentById(incidentId: string, eventId?: string): Promise<ServiceResult<{ incident: IncidentWithDetails }>> {
     try {
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: {
           reporter: true,
           assignedResponder: true,
@@ -364,14 +364,14 @@ export class ReportService {
         },
       });
 
-      if (!report) {
+      if (!incident) {
         return {
           success: false,
           error: 'Report not found.'
         };
       }
 
-      if (eventId && report.eventId !== eventId) {
+      if (eventId && incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -380,13 +380,13 @@ export class ReportService {
 
       return {
         success: true,
-        data: { report }
+        data: { incident }
       };
     } catch (error: any) {
-      console.error('Error fetching report:', error);
+      console.error('Error fetching incident:', error);
       return {
         success: false,
-        error: 'Failed to fetch report.'
+        error: 'Failed to fetch incident.'
       };
     }
   }
@@ -394,7 +394,7 @@ export class ReportService {
   /**
    * Get a single report by slug and report ID
    */
-  async getReportBySlugAndId(slug: string, reportId: string): Promise<ServiceResult<{ report: ReportWithDetails }>> {
+  async getIncidentBySlugAndId(slug: string, incidentId: string): Promise<ServiceResult<{ incident: IncidentWithDetails }>> {
     try {
       // Get event ID from slug
       const event = await this.prisma.event.findUnique({ where: { slug } });
@@ -405,12 +405,12 @@ export class ReportService {
         };
       }
 
-      return this.getReportById(reportId, event.id);
+      return this.getIncidentById(incidentId, event.id);
     } catch (error: any) {
       console.error('Error fetching report by slug:', error);
       return {
         success: false,
-        error: 'Failed to fetch report.'
+        error: 'Failed to fetch incident.'
       };
     }
   }
@@ -418,7 +418,7 @@ export class ReportService {
   /**
    * Update report state
    */
-  async updateReportState(eventId: string, reportId: string, state: string, userId?: string, notes?: string, assignedToUserId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentState(eventId: string, incidentId: string, state: string, userId?: string, notes?: string, assignedToUserId?: string): Promise<ServiceResult<{ incident: any }>> {
     
     try {
       const validStates = ['submitted', 'acknowledged', 'investigating', 'resolved', 'closed'];
@@ -430,15 +430,15 @@ export class ReportService {
       }
 
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: {
           reporter: true,
           assignedResponder: true
         }
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -501,7 +501,7 @@ export class ReportService {
         }
       }
 
-      const oldState = report.state;
+      const oldState = incident.state;
 
       // Prepare update data (Prisma type conflicts require any for now)
       const updateData: any = { state };
@@ -512,8 +512,8 @@ export class ReportService {
       // Update state and assignment in transaction
       const updated = await this.prisma.$transaction(async (tx) => {
         // Update the report
-        const updatedReport = await tx.report.update({
-          where: { id: reportId },
+        const updatedIncident = await tx.incident.update({
+          where: { id: incidentId },
           data: updateData,
           include: {
             reporter: true,
@@ -530,12 +530,12 @@ export class ReportService {
               userId: userId,
               action: `State changed from ${oldState} to ${state}`,
               targetType: 'Report',
-              targetId: reportId,
+              targetId: incidentId,
             }
           });
 
           // Create audit log for assignment if changed
-          if (assignedToUserId && assignedToUserId !== report.assignedResponderId) {
+          if (assignedToUserId && assignedToUserId !== incident.assignedResponderId) {
             const assignedUserName = assignedToUserId ? 
               (await tx.user.findUnique({ where: { id: assignedToUserId } }))?.name || 'Unknown' 
               : 'Unassigned';
@@ -546,7 +546,7 @@ export class ReportService {
                 userId: userId,
                 action: `Report assigned to ${assignedUserName}`,
                 targetType: 'Report',
-                targetId: reportId,
+                targetId: incidentId,
               }
             });
           }
@@ -554,9 +554,9 @@ export class ReportService {
 
         // Add a comment with the state change notes if provided
         if (notes && notes.trim() && userId) {
-          await tx.reportComment.create({
+          await tx.incidentComment.create({
             data: {
-              reportId: reportId,
+              incidentId: incidentId,
               authorId: userId,
               body: `**State changed from ${oldState} to ${state}**\n\n${notes}`,
               isMarkdown: true,
@@ -565,12 +565,12 @@ export class ReportService {
           });
         }
 
-        return updatedReport;
+        return updatedIncident;
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report state:', error);
@@ -584,12 +584,12 @@ export class ReportService {
   /**
    * Get state history for a report
    */
-  async getReportStateHistory(reportId: string): Promise<ServiceResult<{ history: Array<{ id: string; fromState: string; toState: string; changedBy: string; changedAt: string; notes?: string; }> }>> {
+  async getIncidentStateHistory(incidentId: string): Promise<ServiceResult<{ history: Array<{ id: string; fromState: string; toState: string; changedBy: string; changedAt: string; notes?: string; }> }>> {
     try {
       const auditLogs = await this.prisma.auditLog.findMany({
         where: {
           targetType: 'Report',
-          targetId: reportId,
+          targetId: incidentId,
           action: {
             contains: 'State changed'
           }
@@ -640,7 +640,7 @@ export class ReportService {
   /**
    * Update report title (with authorization check)
    */
-  async updateReportTitle(eventId: string, reportId: string, title: string, userId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentTitle(eventId: string, incidentId: string, title: string, userId?: string): Promise<ServiceResult<{ incident: any }>> {
     try {
       if (!title || typeof title !== 'string' || title.length < 10 || title.length > 70) {
         return {
@@ -650,12 +650,12 @@ export class ReportService {
       }
 
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -664,7 +664,7 @@ export class ReportService {
 
       // Check edit permissions if userId provided
       if (userId) {
-        const accessCheck = await this.checkReportEditAccess(userId, reportId, eventId);
+        const accessCheck = await this.checkIncidentEditAccess(userId, incidentId, eventId);
         if (!accessCheck.success) {
           return {
             success: false,
@@ -681,15 +681,15 @@ export class ReportService {
       }
 
       // Update title
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data: { title },
         include: { reporter: true },
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report title:', error);
@@ -703,7 +703,7 @@ export class ReportService {
   /**
    * Update report (assignment, severity, resolution, state)
    */
-  async updateReport(slug: string, reportId: string, updateData: ReportUpdateData): Promise<ServiceResult<{ report: ReportWithDetails; originalAssignedResponderId?: string | null; originalState?: string }>> {
+  async updateIncident(slug: string, incidentId: string, updateData: IncidentUpdateData): Promise<ServiceResult<{ incident: IncidentWithDetails; originalAssignedResponderId?: string | null; originalState?: string }>> {
     try {
       // Get event ID from slug
       const event = await this.prisma.event.findUnique({ where: { slug } });
@@ -714,11 +714,11 @@ export class ReportService {
         };
       }
 
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
       });
 
-      if (!report || report.eventId !== event.id) {
+      if (!incident || incident.eventId !== event.id) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -735,11 +735,11 @@ export class ReportService {
       if (state !== undefined) data.state = state;
 
       // Store original values for notification comparison
-      const originalAssignedResponderId = report.assignedResponderId;
-      const originalState = report.state;
+      const originalAssignedResponderId = incident.assignedResponderId;
+      const originalState = incident.state;
 
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data,
         include: {
           reporter: true,
@@ -755,16 +755,16 @@ export class ReportService {
       return {
         success: true,
         data: { 
-          report: updated, 
+          incident: updated, 
           originalAssignedResponderId, 
           originalState 
         }
       };
     } catch (error: any) {
-      console.error('Error updating report:', error);
+      console.error('Error updating incident:', error);
       return {
         success: false,
-        error: 'Failed to update report.'
+        error: 'Failed to update incident.'
       };
     }
   }
@@ -772,13 +772,13 @@ export class ReportService {
   /**
    * Upload evidence files to a report
    */
-  async uploadEvidenceFiles(reportId: string, evidenceFiles: EvidenceFile[]): Promise<ServiceResult<{ files: any[] }>> {
+  async uploadEvidenceFiles(incidentId: string, evidenceFiles: EvidenceFile[]): Promise<ServiceResult<{ files: any[] }>> {
     try {
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
       });
 
-      if (!report) {
+      if (!incident) {
         return {
           success: false,
           error: 'Report not found.'
@@ -797,7 +797,7 @@ export class ReportService {
       for (const file of evidenceFiles) {
         const evidence = await this.prisma.evidenceFile.create({
           data: {
-            reportId: report.id,
+            incidentId: incident.id,
             filename: file.filename,
             mimetype: file.mimetype,
             size: file.size,
@@ -835,14 +835,14 @@ export class ReportService {
   /**
    * List evidence files for a report
    */
-  async getEvidenceFiles(reportId: string): Promise<ServiceResult<{ files: any[] }>> {
+  async getEvidenceFiles(incidentId: string): Promise<ServiceResult<{ files: any[] }>> {
     try {
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { event: true }
       });
 
-      if (!report) {
+      if (!incident) {
         return {
           success: false,
           error: 'Report not found.'
@@ -850,7 +850,7 @@ export class ReportService {
       }
 
       const files = await this.prisma.evidenceFile.findMany({
-        where: { reportId },
+        where: { incidentId },
         select: {
           id: true,
           filename: true,
@@ -943,7 +943,7 @@ export class ReportService {
   /**
    * Get user's reports across all accessible events with complex filtering and pagination
    */
-  async getUserReports(userId: string, query: ReportQuery): Promise<ServiceResult<UserReportsResponse>> {
+  async getUserIncidents(userId: string, query: IncidentQuery): Promise<ServiceResult<UserIncidentsResponse>> {
     try {
       const {
         page = 1,
@@ -1023,7 +1023,7 @@ export class ReportService {
       if (eventRoles.size === 0) {
         return {
           success: true,
-          data: { reports: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0 }
+          data: { incidents: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0 }
         };
       }
 
@@ -1104,7 +1104,7 @@ export class ReportService {
           // User doesn't have access to this event
           return {
             success: true,
-            data: { reports: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0 }
+            data: { incidents: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0 }
           };
         }
       }
@@ -1131,10 +1131,10 @@ export class ReportService {
       const sortOrder = order === 'asc' ? 'asc' : 'desc';
 
       // Get total count
-      const total = await this.prisma.report.count({ where: whereClause });
+      const total = await this.prisma.incident.count({ where: whereClause });
 
       // Get reports with pagination
-      const reports = await this.prisma.report.findMany({
+      const incidents = await this.prisma.incident.findMany({
         where: whereClause,
         include: {
           event: {
@@ -1171,27 +1171,27 @@ export class ReportService {
       });
 
       // Add user's role in each event to the response and calculate visible comment count
-      const reportsWithRoles = reports.map(report => {
-        const userRoles = eventRoles.get(report.eventId)?.roles || [];
+      const reportsWithRoles = incidents.map(incident => {
+        const userRoles = eventRoles.get(incident.eventId)?.roles || [];
         const isResponderOrAbove = userRoles.some((r: string) => ['responder', 'event_admin', 'system_admin'].includes(r));
         
         // Calculate comment count based on user permissions
         let visibleCommentCount = 0;
         if (isResponderOrAbove) {
           // Responders and above can see all comments
-          visibleCommentCount = report.comments.length;
+          visibleCommentCount = incident.comments.length;
         } else {
           // Reporters can only see public comments (and internal if they're assigned to the report)
-          const isAssignedToReport = report.assignedResponderId === userId;
-          visibleCommentCount = report.comments.filter(comment => 
+          const isAssignedToReport = incident.assignedResponderId === userId;
+          visibleCommentCount = incident.comments.filter(comment => 
             comment.visibility === 'public' || (comment.visibility === 'internal' && isAssignedToReport)
           ).length;
         }
 
         // Remove the comments array and add the count
-        const { comments, ...reportWithoutComments } = report;
+        const { comments, ...incidentWithoutComments } = incident;
         return {
-          ...reportWithoutComments,
+          ...incidentWithoutComments,
           _count: {
             comments: visibleCommentCount
           },
@@ -1202,7 +1202,7 @@ export class ReportService {
       return {
         success: true,
         data: {
-          reports: reportsWithRoles,
+          incidents: reportsWithRoles,
           total,
           page: pageNum,
           limit: limitNum,
@@ -1210,10 +1210,10 @@ export class ReportService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching user reports:', error);
+      console.error('Error fetching user incidents:', error);
       return {
         success: false,
-        error: 'Failed to fetch user reports.'
+        error: 'Failed to fetch user incidents.'
       };
     }
   }
@@ -1221,21 +1221,21 @@ export class ReportService {
   /**
    * Check if user has access to a report
    */
-  async checkReportAccess(userId: string, reportId: string, eventId?: string): Promise<ServiceResult<{ hasAccess: boolean; isReporter: boolean; roles: string[] }>> {
+  async checkIncidentAccess(userId: string, incidentId: string, eventId?: string): Promise<ServiceResult<{ hasAccess: boolean; isReporter: boolean; roles: string[] }>> {
     try {
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { event: true }
       });
 
-      if (!report) {
+      if (!incident) {
         return {
           success: false,
           error: 'Report not found.'
         };
       }
 
-      if (eventId && report.eventId !== eventId) {
+      if (eventId && incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1243,10 +1243,10 @@ export class ReportService {
       }
 
       // Check if user is the reporter
-      const isReporter = !!(report.reporterId && userId === report.reporterId);
+      const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
       // Use unified RBAC service to get user roles
-      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', report.eventId);
+      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', incident.eventId);
       const roles = userRoles.map((userRole: any) => {
         // Map unified role names back to display names
         switch (userRole.role.name) {
@@ -1259,7 +1259,7 @@ export class ReportService {
       });
 
       // Also check for organization admin inheritance
-      const hasOrgAdminRole = await this.unifiedRBAC.hasEventRole(userId, report.eventId, ['event_admin']);
+      const hasOrgAdminRole = await this.unifiedRBAC.hasEventRole(userId, incident.eventId, ['event_admin']);
       if (hasOrgAdminRole && !roles.includes('event_admin')) {
         roles.push('event_admin');
       }
@@ -1283,14 +1283,14 @@ export class ReportService {
   /**
    * Check if user can edit a report title
    */
-  async checkReportEditAccess(userId: string, reportId: string, eventId: string): Promise<ServiceResult<{ canEdit: boolean; reason?: string }>> {
+  async checkIncidentEditAccess(userId: string, incidentId: string, eventId: string): Promise<ServiceResult<{ canEdit: boolean; reason?: string }>> {
     try {
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1298,7 +1298,7 @@ export class ReportService {
       }
 
       // Check permissions: reporter can edit their own report, or user must be Admin/System Admin
-      const isReporter = !!(report.reporterId && userId === report.reporterId);
+      const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
       // Use unified RBAC service to check roles
       const hasAdminRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['event_admin', 'system_admin']);
@@ -1323,15 +1323,15 @@ export class ReportService {
   /**
    * Update report location (with authorization check)
    */
-  async updateReportLocation(eventId: string, reportId: string, location: string | null, userId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentLocation(eventId: string, incidentId: string, location: string | null, userId?: string): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1340,7 +1340,7 @@ export class ReportService {
 
       // Check edit permissions if userId provided
       if (userId) {
-        const isReporter = !!(report.reporterId && userId === report.reporterId);
+        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
         // Use unified RBAC service to check roles
         const hasResponderRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
@@ -1355,15 +1355,15 @@ export class ReportService {
       }
 
       // Update location
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data: { location: location || null } as any,
         include: { reporter: true },
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report location:', error);
@@ -1377,7 +1377,7 @@ export class ReportService {
   /**
    * Update report contact preference (with authorization check)
    */
-  async updateReportContactPreference(eventId: string, reportId: string, contactPreference: string, userId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentContactPreference(eventId: string, incidentId: string, contactPreference: string, userId?: string): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Validate contact preference
       const validPreferences = ['email', 'phone', 'in_person', 'no_contact'];
@@ -1389,12 +1389,12 @@ export class ReportService {
       }
 
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1403,7 +1403,7 @@ export class ReportService {
 
       // Check edit permissions - only reporter can edit contact preference
       if (userId) {
-        const isReporter = !!(report.reporterId && userId === report.reporterId);
+        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
         if (!isReporter) {
           return {
@@ -1414,15 +1414,15 @@ export class ReportService {
       }
 
       // Update contact preference
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data: { contactPreference } as any,
         include: { reporter: true },
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report contact preference:', error);
@@ -1436,7 +1436,7 @@ export class ReportService {
   /**
    * Update report type (with authorization check)
    */
-  async updateReportType(eventId: string, reportId: string, type: string, userId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentType(eventId: string, incidentId: string, type: string, userId?: string): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Validate report type
       const validTypes = ['harassment', 'safety', 'other'];
@@ -1448,12 +1448,12 @@ export class ReportService {
       }
 
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1462,7 +1462,7 @@ export class ReportService {
 
       // Check edit permissions if userId provided
       if (userId) {
-        const isReporter = !!(report.reporterId && userId === report.reporterId);
+        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
         // Use unified RBAC to check event permissions
         const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
@@ -1478,15 +1478,15 @@ export class ReportService {
       }
 
       // Update type
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data: { type: type as any },
         include: { reporter: true },
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report type:', error);
@@ -1500,7 +1500,7 @@ export class ReportService {
   /**
    * Update report description (with authorization check)
    */
-  async updateReportDescription(eventId: string, reportId: string, description: string, userId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentDescription(eventId: string, incidentId: string, description: string, userId?: string): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Validate description
       if (!description || description.trim().length === 0) {
@@ -1518,12 +1518,12 @@ export class ReportService {
       }
 
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1532,7 +1532,7 @@ export class ReportService {
 
       // Check edit permissions - description is more sensitive, only reporter and event admin+
       if (userId) {
-        const isReporter = !!(report.reporterId && userId === report.reporterId);
+        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
         // Use unified RBAC to check event permissions (description requires admin+ access)
         const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['event_admin', 'system_admin']);
@@ -1548,15 +1548,15 @@ export class ReportService {
       }
 
       // Update description
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data: { description: description.trim() },
         include: { reporter: true },
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report description:', error);
@@ -1570,7 +1570,7 @@ export class ReportService {
   /**
    * Update report incident date (with authorization check)
    */
-  async updateReportIncidentDate(eventId: string, reportId: string, incidentAt: string | null, userId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentIncidentDate(eventId: string, incidentId: string, incidentAt: string | null, userId?: string): Promise<ServiceResult<{ incident: any }>> {
     try {
       let incidentDate: Date | null = null;
 
@@ -1596,12 +1596,12 @@ export class ReportService {
       }
 
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1610,7 +1610,7 @@ export class ReportService {
 
       // Check edit permissions if userId provided
       if (userId) {
-        const isReporter = !!(report.reporterId && userId === report.reporterId);
+        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
         // Use unified RBAC to check event permissions
         const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
@@ -1626,15 +1626,15 @@ export class ReportService {
       }
 
       // Update incident date
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data: { incidentAt: incidentDate },
         include: { reporter: true },
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report incident date:', error);
@@ -1648,7 +1648,7 @@ export class ReportService {
   /**
    * Update report parties involved (with authorization check)
    */
-  async updateReportParties(eventId: string, reportId: string, parties: string | null, userId?: string): Promise<ServiceResult<{ report: any }>> {
+  async updateIncidentParties(eventId: string, incidentId: string, parties: string | null, userId?: string): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Validate parties if provided
       if (parties && parties.length > 1000) {
@@ -1659,12 +1659,12 @@ export class ReportService {
       }
 
       // Check report exists and belongs to event
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: { reporter: true },
       });
 
-      if (!report || report.eventId !== eventId) {
+      if (!incident || incident.eventId !== eventId) {
         return {
           success: false,
           error: 'Report not found for this event.'
@@ -1673,7 +1673,7 @@ export class ReportService {
 
       // Check edit permissions if userId provided
       if (userId) {
-        const isReporter = !!(report.reporterId && userId === report.reporterId);
+        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
         // Use unified RBAC to check event permissions
         const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
@@ -1689,15 +1689,15 @@ export class ReportService {
       }
 
       // Update parties
-      const updated = await this.prisma.report.update({
-        where: { id: reportId },
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
         data: { parties: parties ? parties.trim() : null },
         include: { reporter: true },
       });
 
       return {
         success: true,
-        data: { report: updated }
+        data: { incident: updated }
       };
     } catch (error: any) {
       console.error('Error updating report parties:', error);
@@ -1711,8 +1711,8 @@ export class ReportService {
   /**
    * Get reports for a specific event with enhanced filtering, search, and optional stats
    */
-  async getEventReports(eventId: string, userId: string, query: ReportQuery & { includeStats?: boolean }): Promise<ServiceResult<{
-    reports: ReportWithDetails[];
+  async getEventIncidents(eventId: string, userId: string, query: IncidentQuery & { includeStats?: boolean }): Promise<ServiceResult<{
+    incidents: IncidentWithDetails[];
     total: number;
     page: number;
     limit: number;
@@ -1737,7 +1737,7 @@ export class ReportService {
         sort = 'createdAt',
         order = 'desc',
         userId: filterUserId,
-        reportIds,
+        incidentIds,
         includeStats = false
       } = query;
 
@@ -1771,7 +1771,7 @@ export class ReportService {
       const reporterFilter = !isResponderOrAbove && !filterUserId ? { reporterId: userId } : {};
 
       // Get reports with includes
-      const reports = await this.prisma.report.findMany({
+      const incidents = await this.prisma.incident.findMany({
         where: {
           eventId,
           ...reporterFilter,
@@ -1786,7 +1786,7 @@ export class ReportService {
           ...(assigned === 'me' ? { assignedResponderId: userId } : {}),
           ...(assigned === 'unassigned' ? { assignedResponderId: null } : {}),
           ...(filterUserId ? { reporterId: filterUserId } : {}),
-          ...(reportIds && reportIds.length > 0 ? { id: { in: reportIds } } : {})
+          ...(incidentIds && incidentIds.length > 0 ? { id: { in: incidentIds } } : {})
         },
         include: {
           reporter: {
@@ -1839,26 +1839,26 @@ export class ReportService {
       });
 
       // Add user roles to each report and calculate visible comment count
-      const reportsWithRoles = reports.map(report => {
+      const reportsWithRoles = incidents.map(incident => {
         // Calculate comment count based on user permissions
         let visibleCommentCount = 0;
-        if (report.comments && Array.isArray(report.comments)) {
+        if (incident.comments && Array.isArray(incident.comments)) {
           if (isResponderOrAbove) {
             // Responders and above can see all comments
-            visibleCommentCount = report.comments.length;
+            visibleCommentCount = incident.comments.length;
           } else {
             // Reporters can only see public comments (and internal if they're assigned to the report)
-            const isAssignedToReport = report.assignedResponderId === userId;
-            visibleCommentCount = report.comments.filter(comment => 
+            const isAssignedToReport = incident.assignedResponderId === userId;
+            visibleCommentCount = incident.comments.filter(comment => 
               comment.visibility === 'public' || (comment.visibility === 'internal' && isAssignedToReport)
             ).length;
           }
         }
 
         // Remove the comments array and add the count
-        const { comments, ...reportWithoutComments } = report;
+        const { comments, ...incidentWithoutComments } = incident;
         return {
-          ...reportWithoutComments,
+          ...incidentWithoutComments,
           _count: {
             comments: visibleCommentCount
           },
@@ -1867,7 +1867,7 @@ export class ReportService {
       });
 
       // Get total count
-      const total = await this.prisma.report.count({
+      const total = await this.prisma.incident.count({
         where: {
           eventId,
           ...reporterFilter,
@@ -1882,7 +1882,7 @@ export class ReportService {
           ...(assigned === 'me' ? { assignedResponderId: userId } : {}),
           ...(assigned === 'unassigned' ? { assignedResponderId: null } : {}),
           ...(filterUserId ? { reporterId: filterUserId } : {}),
-          ...(reportIds && reportIds.length > 0 ? { id: { in: reportIds } } : {})
+          ...(incidentIds && incidentIds.length > 0 ? { id: { in: incidentIds } } : {})
         }
       });
 
@@ -1898,7 +1898,7 @@ export class ReportService {
       
       if (includeStats) {
         try {
-          const statsResult = await this.prisma.report.groupBy({
+          const statsResult = await this.prisma.incident.groupBy({
             by: ['state'],
             where: {
               eventId,
@@ -1914,7 +1914,7 @@ export class ReportService {
               ...(assigned === 'me' ? { assignedResponderId: userId } : {}),
               ...(assigned === 'unassigned' ? { assignedResponderId: null } : {}),
               ...(filterUserId ? { reporterId: filterUserId } : {}),
-              ...(reportIds && reportIds.length > 0 ? { id: { in: reportIds } } : {})
+              ...(incidentIds && incidentIds.length > 0 ? { id: { in: incidentIds } } : {})
             },
             _count: true
           });
@@ -1969,7 +1969,7 @@ export class ReportService {
       return {
         success: true,
         data: {
-          reports: reportsWithRoles,
+          incidents: reportsWithRoles,
           total,
           page: pageNum,
           limit: limitNum,
@@ -1978,7 +1978,7 @@ export class ReportService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching event reports:', error);
+      console.error('Error fetching event incidents:', error);
       return {
         success: false,
         error: 'Failed to fetch event reports'
@@ -1987,7 +1987,7 @@ export class ReportService {
   }
 
   // Bulk update reports (assign, status change, delete)
-  async bulkUpdateReports(eventId: string, reportIds: string[], action: string, options: {
+  async bulkUpdateIncidents(eventId: string, incidentIds: string[], action: string, options: {
     assignedTo?: string;
     status?: string;
     notes?: string;
@@ -2009,18 +2009,18 @@ export class ReportService {
       }
 
       // Process each report
-      for (const reportId of reportIds) {
+      for (const incidentId of incidentIds) {
         try {
           // Verify report exists and belongs to event
-          const report = await this.prisma.report.findFirst({
+          const incident = await this.prisma.incident.findFirst({
             where: {
-              id: reportId,
+              id: incidentId,
               eventId
             }
           });
 
-          if (!report) {
-            errors.push(`Report ${reportId} not found or not in this event`);
+          if (!incident) {
+            errors.push(`Report ${incidentId} not found or not in this event`);
             continue;
           }
 
@@ -2028,13 +2028,13 @@ export class ReportService {
           switch (action) {
             case 'assign':
               if (assignedTo) {
-                await this.prisma.report.update({
-                  where: { id: reportId },
+                await this.prisma.incident.update({
+                  where: { id: incidentId },
                   data: { assignedResponderId: assignedTo }
                 });
                 updated++;
               } else {
-                errors.push(`Report ${reportId}: assignedTo is required for assign action`);
+                errors.push(`Report ${incidentId}: assignedTo is required for assign action`);
               }
               break;
 
@@ -2043,43 +2043,43 @@ export class ReportService {
                 // Validate status is a valid ReportState
                 const validStates = ['submitted', 'acknowledged', 'investigating', 'resolved', 'closed'];
                 if (!validStates.includes(status)) {
-                  errors.push(`Report ${reportId}: Invalid status ${status}`);
+                  errors.push(`Report ${incidentId}: Invalid status ${status}`);
                   continue;
                 }
                 
-                await this.prisma.report.update({
-                  where: { id: reportId },
+                await this.prisma.incident.update({
+                  where: { id: incidentId },
                   data: { state: status as any }
                 });
                 updated++;
               } else {
-                errors.push(`Report ${reportId}: status is required for status action`);
+                errors.push(`Report ${incidentId}: status is required for status action`);
               }
               break;
 
             case 'delete':
               // Delete associated evidence files first
               await this.prisma.evidenceFile.deleteMany({
-                where: { reportId }
+                where: { incidentId }
               });
               
               // Delete associated comments
-              await this.prisma.reportComment.deleteMany({
-                where: { reportId }
+              await this.prisma.incidentComment.deleteMany({
+                where: { incidentId }
               });
               
               // Delete the report
-              await this.prisma.report.delete({
-                where: { id: reportId }
+              await this.prisma.incident.delete({
+                where: { id: incidentId }
               });
               updated++;
               break;
 
             default:
-              errors.push(`Report ${reportId}: Unknown action ${action}`);
+              errors.push(`Report ${incidentId}: Unknown action ${action}`);
           }
         } catch (error: any) {
-          errors.push(`Report ${reportId}: ${error.message}`);
+          errors.push(`Report ${incidentId}: ${error.message}`);
         }
       }
 
@@ -2091,7 +2091,7 @@ export class ReportService {
         }
       };
     } catch (error: any) {
-      console.error('Error in bulk update reports:', error);
+      console.error('Error in bulk update incidents:', error);
       return {
         success: false,
         error: 'Failed to perform bulk update'

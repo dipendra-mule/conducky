@@ -279,14 +279,14 @@ export enum NotificationPriority {
 export interface UserNotificationSettings {
   id: string;
   userId: string;
-  reportSubmittedInApp: boolean;
-  reportSubmittedEmail: boolean;
-  reportAssignedInApp: boolean;
-  reportAssignedEmail: boolean;
-  reportStatusChangedInApp: boolean;
-  reportStatusChangedEmail: boolean;
-  reportCommentAddedInApp: boolean;
-  reportCommentAddedEmail: boolean;
+  incidentSubmittedInApp: boolean;
+  incidentSubmittedEmail: boolean;
+  incidentAssignedInApp: boolean;
+  incidentAssignedEmail: boolean;
+  incidentStatusChangedInApp: boolean;
+  incidentStatusChangedEmail: boolean;
+  incidentCommentAddedInApp: boolean;
+  incidentCommentAddedEmail: boolean;
   eventInvitationInApp: boolean;
   eventInvitationEmail: boolean;
   eventRoleChangedInApp: boolean;

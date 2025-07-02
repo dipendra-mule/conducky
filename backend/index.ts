@@ -40,7 +40,7 @@ import {
   userRoutes, 
   eventRoutes, 
   inviteRoutes, 
-  reportRoutes,
+  incidentRoutes,
   notificationRoutes,
   adminRoutes,
   userNotificationSettingsRoutes,
@@ -185,7 +185,7 @@ app.use('/api/events', eventRoutes);
 app.use('/events', eventRoutes); // Backward compatibility for tests (slug routes)
 app.use('/api/invites', inviteRoutes);
 app.use('/invites', inviteRoutes); // Backward compatibility for tests
-app.use('/api/reports', reportRoutes);
+app.use('/api/incidents', incidentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/user/notification-settings', userNotificationSettingsRoutes); // Fix 404 error for /api/user/notification-settings
@@ -285,7 +285,7 @@ app.get('/api/evidence/:evidenceId/download', async (req: any, res: any) => {
     const evidence = await prisma.evidenceFile.findUnique({
       where: { id: evidenceId },
       include: {
-        report: {
+        incident: {
           include: {
             event: true
           }
@@ -298,9 +298,9 @@ app.get('/api/evidence/:evidenceId/download', async (req: any, res: any) => {
     }
 
     // Check if user has access to this evidence file's report
-    const { ReportService } = await import('./src/services/report.service');
-    const reportService = new ReportService(prisma);
-    const accessResult = await reportService.checkReportAccess(req.user.id, evidence.reportId, evidence.report.eventId);
+            const { IncidentService } = await import('./src/services/incident.service');
+        const incidentService = new IncidentService(prisma);
+        const accessResult = await incidentService.checkIncidentAccess(req.user.id, evidence.incidentId, evidence.incidentId);
     
     if (!accessResult.success) {
       return res.status(500).json({ error: accessResult.error });

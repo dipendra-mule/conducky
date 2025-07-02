@@ -13,7 +13,7 @@ import { emailService } from './email';
  * Create a notification for a user
  */
 // Define notification types for better type safety
-type ReportNotificationType = 'report_submitted' | 'report_assigned' | 'report_status_changed' | 'report_comment_added';
+type ReportNotificationType = 'incident_submitted' | 'incident_assigned' | 'incident_status_changed' | 'incident_comment_added';
 type SystemNotificationType = 'event_invitation' | 'event_role_changed' | 'system_announcement';
 type NotificationType = ReportNotificationType | SystemNotificationType;
 
@@ -47,7 +47,7 @@ export async function createNotification({
         title,
         message,
         eventId,
-        reportId,
+        incidentId: reportId,
         actionData,
         actionUrl,
       },
@@ -58,10 +58,10 @@ export async function createNotification({
     let shouldSendEmail = false;
     // Type-safe mapping for settings key
     const emailTypeMap: Record<string, keyof typeof settings> = {
-      report_submitted: 'reportSubmittedEmail',
-      report_assigned: 'reportAssignedEmail',
-      report_status_changed: 'reportStatusChangedEmail',
-      report_comment_added: 'reportCommentAddedEmail',
+      incident_submitted: 'incidentSubmittedEmail',
+      incident_assigned: 'incidentAssignedEmail',
+      incident_status_changed: 'incidentStatusChangedEmail',
+      incident_comment_added: 'incidentCommentAddedEmail',
       event_invitation: 'eventInvitationEmail',
       event_role_changed: 'eventRoleChangedEmail',
       system_announcement: 'systemAnnouncementEmail',
@@ -95,20 +95,20 @@ export async function createNotification({
 /**
  * Notify users about report events
  */
-export async function notifyReportEvent(reportId: string, type: string, excludeUserId: string | null = null) {
+export async function notifyReportEvent(incidentId: string, type: string, excludeUserId: string | null = null) {
   try {
     // Get the report with event and reporter info
-    const report = await prisma.report.findUnique({
-      where: { id: reportId },
+    const incident = await prisma.incident.findUnique({
+      where: { id: incidentId },
       include: {
         event: true,
         reporter: true,
       },
     });
 
-    if (!report) {
+    if (!incident) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('Report not found for notification:', reportId);
+        console.error('Report not found for notification:', incidentId);
       }
       return;
     }
@@ -118,7 +118,7 @@ export async function notifyReportEvent(reportId: string, type: string, excludeU
     const eventUserRoles = await prisma.userRole.findMany({
       where: {
         scopeType: 'event',
-        scopeId: report.eventId,
+        scopeId: incident.eventId,
         role: {
           name: {
             in: ['responder', 'event_admin'],
@@ -147,55 +147,55 @@ export async function notifyReportEvent(reportId: string, type: string, excludeU
         let priority: 'low' | 'normal' | 'high' | 'urgent' = 'normal';
 
         switch (type) {
-          case 'report_submitted':
+          case 'incident_submitted':
           case 'submitted': // backward compatibility
             title = 'New Report Submitted';
-            message = `A new report has been submitted for ${report.event.name}`;
+            message = `A new report has been submitted for ${incident.event.name}`;
             priority = 'high';
             break;
-          case 'report_assigned':
+          case 'incident_assigned':
           case 'assigned': // backward compatibility
             title = 'Report Assigned';
-            message = `Report #${report.id.substring(0, 8)} has been assigned`;
+            message = `Report #${incident.id.substring(0, 8)} has been assigned`;
             priority = 'normal';
             break;
-          case 'report_status_changed':
+          case 'incident_status_changed':
           case 'status_changed': // backward compatibility
             title = 'Report Status Updated';
-            message = `Report #${report.id.substring(0, 8)} status has been updated`;
+            message = `Report #${incident.id.substring(0, 8)} status has been updated`;
             priority = 'normal';
             break;
-          case 'report_comment_added':
+          case 'incident_comment_added':
           case 'comment_added': // backward compatibility
             title = 'New Comment Added';
-            message = `A new comment has been added to report #${report.id.substring(0, 8)}`;
+            message = `A new comment has been added to report #${incident.id.substring(0, 8)}`;
             priority = 'normal';
             break;
           default:
             title = 'Report Update';
-            message = `Report #${report.id.substring(0, 8)} has been updated`;
+            message = `Report #${incident.id.substring(0, 8)} has been updated`;
             priority = 'normal';
         }
 
         const frontendBaseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
-        const actionUrl = `${frontendBaseUrl}/events/${report.event.slug}/reports/${report.id}`;
+        const actionUrl = `${frontendBaseUrl}/events/${incident.event.slug}/reports/${incident.id}`;
         
         // Map notification types with fallback error handling
         const getNotificationType = (inputType: string): ReportNotificationType => {
           const typeMap: Record<string, ReportNotificationType> = {
-            'report_submitted': 'report_submitted', 
-            'submitted': 'report_submitted',
-            'report_assigned': 'report_assigned', 
-            'assigned': 'report_assigned',
-            'report_status_changed': 'report_status_changed', 
-            'status_changed': 'report_status_changed',
-            'report_comment_added': 'report_comment_added', 
-            'comment_added': 'report_comment_added'
+            'incident_submitted': 'incident_submitted', 
+            'submitted': 'incident_submitted',
+            'incident_assigned': 'incident_assigned', 
+            'assigned': 'incident_assigned',
+            'incident_status_changed': 'incident_status_changed', 
+            'status_changed': 'incident_status_changed',
+            'incident_comment_added': 'incident_comment_added', 
+            'comment_added': 'incident_comment_added'
           };
           
           if (!(inputType in typeMap)) {
-            console.warn(`Unknown notification type: ${inputType}, falling back to 'report_submitted'`);
-            return 'report_submitted';
+            console.warn(`Unknown notification type: ${inputType}, falling back to 'incident_submitted'`);
+            return 'incident_submitted';
           }
           return typeMap[inputType];
         };
@@ -206,8 +206,8 @@ export async function notifyReportEvent(reportId: string, type: string, excludeU
           priority,
           title,
           message,
-          eventId: report.eventId,
-          reportId: report.id,
+          eventId: incident.eventId,
+          reportId: incident.id,
           actionUrl,
         });
       });
@@ -216,7 +216,7 @@ export async function notifyReportEvent(reportId: string, type: string, excludeU
     
     // Only log in non-test environments
     if (process.env.NODE_ENV !== 'test') {
-      console.log(`Created ${notifications.length} notifications for report ${reportId}`);
+      console.log(`Created ${notifications.length} notifications for report ${incidentId}`);
     }
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {

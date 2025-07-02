@@ -932,15 +932,15 @@ export class EventService {
 
       // Get last activity (most recent report, comment, or audit log)
       const [lastReport, lastComment, lastAuditLog] = await Promise.all([
-        this.prisma.report.findFirst({
+        this.prisma.incident.findFirst({
           where: { reporterId: userId, eventId },
           orderBy: { createdAt: 'desc' },
           select: { createdAt: true }
         }),
-        this.prisma.reportComment.findFirst({
+        this.prisma.incidentComment.findFirst({
           where: { 
             authorId: userId,
-            report: { eventId }
+            incident: { eventId }
           },
           orderBy: { createdAt: 'desc' },
           select: { createdAt: true }
@@ -1001,7 +1001,7 @@ export class EventService {
 
       // Get various activity types
       const [reports, comments, auditLogs] = await Promise.all([
-        this.prisma.report.findMany({
+        this.prisma.incident.findMany({
           where: { reporterId: userId, eventId },
           select: {
             id: true,
@@ -1012,16 +1012,16 @@ export class EventService {
           },
           orderBy: { createdAt: 'desc' }
         }),
-        this.prisma.reportComment.findMany({
+        this.prisma.incidentComment.findMany({
           where: { 
             authorId: userId,
-            report: { eventId }
+            incident: { eventId }
           },
           select: {
             id: true,
             body: true,
             createdAt: true,
-            report: {
+            incident: {
               select: {
                 id: true,
                 title: true
@@ -1057,7 +1057,7 @@ export class EventService {
           id: c.id,
           type: 'comment',
           action: 'commented',
-          title: `Comment on "${c.report.title}"`,
+          title: `Comment on "${c.incident.title}"`,
           details: { body: c.body.substring(0, 100) + (c.body.length > 100 ? '...' : '') },
           timestamp: c.createdAt
         })),
@@ -1121,7 +1121,7 @@ export class EventService {
       }
 
       const [reports, total] = await Promise.all([
-        this.prisma.report.findMany({
+        this.prisma.incident.findMany({
           where: whereClause,
           select: {
             id: true,
@@ -1150,7 +1150,7 @@ export class EventService {
           skip: offset,
           take: limit
         }),
-        this.prisma.report.count({
+        this.prisma.incident.count({
           where: whereClause
         })
       ]);
@@ -1166,7 +1166,7 @@ export class EventService {
       console.error('Error getting user reports:', error);
       return {
         success: false,
-        error: 'Failed to get user reports.'
+        error: 'Failed to get user incidents.'
       };
     }
   }
@@ -1210,7 +1210,7 @@ export class EventService {
         recentReports
       ] = await Promise.all([
         // Get all reports with necessary fields for aggregation
-        this.prisma.report.findMany({
+        this.prisma.incident.findMany({
           where: { eventId },
           select: {
             id: true,
@@ -1223,7 +1223,7 @@ export class EventService {
         }),
         
         // Recent reports for preview (last 3)
-        this.prisma.report.findMany({
+        this.prisma.incident.findMany({
           where: { eventId },
           select: {
             id: true,
@@ -1244,21 +1244,20 @@ export class EventService {
       
       const totalReports = allReports.length;
       
-      const urgentReports = allReports.filter(report => 
-        report.severity === 'high' || 
-        (report.createdAt >= oneDayAgo && report.state === 'submitted')
+      const urgentReports = allReports.filter(incident => 
+        incident.severity === 'high' || 
+        (incident.createdAt >= oneDayAgo && incident.state === 'submitted')
       ).length;
       
-      const assignedToMe = allReports.filter(report => 
-        report.assignedResponderId === userId
+      const assignedToMe = allReports.filter(incident => incident.assignedResponderId === userId
       ).length;
       
-      const needsResponse = allReports.filter(report => 
-        ['submitted', 'acknowledged', 'investigating'].includes(report.state)
+      const needsResponse = allReports.filter(incident => 
+        ['submitted', 'acknowledged', 'investigating'].includes(incident.state)
       ).length;
       
-      const recentActivity = allReports.filter(report => 
-        report.updatedAt >= sevenDaysAgo
+      const recentActivity = allReports.filter(incident => 
+        incident.updatedAt >= sevenDaysAgo
       ).length;
 
       return {
@@ -1269,12 +1268,12 @@ export class EventService {
           assignedToMe,
           needsResponse,
           recentActivity,
-          recentReports: recentReports.map(report => ({
-            id: report.id,
-            title: report.title,
-            state: report.state,
-            severity: report.severity,
-            createdAt: report.createdAt.toISOString()
+          recentReports: recentReports.map(incident => ({
+            id: incident.id,
+            title: incident.title,
+            state: incident.state,
+            severity: incident.severity,
+            createdAt: incident.createdAt.toISOString()
           }))
         }
       };
@@ -1315,7 +1314,7 @@ export class EventService {
       const eventId = event.id;
 
       // Get total reports for this event
-      const totalReports = await this.prisma.report.count({
+      const totalReports = await this.prisma.incident.count({
         where: { eventId }
       });
 
@@ -1355,7 +1354,7 @@ export class EventService {
       const totalUsers = uniqueUserIds.size + orgAdminCount;
 
       // Get reports that need response (submitted, acknowledged, investigating)
-      const needsResponseCount = await this.prisma.report.count({
+      const needsResponseCount = await this.prisma.incident.count({
         where: {
           eventId,
           state: {
@@ -1365,7 +1364,7 @@ export class EventService {
       });
 
       // Get reports assigned to the specific user (if userId provided) or all assigned reports
-      const assignedReports = await this.prisma.report.count({
+      const assignedReports = await this.prisma.incident.count({
         where: {
           eventId,
           assignedResponderId: userId ? userId : { not: null }
@@ -1373,7 +1372,7 @@ export class EventService {
       });
 
       // Get resolved reports (resolved or closed state)
-      const resolvedReports = await this.prisma.report.count({
+      const resolvedReports = await this.prisma.incident.count({
         where: {
           eventId,
           state: {

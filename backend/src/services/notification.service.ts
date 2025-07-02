@@ -125,7 +125,7 @@ export class NotificationService {
           event: {
             select: { id: true, name: true, slug: true }
           },
-          report: {
+          incident: {
             select: { id: true, title: true, state: true }
           }
         },
@@ -361,7 +361,7 @@ export class NotificationService {
           title,
           message,
           eventId,
-          reportId,
+          incidentId: reportId,
           actionData,
           actionUrl,
           isRead: false
@@ -384,11 +384,11 @@ export class NotificationService {
   /**
    * Create notifications for report events
    */
-  async notifyReportEvent(reportId: string, type: string, excludeUserId: string | null = null): Promise<ServiceResult<{ notificationsCreated: number }>> {
+  async notifyReportEvent(incidentId: string, type: string, excludeUserId: string | null = null): Promise<ServiceResult<{ notificationsCreated: number }>> {
     try {
       // Get report with event and related users
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId },
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
         include: {
           event: true,
           reporter: true,
@@ -396,7 +396,7 @@ export class NotificationService {
         }
       });
 
-      if (!report) {
+      if (!incident) {
         return {
           success: false,
           error: 'Report not found'
@@ -406,20 +406,20 @@ export class NotificationService {
       const usersToNotify = new Set<string>();
 
       // Add reporter (if exists and not excluded)
-      if (report.reporterId && report.reporterId !== excludeUserId) {
-        usersToNotify.add(report.reporterId);
+      if (incident.reporterId && incident.reporterId !== excludeUserId) {
+        usersToNotify.add(incident.reporterId);
       }
 
       // Add assigned responder (if exists and not excluded)
-      if (report.assignedResponderId && report.assignedResponderId !== excludeUserId) {
-        usersToNotify.add(report.assignedResponderId);
+      if (incident.assignedResponderId && incident.assignedResponderId !== excludeUserId) {
+        usersToNotify.add(incident.assignedResponderId);
       }
 
       // Add event admins and responders using unified RBAC (excluding the user who triggered the action)
       const eventUserRoles = await this.prisma.userRole.findMany({
         where: {
           scopeType: 'event',
-          scopeId: report.eventId,
+          scopeId: incident.eventId,
           role: {
             name: { in: ['event_admin', 'responder'] }
           }
@@ -443,25 +443,25 @@ export class NotificationService {
          let notificationType: NotificationType;
 
          switch (type) {
-           case 'report_submitted':
+           case 'incident_submitted':
              title = 'New Report Submitted';
-             message = `A new report "${report.title}" has been submitted for ${report.event.name}`;
-             notificationType = 'report_submitted';
+             message = `A new report "${incident.title}" has been submitted for ${incident.event.name}`;
+             notificationType = 'incident_submitted';
              break;
-           case 'report_assigned':
+           case 'incident_assigned':
              title = 'Report Assigned';
-             message = `Report "${report.title}" has been assigned in ${report.event.name}`;
-             notificationType = 'report_assigned';
+             message = `Report "${incident.title}" has been assigned in ${incident.event.name}`;
+             notificationType = 'incident_assigned';
              break;
-           case 'report_status_changed':
+           case 'incident_status_changed':
              title = 'Report Status Updated';
-             message = `Report "${report.title}" status has been updated in ${report.event.name}`;
-             notificationType = 'report_status_changed';
+             message = `Report "${incident.title}" status has been updated in ${incident.event.name}`;
+             notificationType = 'incident_status_changed';
              break;
            case 'comment_added':
              title = 'New Comment Added';
-             message = `A new comment has been added to report "${report.title}" in ${report.event.name}`;
-             notificationType = 'report_comment_added';
+             message = `A new comment has been added to report "${incident.title}" in ${incident.event.name}`;
+             notificationType = 'incident_comment_added';
              break;
            default:
              continue; // Skip unknown types
@@ -474,9 +474,9 @@ export class NotificationService {
             priority: 'normal',
             title,
             message,
-            eventId: report.eventId,
-            reportId: report.id,
-            actionUrl: `/events/${report.event.slug}/reports/${report.id}`,
+            eventId: incident.eventId,
+            incidentId: incident.id,
+            actionUrl: `/events/${incident.event.slug}/reports/${incident.id}`,
             isRead: false
           }
         });

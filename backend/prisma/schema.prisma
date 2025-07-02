@@ -14,7 +14,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ReportState {
+enum IncidentState {
   submitted
   acknowledged
   investigating
@@ -22,7 +22,7 @@ enum ReportState {
   closed
 }
 
-enum ReportType {
+enum IncidentType {
   harassment
   safety
   other
@@ -33,7 +33,7 @@ enum CommentVisibility {
   internal    // visible only to responders/admins
 }
 
-enum ReportSeverity {
+enum IncidentSeverity {
   low
   medium
   high
@@ -48,13 +48,13 @@ enum ContactPreference {
 }
 
 enum NotificationType {
-  report_submitted      // New report submitted
-  report_assigned       // Report assigned to user
-  report_status_changed // Report status changed
-  report_comment_added  // New comment on report
-  event_invitation      // Invited to event
-  event_role_changed    // Role changed in event
-  system_announcement   // System-wide announcement
+  incident_submitted      // New incident submitted
+  incident_assigned       // Incident assigned to user
+  incident_status_changed // Incident status changed
+  incident_comment_added  // New comment on incident
+  event_invitation        // Invited to event
+  event_role_changed      // Role changed in event
+  system_announcement     // System-wide announcement
 }
 
 enum NotificationPriority {
@@ -82,11 +82,11 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   userEventRoles UserEventRole[]
-  reports        Report[] @relation("ReporterReports")
+  incidents      Incident[] @relation("ReporterIncidents")
   auditLogs      AuditLog[]
-  reportComments ReportComment[]
+  incidentComments IncidentComment[]
   evidenceFilesUploaded EvidenceFile[] @relation("EvidenceFileUploader")
-  assignedReports Report[] @relation("AssignedResponder")
+  assignedIncidents Incident[] @relation("AssignedResponder")
   avatar         UserAvatar?
   passwordResetTokens PasswordResetToken[]
   notifications  Notification[]
@@ -117,7 +117,7 @@ model Event {
   organizationId String?  // Nullable initially for migration
   organization   Organization? @relation(fields: [organizationId], references: [id])
   userEventRoles UserEventRole[]
-  reports        Report[]
+  incidents      Incident[]
   auditLogs      AuditLog[]
   inviteLinks    EventInviteLink[]
   eventLogo      EventLogo?
@@ -141,27 +141,27 @@ model UserEventRole {
   @@unique([userId, eventId, roleId])
 }
 
-model Report {
+model Incident {
   id          String   @id @default(uuid())
   event       Event    @relation(fields: [eventId], references: [id])
   eventId     String
-  reporter    User?    @relation("ReporterReports", fields: [reporterId], references: [id])
+  reporter    User?    @relation("ReporterIncidents", fields: [reporterId], references: [id])
   reporterId  String?
-  type        ReportType
+  type        IncidentType
   title       String   @db.VarChar(70) // required, max 70 chars
   description String
-  state       ReportState   // submitted, acknowledged, investigating, resolved, closed
+  state       IncidentState   // submitted, acknowledged, investigating, resolved, closed
   incidentAt  DateTime? // date and time of the incident (optional)
   parties     String?   // comma-separated or freeform list of parties involved (optional)
   location    String?   // location where the incident occurred (optional)
   contactPreference ContactPreference @default(email) // preferred contact method
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  comments    ReportComment[]
+  comments    IncidentComment[]
   evidenceFiles EvidenceFile[]
   assignedResponderId String?
   assignedResponder   User?    @relation("AssignedResponder", fields: [assignedResponderId], references: [id])
-  severity            ReportSeverity?
+  severity            IncidentSeverity?
   resolution          String?
   notifications Notification[]
 }
@@ -196,10 +196,10 @@ model EventInviteLink {
   role            UnifiedRole @relation(fields: [roleId], references: [id])
 }
 
-model ReportComment {
+model IncidentComment {
   id         String   @id @default(uuid())
-  report     Report   @relation(fields: [reportId], references: [id])
-  reportId   String
+  incident   Incident @relation(fields: [incidentId], references: [id])
+  incidentId String
   author     User?    @relation(fields: [authorId], references: [id])
   authorId   String?
   body       String
@@ -211,8 +211,8 @@ model ReportComment {
 
 model EvidenceFile {
   id        String   @id @default(uuid())
-  report    Report   @relation(fields: [reportId], references: [id])
-  reportId  String
+  incident  Incident @relation(fields: [incidentId], references: [id])
+  incidentId String
   filename  String
   mimetype  String
   size      Int
@@ -272,10 +272,10 @@ model Notification {
   readAt    DateTime?
   
   // Optional references to related entities
-  eventId   String?
-  event     Event?   @relation(fields: [eventId], references: [id])
-  reportId  String?
-  report    Report?  @relation(fields: [reportId], references: [id])
+  eventId    String?
+  event      Event?    @relation(fields: [eventId], references: [id])
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
   
   // Optional action data (JSON for flexibility)
   actionData String? // JSON string for action-specific data
@@ -317,14 +317,14 @@ model UserNotificationSettings {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
   userId    String   @unique
-  reportSubmittedInApp   Boolean @default(true)
-  reportSubmittedEmail   Boolean @default(false)
-  reportAssignedInApp    Boolean @default(true)
-  reportAssignedEmail    Boolean @default(false)
-  reportStatusChangedInApp Boolean @default(true)
-  reportStatusChangedEmail Boolean @default(false)
-  reportCommentAddedInApp Boolean @default(true)
-  reportCommentAddedEmail Boolean @default(false)
+  incidentSubmittedInApp   Boolean @default(true)
+  incidentSubmittedEmail   Boolean @default(false)
+  incidentAssignedInApp    Boolean @default(true)
+  incidentAssignedEmail    Boolean @default(false)
+  incidentStatusChangedInApp Boolean @default(true)
+  incidentStatusChangedEmail Boolean @default(false)
+  incidentCommentAddedInApp Boolean @default(true)
+  incidentCommentAddedEmail Boolean @default(false)
   eventInvitationInApp   Boolean @default(true)
   eventInvitationEmail   Boolean @default(false)
   eventRoleChangedInApp  Boolean @default(true)

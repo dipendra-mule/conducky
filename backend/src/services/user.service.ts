@@ -565,10 +565,10 @@ export class UserService {
       const sortOrder = order === 'asc' ? 'asc' : 'desc';
 
       // Get total count
-      const total = await this.prisma.report.count({ where: whereClause });
+      const total = await this.prisma.incident.count({ where: whereClause });
 
       // Get reports with pagination
-      const reports = await this.prisma.report.findMany({
+      const incidents = await this.prisma.incident.findMany({
         where: whereClause,
         include: {
           event: {
@@ -596,29 +596,29 @@ export class UserService {
       });
 
       // Add user's role in each event to the response and calculate visible comment count
-      const reportsWithRoles = reports.map(report => {
-        const userRoles = eventRoles.get(report.eventId)?.roles || [];
+      const reportsWithRoles = incidents.map(incident => {
+        const userRoles = eventRoles.get(incident.eventId)?.roles || [];
         const isResponderOrAbove = userRoles.some((r: string) => ['responder', 'event_admin', 'system_admin'].includes(r));
         
         // Calculate comment count based on user permissions
         let visibleCommentCount = 0;
-        if (report.comments && Array.isArray(report.comments)) {
+        if (incident.comments && Array.isArray(incident.comments)) {
           if (isResponderOrAbove) {
             // Responders and above can see all comments
-            visibleCommentCount = report.comments.length;
+            visibleCommentCount = incident.comments.length;
           } else {
             // Reporters can only see public comments (and internal if they're assigned to the report)
-            const isAssignedToReport = report.assignedResponderId === userId;
-            visibleCommentCount = report.comments.filter(comment => 
+            const isAssignedToReport = incident.assignedResponderId === userId;
+            visibleCommentCount = incident.comments.filter(comment => 
               comment.visibility === 'public' || (comment.visibility === 'internal' && isAssignedToReport)
             ).length;
           }
         }
 
         // Remove the comments array and add the count
-        const { comments, ...reportWithoutComments } = report;
+        const { comments, ...incidentWithoutComments } = incident;
         return {
-          ...reportWithoutComments,
+          ...incidentWithoutComments,
           _count: {
             comments: visibleCommentCount
           },
@@ -643,7 +643,7 @@ export class UserService {
       console.error('Error fetching user reports:', error);
       return {
         success: false,
-        error: 'Failed to fetch reports.'
+        error: 'Failed to fetch incidents.'
       };
     }
   }
@@ -737,18 +737,18 @@ export class UserService {
       const eventCount = eventIds.size;
 
       // Get unique report IDs to avoid double counting when user has multiple roles for same report
-      const reporterIds = await this.prisma.report.findMany({ 
+      const reporterIds = await this.prisma.incident.findMany({ 
         where: { reporterId: userId }, 
         select: { id: true } 
       });
-      const responderIds = await this.prisma.report.findMany({ 
+      const responderIds = await this.prisma.incident.findMany({ 
         where: { assignedResponderId: userId }, 
         select: { id: true } 
       });
       
       // Count reports where user is event admin or org admin
       const adminEventIds = Array.from(eventIds);
-      const adminIds = adminEventIds.length > 0 ? await this.prisma.report.findMany({ 
+      const adminIds = adminEventIds.length > 0 ? await this.prisma.incident.findMany({ 
         where: { eventId: { in: adminEventIds } }, 
         select: { id: true } 
       }) : [];
@@ -762,7 +762,7 @@ export class UserService {
       const reportCount = uniqueReportIds.size;
 
       // Needs response: reports assigned to user as responder and not closed/resolved
-      const needsResponseCount = await this.prisma.report.count({
+      const needsResponseCount = await this.prisma.incident.count({
         where: {
           assignedResponderId: userId,
           state: { in: ['submitted', 'acknowledged', 'investigating'] },
@@ -792,7 +792,7 @@ export class UserService {
       const eventIds = userEventRoles.map((role: any) => role.scopeId);
 
       // Get recent reports submitted by user
-      const recentReports = await this.prisma.report.findMany({
+      const recentReports = await this.prisma.incident.findMany({
         where: { reporterId: userId },
         include: {
           event: { select: { name: true, slug: true } }
@@ -802,7 +802,7 @@ export class UserService {
       });
 
       // Get recent reports assigned to user
-      const assignedReports = await this.prisma.report.findMany({
+      const assignedReports = await this.prisma.incident.findMany({
         where: { assignedResponderId: userId },
         include: {
           event: { select: { name: true, slug: true } }
@@ -812,15 +812,15 @@ export class UserService {
       });
 
       // Get recent comments by user
-      const recentComments = await this.prisma.reportComment.findMany({
+      const recentComments = await this.prisma.incidentComment.findMany({
         where: { 
           authorId: userId,
-          report: {
+          incident: {
             eventId: { in: eventIds }
           }
         },
         include: {
-          report: {
+          incident: {
             select: { 
               title: true, 
               event: { select: { name: true, slug: true } }
@@ -848,24 +848,24 @@ export class UserService {
       const activities: ActivityItem[] = [];
 
       // Add report submissions
-      recentReports.forEach(report => {
+      recentReports.forEach(incident => {
         activities.push({
-          type: 'report_submitted',
-          message: `You submitted a new report in ${report.event.name}`,
-          timestamp: report.createdAt.toISOString(),
-          eventSlug: report.event.slug,
-          reportId: report.id
+          type: 'incident_submitted',
+          message: `You submitted a new report in ${incident.event.name}`,
+          timestamp: incident.createdAt.toISOString(),
+          eventSlug: incident.event.slug,
+          reportId: incident.id
         });
       });
 
       // Add report assignments
-      assignedReports.forEach(report => {
+      assignedReports.forEach(incident => {
         activities.push({
-          type: 'report_assigned',
-          message: `A report was assigned to you in ${report.event.name}`,
-          timestamp: report.updatedAt.toISOString(),
-          eventSlug: report.event.slug,
-          reportId: report.id
+          type: 'incident_assigned',
+          message: `A report was assigned to you in ${incident.event.name}`,
+          timestamp: incident.updatedAt.toISOString(),
+          eventSlug: incident.event.slug,
+          reportId: incident.id
         });
       });
 
@@ -873,10 +873,10 @@ export class UserService {
       recentComments.forEach(comment => {
         activities.push({
           type: 'comment_posted',
-          message: `You commented on "${comment.report.title}" in ${comment.report.event.name}`,
+          message: `You commented on "${comment.incident.title}" in ${comment.incident.event.name}`,
           timestamp: comment.createdAt.toISOString(),
-          eventSlug: comment.report.event.slug,
-          reportId: comment.reportId
+          eventSlug: comment.incident.event.slug,
+          reportId: comment.incidentId
         });
       });
 

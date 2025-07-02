@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { ReportService } from '../services/report.service';
+import { IncidentService } from '../services/incident.service';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 
 const router = Router();
 const prisma = new PrismaClient();
-const reportService = new ReportService(prisma);
+const incidentService = new IncidentService(prisma);
 
 // Multer setup for evidence uploads (memory storage, 10MB limit)
 const uploadEvidence = multer({
@@ -13,12 +13,12 @@ const uploadEvidence = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 
-// Get evidence files for a report
-router.get('/:reportId/evidence', async (req: Request, res: Response): Promise<void> => {
+// Get evidence files for an incident
+router.get('/:incidentId/evidence', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { reportId } = req.params;
+    const { incidentId } = req.params;
     
-    const result = await reportService.getEvidenceFiles(reportId);
+    const result = await incidentService.getEvidenceFiles(incidentId);
     
     if (!result.success) {
       res.status(404).json({ error: result.error });
@@ -32,10 +32,10 @@ router.get('/:reportId/evidence', async (req: Request, res: Response): Promise<v
   }
 });
 
-// Upload evidence files for a report
-router.post('/:reportId/evidence', uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+// Upload evidence files for an incident
+router.post('/:incidentId/evidence', uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { reportId } = req.params;
+    const { incidentId } = req.params;
     
     if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
       res.status(400).json({ error: 'No files uploaded.' });
@@ -50,7 +50,7 @@ router.post('/:reportId/evidence', uploadEvidence.array('evidence'), async (req:
       data: file.buffer
     }));
     
-    const result = await reportService.uploadEvidenceFiles(reportId, evidenceFiles);
+    const result = await incidentService.uploadEvidenceFiles(incidentId, evidenceFiles);
     
     if (!result.success) {
       res.status(400).json({ error: result.error });
@@ -65,11 +65,11 @@ router.post('/:reportId/evidence', uploadEvidence.array('evidence'), async (req:
 });
 
 // Get specific evidence file
-router.get('/:reportId/evidence/:evidenceId', async (req: Request, res: Response): Promise<void> => {
+router.get('/:incidentId/evidence/:evidenceId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { evidenceId } = req.params;
     
-    const result = await reportService.getEvidenceFile(evidenceId);
+    const result = await incidentService.getEvidenceFile(evidenceId);
     
     if (!result.success) {
       res.status(404).json({ error: result.error });
@@ -92,11 +92,11 @@ router.get('/:reportId/evidence/:evidenceId', async (req: Request, res: Response
 });
 
 // Delete evidence file
-router.delete('/:reportId/evidence/:evidenceId', async (req: Request, res: Response): Promise<void> => {
+router.delete('/:incidentId/evidence/:evidenceId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { evidenceId } = req.params;
     
-    const result = await reportService.deleteEvidenceFile(evidenceId);
+    const result = await incidentService.deleteEvidenceFile(evidenceId);
     
     if (!result.success) {
       res.status(400).json({ error: result.error });
