@@ -9,7 +9,7 @@ interface ActivityItem {
   message: string;
   timestamp: string;
   eventSlug?: string;
-  reportId?: string;
+  incidentId?: string;
 }
 
 export function ActivityFeed() {
@@ -49,7 +49,7 @@ export function ActivityFeed() {
       ) : (
         <ul className="flex flex-col gap-4">
           {activity.map((item, idx) => {
-            // Create link if we have both eventSlug and reportId
+            // Create link if we have both eventSlug and incidentId
             const activityContent = (
               <div className="flex items-start gap-3">
                 <span className="mt-2 w-2 h-2 rounded-full bg-primary flex-shrink-0" aria-hidden="true" />
@@ -60,12 +60,12 @@ export function ActivityFeed() {
               </div>
             );
 
-            // If we have both eventSlug and reportId, make it clickable
-            if (item.eventSlug && item.reportId) {
+            // If we have both eventSlug and incidentId, make it clickable
+            if (item.eventSlug && item.incidentId) {
               return (
                 <li key={idx}>
                   <Link 
-                    href={`/events/${item.eventSlug}/reports/${item.reportId}`}
+                    href={`/events/${item.eventSlug}/incidents/${item.incidentId}`}
                     className="block hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
                   >
                     {activityContent}

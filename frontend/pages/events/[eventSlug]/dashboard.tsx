@@ -19,7 +19,7 @@ const validStates = [
   "closed",
 ] as const;
 
-type ReportState = typeof validStates[number];
+type IncidentState = typeof validStates[number];
 
 interface User {
   id: string;
@@ -32,11 +32,11 @@ interface Reporter {
   email?: string;
 }
 
-interface Report {
+interface Incident {
   id: string;
   type: string;
   description: string;
-  state: ReportState;
+  state: IncidentState;
   reporter?: Reporter;
 }
 
@@ -55,7 +55,7 @@ interface StateChangeStatus {
 }
 
 type StateChangeMap = {
-  [reportId: string]: StateChangeStatus;
+  [incidentId: string]: StateChangeStatus;
 };
 
 export default function EventDashboard() {
@@ -143,7 +143,7 @@ export default function EventDashboard() {
           <Card className="p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Please Log In</h2>
             <p className="text-muted-foreground mb-6">
-              You need to log in to access the full event dashboard and submit reports.
+              You need to log in to access the full event dashboard and submit incidents.
             </p>
             <Link href="/login">
               <Button size="lg">Log In</Button>
@@ -190,11 +190,11 @@ export default function EventDashboard() {
               As a reporter, you can submit new incident reports and view the status of your submissions.
             </p>
             <div className="flex gap-4">
-              <Link href={`/events/${eventSlug}/reports/new`}>
+              <Link href={`/events/${eventSlug}/incidents/new`}>
                 <Button>Submit New Report</Button>
               </Link>
-              <Link href={`/events/${eventSlug}/reports`}>
-                <Button variant="outline">View My Reports</Button>
+              <Link href={`/events/${eventSlug}/incidents`}>
+                <Button variant="outline">View My Incidents</Button>
               </Link>
             </div>
           </Card>
@@ -212,8 +212,8 @@ export default function EventDashboard() {
               }
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link href={`/events/${eventSlug}/reports`}>
-                <Button>Manage Reports</Button>
+              <Link href={`/events/${eventSlug}/incidents`}>
+                <Button>Manage Incidents</Button>
               </Link>
               {isAdmin && (
                 <>

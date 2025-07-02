@@ -69,15 +69,15 @@ export function AppBreadcrumbs({ eventName, className }: AppBreadcrumbsProps) {
         href: `/events/${eventSlug}/dashboard` 
       });
       
-      if (pathname.includes('/reports')) {
+      if (pathname.includes('/incidents')) {
         breadcrumbs.push({ 
-          label: 'Reports', 
-          href: `/events/${eventSlug}/reports` 
+          label: 'Incidents', 
+          href: `/events/${eventSlug}/incidents` 
         });
         
         if (pathname.includes('/new')) {
           breadcrumbs.push({ label: 'New Report' });
-        } else if (query.reportId) {
+        } else if (query.incidentId) {
           breadcrumbs.push({ label: 'Report Details' });
         }
       } else if (pathname.includes('/team')) {
@@ -108,8 +108,8 @@ export function AppBreadcrumbs({ eventName, className }: AppBreadcrumbsProps) {
     }
   } else if (pathname.startsWith('/dashboard')) {
     // Global dashboard routes
-    if (pathname === '/dashboard/reports') {
-      breadcrumbs.push({ label: 'All Reports' });
+    if (pathname === '/dashboard/incidents') {
+      breadcrumbs.push({ label: 'All Incidents' });
     } else if (pathname === '/dashboard/notifications') {
       breadcrumbs.push({ label: 'Notifications' });
     }

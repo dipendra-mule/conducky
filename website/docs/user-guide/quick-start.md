@@ -52,18 +52,18 @@ Once in an event, explore the key features:
 
 **📊 Event Dashboard**
 - Overview of recent activity
-- Quick access to reports and team management
+- Quick access to incidents and team management
 - Event-specific navigation appears in the sidebar
 
-**📝 Submit Report (All Users)**
-- Click "Submit Report" in the sidebar
+**📝 Submit Incident (All Users)**
+- Click "Submit Incident" in the sidebar
 - Fill out the incident details
 - Upload evidence if needed
 - Submit for the response team to review
 
-**📋 View Reports**
-- **Reporters**: See "My Reports" to track your submissions
-- **Responders/Admins**: See "All Reports" to manage incidents
+**📋 View Incidents**
+- **Reporters**: See "My Incidents" to track your submissions
+- **Responders/Admins**: See "All Incidents" to manage incidents
 
 **👥 Team Management (Event Admins)**
 - View and manage team members
@@ -83,27 +83,27 @@ Once in an event, explore the key features:
 
 ## 🎯 What's Your Role?
 
-### Reporter (Event Attendee)
+### Incidenter (Event Attendee)
 **You can:**
 - Submit incident reports
-- View and track your own reports
-- Add comments to your reports
+- View and track your own incidents
+- Add comments to your incidents
 - Upload evidence files
 
 **Your workflow:**
-1. Something happens → Submit a report
+1. Something happens → Submit an incident
 2. Response team investigates → You receive updates
 3. Add comments if you have more information
 
 ### Responder (Safety Team Member)
 **You can:**
-- View all reports in your events
-- Change report states (investigating, resolved, etc.)
+- View all incidents in your events
+- Change incident states (investigating, resolved, etc.)
 - Add internal and external comments
-- Assign reports to team members
+- Assign incidents to team members
 
 **Your workflow:**
-1. New report arrives → Review details
+1. New incident arrives → Review details
 2. Start investigation → Change state to "investigating"
 3. Work the case → Add comments and updates
 4. Resolution → Mark as resolved or closed
@@ -114,7 +114,7 @@ Once in an event, explore the key features:
 - Manage team members and roles
 - Configure event settings
 - Create invitation links
-- View event analytics and reports
+- View event analytics and incidents
 
 **Your workflow:**
 1. Set up event → Add team members
@@ -135,13 +135,12 @@ Once in an event, explore the key features:
 
 ## 🔧 Essential Features
 
-### Report States
-Reports flow through these states:
+### Incident States
+Incidents flow through these states:
 - **Submitted** → **Investigating** → **Resolved** → **Closed**
 
 ### Comment Types
-- **External**: Visible to everyone who can see the report
-- **Internal**: Only visible to Responders and Event Admins
+- **External**: Visible to everyone who can see the incident - **Internal**: Only visible to Responders and Event Admins
 
 ### Invitation System
 - **Invitation links**: Send to specific users for specific roles
@@ -150,7 +149,7 @@ Reports flow through these states:
 ### Multi-Event Support
 - Belong to multiple events with different roles
 - Switch between events using the event cards
-- Cross-event report view for responders working multiple events
+- Cross-event incident view for responders working multiple events
 
 ---
 
@@ -167,7 +166,7 @@ Reports flow through these states:
 - Verify the event URL is correct
 - Contact the event administrator
 
-**Can't submit reports?**
+**Can't submit incidents?**
 - Ensure you have at least Reporter role
 - Check all required fields are filled
 - Try refreshing the page
@@ -187,12 +186,12 @@ That's it! You now know the basics of Conducky. Here's what to do next:
 
 ### For Reporters
 1. Bookmark your event dashboard
-2. Familiarize yourself with the report submission process
-3. Know how to check the status of your reports
+2. Familiarize yourself with the incident submission process
+3. Know how to check the status of your incidents
 
 ### For Responders
 1. Review your team's response procedures
-2. Practice changing report states and adding comments
+2. Practice changing incident states and adding comments
 3. Set up notifications (when available)
 
 ### For Event Admins

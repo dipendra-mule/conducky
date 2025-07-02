@@ -30,15 +30,15 @@ export type {
   EventLogo
 } from './event.service';
 
-export { ReportService } from './report.service';
+export { IncidentService } from './incident.service';
 export type {
-  ReportCreateData,
-  ReportUpdateData,
-  ReportQuery,
+  IncidentCreateData,
+  IncidentUpdateData,
+  IncidentQuery,
   EvidenceFile,
-  ReportWithDetails,
-  UserReportsResponse
-} from './report.service';
+  IncidentWithDetails,
+  UserIncidentsResponse
+} from './incident.service';
 
 export { NotificationService } from './notification.service';
 export type {

@@ -156,13 +156,13 @@ describe('GlobalDashboard Submit Report Feature', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Need to Report an Incident?')).toBeInTheDocument();
-      expect(screen.getByText('Submit a report quickly and securely')).toBeInTheDocument();
+      expect(screen.getByText('Submit an incident quickly and securely')).toBeInTheDocument();
       expect(screen.getByText('Submit Report for Test Event')).toBeInTheDocument();
     });
 
     // Check that the button links to the correct URL
     const submitButton = screen.getByRole('link', { name: /Submit Report for Test Event/i });
-    expect(submitButton).toHaveAttribute('href', '/events/test-event/reports/new');
+    expect(submitButton).toHaveAttribute('href', '/events/test-event/incidents/new');
   });
 
   it('shows event selector for multiple event user', async () => {
@@ -176,7 +176,7 @@ describe('GlobalDashboard Submit Report Feature', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Need to Report an Incident?')).toBeInTheDocument();
-      expect(screen.getByText('Select an event to submit a report:')).toBeInTheDocument();
+      expect(screen.getByText('Select an event to submit a incident:')).toBeInTheDocument();
       expect(screen.getByText('Choose an event...')).toBeInTheDocument();
     });
   });

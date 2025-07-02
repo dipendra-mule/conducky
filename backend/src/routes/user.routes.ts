@@ -102,8 +102,8 @@ router.get('/me/events', async (req: any, res: Response): Promise<void> => {
   }
 });
 
-// Get user reports
-router.get('/me/reports', async (req: any, res: Response): Promise<void> => {
+// Get user incidents
+router.get('/me/incidents', async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
       res.status(401).json({ error: 'Not authenticated' });
@@ -150,7 +150,7 @@ router.get('/me/reports', async (req: any, res: Response): Promise<void> => {
     if (process.env.NODE_ENV === 'development') {
       console.error('Get user reports error:', error);
     }
-    res.status(500).json({ error: 'Failed to fetch user reports.' });
+    res.status(500).json({ error: 'Failed to fetch user incidents.' });
   }
 });
 
@@ -380,7 +380,7 @@ router.get('/me/notifications', async (req: any, res: Response): Promise<void> =
         event: {
           select: { id: true, name: true, slug: true }
         },
-        report: {
+        incident: {
           select: { id: true, title: true, state: true }
         }
       },

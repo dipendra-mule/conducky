@@ -15,7 +15,7 @@ interface SystemStats {
   totalEvents: number;
   activeEvents: number;
   totalUsers: number;
-  totalReports: number;
+  totalIncidents: number;
   reportsByState: Record<string, number>;
   recentActivity: Array<{
     id: string;
@@ -242,11 +242,11 @@ export default function AdminDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats?.totalReports || 0}</div>
+                <div className="text-2xl font-bold">{stats?.totalIncidents || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   All-time reports
                 </p>
@@ -268,12 +268,12 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Reports by State */}
+            {/* Incidents by State */}
             <Card>
               <CardHeader>
-                <CardTitle>Reports by State</CardTitle>
+                <CardTitle>Incidents by State</CardTitle>
                 <CardDescription>
-                  Current status of all reports across events
+                  Current status of all incidents across events
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
                     stats.recentActivity.map((activity) => (
                       <Link 
                         key={activity.id}
-                        href={`/events/${activity.eventSlug}/reports/${activity.id}`}
+                        href={`/events/${activity.eventSlug}/incidents/${activity.id}`}
                         className="block hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
                       >
                         <div className="flex items-center justify-between border-b pb-2 last:border-b-0">

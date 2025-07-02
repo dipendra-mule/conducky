@@ -10,7 +10,7 @@ This section covers the most common questions users have about Conducky.
 
 ### What is Conducky?
 
-Conducky is a comprehensive incident management platform designed specifically for conferences, events, and organizations that need to handle Code of Conduct reports. It provides a secure, multi-tenant system where different events can manage their incidents independently while maintaining proper role-based access controls.
+Conducky is a comprehensive incident management platform designed specifically for conferences, events, and organizations that need to handle Code of Conduct incidents. It provides a secure, multi-tenant system where different events can manage their incidents independently while maintaining proper role-based access controls.
 
 ### Who should use Conducky?
 
@@ -23,7 +23,7 @@ Conducky is designed for:
 ### How does Conducky protect privacy and confidentiality?
 
 Conducky takes privacy seriously with several built-in protections:
-- **Event isolation**: Reports are strictly scoped to individual events
+- **Event isolation**: Incidents are strictly scoped to individual events
 - **Role-based access**: Users only see information they're authorized to view
 - **Secure authentication**: All access requires proper login credentials
 - **Internal/external comments**: Sensitive discussions can be kept internal to the response team
@@ -60,8 +60,8 @@ See the [Troubleshooting Guide](./troubleshooting.md) for more details.
 ### What are the different user roles?
 
 **Event-level roles:**
-- **Reporter**: Can submit reports and view their own reports
-- **Responder**: Can view and respond to all reports in the event
+- **Reporter**: Can submit incidents and view their own incidents
+- **Responder**: Can view and respond to all incidents in the event
 - **Event Admin**: Full management of the event, users, and settings
 
 **System-level roles:**
@@ -79,47 +79,46 @@ Yes! Conducky supports multi-event participation where you can have different ro
 
 SuperAdmins don't automatically have access to event data - they must be explicitly added to events by Event Admins.
 
-## Reports and Incident Management
+## Incidents and Incident Management
 
-### Who can submit reports?
+### Who can submit incidents?
 
-Anyone with at least "Reporter" role in an event can submit reports. This includes:
+Anyone with at least "Reporter" role in an event can submit incidents. This includes:
 - Event attendees (Reporter role)
 - Response team members (Responder role)
 - Event administrators (Event Admin role)
 
-### Can I submit reports anonymously?
+### Can I submit incidents anonymously?
 
-Currently, anonymous reporting is not available. All reports require the reporter to be logged in and have appropriate access to the event. This is planned for future releases.
+Currently, anonymous reporting is not available. All incidents require the reporter to be logged in and have appropriate access to the event. This is planned for future releases.
 
-### Who can see my report?
+### Who can see my incident?
 
-Report visibility depends on your role and the report:
-- **Reporters**: Can only see their own reports
-- **Responders**: Can see all reports in events where they have Responder role
-- **Event Admins**: Can see all reports in events they administer
+Report visibility depends on your role and the incident:
+- **Reporters**: Can only see their own incidents
+- **Responders**: Can see all incidents in events where they have Responder role
+- **Event Admins**: Can see all incidents in events they administer
 
-### What happens after I submit a report?
+### What happens after I submit an incident?
 
-1. The report is immediately available to the response team
+1. The incident is immediately available to the response team
 2. Responders and Event Admins receive notifications (when implemented)
-3. The response team can change the report state (investigating, resolved, etc.)
+3. The response team can change the incident state (investigating, resolved, etc.)
 4. Comments can be added for communication and documentation
-5. You'll be able to track progress through the report detail page
+5. You'll be able to track progress through the incident detail page
 
-### Can I edit or delete my report after submitting?
+### Can I edit or delete my incident after submitting?
 
-Currently, reports cannot be edited or deleted by reporters after submission. If you need changes:
+Currently, incidents cannot be edited or deleted by reporters after submission. If you need changes:
 - Add a comment with additional information or corrections
 - Contact the response team to request changes
-- The response team can update report details if needed
+- The response team can update incident details if needed
 
 ## Comments and Communication
 
 ### What's the difference between internal and external comments?
 
-- **External comments**: Visible to everyone who can access the report
-- **Internal comments**: Only visible to Responders and Event Admins
+- **External comments**: Visible to everyone who can access the incident - **Internal comments**: Only visible to Responders and Event Admins
 
 This allows the response team to have private discussions while keeping appropriate information visible to reporters.
 
@@ -127,9 +126,9 @@ This allows the response team to have private discussions while keeping appropri
 
 Yes, you can edit and delete your own comments. Look for the three-dot menu (⋮) next to your comments for these options.
 
-### How do I know if there are new comments on my report?
+### How do I know if there are new comments on my incident?
 
-Notifications will alert you to new activity on your reports (when the notification system is fully implemented). You can also check the [Notification Center](./notification-center.md) for updates.
+Notifications will alert you to new activity on your incidents (when the notification system is fully implemented). You can also check the [Notification Center](./notification-center.md) for updates.
 
 ## Events and Organizations
 
@@ -144,14 +143,14 @@ You can join multiple events by:
 
 Yes, you can leave events through your profile page (accessible from the user menu). However:
 - This will remove your access to all event data
-- You won't be able to see reports you submitted
+- You won't be able to see incidents you submitted
 - Event Admins can re-invite you if needed
 
 ### What happens if an event is disabled?
 
 If an event is disabled by a SuperAdmin:
 - Event data remains intact but becomes inaccessible
-- Users cannot access the event dashboard or reports
+- Users cannot access the event dashboard or incidents
 - Only SuperAdmins can re-enable disabled events
 
 ## Technical Questions
@@ -187,7 +186,7 @@ Yes! Conducky provides a comprehensive REST API. See the [API Reference](/api) f
 ### Can Conducky integrate with other systems?
 
 The API allows for various integrations. Common integration points include:
-- **Email systems**: For notifications and report submission
+- **Email systems**: For notifications and incident submission
 - **Chat platforms**: For team notifications (Slack, Discord, etc.)
 - **Analytics tools**: For reporting and metrics
 - **Authentication systems**: For single sign-on (SSO)
@@ -234,7 +233,7 @@ The sidebar only appears when you:
 
 See [Navigation Issues](./troubleshooting.md#navigation-issues) for more details.
 
-### I can't submit a report - the form isn't working
+### I can't submit an incident - the form isn't working
 
 Check that:
 - You have at least Reporter role in the event
@@ -256,7 +255,7 @@ The notification system may not be fully enabled in your installation. Contact y
 4. **System issues**: Contact your system administrators
 5. **Community**: Join discussions on [GitHub](https://github.com/mattstratton/conducky/discussions)
 
-### How do I report a bug or request a feature?
+### How do I incident a bug or request a feature?
 
 - **Bugs**: Report issues on [GitHub Issues](https://github.com/mattstratton/conducky/issues)
 - **Feature requests**: Start a discussion on [GitHub Discussions](https://github.com/mattstratton/conducky/discussions)
@@ -267,7 +266,7 @@ The notification system may not be fully enabled in your installation. Contact y
 Yes! Conducky welcomes contributions:
 - **Code**: See the [Contributing Guide](https://github.com/mattstratton/conducky/blob/main/CONTRIBUTING.md)
 - **Documentation**: Improvements and translations are welcome
-- **Testing**: Help test new features and report issues
+- **Testing**: Help test new features and incident issues
 - **Feedback**: Share your experience and suggestions
 
 ---

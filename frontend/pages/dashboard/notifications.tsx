@@ -530,7 +530,7 @@ const NotificationCenter: React.FC = () => {
                     </p>
 
                     {/* Event/Report Context */}
-                    {(notification.event || notification.report) && (
+                    {(notification.event || notification.incident) && (
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
                         {notification.event && (
                           <span className="flex items-center gap-1">
@@ -538,8 +538,8 @@ const NotificationCenter: React.FC = () => {
                             {notification.event.name}
                           </span>
                         )}
-                        {notification.report && (
-                          <span>Report: {notification.report.title}</span>
+                        {notification.incident && (
+                          <span>Report: {notification.incident.title}</span>
                         )}
                       </div>
                     )}

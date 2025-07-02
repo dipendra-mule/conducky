@@ -46,8 +46,8 @@ This guide covers common issues you might encounter while using Conducky and how
 **Causes & Solutions**:
 
 1. **Role-based access**: Navigation items are filtered based on your role in each event
-   - **Reporters** only see: Event Dashboard, Submit Report, My Reports
-   - **Responders** see: Event Dashboard, All Reports, Submit Report, Team (view only)
+   - **Reporters** only see: Event Dashboard, Submit Incident, My Incidents
+   - **Responders** see: Event Dashboard, All Incidents, Submit Incident, Team (view only)
    - **Admins** see: Full navigation including Team Management and Event Settings
 
 2. **Event context**: Some navigation items only appear when you're in an event context
@@ -139,16 +139,16 @@ This guide covers common issues you might encounter while using Conducky and how
 
 ### Can't See Event Data
 
-**Problem**: You can access the event but can't see reports, team members, etc.
+**Problem**: You can access the event but can't see incidents, team members, etc.
 
 **Solutions**:
 1. **Check your role**: Different roles have different access levels
 2. **Event permissions**: Some data may be restricted based on your role
 3. **Data exists**: The event may not have any data yet
 
-## Report Issues
+## Incident Issues
 
-### Can't Submit Reports
+### Can't Submit Incidents
 
 **Problem**: Report submission fails or form is not accessible.
 
@@ -158,19 +158,19 @@ This guide covers common issues you might encounter while using Conducky and how
 3. **File uploads**: Ensure evidence files meet size and type requirements
 4. **Network issues**: Large file uploads may timeout on slow connections
 
-### Can't View Reports
+### Can't View Incidents
 
-**Problem**: Report lists are empty or specific reports can't be accessed.
+**Problem**: Report lists are empty or specific incidents can't be accessed.
 
 **Role-based access**:
-- **Reporters**: Can only see their own reports
-- **Responders**: Can see all reports in the event
-- **Admins**: Can see all reports in the event
+- **Reporters**: Can only see their own incidents
+- **Responders**: Can see all incidents in the event
+- **Admins**: Can see all incidents in the event
 
 **Solutions**:
 1. **Check filters**: Report lists may have filters applied
 2. **Verify role**: Ensure you have appropriate access
-3. **Reports exist**: The event may not have any reports yet
+3. **Incidents exist**: The event may not have any incidents yet
 
 ## Mobile Issues
 
@@ -265,4 +265,4 @@ These issues have been resolved in recent updates:
 - **Bulk operations**: Limited bulk actions available
 - **Advanced search**: Basic search functionality only
 
-If you encounter an issue not covered in this guide, please report it to your administrator with as much detail as possible. 
+If you encounter an issue not covered in this guide, please incident it to your administrator with as much detail as possible. 

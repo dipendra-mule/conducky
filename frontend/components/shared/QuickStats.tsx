@@ -41,7 +41,7 @@ export function QuickStats() {
       ) : stats ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <StatBox label="Events" value={stats.eventCount} />
-          <StatBox label="Reports" value={stats.reportCount} />
+          <StatBox label="Incidents" value={stats.reportCount} />
           <StatBox label="Needs Response" value={stats.needsResponseCount} />
         </div>
       ) : null}

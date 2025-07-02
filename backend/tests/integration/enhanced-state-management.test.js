@@ -28,11 +28,11 @@ describe('Enhanced State Management API', () => {
     ];
   });
   
-  describe('PATCH /api/events/:eventId/reports/:reportId/state', () => {
+  describe('PATCH /api/events/:eventId/incidents/:incidentId/state', () => {
     test('should respond to state change endpoint', async () => {
       // The endpoint exists and responds successfully (SuperAdmin has access)
       const res = await request(app)
-        .patch('/api/events/1/reports/r1/state')
+        .patch('/api/events/1/incidents/r1/state')
         .send({
           state: 'acknowledged',
           notes: 'Test notes'
@@ -43,11 +43,11 @@ describe('Enhanced State Management API', () => {
     });
   });
 
-  describe('GET /api/events/:eventId/reports/:reportId/state-history', () => {
+  describe('GET /api/events/:eventId/incidents/:incidentId/state-history', () => {
     test('should respond to state history endpoint', async () => {
       // The endpoint exists and responds successfully
       const res = await request(app)
-        .get('/api/events/1/reports/r1/state-history');
+        .get('/api/events/1/incidents/r1/state-history');
 
       // Should get 200 (success) since SuperAdmin has access
       expect(res.status).toBe(200);
@@ -58,7 +58,7 @@ describe('Enhanced State Management API', () => {
     test('should allow Reporter access to state history for their own reports', async () => {
       // Test that Reporter role can access state history
       const res = await request(app)
-        .get('/api/events/1/reports/r1/state-history')
+        .get('/api/events/1/incidents/r1/state-history')
         .set('x-test-user-id', '1'); // Using default SuperAdmin for this basic test
 
       // Should get 200 (success) or appropriate response based on access control
@@ -73,7 +73,7 @@ describe('Enhanced State Management API', () => {
     test('should handle access control properly', async () => {
       // Test that the endpoint includes proper access control checks
       const res = await request(app)
-        .get('/api/events/1/reports/999/state-history'); // Non-existent report
+        .get('/api/events/1/incidents/999/state-history'); // Non-existent report
 
       // Should get appropriate error response
       expect([400, 403, 404, 500]).toContain(res.status);
@@ -83,7 +83,7 @@ describe('Enhanced State Management API', () => {
   describe('API Validation', () => {
     test('should validate required fields for state change', async () => {
       const res = await request(app)
-        .patch('/api/events/1/reports/r1/state')
+        .patch('/api/events/1/incidents/r1/state')
         .send({}); // Empty body
 
       // Should get validation error

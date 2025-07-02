@@ -14,7 +14,7 @@ This document describes the main data models used in the system, based on the Pr
 - **name**: Optional display name
 - **passwordHash**: Hashed password (nullable for social login users)
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: userEventRoles, reports, auditLogs, reportComments, evidenceFilesUploaded, assignedReports, avatar, passwordResetTokens, notifications, socialAccounts, notificationSettings, organizationMemberships, createdOrganizations, createdMemberships, createdOrgInvites
+- **Relations**: userEventRoles, incidents, auditLogs, reportComments, evidenceFilesUploaded, assignedIncidents, avatar, passwordResetTokens, notifications, socialAccounts, notificationSettings, organizationMemberships, createdOrganizations, createdMemberships, createdOrgInvites
 
 ## Event
 
@@ -30,7 +30,7 @@ This document describes the main data models used in the system, based on the Pr
 - **isActive**: Boolean (default: true)
 - **organizationId**: Optional organization reference (nullable for migration compatibility)
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: organization, userEventRoles, reports, auditLogs, inviteLinks, eventLogo, notifications
+- **Relations**: organization, userEventRoles, incidents, auditLogs, inviteLinks, eventLogo, notifications
 
 ## Role
 
@@ -46,7 +46,7 @@ This document describes the main data models used in the system, based on the Pr
 - **roleId**: Role reference
 - **Unique:** Combination of userId, eventId, roleId
 
-## Report
+## Incident
 
 - **id**: UUID, primary key
 - **eventId**: Event reference
@@ -61,32 +61,32 @@ This document describes the main data models used in the system, based on the Pr
 - **contactPreference**: Contact preference enum (email, phone, in_person, no_contact) with default 'email'
 - **assignedResponderId**: string (nullable, UUID) — the user ID of the assigned responder (if any)
 - **assignedResponder**: User (nullable) — the assigned responder user object (if any)
-- **severity**: enum (`low`, `medium`, `high`, `critical`, nullable) — severity/priority of the report
-- **resolution**: string (optional) — freeform text describing the resolution of the report
+- **severity**: enum (`low`, `medium`, `high`, `critical`, nullable) — severity/priority of the incident 
+- **resolution**: string (optional) — freeform text describing the resolution of the incident 
 - **createdAt, updatedAt**: Timestamps
 - **Relations**: comments, evidenceFiles, notifications
 
-## ReportComment
+## IncidentComment
 
 - **id**: UUID, primary key
-- **reportId**: Report reference
+- **incidentId**: Incident reference
 - **authorId**: User reference (nullable for system comments)
 - **body**: Comment text
 - **visibility**: Comment visibility enum (public, internal)
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: report, author
+- **Relations**: incident, author
 
 ## EvidenceFile
 
 - **id**: UUID, primary key
-- **reportId**: Report reference
+- **incidentId**: Incident reference
 - **filename**: Original file name
 - **mimetype**: File MIME type
 - **size**: File size (bytes)
 - **data**: File data (BLOB)
 - **uploaderId**: User reference (nullable, for anonymous uploads)
 - **createdAt**: Timestamp
-- **Relations**: report, uploader
+- **Relations**: incident, uploader
 
 ## EventLogo
 
@@ -161,22 +161,22 @@ This document describes the main data models used in the system, based on the Pr
 
 - **id**: UUID, primary key
 - **userId**: User reference
-- **type**: Notification type enum (report_submitted, report_assigned, report_status_changed, report_comment_added, event_invitation, event_role_changed, system_announcement)
+- **type**: Notification type enum (incident_submitted, incident_assigned, incident_status_changed, incident_comment_added, event_invitation, event_role_changed, system_announcement)
 - **priority**: Notification priority enum (low, normal, high, urgent)
 - **title**: Notification title
 - **message**: Notification message
 - **isRead**: Boolean (default: false)
 - **readAt**: Optional timestamp when notification was read
 - **eventId**: Optional event reference
-- **reportId**: Optional report reference
+- **incidentId**: Optional incident reference
 - **actionData**: Optional JSON string for action-specific data
 - **actionUrl**: Optional URL to navigate to when notification is clicked
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: user, event, report
+- **Relations**: user, event, incident 
 
 ## Enums
 
-### ReportState
+### IncidentState
 
 - `submitted`
 - `acknowledged`
@@ -184,7 +184,7 @@ This document describes the main data models used in the system, based on the Pr
 - `resolved`
 - `closed`
 
-### ReportType
+### IncidentType
 
 - `harassment`
 - `safety`
@@ -195,7 +195,7 @@ This document describes the main data models used in the system, based on the Pr
 - `public` - visible to all involved (reporter, responders, admins)
 - `internal` - visible only to responders/admins
 
-### ReportSeverity
+### IncidentSeverity
 
 - `low`
 - `medium`
@@ -211,10 +211,10 @@ This document describes the main data models used in the system, based on the Pr
 
 ### NotificationType
 
-- `report_submitted` - New report submitted
-- `report_assigned` - Report assigned to user
-- `report_status_changed` - Report status changed
-- `report_comment_added` - New comment on report
+- `incident_submitted` - New incident submitted
+- `incident_assigned` - Report assigned to user
+- `incident_status_changed` - Report status changed
+- `incident_comment_added` - New comment on incident 
 - `event_invitation` - Invited to event
 - `event_role_changed` - Role changed in event
 - `system_announcement` - System-wide announcement

@@ -3,7 +3,7 @@ import { ServiceResult } from '../types';
 import { Prisma } from '@prisma/client';
 
 export interface CommentCreateData {
-  reportId: string;
+  incidentId: string;
   authorId?: string | null;
   body: string;
   visibility?: CommentVisibility;
@@ -28,7 +28,7 @@ export interface CommentQuery {
 
 export interface CommentWithDetails {
   id: string;
-  reportId: string;
+  incidentId: string;
   authorId?: string | null;
   body: string;
   isMarkdown: boolean;
@@ -60,14 +60,14 @@ export class CommentService {
    */
   async createComment(data: CommentCreateData): Promise<ServiceResult<{ comment: CommentWithDetails }>> {
     try {
-      const { reportId, authorId, body, visibility = 'public', isMarkdown = false } = data;
+      const { incidentId, authorId, body, visibility = 'public', isMarkdown = false } = data;
 
       // Verify report exists
-      const report = await this.prisma.report.findUnique({
-        where: { id: reportId }
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId }
       });
 
-      if (!report) {
+      if (!incident) {
         return {
           success: false,
           error: 'Report not found'
@@ -75,9 +75,9 @@ export class CommentService {
       }
 
       // Create the comment
-      const comment = await this.prisma.reportComment.create({
+      const comment = await this.prisma.incidentComment.create({
         data: {
-          reportId,
+          incidentId,
           authorId: authorId || null,
           body,
           visibility,
@@ -110,7 +110,7 @@ export class CommentService {
   /**
    * Get paginated comments for a report with filtering and search
    */
-  async getReportComments(reportId: string, query: CommentQuery): Promise<ServiceResult<CommentListResponse>> {
+  async getIncidentComments(incidentId: string, query: CommentQuery): Promise<ServiceResult<CommentListResponse>> {
     try {
       const {
         page = 1,
@@ -154,7 +154,7 @@ export class CommentService {
       const skip = (pageNum - 1) * limitNum;
 
       // Build where clause
-      const whereClause: Prisma.ReportCommentWhereInput = { reportId };
+      const whereClause: Prisma.IncidentCommentWhereInput = { incidentId };
 
       if (visibility) {
         whereClause.visibility = visibility;
@@ -173,10 +173,10 @@ export class CommentService {
       }
 
       // Get total count
-      const total = await this.prisma.reportComment.count({ where: whereClause });
+      const total = await this.prisma.incidentComment.count({ where: whereClause });
 
       // Build order by clause with proper typing
-      const orderBy: Prisma.ReportCommentOrderByWithRelationInput = {};
+      const orderBy: Prisma.IncidentCommentOrderByWithRelationInput = {};
       if (sortBy === 'createdAt') {
         orderBy.createdAt = sortOrder;
       } else if (sortBy === 'updatedAt') {
@@ -184,7 +184,7 @@ export class CommentService {
       }
 
       // Get comments with author details
-      const comments = await this.prisma.reportComment.findMany({
+      const comments = await this.prisma.incidentComment.findMany({
         where: whereClause,
         include: {
           author: {
@@ -226,7 +226,7 @@ export class CommentService {
    */
   async getCommentById(commentId: string): Promise<ServiceResult<{ comment: CommentWithDetails }>> {
     try {
-      const comment = await this.prisma.reportComment.findUnique({
+      const comment = await this.prisma.incidentComment.findUnique({
         where: { id: commentId },
         include: {
           author: {
@@ -265,7 +265,7 @@ export class CommentService {
   async updateComment(commentId: string, data: CommentUpdateData, userId?: string): Promise<ServiceResult<{ comment: CommentWithDetails }>> {
     try {
       // Check if comment exists and user has permission
-      const existingComment = await this.prisma.reportComment.findUnique({
+      const existingComment = await this.prisma.incidentComment.findUnique({
         where: { id: commentId }
       });
 
@@ -285,7 +285,7 @@ export class CommentService {
       }
 
       // Update the comment
-      const comment = await this.prisma.reportComment.update({
+      const comment = await this.prisma.incidentComment.update({
         where: { id: commentId },
         data,
         include: {
@@ -318,7 +318,7 @@ export class CommentService {
   async deleteComment(commentId: string, userId?: string): Promise<ServiceResult<{ message: string }>> {
     try {
       // Check if comment exists and user has permission
-      const existingComment = await this.prisma.reportComment.findUnique({
+      const existingComment = await this.prisma.incidentComment.findUnique({
         where: { id: commentId }
       });
 
@@ -338,7 +338,7 @@ export class CommentService {
       }
 
       // Delete the comment
-      await this.prisma.reportComment.delete({
+      await this.prisma.incidentComment.delete({
         where: { id: commentId }
       });
 
@@ -358,15 +358,15 @@ export class CommentService {
   /**
    * Get comment count for a report
    */
-  async getCommentCount(reportId: string, visibility?: CommentVisibility): Promise<ServiceResult<{ count: number }>> {
+  async getCommentCount(incidentId: string, visibility?: CommentVisibility): Promise<ServiceResult<{ count: number }>> {
     try {
-      const whereClause: Prisma.ReportCommentWhereInput = { reportId };
+      const whereClause: Prisma.IncidentCommentWhereInput = { incidentId };
 
       if (visibility) {
         whereClause.visibility = visibility;
       }
 
-      const count = await this.prisma.reportComment.count({ where: whereClause });
+      const count = await this.prisma.incidentComment.count({ where: whereClause });
 
       return {
         success: true,
@@ -427,7 +427,7 @@ export class CommentService {
       const skip = (pageNum - 1) * limitNum;
 
       // Build where clause
-      const whereClause: Prisma.ReportCommentWhereInput = { authorId };
+      const whereClause: Prisma.IncidentCommentWhereInput = { authorId };
 
       if (visibility) {
         whereClause.visibility = visibility;
@@ -442,10 +442,10 @@ export class CommentService {
       }
 
       // Get total count
-      const total = await this.prisma.reportComment.count({ where: whereClause });
+      const total = await this.prisma.incidentComment.count({ where: whereClause });
 
       // Build order by clause with proper typing
-      const orderBy: Prisma.ReportCommentOrderByWithRelationInput = {};
+      const orderBy: Prisma.IncidentCommentOrderByWithRelationInput = {};
       if (sortBy === 'createdAt') {
         orderBy.createdAt = sortOrder;
       } else if (sortBy === 'updatedAt') {
@@ -453,7 +453,7 @@ export class CommentService {
       }
 
       // Get comments with report details
-      const comments = await this.prisma.reportComment.findMany({
+      const comments = await this.prisma.incidentComment.findMany({
         where: whereClause,
         include: {
           author: {
@@ -463,7 +463,7 @@ export class CommentService {
               email: true
             }
           },
-          report: {
+          incident: {
             select: {
               id: true,
               title: true,
@@ -506,7 +506,7 @@ export class CommentService {
   /**
    * Check if user can view comments on a report (based on visibility and permissions)
    */
-  async canUserViewComments(reportId: string, userId?: string, userRole?: string): Promise<ServiceResult<{ canView: boolean; visibleComments: CommentVisibility[] }>> {
+  async canUserViewComments(incidentId: string, userId?: string, userRole?: string): Promise<ServiceResult<{ canView: boolean; visibleComments: CommentVisibility[] }>> {
     try {
       // Default visibility levels user can see
       let visibleComments: CommentVisibility[] = ['public'];
@@ -514,8 +514,8 @@ export class CommentService {
       // If user is authenticated, they can see internal comments if they have appropriate role
       if (userId && userRole) {
         // Get the report to check if user is involved
-        const report = await this.prisma.report.findUnique({
-          where: { id: reportId },
+        const incident = await this.prisma.incident.findUnique({
+          where: { id: incidentId },
           select: {
             reporterId: true,
             assignedResponderId: true,
@@ -523,7 +523,7 @@ export class CommentService {
           }
         });
 
-        if (!report) {
+        if (!incident) {
           return {
             success: false,
             error: 'Report not found'
@@ -531,8 +531,8 @@ export class CommentService {
         }
 
         // Check if user is reporter, assigned responder, or has admin/responder role
-        const isReporter = report.reporterId === userId;
-        const isAssigned = report.assignedResponderId === userId;
+        const isReporter = incident.reporterId === userId;
+        const isAssigned = incident.assignedResponderId === userId;
         const hasResponderRole = ['Event Admin', 'Responder', 'System Admin'].includes(userRole);
 
         if (isReporter || isAssigned || hasResponderRole) {

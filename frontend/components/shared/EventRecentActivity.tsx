@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-interface Report {
+interface Incident {
   id: string;
   title?: string;
   type: string;
@@ -23,7 +23,7 @@ interface EventRecentActivityProps {
 }
 
 export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivityProps) {
-  const [reports, setReports] = useState<Report[]>([]);
+  const [incidents, setIncidents] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,18 +31,18 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
   const isResponder = userRoles.includes("responder");
 
   useEffect(() => {
-    async function fetchRecentReports() {
+    async function fetchRecentIncidents() {
       setLoading(true);
       setError("");
       try {
         const res = await fetch(
           (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
-          `/api/events/slug/${eventSlug}/reports?limit=5&recent=1`,
+          `/api/events/slug/${eventSlug}/incidents?limit=5&recent=1`,
           { credentials: "include" }
         );
         if (!res.ok) throw new Error("Failed to fetch reports");
         const data = await res.json();
-        setReports(data.reports || []);
+        setIncidents(data.incidents || []);
       } catch {
         setError("Could not load recent activity.");
       } finally {
@@ -51,7 +51,7 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
     }
     
     if (eventSlug) {
-      fetchRecentReports();
+      fetchRecentIncidents();
     }
   }, [eventSlug]);
 
@@ -84,10 +84,10 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
     <Card className="p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-foreground">
-          {isAdmin || isResponder ? "Recent Reports" : "Your Recent Reports"}
+          {isAdmin || isResponder ? "Recent Incidents" : "Your Recent Incidents"}
         </h2>
         <Button asChild variant="ghost" size="sm">
-          <Link href={`/events/${eventSlug}/reports`} className="flex items-center gap-1">
+          <Link href={`/events/${eventSlug}/incidents`} className="flex items-center gap-1">
             View All
             <ArrowRight className="h-3 w-3" />
           </Link>
@@ -130,7 +130,7 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
                 </div>
               </div>
               <Button asChild variant="ghost" size="sm">
-                <Link href={`/events/${eventSlug}/reports/${report.id}`}>
+                <Link href={`/events/${eventSlug}/incidents/${report.id}`}>
                   View
                 </Link>
               </Button>

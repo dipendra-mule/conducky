@@ -131,7 +131,7 @@ function NavigationControls({ user }: NavigationControlsProps) {
       .filter((event): event is { slug: string; name: string } => event !== null);
   }, [quickJumpItems]);
 
-  const handleQuickReportOpen = React.useCallback(() => {
+  const handleQuickIncidentOpen = React.useCallback(() => {
     // Open quick jump with "submit report" pre-filled to show report options
     setReportJumpOpen(true);
   }, []);
@@ -139,7 +139,7 @@ function NavigationControls({ user }: NavigationControlsProps) {
   // Only initialize keyboard shortcuts if user is authenticated
   useKeyboardShortcuts({ 
     onQuickJumpOpen: () => setQuickJumpOpen(true),
-    onQuickReportOpen: handleQuickReportOpen,
+    onQuickIncidentOpen: handleQuickIncidentOpen,
     userEvents: userEvents,
     enabled: !!user
   });
@@ -256,7 +256,7 @@ function NavigationControls({ user }: NavigationControlsProps) {
       <QuickJump 
         isOpen={reportJumpOpen} 
         onClose={() => setReportJumpOpen(false)}
-        initialQuery="🚨 Submit Report"
+        initialQuery="🚨 Submit Incident"
       />
 
       {/* Help Modal */}

@@ -21,7 +21,7 @@ export function EventActions({ eventSlug, userRoles }: EventActionsProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {/* Primary Submit Report Action - Always Available */}
         <Button asChild className="flex items-center gap-2 h-12" size="lg">
-          <Link href={`/events/${eventSlug}/reports/new`}>
+          <Link href={`/events/${eventSlug}/incidents/new`}>
             <Plus className="h-4 w-4" />
             Submit Report
           </Link>
@@ -31,9 +31,9 @@ export function EventActions({ eventSlug, userRoles }: EventActionsProps) {
         {isReporter && (
           <>
             <Button asChild variant="outline" className="flex items-center gap-2 h-12">
-              <Link href={`/events/${eventSlug}/reports?mine=1`}>
+              <Link href={`/events/${eventSlug}/incidents?mine=1`}>
                 <FileText className="h-4 w-4" />
-                My Reports
+                My Incidents
               </Link>
             </Button>
             <Button asChild variant="outline" className="flex items-center gap-2 h-12">
@@ -49,13 +49,13 @@ export function EventActions({ eventSlug, userRoles }: EventActionsProps) {
         {isResponder && (
           <>
             <Button asChild variant="outline" className="flex items-center gap-2 h-12">
-              <Link href={`/events/${eventSlug}/reports`}>
+              <Link href={`/events/${eventSlug}/incidents`}>
                 <FileText className="h-4 w-4" />
-                All Reports
+                All Incidents
               </Link>
             </Button>
             <Button asChild variant="outline" className="flex items-center gap-2 h-12">
-              <Link href={`/events/${eventSlug}/reports?assigned=me`}>
+              <Link href={`/events/${eventSlug}/incidents?assigned=me`}>
                 <AlertCircle className="h-4 w-4" />
                 Assigned to Me
               </Link>
@@ -73,9 +73,9 @@ export function EventActions({ eventSlug, userRoles }: EventActionsProps) {
               </Link>
             </Button>
             <Button asChild variant="outline" className="flex items-center gap-2 h-12">
-              <Link href={`/events/${eventSlug}/reports`}>
+              <Link href={`/events/${eventSlug}/incidents`}>
                 <FileText className="h-4 w-4" />
-                All Reports
+                All Incidents
               </Link>
             </Button>
             <Button asChild variant="outline" className="flex items-center gap-2 h-12">

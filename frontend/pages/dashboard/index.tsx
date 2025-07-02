@@ -139,13 +139,13 @@ export default function GlobalDashboard() {
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">Need to Report an Incident?</h2>
-                    <p className="text-muted-foreground">Submit a report quickly and securely</p>
+                    <p className="text-muted-foreground">Submit an incident quickly and securely</p>
                   </div>
                 </div>
                 
                 {userEvents.length === 1 ? (
                   // Single event - direct link
-                  <Link href={`/events/${userEvents[0].slug}/reports/new`}>
+                  <Link href={`/events/${userEvents[0].slug}/incidents/new`}>
                     <Button size="lg" className="w-full sm:w-auto flex items-center gap-2">
                       <Plus className="h-5 w-5" />
                       Submit Report for {userEvents[0].name}
@@ -155,14 +155,14 @@ export default function GlobalDashboard() {
                   // Multiple events - dropdown selector
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Select an event to submit a report:
+                      Select an event to submit a incident:
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Select 
                         value=""
                         onValueChange={(eventSlug) => {
                           if (eventSlug) {
-                            router.push(`/events/${eventSlug}/reports/new`);
+                            router.push(`/events/${eventSlug}/incidents/new`);
                           }
                         }}
                       >

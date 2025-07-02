@@ -201,8 +201,8 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
         isActive: router.asPath === "/dashboard",
       },
       {
-        title: "All Reports",
-        url: "/dashboard/reports",
+        title: "All Incidents",
+        url: "/dashboard/incidents",
         icon: ClipboardList,
       },
       {
@@ -296,10 +296,10 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
           isActive: router.asPath.startsWith(`/orgs/${targetOrgSlug}/events`),
         },
         {
-          title: "Reports Overview",
-          url: `/orgs/${targetOrgSlug}/reports`,
+          title: "Incidents Overview",
+          url: `/orgs/${targetOrgSlug}/incidents`,
           icon: BookOpen,
-          isActive: router.asPath.startsWith(`/orgs/${targetOrgSlug}/reports`),
+          isActive: router.asPath.startsWith(`/orgs/${targetOrgSlug}/incidents`),
         },
         {
           title: "Team",
@@ -361,22 +361,22 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
             isActive: router.asPath === `/events/${targetEventSlug}/dashboard`,
           },
           {
-            title: "Reports",
-            url: `/events/${targetEventSlug}/reports`,
+            title: "Incidents",
+            url: `/events/${targetEventSlug}/incidents`,
             icon: ClipboardList,
             items: [
               {
-                title: "My Reports",
-                url: `/events/${targetEventSlug}/my-reports`,
+                title: "My Incidents",
+                url: `/events/${targetEventSlug}/my-incidents`,
               },
-              // Add "All Reports" for Responders and Admins
+              // Add "All Incidents" for Responders and Admins
               ...(isEventResponder ? [{
-                title: "All Reports",
-                url: `/events/${targetEventSlug}/reports`,
+                title: "All Incidents",
+                url: `/events/${targetEventSlug}/incidents`,
               }] : []),
               {
-                title: "Submit Report",
-                url: `/events/${targetEventSlug}/reports/new`,
+                title: "Submit Incident",
+                url: `/events/${targetEventSlug}/incidents/new`,
               },
             ],
           },

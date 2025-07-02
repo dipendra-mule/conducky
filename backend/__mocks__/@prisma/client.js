@@ -98,14 +98,14 @@ const inMemoryStore = {
       user: { id: "3", email: "responder@example.com", name: "Responder User" },
     },
   ],
-  reports: [
+  incidents: [
     { id: "r1", eventId: "1", state: "submitted", severity: "low" },
     { 
       id: "1", 
       eventId: "1", 
       state: "submitted", 
       reporterId: "2", 
-      title: "Test Report", 
+      title: "Test Incident", 
       description: "Test description",
       type: "harassment",
       severity: "high",
@@ -140,7 +140,7 @@ const inMemoryStore = {
   userAvatars: [],
   passwordResetTokens: [],
   notifications: [],
-  reportComments: [],
+  incidentComments: [],
   rateLimitAttempts: [],
   systemSettings: [
     { id: "1", key: "showPublicEventList", value: "false" }
@@ -152,8 +152,8 @@ const inMemoryStore = {
       mimetype: "text/plain; charset=utf-8",
       size: 10,
       data: Buffer.from("downloadme"),
-      reportId: "1",
-      report: {
+      incidentId: "1",
+      incident: {
         id: "1",
         eventId: "1",
         event: { id: "1", name: "Event1", slug: "event1" }
@@ -496,36 +496,36 @@ class PrismaClient {
         }
       }),
     };
-    this.report = {
+    this.incident = {
       findUnique: jest.fn(
         ({ where }) =>
-          inMemoryStore.reports.find((r) => r.id === where.id) || null,
+          inMemoryStore.incidents.find((r) => r.id === where.id) || null,
       ),
       update: jest.fn(({ where, data }) => {
-        const report = inMemoryStore.reports.find((r) => r.id === where.id);
-        if (report) Object.assign(report, data);
-        return { ...report, reporter: inMemoryStore.users[0] };
+        const incident = inMemoryStore.incidents.find((r) => r.id === where.id);
+        if (incident) Object.assign(incident, data);
+        return { ...incident, reporter: inMemoryStore.users[0] };
       }),
       delete: jest.fn(({ where }) => {
-        const idx = inMemoryStore.reports.findIndex((r) => r.id === where.id);
+        const idx = inMemoryStore.incidents.findIndex((r) => r.id === where.id);
         if (idx === -1) {
           const err = new Error("Record not found");
           err.code = "P2025";
           throw err;
         }
-        const deletedReport = inMemoryStore.reports.splice(idx, 1)[0];
-        return deletedReport;
+        const deletedIncident = inMemoryStore.incidents.splice(idx, 1)[0];
+        return deletedIncident;
       }),
       create: jest.fn(({ data }) => {
-        const newReport = {
-          id: `r${inMemoryStore.reports.length + 1}`,
+        const newIncident = {
+          id: `r${inMemoryStore.incidents.length + 1}`,
           ...data,
         };
-        inMemoryStore.reports.push(newReport);
-        return newReport;
+        inMemoryStore.incidents.push(newIncident);
+        return newIncident;
       }),
       findMany: jest.fn(({ where, include, orderBy, skip, take }) => {
-        let results = [...inMemoryStore.reports];
+        let results = [...inMemoryStore.incidents];
         
         // Helper function to apply a single where condition
         const applyWhereCondition = (results, condition) => {
@@ -548,7 +548,7 @@ class PrismaClient {
           }
           
           if (condition.id && condition.id.in) {
-            // Filter by multiple IDs (for export with specific report IDs)
+            // Filter by multiple IDs (for export with specific incident IDs)
             results = results.filter((r) => condition.id.in.includes(r.id));
           }
           
@@ -604,31 +604,31 @@ class PrismaClient {
         
         // Apply includes
         if (include) {
-          results = results.map(report => {
-            const enrichedReport = { ...report };
+          results = results.map(incident => {
+            const enrichedIncident = { ...incident };
             
             if (include.event) {
-              enrichedReport.event = inMemoryStore.events.find(e => e.id === report.eventId);
+              enrichedIncident.event = inMemoryStore.events.find(e => e.id === incident.eventId);
             }
             
             if (include.reporter) {
-              enrichedReport.reporter = inMemoryStore.users.find(u => u.id === report.reporterId);
+              enrichedIncident.reporter = inMemoryStore.users.find(u => u.id === incident.reporterId);
             }
             
             if (include.assignedResponder) {
-              enrichedReport.assignedResponder = report.assignedResponderId ? 
-                inMemoryStore.users.find(u => u.id === report.assignedResponderId) : null;
+              enrichedIncident.assignedResponder = incident.assignedResponderId ? 
+                inMemoryStore.users.find(u => u.id === incident.assignedResponderId) : null;
             }
             
             if (include.evidenceFiles) {
-              enrichedReport.evidenceFiles = report.evidenceFiles || [];
+              enrichedIncident.evidenceFiles = incident.evidenceFiles || [];
             }
             
             if (include._count) {
-              enrichedReport._count = report._count || { comments: 0 };
+              enrichedIncident._count = incident._count || { comments: 0 };
             }
             
-            return enrichedReport;
+            return enrichedIncident;
           });
         }
         
@@ -665,7 +665,7 @@ class PrismaClient {
         return results;
       }),
       count: jest.fn(({ where }) => {
-        let results = [...inMemoryStore.reports];
+        let results = [...inMemoryStore.incidents];
         
         // Helper function to apply a single where condition (same as in findMany)
         const applyWhereCondition = (results, condition) => {
@@ -1405,9 +1405,9 @@ class PrismaClient {
         });
       }),
     };
-    this.reportComment = {
-      findMany: jest.fn(({ where, orderBy, skip, take, include }) => {
-        let results = [...inMemoryStore.reportComments];
+    this.incidentComment = {
+              findMany: jest.fn(({ where, orderBy, skip, take, include }) => {
+          let results = [...inMemoryStore.incidentComments];
         
         if (where) {
           if (where.reportId) {
@@ -1449,11 +1449,11 @@ class PrismaClient {
         return results;
       }),
       count: jest.fn(({ where }) => {
-        let results = [...inMemoryStore.reportComments];
+        let results = [...inMemoryStore.incidentComments];
         
         if (where) {
-          if (where.reportId) {
-            results = results.filter((comment) => comment.reportId === where.reportId);
+          if (where.incidentId) {
+            results = results.filter((comment) => comment.incidentId === where.incidentId);
           }
           if (where.userId) {
             results = results.filter((comment) => comment.userId === where.userId);
@@ -1464,20 +1464,20 @@ class PrismaClient {
       }),
       create: jest.fn(({ data }) => {
         const comment = {
-          id: `c${inMemoryStore.reportComments.length + 1}`,
+          id: `c${inMemoryStore.incidentComments.length + 1}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           ...data,
         };
-        inMemoryStore.reportComments.push(comment);
+        inMemoryStore.incidentComments.push(comment);
         return comment;
       }),
       findFirst: jest.fn(({ where, orderBy }) => {
-        let results = [...inMemoryStore.reportComments];
+        let results = [...inMemoryStore.incidentComments];
         
         if (where) {
-          if (where.reportId) {
-            results = results.filter((comment) => comment.reportId === where.reportId);
+          if (where.incidentId) {
+            results = results.filter((comment) => comment.incidentId === where.incidentId);
           }
           if (where.userId) {
             results = results.filter((comment) => comment.userId === where.userId);
@@ -1496,17 +1496,17 @@ class PrismaClient {
         return results[0] || null;
       }),
       deleteMany: jest.fn(({ where }) => {
-        if (!inMemoryStore.reportComments) {
-          inMemoryStore.reportComments = [];
+        if (!inMemoryStore.incidentComments) {
+          inMemoryStore.incidentComments = [];
           return { count: 0 };
         }
-        const before = inMemoryStore.reportComments.length;
-        if (where.reportId) {
-          inMemoryStore.reportComments = inMemoryStore.reportComments.filter(
-            (c) => c.reportId !== where.reportId
+        const before = inMemoryStore.incidentComments.length;
+        if (where.incidentId) {
+          inMemoryStore.incidentComments = inMemoryStore.incidentComments.filter(
+            (c) => c.incidentId !== where.incidentId
           );
         }
-        return { count: before - inMemoryStore.reportComments.length };
+        return { count: before - inMemoryStore.incidentComments.length };
       }),
     };
     this.rateLimitAttempt = {
@@ -1625,14 +1625,14 @@ class PrismaClient {
         const newSettings = {
           id: (Math.random() + 1).toString(36).substring(7),
           ...{
-            reportSubmittedInApp: true,
-            reportSubmittedEmail: false,
-            reportAssignedInApp: true,
-            reportAssignedEmail: false,
-            reportStatusChangedInApp: true,
-            reportStatusChangedEmail: false,
-            reportCommentAddedInApp: true,
-            reportCommentAddedEmail: false,
+            incidentSubmittedInApp: true,
+            incidentSubmittedEmail: false,
+            incidentAssignedInApp: true,
+            incidentAssignedEmail: false,
+            incidentStatusChangedInApp: true,
+            incidentStatusChangedEmail: false,
+            incidentCommentAddedInApp: true,
+            incidentCommentAddedEmail: false,
             eventInvitationInApp: true,
             eventInvitationEmail: false,
             eventRoleChangedInApp: true,

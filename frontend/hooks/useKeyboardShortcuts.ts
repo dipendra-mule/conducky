@@ -12,7 +12,7 @@ interface KeyboardShortcut {
 
 interface UseKeyboardShortcutsProps {
   onQuickJumpOpen?: () => void;
-  onQuickReportOpen?: () => void;
+  onQuickIncidentOpen?: () => void;
   enabled?: boolean;
   enableSwipeNavigation?: boolean;
   userEvents?: Array<{ slug: string; name: string; }>;
@@ -20,25 +20,25 @@ interface UseKeyboardShortcutsProps {
 
 export function useKeyboardShortcuts({ 
   onQuickJumpOpen, 
-  onQuickReportOpen,
+  onQuickIncidentOpen,
   enabled = true,
   enableSwipeNavigation = true,
   userEvents = []
 }: UseKeyboardShortcutsProps = {}) {
   const router = useRouter();
 
-  const handleQuickReport = useCallback(() => {
+  const handleQuickIncident = useCallback(() => {
     if (userEvents.length === 0) {
       // No events - could show a message or do nothing
       return;
     } else if (userEvents.length === 1) {
       // Single event - navigate directly
-      router.push(`/events/${userEvents[0].slug}/reports/new`);
+      router.push(`/events/${userEvents[0].slug}/incidents/new`);
     } else {
       // Multiple events - open quick jump with "new report" query
-      onQuickReportOpen?.();
+      onQuickIncidentOpen?.();
     }
-  }, [userEvents, router, onQuickReportOpen]);
+  }, [userEvents, router, onQuickIncidentOpen]);
 
   const shortcuts: KeyboardShortcut[] = [
     {
@@ -62,19 +62,19 @@ export function useKeyboardShortcuts({
       key: 'r',
       ctrlKey: true,
       shiftKey: true,
-      action: () => handleQuickReport(),
+      action: () => handleQuickIncident(),
       description: userEvents.length === 1 
         ? `Submit report for ${userEvents[0]?.name || 'event'}` 
-        : 'Quick submit report'
+        : 'Quick submit incident'
     },
     {
       key: 'r',
       metaKey: true, // For Mac users
       shiftKey: true,
-      action: () => handleQuickReport(),
+      action: () => handleQuickIncident(),
       description: userEvents.length === 1 
         ? `Submit report for ${userEvents[0]?.name || 'event'}` 
-        : 'Quick submit report'
+        : 'Quick submit incident'
     },
     {
       key: 'h',
@@ -83,8 +83,8 @@ export function useKeyboardShortcuts({
     },
     {
       key: 'r',
-      action: () => router.push('/dashboard/reports'),
-      description: 'Go to all reports'
+      action: () => router.push('/dashboard/incidents'),
+      description: 'Go to all incidents'
     },
     {
       key: 'n',
@@ -140,7 +140,7 @@ export function useKeyboardShortcuts({
       event.stopPropagation();
       shortcut.action();
     }
-  }, [shortcuts, onQuickJumpOpen, router, handleQuickReport]);
+  }, [shortcuts, onQuickJumpOpen, router, handleQuickIncident]);
 
   // Swipe navigation for mobile
   useEffect(() => {

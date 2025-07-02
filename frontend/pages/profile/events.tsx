@@ -381,7 +381,7 @@ export default function ProfileEvents() {
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Full event management access. Can manage users, settings, and all reports.
+                    Full event management access. Can manage users, settings, and all incidents.
                   </p>
                 </div>
                 
@@ -393,7 +393,7 @@ export default function ProfileEvents() {
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Can view and respond to all reports. Handle incident investigations.
+                    Can view and respond to all incidents. Handle incident investigations.
                   </p>
                 </div>
                 
@@ -405,7 +405,7 @@ export default function ProfileEvents() {
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Can submit reports and view own submissions. Basic event access.
+                    Can submit incidents and view own submissions. Basic event access.
                   </p>
                 </div>
               </div>

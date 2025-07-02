@@ -54,7 +54,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
     // Get all events with report counts (user counts will be calculated separately)
     const events = await prisma.event.findMany({
       include: {
-        reports: {
+        incidents: {
           select: {
             id: true,
             createdAt: true,
@@ -63,7 +63,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
         },
         _count: {
           select: {
-            reports: true,
+            incidents: true,
           },
         },
       },
@@ -74,7 +74,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
 
     // Calculate statistics
     const totalUsers = await prisma.user.count();
-    const totalReports = await prisma.report.count();
+    const totalReports = await prisma.incident.count();
     const activeEvents = events.length; // All events are active for now, will add status field later
 
     // Transform events data for API response with unified RBAC user counts
@@ -84,8 +84,8 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
       const userDates = await getEventUserDates(event.id);
       
       // Find the most recent activity (report or user join)
-      const reportDates = event.reports.map(r => r.createdAt);
-      const allDates = [...reportDates, ...userDates, event.createdAt];
+      const incidentDates = event.incidents.map(r => r.createdAt);
+      const allDates = [...incidentDates, ...userDates, event.createdAt];
       const lastActivity = allDates.length > 0 
         ? new Date(Math.max(...allDates.map(d => d.getTime())))
         : event.createdAt;
@@ -97,7 +97,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
         description: event.description,
         status: 'active' as const, // Will implement enable/disable later
         userCount: userCount,
-        reportCount: event._count.reports,
+        reportCount: event._count.incidents,
         createdAt: event.createdAt.toISOString(),
         updatedAt: event.updatedAt.toISOString(),
         lastActivity: lastActivity.toISOString(),
@@ -287,8 +287,8 @@ router.get('/events/stats', requireSystemAdmin(), async (req: Request, res: Resp
     ] = await Promise.all([
       prisma.event.count(),
       prisma.user.count(),
-      prisma.report.count(),
-      prisma.report.findMany({
+      prisma.incident.count(),
+      prisma.incident.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -300,7 +300,7 @@ router.get('/events/stats', requireSystemAdmin(), async (req: Request, res: Resp
     ]);
 
     // Calculate reports by state
-    const reportsByState = await prisma.report.groupBy({
+    const reportsByState = await prisma.incident.groupBy({
       by: ['state'],
       _count: {
         state: true,
@@ -318,13 +318,13 @@ router.get('/events/stats', requireSystemAdmin(), async (req: Request, res: Resp
       totalUsers,
       totalReports,
       reportsByState: stateStats,
-      recentActivity: recentActivity.map(report => ({
-        id: report.id,
-        title: report.title,
-        state: report.state,
-        eventName: report.event.name,
-        eventSlug: report.event.slug,
-        createdAt: report.createdAt.toISOString(),
+      recentActivity: recentActivity.map(incident => ({
+        id: incident.id,
+        title: incident.title,
+        state: incident.state,
+        eventName: incident.event.name,
+        eventSlug: incident.event.slug,
+        createdAt: incident.createdAt.toISOString(),
       })),
     });
   } catch (error: any) {
@@ -493,7 +493,7 @@ router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: R
       include: {
         _count: {
           select: {
-            reports: true,
+            incidents: true,
           },
         },
       },
@@ -523,7 +523,7 @@ router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: R
         codeOfConduct: event.codeOfConduct,
         setupComplete: event.isActive, // For now, isActive indicates setup completion
         userCount: userCount,
-        reportCount: event._count.reports,
+        reportCount: event._count.incidents,
         createdAt: event.createdAt.toISOString(),
         updatedAt: event.updatedAt.toISOString(),
       },

@@ -25,7 +25,7 @@ describe('Notification Endpoints', () => {
         {
           id: 'n1',
           userId: userId,
-          type: 'report_submitted',
+          type: 'incident_submitted',
           priority: 'high',
           title: 'New Report Submitted',
           message: 'A new report was submitted',
@@ -33,12 +33,12 @@ describe('Notification Endpoints', () => {
           createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
           updatedAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
           eventId: '1',
-          reportId: 'r1'
+          incidentId: 'r1'
         },
         {
           id: 'n2',
           userId: userId,
-          type: 'report_assigned',
+          type: 'incident_assigned',
           priority: 'normal',
           title: 'Report Assigned',
           message: 'You have been assigned to a report',
@@ -47,12 +47,12 @@ describe('Notification Endpoints', () => {
           createdAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
           updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
           eventId: '1',
-          reportId: 'r2'
+          incidentId: 'r2'
         },
         {
           id: 'n3',
           userId: 'other-user',
-          type: 'report_comment_added',
+          type: 'incident_comment_added',
           priority: 'low',
           title: 'New Comment',
           message: 'A comment was added to your report',
@@ -60,7 +60,7 @@ describe('Notification Endpoints', () => {
           createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(), // 3 hours ago
           updatedAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
           eventId: '1',
-          reportId: 'r3'
+          incidentId: 'r3'
         }
       ];
     });
@@ -118,7 +118,7 @@ describe('Notification Endpoints', () => {
         {
           id: 'n1',
           userId: userId,
-          type: 'report_submitted',
+          type: 'incident_submitted',
           priority: 'high',
           title: 'New Report',
           message: 'A new report was submitted',
@@ -162,7 +162,7 @@ describe('Notification Endpoints', () => {
         {
           id: 'n1',
           userId: userId,
-          type: 'report_submitted',
+          type: 'incident_submitted',
           priority: 'high',
           title: 'High Priority Report',
           message: 'A high priority report was submitted',
@@ -173,7 +173,7 @@ describe('Notification Endpoints', () => {
         {
           id: 'n2',
           userId: userId,
-          type: 'report_assigned',
+          type: 'incident_assigned',
           priority: 'normal',
           title: 'Report Assigned',
           message: 'You have been assigned to a report',
@@ -194,8 +194,8 @@ describe('Notification Endpoints', () => {
         total: 2,
         unread: 1,
         byType: {
-          report_submitted: 1,
-          report_assigned: 1
+          incident_submitted: 1,
+          incident_assigned: 1
         },
         byPriority: {
           high: 1,

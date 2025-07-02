@@ -46,7 +46,7 @@ A comprehensive notification system has been added to keep you informed about im
 **Key Features:**
 
 - **Centralized Hub**: All notifications accessible from Dashboard > Notifications
-- **Automatic Creation**: Notifications are automatically generated for report events
+- **Automatic Creation**: Notifications are automatically generated for incident events
 - **Advanced Filtering**: Filter by type, priority, and read status
 - **Real-Time Updates**: Stay current with the latest incident activities
 - **Mobile Responsive**: Optimized for both desktop and mobile use
@@ -62,25 +62,25 @@ A comprehensive notification system has been added to keep you informed about im
 **Benefits:**
 
 - Never miss important incident updates
-- Faster response times to critical reports
+- Faster response times to critical incidents
 - Better coordination between team members
 - Clear audit trail of incident activities
 
 See the [Notification Center Guide](./notification-center.md) for complete documentation.
 
-### 📋 Cross-Event Reports Dashboard
+### 📋 Cross-Event Incidents Dashboard
 
-Enhanced multi-event report management with advanced filtering and quick actions:
+Enhanced multi-event incident management with advanced filtering and quick actions:
 
 **New Features:**
 
-- View reports across all events where you have access
-- Role-based filtering (reporters see only their reports, responders see all)
+- View incidents across all events where you have access
+- Role-based filtering (reporters see only their incidents, responders see all)
 - Quick assignment actions ("Assign to Me" button)
 - Status change quick actions
 - Advanced search and filtering capabilities
 
-See the [Cross-Event Reports Guide](./cross-event-reports.md) for details.
+See the [Cross-Event Incidents Guide](./cross-event-incidents.md) for details.
 
 ### 🎨 UI/UX Improvements
 

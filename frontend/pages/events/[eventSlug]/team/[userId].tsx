@@ -35,7 +35,7 @@ interface Activity {
   timestamp: string;
 }
 
-interface Report {
+interface Incident {
   id: string;
   title: string;
   type: string;
@@ -50,7 +50,7 @@ export default function TeamMemberProfile() {
   const [event, setEvent] = useState<{ id: string; name: string; slug: string; description?: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [reports, setReports] = useState<Report[]>([]);
+  const [incidents, setIncidents] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -106,13 +106,13 @@ export default function TeamMemberProfile() {
         }
 
         // Fetch user reports
-        const reportsRes = await fetch(`${apiUrl}/api/events/slug/${eventSlug}/users/${userId}/reports?page=1&limit=10`, {
+        const reportsRes = await fetch(`${apiUrl}/api/events/slug/${eventSlug}/users/${userId}/incidents?page=1&limit=10`, {
           credentials: 'include'
         });
 
         if (reportsRes.ok) {
           const reportsData = await reportsRes.json();
-          setReports(reportsData.reports || []);
+          setIncidents(reportsData.incidents || []);
         }
 
       } catch (err) {
@@ -296,7 +296,7 @@ export default function TeamMemberProfile() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="reports">Incidents</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -324,7 +324,7 @@ export default function TeamMemberProfile() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Reports:</span>
+                      <span className="text-muted-foreground">Total Incidents:</span>
                       <span className="font-medium">{reports.length}</span>
                     </div>
                     <div className="flex justify-between">
@@ -375,16 +375,16 @@ export default function TeamMemberProfile() {
           <TabsContent value="reports" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Reports</CardTitle>
+                <CardTitle>Incidents</CardTitle>
               </CardHeader>
               <CardContent>
                 {reports.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No reports found.</p>
+                  <p className="text-muted-foreground text-center py-8">No incidents found.</p>
                 ) : (
                   <div className="space-y-4">
                     {reports.map((report) => (
                       <div key={report.id} className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                           onClick={() => router.push(`/events/${eventSlug}/reports/${report.id}`)}>
+                           onClick={() => router.push(`/events/${eventSlug}/incidents/${report.id}`)}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h3 className="font-medium">{report.title}</h3>

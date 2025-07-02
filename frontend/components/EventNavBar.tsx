@@ -16,7 +16,7 @@ export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openRe
   const isAdmin = userRoles.includes("event_admin");
   const isResponder = userRoles.includes("responder");
   const isSystemAdmin = userRoles.includes("system_admin");
-  const canSeeEventReports = isResponder || isAdmin || isSystemAdmin;
+  const canSeeEventIncidents = isResponder || isAdmin || isSystemAdmin;
 
   return (
     <nav className="w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-10 sticky top-[56px] md:top-[72px]">
@@ -80,7 +80,7 @@ export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openRe
             <nav className="flex flex-col gap-2 px-4 py-4">
               {!!user && (
                 <Button onClick={openReportModal} className="w-full text-left">
-                  Submit Report
+                  Submit Incident
                 </Button>
               )}
               <SheetClose asChild>
@@ -88,16 +88,16 @@ export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openRe
                   href={`/event/${eventSlug}/report`}
                   className="text-blue-600 dark:text-blue-400 underline font-medium px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                 >
-                  My Reports
+                  My Incidents
                 </Link>
               </SheetClose>
-              {canSeeEventReports && (
+              {canSeeEventIncidents && (
                 <SheetClose asChild>
                   <Link
-                    href={`/event/${eventSlug}/admin/reports`}
+                    href={`/event/${eventSlug}/admin/incidents`}
                     className="text-blue-600 dark:text-blue-400 underline font-medium px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                   >
-                    Event Reports
+                    Event Incidents
                   </Link>
                 </SheetClose>
               )}
@@ -120,7 +120,7 @@ export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openRe
             {!!user && (
               <NavigationMenuItem>
                 <Button onClick={openReportModal} className="sm:px-3 sm:py-1.5 sm:text-sm">
-                  Submit Report
+                  Submit Incident
                 </Button>
               </NavigationMenuItem>
             )}
@@ -130,18 +130,18 @@ export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openRe
                   href={`/event/${eventSlug}/report`}
                   className="text-blue-600 dark:text-blue-400 underline font-medium px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                 >
-                  My Reports
+                  My Incidents
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
-            {canSeeEventReports && (
+            {canSeeEventIncidents && (
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    href={`/event/${eventSlug}/admin/reports`}
+                    href={`/event/${eventSlug}/admin/incidents`}
                     className="text-blue-600 dark:text-blue-400 underline font-medium px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                   >
-                    Event Reports
+                    Event Incidents
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>

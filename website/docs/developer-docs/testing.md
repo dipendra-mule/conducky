@@ -616,13 +616,13 @@ For questions or improvements, see the project README or contact the maintainers
 - Test role-based access control (reporters see only their reports, responders/admins see appropriate reports).
 - Test empty states when no reports match filters.
 - Test error handling for API failures.
-- Automated: See `backend/tests/integration/cross-event-reports.test.js` for comprehensive API testing.
+- Automated: See `backend/tests/integration/cross-event-incidents.test.js` for comprehensive API testing.
 
 ## Backend Integration Tests
 
 ### Cross-Event Reports API (`/api/users/me/reports`)
 
-The cross-event reports endpoint has comprehensive test coverage in `backend/tests/integration/cross-event-reports.test.js`:
+The cross-event reports endpoint has comprehensive test coverage in `backend/tests/integration/cross-event-incidents.test.js`:
 
 #### Test Coverage (15 tests total)
 - **Authentication**: Requires valid authentication (401 for unauthenticated requests)
@@ -650,10 +650,10 @@ The cross-event reports endpoint has comprehensive test coverage in `backend/tes
 #### Running the Tests
 ```bash
 # Run only cross-event reports tests
-cd backend && npm test -- --testPathPattern=cross-event-reports.test.js
+cd backend && npm test -- --testPathPattern=cross-event-incidents.test.js
 
 # Run with verbose output
-cd backend && npm test -- --testPathPattern=cross-event-reports.test.js --verbose
+cd backend && npm test -- --testPathPattern=cross-event-incidents.test.js --verbose
 
 # Run all backend tests
 cd backend && npm test

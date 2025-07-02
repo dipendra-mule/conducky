@@ -553,8 +553,8 @@ Now that you understand the basics, here are recommended next steps based on you
 4. **Configure notifications** - Stay on top of new reports
 
 **Recommended reading:**
-- [Report Comments Guide](./report-comments) - Team communication
-- [Cross-Event Reports](./cross-event-reports) - Multi-event management
+- [Incident Comments Guide](./incident-comments) - Team communication
+- [Cross-Event Incidents](./cross-event-incidents) - Multi-event management
 - [Notification Center](./notification-center) - Stay informed
 
 ### For Event Admins

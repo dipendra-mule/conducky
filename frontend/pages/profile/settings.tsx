@@ -527,7 +527,7 @@ export default function ProfileSettings() {
                       <div className="space-y-0.5">
                         <Label>Email notifications for comments</Label>
                         <p className="text-sm text-muted-foreground">
-                          Receive emails when someone comments on your reports
+                          Receive emails when someone comments on your incidents
                         </p>
                       </div>
                       <Switch

@@ -540,7 +540,7 @@ export class OrganizationController {
         include: {
           _count: {
             select: {
-              reports: true,
+              incidents: true,
               userEventRoles: true,
             },
           },

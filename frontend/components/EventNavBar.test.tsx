@@ -15,9 +15,9 @@ describe("EventNavBar", () => {
     render(<EventNavBar {...baseProps} />);
     // Desktop nav is hidden on mobile, so force desktop
     expect(screen.getByText("Test Event")).toBeInTheDocument();
-    expect(screen.getByText("Submit Report")).toBeInTheDocument();
-    expect(screen.getByText("My Reports")).toBeInTheDocument();
-    expect(screen.getByText("Event Reports")).toBeInTheDocument();
+    expect(screen.getByText("Submit Incident")).toBeInTheDocument();
+    expect(screen.getByText("My Incidents")).toBeInTheDocument();
+    expect(screen.getByText("Event Incidents")).toBeInTheDocument();
     expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
@@ -29,8 +29,8 @@ describe("EventNavBar", () => {
     // The Sheet dialog should be present
     const dialog = screen.getByRole('dialog');
     expect(dialog).toBeInTheDocument();
-    // 'My Reports' should be present inside the dialog
-    expect(within(dialog).getByText("My Reports")).toBeInTheDocument();
+    // 'My Incidents' should be present inside the dialog
+    expect(within(dialog).getByText("My Incidents")).toBeInTheDocument();
     // Close Sheet
     const closeBtn = screen.getByLabelText(/close event navigation/i);
     fireEvent.click(closeBtn);
@@ -41,14 +41,14 @@ describe("EventNavBar", () => {
   it("calls openReportModal when Submit Report is clicked", () => {
     const openReportModal = jest.fn();
     render(<EventNavBar {...baseProps} openReportModal={openReportModal} />);
-    fireEvent.click(screen.getAllByText("Submit Report")[0]);
+    fireEvent.click(screen.getAllByText("Submit Incident")[0]);
     expect(openReportModal).toHaveBeenCalled();
   });
 
   it("renders correct links for non-admin user", () => {
     render(<EventNavBar {...baseProps} userRoles={[]} />);
-    expect(screen.getByText("My Reports")).toBeInTheDocument();
-    expect(screen.queryByText("Event Reports")).not.toBeInTheDocument();
+    expect(screen.getByText("My Incidents")).toBeInTheDocument();
+    expect(screen.queryByText("Event Incidents")).not.toBeInTheDocument();
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
   });
 }); 

@@ -292,7 +292,7 @@ describe("Profile Management API", () => {
           role: { id: "2", name: "event_admin" },
           user: { id: mockUser.id, email: mockUser.email, name: mockUser.name }
         },
-        // Reporter role for event1  
+        // Incidenter role for event1  
         {
           id: "ur2",
           userId: mockUser.id,

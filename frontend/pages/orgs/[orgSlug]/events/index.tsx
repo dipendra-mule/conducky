@@ -41,7 +41,7 @@ interface Event {
   createdAt: string;
   updatedAt: string;
   _count: {
-    reports: number;
+    incidents: number;
     userEventRoles: number;
   };
 }
@@ -158,7 +158,7 @@ export default function OrganizationEvents() {
   }
 
   const getEventStatus = (event: Event) => {
-    if (event._count.reports > 0) {
+    if (event._count.incidents > 0) {
       return { label: 'Active', variant: 'default' as const };
     }
     return { label: 'Quiet', variant: 'secondary' as const };
@@ -270,8 +270,8 @@ export default function OrganizationEvents() {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Reports</span>
-                        <span className="text-sm font-medium">{event._count.reports}</span>
+                        <span className="text-sm text-muted-foreground">Incidents</span>
+                        <span className="text-sm font-medium">{event._count.incidents}</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -294,10 +294,10 @@ export default function OrganizationEvents() {
                         </Link>
                       </Button>
                       
-                      {event._count.reports > 0 && (
+                      {event._count.incidents > 0 && (
                         <Button asChild size="sm" variant="outline">
-                          <Link href={`/events/${event.slug}/reports`}>
-                            View Reports
+                          <Link href={`/events/${event.slug}/incidents`}>
+                            View Incidents
                           </Link>
                         </Button>
                       )}
@@ -323,9 +323,9 @@ export default function OrganizationEvents() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold">
-                    {filteredEvents.reduce((sum, event) => sum + event._count.reports, 0)}
+                    {filteredEvents.reduce((sum, event) => sum + event._count.incidents, 0)}
                   </div>
-                  <div className="text-sm text-muted-foreground">Total Reports</div>
+                  <div className="text-sm text-muted-foreground">Total Incidents</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">
@@ -335,7 +335,7 @@ export default function OrganizationEvents() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold">
-                    {filteredEvents.filter(event => event._count.reports > 0).length}
+                    {filteredEvents.filter(event => event._count.incidents > 0).length}
                   </div>
                   <div className="text-sm text-muted-foreground">Active Events</div>
                 </div>

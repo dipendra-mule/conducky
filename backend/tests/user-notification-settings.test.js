@@ -10,16 +10,16 @@ describe('User Notification Settings API', () => {
       .set('x-test-user-id', userId);
     expect(res.status).toBe(200);
     expect(res.body.userId).toBe(userId);
-    expect(res.body.reportSubmittedInApp).toBe(true);
-    expect(res.body.reportSubmittedEmail).toBe(false);
+    expect(res.body.incidentSubmittedInApp).toBe(true);
+    expect(res.body.incidentSubmittedEmail).toBe(false);
   });
 
   it('should update notification settings', async () => {
     const res = await request(app)
       .put('/api/user/notification-settings')
       .set('x-test-user-id', userId)
-      .send({ reportSubmittedEmail: true });
+      .send({ incidentSubmittedEmail: true });
     expect(res.status).toBe(200);
-    expect(res.body.reportSubmittedEmail).toBe(true);
+    expect(res.body.incidentSubmittedEmail).toBe(true);
   });
 });

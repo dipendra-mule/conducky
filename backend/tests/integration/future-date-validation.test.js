@@ -2,7 +2,7 @@ const request = require("supertest");
 const app = require("../../index");
 
 describe("Report Creation Future Date Validation Tests", () => {
-  describe("POST /api/events/slug/:slug/reports - Future Date Validation", () => {
+  describe("POST /api/events/slug/:slug/incidents - Future Date Validation", () => {
     it("should reject future incident dates beyond 24 hours", async () => {
       // Create a date 48 hours in the future
       const futureDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
@@ -35,7 +35,7 @@ describe("Report Creation Future Date Validation Tests", () => {
           incidentAt: nearFutureDate
         });
       expect(res.statusCode).toBe(201);
-      expect(res.body.report).toHaveProperty("incidentAt");
+      expect(res.body.incident).toHaveProperty("incidentAt");
     });
 
     it("should reject invalid incident date format", async () => {
@@ -67,7 +67,7 @@ describe("Report Creation Future Date Validation Tests", () => {
           incidentAt: pastDate
         });
       expect(res.statusCode).toBe(201);
-      expect(res.body.report).toHaveProperty("incidentAt");
+      expect(res.body.incident).toHaveProperty("incidentAt");
     });
 
     it("should accept current date/time", async () => {
@@ -84,7 +84,7 @@ describe("Report Creation Future Date Validation Tests", () => {
           incidentAt: currentDate
         });
       expect(res.statusCode).toBe(201);
-      expect(res.body.report).toHaveProperty("incidentAt");
+      expect(res.body.incident).toHaveProperty("incidentAt");
     });
 
     it("should reject slightly beyond 24 hours in the future (boundary test)", async () => {
@@ -116,7 +116,7 @@ describe("Report Creation Future Date Validation Tests", () => {
           // No incidentAt field
         });
       expect(res.statusCode).toBe(201);
-      expect(res.body.report).toHaveProperty("incidentAt", null);
+      expect(res.body.incident).toHaveProperty("incidentAt", null);
     });
   });
 }); 
