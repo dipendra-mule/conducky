@@ -292,7 +292,7 @@ System administration endpoints for SuperAdmin users only.
 
 - **GET** `/api/admin/events`
 - **Role:** SuperAdmin only
-- **Response:** `{ events: [...], statistics: { totalEvents, activeEvents, totalUsers, totalReports } }`
+- **Response:** `{ events: [...], statistics: { totalEvents, activeEvents, totalUsers, totalIncidents } }`
 - **Description:** Get all events in the system with statistics and metadata.
 
 #### Get Event Details
@@ -409,19 +409,19 @@ Event routes are mounted at `/api/events` and `/events`:
 - **Response:** `{ activities: [...], total: number }`
 - **Activity Types:**
   - `report`: Report submissions and updates
-  - `comment`: Comment additions to reports
+  - `comment`: Comment additions to incidents
   - `audit`: System actions and role changes
 
-#### Get User Reports
+#### Get User Incidents
 
-- **GET** `/api/events/slug/:slug/users/:userId/reports` or `/events/slug/:slug/users/:userId/reports`
+- **GET** `/api/events/slug/:slug/users/:userId/incidents` or `/events/slug/:slug/users/:userId/incidents`
 - **Role:** Responder, Admin, or SuperAdmin for the event
-- **Description:** Get all reports submitted by or assigned to a specific user in the event
+- **Description:** Get all incidents submitted by or assigned to a specific user in the event
 - **Query Parameters:**
-  - `type` (string, optional): Filter by report type (`submitted`, `assigned`, `all`) (default: `all`)
+  - `type` (string, optional): Filter by incident type (`submitted`, `assigned`, `all`) (default: `all`)
   - `page` (integer, optional): Page number for pagination (default: 1)
-  - `limit` (integer, optional): Number of reports per page (default: 20)
-- **Response:** `{ reports: [...], total: number }`
+  - `limit` (integer, optional): Number of incidents per page (default: 20)
+- **Response:** `{ incidents: [...], total: number }`
 
 ### Role Management
 
@@ -469,85 +469,85 @@ Event routes are mounted at `/api/events` and `/events`:
 
 ---
 
-## Reports
+## Incidents
 
-### Report Management by Event ID
+### Incident Management by Event ID
 
 #### Create Report
 
-- **POST** `/api/events/:eventId/reports`
+- **POST** `/api/events/:eventId/incidents`
 - **Body:** `title` (string, required, 10–70 chars), `type`, `description`, `location` (string, optional), `contactPreference` (enum, optional: email|phone|in_person|no_contact, default: email), `evidence[]` (multipart/form-data, zero or more files)
-- **Response:** `{ report }`
+- **Response:** `{ incident }`
 
-#### List Reports
+#### List Incidents
 
-- **GET** `/api/events/:eventId/reports`
+- **GET** `/api/events/:eventId/incidents`
 - **Query Parameters:**
   - `page` (integer, optional): Page number (default: 1)
   - `limit` (integer, optional): Items per page (default: 10)
   - `status` (string, optional): Filter by status
   - `priority` (string, optional): Filter by priority
   - `search` (string, optional): Search term
-- **Response:** `{ reports }`
+- **Response:** `{ incidents }`
 
 #### Get Report by ID
 
-- **GET** `/api/events/:eventId/reports/:reportId`
-- **Response:** `{ report }`
+- **GET** `/api/events/:eventId/incidents/:incidentId`
+- **Response:** `{ incident }`
 
 #### Update Report State
 
-- **PATCH** `/api/events/:eventId/reports/:reportId/state`
+- **PATCH** `/api/events/:eventId/incidents/:incidentId/state`
 - **Role:** Admin, SuperAdmin, or Responder
 - **Body:** `{ state }` (or `{ status }` for compatibility)
-- **Response:** `{ report }`
+- **Response:** `{ incident }`
 
 #### Update Report Title
 
-- **PATCH** `/api/events/:eventId/reports/:reportId/title`
-- **Role:** Admin, SuperAdmin, or Reporter (own reports only)
+- **PATCH** `/api/events/:eventId/incidents/:incidentId/title`
+- **Role:** Admin, SuperAdmin, or Reporter (own incidents only)
 - **Body:** `{ title }` (string, 10–70 chars)
-- **Response:** `{ report }`
+- **Response:** `{ incident }`
 
-### Report Management by Event Slug
+### Incident Management by Event Slug
 
 #### Create Report
 
-- **POST** `/api/events/slug/:slug/reports` or `/events/slug/:slug/reports`
+- **POST** `/api/events/slug/:slug/incidents` or `/events/slug/:slug/incidents`
 - **Role:** Reporter, Responder, Admin, or SuperAdmin for the event
 - **Body:** `title` (string, required, 10–70 chars), `type`, `description`, `location` (string, optional), `contactPreference` (enum, optional: email|phone|in_person|no_contact, default: email), `evidence[]` (multipart/form-data, zero or more files)
-- **Response:** `{ report }`
+- **Response:** `{ incident }`
 
-#### List Reports
+#### List Incidents
 
-- **GET** `/api/events/slug/:slug/reports` or `/events/slug/:slug/reports`
+- **GET** `/api/events/slug/:slug/incidents` or `/events/slug/:slug/incidents`
 - **Role:** Reporter, Responder, Admin, or SuperAdmin for the event
-- **Response:** `{ reports }`
+- **Response:** `{ incidents }`
 
 #### Get Report by ID
 
-- **GET** `/api/events/slug/:slug/reports/:reportId` or `/events/slug/:slug/reports/:reportId`
-- **Role:** Reporter (own reports), Responder, Admin, or SuperAdmin for the event
-- **Response:** `{ report }`
+- **GET** `/api/events/slug/:slug/incidents/:incidentId` or `/events/slug/:slug/incidents/:incidentId`
+- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
+- **Response:** `{ incident }`
 
 #### Update Report
 
-- **PATCH** `/api/events/slug/:slug/reports/:reportId` or `/events/slug/:slug/reports/:reportId`
+- **PATCH** `/api/events/slug/:slug/incidents/:incidentId` or `/events/slug/:slug/incidents/:incidentId`
 - **Role:** Responder, Admin, or SuperAdmin for the event
 - **Body:** `{ assignedResponderId?, severity?, resolution?, state? }` (at least one required)
-- **Response:** `{ report }`
+- **Response:** `{ incident }`
 
 #### Update Report Title
 
-- **PATCH** `/api/events/slug/:slug/reports/:reportId/title` or `/events/slug/:slug/reports/:reportId/title`
-- **Role:** Reporter (own reports), Responder, Admin, or SuperAdmin for the event
+- **PATCH** `/api/events/slug/:slug/incidents/:incidentId/title` or `/events/slug/:slug/incidents/:incidentId/title`
+- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
 - **Body:** `{ title }` (string, 10–70 chars)
-- **Response:** `{ report }`
+- **Response:** `{ incident }`
 
-### Cross-Event Reports
+### Cross-Event Incidents
 
-- **GET** `/api/users/me/reports`
-- **Description:** Get reports across all events the authenticated user has access to.
+- **GET** `/api/users/me/incidents`
+- **Description:** Get incidents across all events the authenticated user has access to.
 - **Authentication:** Required
 - **Query Parameters:**
   - `page` (integer, optional): Page number (default: 1, min: 1)
@@ -558,36 +558,36 @@ Event routes are mounted at `/api/events` and `/events`:
   - `assigned` (string, optional): Filter by assignment (`me`, `unassigned`, `others`)
   - `sort` (string, optional): Sort field (`title`, `createdAt`, `status`) (default: `createdAt`)
   - `order` (string, optional): Sort direction (`asc`, `desc`) (default: `desc`)
-- **Response:** `{ reports: [...], pagination: { page, limit, total, totalPages } }`
+- **Response:** `{ incidents: [...], pagination: { page, limit, total, totalPages } }`
 
 ---
 
 ## Evidence Files
 
-Evidence routes are available both through the main reports module and as standalone routes:
+Evidence routes are available both through the main incidents module and as standalone routes:
 
 ### Evidence Management via Event ID
 
 #### Upload Evidence
 
-- **POST** `/api/events/:eventId/reports/:reportId/evidence`
+- **POST** `/api/events/:eventId/incidents/:incidentId/evidence`
 - **Role:** Admin, SuperAdmin, or Responder
 - **Body:** `multipart/form-data` with `evidence[]` files
 - **Response:** `{ files }`
 
 #### Get Evidence Files
 
-- **GET** `/api/events/:eventId/reports/:reportId/evidence`
+- **GET** `/api/events/:eventId/incidents/:incidentId/evidence`
 - **Response:** `{ files }`
 
 #### Download Evidence File
 
-- **GET** `/api/events/:eventId/reports/:reportId/evidence/:evidenceId/download`
+- **GET** `/api/events/:eventId/incidents/:incidentId/evidence/:evidenceId/download`
 - **Response:** Binary file data
 
 #### Delete Evidence File
 
-- **DELETE** `/api/events/:eventId/reports/:reportId/evidence/:evidenceId`
+- **DELETE** `/api/events/:eventId/incidents/:incidentId/evidence/:evidenceId`
 - **Role:** Admin, SuperAdmin, or Responder
 - **Response:** `{ message }`
 
@@ -595,21 +595,21 @@ Evidence routes are available both through the main reports module and as standa
 
 #### Upload Evidence
 
-- **POST** `/api/events/slug/:slug/reports/:reportId/evidence` or `/events/slug/:slug/reports/:reportId/evidence`
-- **Role:** Reporter (own reports), Responder, Admin, or SuperAdmin for the event
+- **POST** `/api/events/slug/:slug/incidents/:incidentId/evidence` or `/events/slug/:slug/incidents/:incidentId/evidence`
+- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
 - **Body:** `multipart/form-data` with `evidence[]` files
 - **Response:** `{ files }`
-- **Notes:** Reporters can only upload evidence to their own reports
+- **Notes:** Reporters can only upload evidence to their own incidents
 
 #### Get Evidence Files
 
-- **GET** `/api/events/slug/:slug/reports/:reportId/evidence` or `/events/slug/:slug/reports/:reportId/evidence`
-- **Role:** Reporter (own reports), Responder, Admin, or SuperAdmin for the event
+- **GET** `/api/events/slug/:slug/incidents/:incidentId/evidence` or `/events/slug/:slug/incidents/:incidentId/evidence`
+- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
 - **Response:** `{ files }`
 
 #### Delete Evidence File
 
-- **DELETE** `/api/events/slug/:slug/reports/:reportId/evidence/:evidenceId` or `/events/slug/:slug/reports/:reportId/evidence/:evidenceId`
+- **DELETE** `/api/events/slug/:slug/incidents/:incidentId/evidence/:evidenceId` or `/events/slug/:slug/incidents/:incidentId/evidence/:evidenceId`
 - **Role:** Responder, Admin, or SuperAdmin for the event
 - **Response:** `{ message }`
 
@@ -617,26 +617,26 @@ Evidence routes are available both through the main reports module and as standa
 
 #### Get Evidence Files for Report
 
-- **GET** `/api/reports/:reportId/evidence`
-- **Description:** List all evidence files for a report (metadata only).
+- **GET** `/api/incidents/:incidentId/evidence`
+- **Description:** List all evidence files for a incident (metadata only).
 - **Response:** `{ files: [...] }`
 
 #### Upload Evidence to Report
 
-- **POST** `/api/reports/:reportId/evidence`
-- **Description:** Upload additional evidence files to an existing report.
+- **POST** `/api/incidents/:incidentId/evidence`
+- **Description:** Upload additional evidence files to an existing incident.
 - **Body:** `multipart/form-data` with `evidence[]` files
 - **Response:** `{ files: [...] }`
 
 #### Get Specific Evidence File
 
-- **GET** `/api/reports/:reportId/evidence/:evidenceId`
+- **GET** `/api/incidents/:incidentId/evidence/:evidenceId`
 - **Description:** Download a specific evidence file.
 - **Response:** Binary file data
 
 #### Delete Evidence File
 
-- **DELETE** `/api/reports/:reportId/evidence/:evidenceId`
+- **DELETE** `/api/incidents/:incidentId/evidence/:evidenceId`
 - **Description:** Delete a specific evidence file.
 - **Response:** `{ message }`
 
@@ -652,7 +652,7 @@ Evidence routes are available both through the main reports module and as standa
 
 ### Create Comment
 
-- **POST** `/api/events/slug/:slug/reports/:reportId/comments` or `/events/slug/:slug/reports/:reportId/comments`
+- **POST** `/api/events/slug/:slug/incidents/:incidentId/comments` or `/events/slug/:slug/incidents/:incidentId/comments`
 - **Role:** Reporter, Responder, Admin, or SuperAdmin for the event
 - **Body:** `{ body, visibility?, isMarkdown? }`
   - `visibility`: 'public' or 'internal', default: 'public'
@@ -661,12 +661,12 @@ Evidence routes are available both through the main reports module and as standa
 - **Notes:**
   - Only Responders, Admins, and SuperAdmins can create internal comments
   - Markdown support includes formatting, links, lists, and code blocks
-  - Creates notifications for other users with access to the report
+  - Creates notifications for other users with access to the incident 
 
 ### Get Comments (Enhanced with Pagination, Filtering & Search)
 
-- **GET** `/api/events/slug/:slug/reports/:reportId/comments` or `/events/slug/:slug/reports/:reportId/comments`
-- **Role:** Reporter (own reports), Responder, Admin, or SuperAdmin for the event
+- **GET** `/api/events/slug/:slug/incidents/:incidentId/comments` or `/events/slug/:slug/incidents/:incidentId/comments`
+- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
 - **Query Parameters:**
   - `page` (integer, optional): Page number (default: 1)
   - `limit` (integer, optional): Items per page (default: 10, max: 100)
@@ -676,7 +676,7 @@ Evidence routes are available both through the main reports module and as standa
   - `sortOrder` (string, optional): Sort order ('asc' or 'desc', default: 'asc')
 - **Response:** `{ comments: [...], pagination: { page, limit, total, totalPages } }`
 - **Notes:**
-  - Reporters can only see public comments unless they're assigned to the report
+  - Reporters can only see public comments unless they're assigned to the incident 
   - Responders/Admins can see both public and internal comments
   - Search is case-insensitive and searches comment body text
   - Comments include markdown rendering support
@@ -684,7 +684,7 @@ Evidence routes are available both through the main reports module and as standa
 
 ### Update Comment
 
-- **PATCH** `/api/events/slug/:slug/reports/:reportId/comments/:commentId` or `/events/slug/:slug/reports/:reportId/comments/:commentId`
+- **PATCH** `/api/events/slug/:slug/incidents/:incidentId/comments/:commentId` or `/events/slug/:slug/incidents/:incidentId/comments/:commentId`
 - **Role:** Comment author, or Admin/SuperAdmin for the event
 - **Body:** `{ body?, visibility?, isMarkdown? }` (at least one required)
 - **Response:** `{ comment }`
@@ -695,7 +695,7 @@ Evidence routes are available both through the main reports module and as standa
 
 ### Delete Comment
 
-- **DELETE** `/api/events/slug/:slug/reports/:reportId/comments/:commentId` or `/events/slug/:slug/reports/:reportId/comments/:commentId`
+- **DELETE** `/api/events/slug/:slug/incidents/:incidentId/comments/:commentId` or `/events/slug/:slug/incidents/:incidentId/comments/:commentId`
 - **Role:** Comment author, or Admin/SuperAdmin for the event
 - **Response:** `{ message }`
 - **Notes:**
@@ -803,7 +803,7 @@ User routes are mounted at `/api/users` and `/users`:
 
 - **GET** `/api/users/me/quickstats` or `/users/me/quickstats`
 - **Authentication:** Required
-- **Response:** `{ totalReports, totalEvents, unreadNotifications, recentActivity }`
+- **Response:** `{ totalIncidents, totalEvents, unreadNotifications, recentActivity }`
 
 #### Get Activity Feed
 
@@ -959,7 +959,7 @@ Notification routes are mounted at `/api/notifications`:
 - User routes: `/api/users/*` and `/users/*` (backward compatibility)
 - Event routes: `/api/events/*` and `/events/*` (backward compatibility)
 - Invite routes: `/api/invites/*` and `/invites/*` (backward compatibility)
-- Report routes: `/api/reports/*`
+- Report routes: `/api/incidents/*`
 - Notification routes: `/api/notifications/*`
 
 ### Authentication & Authorization
@@ -967,7 +967,7 @@ Notification routes are mounted at `/api/notifications`:
 - All endpoints require proper authentication unless marked as public
 - Role-based access control is enforced at the API level using middleware
 - Event-scoped permissions are validated for all event-related operations
-- Reporters have limited access (own reports only for most operations)
+- Reporters have limited access (own incidents only for most operations)
 - Responders, Admins, and SuperAdmins have escalating levels of access
 
 ### File Uploads
@@ -986,7 +986,7 @@ Notification routes are mounted at `/api/notifications`:
 
 ### Access Control Matrix
 
-- **Reporters**: View own reports, edit own titles, add comments, upload evidence to own reports
-- **Responders**: Additionally change states, assign reports, upload evidence to any report, see internal comments
+- **Reporters**: View own incidents, edit own titles, add comments, upload evidence to own incidents
+- **Responders**: Additionally change states, assign incidents, upload evidence to any report, see internal comments
 - **Admins**: Full access within their events, manage users and invites
 - **SuperAdmins**: Global access, create events, manage system settings

@@ -5,7 +5,7 @@ import { ModalContext } from "../context/ModalContext";
 import { Button } from "@/components/ui/button";
 import Head from "next/head";
 import type { AppProps } from "next/app";
-import { ReportForm } from '@/components/IncidentForm';
+import { IncidentForm } from '@/components/IncidentForm';
 import { ThemeProvider } from "next-themes";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { AppSidebar } from "@/components/app-sidebar";

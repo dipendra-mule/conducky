@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { ReportForm } from './IncidentForm';
+import { IncidentForm } from './IncidentForm';
 
 jest.mock("next/router", () => ({
   useRouter: () => ({
@@ -16,7 +16,7 @@ const baseProps = {
   onSuccess: jest.fn(),
 };
 
-describe("ReportForm", () => {
+describe("IncidentForm", () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });
@@ -25,14 +25,14 @@ describe("ReportForm", () => {
     render(<IncidentForm {...baseProps} />);
     
     // Check for basic form fields that work reliably
-    expect(screen.getByLabelText(/report title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/incident title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/date\/time of incident/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/involved parties/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/location of incident/i)).toBeInTheDocument();
     
     // Check for submit button
-    expect(screen.getByRole("button", { name: /submit report/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Submit Incident" })).toBeInTheDocument();
   });
 
   it("displays event context", () => {
@@ -48,7 +48,7 @@ describe("ReportForm", () => {
     expect(screen.getByText("Submit an Incident")).toBeInTheDocument();
     
     // Check for required field indicators
-    expect(screen.getByText("Report Title *")).toBeInTheDocument();
+    expect(screen.getByText("Incident Title *")).toBeInTheDocument();
     expect(screen.getByText("Type *")).toBeInTheDocument();
     expect(screen.getByText("Urgency Level *")).toBeInTheDocument();
     expect(screen.getByText("Preferred Contact Method *")).toBeInTheDocument();

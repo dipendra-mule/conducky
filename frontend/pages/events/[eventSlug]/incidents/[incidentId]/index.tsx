@@ -1,7 +1,7 @@
 import React from "react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { ReportDetailView } from '../../../../../components/IncidentDetailView';
+import { IncidentDetailView } from '../../../../../components/IncidentDetailView';
 
 // Define interfaces
 interface User {

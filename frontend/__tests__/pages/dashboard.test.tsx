@@ -156,7 +156,7 @@ describe('GlobalDashboard Submit Report Feature', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Need to Report an Incident?')).toBeInTheDocument();
-      expect(screen.getByText('Submit a report quickly and securely')).toBeInTheDocument();
+      expect(screen.getByText('Submit an incident quickly and securely')).toBeInTheDocument();
       expect(screen.getByText('Submit Report for Test Event')).toBeInTheDocument();
     });
 

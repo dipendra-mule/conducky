@@ -491,12 +491,12 @@ export default function EventTeam() {
                                 <DropdownMenuItem 
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    router.push(`/events/${eventSlug}/reports?userId=${member.id}`);
+                                    router.push(`/events/${eventSlug}/incidents?userId=${member.id}`);
                                   }}
                                   className="flex items-center"
                                 >
                                   <FileText className="h-4 w-4 mr-2" />
-                                  User&apos;s Reports
+                                  User&apos;s Incidents
                                 </DropdownMenuItem>
                                 {isAdmin && (
                                   <>

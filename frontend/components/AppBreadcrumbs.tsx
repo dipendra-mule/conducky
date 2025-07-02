@@ -69,10 +69,10 @@ export function AppBreadcrumbs({ eventName, className }: AppBreadcrumbsProps) {
         href: `/events/${eventSlug}/dashboard` 
       });
       
-      if (pathname.includes('/reports')) {
+      if (pathname.includes('/incidents')) {
         breadcrumbs.push({ 
-          label: 'Reports', 
-          href: `/events/${eventSlug}/reports` 
+          label: 'Incidents', 
+          href: `/events/${eventSlug}/incidents` 
         });
         
         if (pathname.includes('/new')) {
@@ -109,7 +109,7 @@ export function AppBreadcrumbs({ eventName, className }: AppBreadcrumbsProps) {
   } else if (pathname.startsWith('/dashboard')) {
     // Global dashboard routes
     if (pathname === '/dashboard/incidents') {
-      breadcrumbs.push({ label: 'All Reports' });
+      breadcrumbs.push({ label: 'All Incidents' });
     } else if (pathname === '/dashboard/notifications') {
       breadcrumbs.push({ label: 'Notifications' });
     }

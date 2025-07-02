@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { ReportForm } from '@/components/IncidentForm';
+import { IncidentForm } from '@/components/IncidentForm';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, FileText } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function NewIncident() {
           if (res.status === 404) {
             setError("Event not found");
           } else if (res.status === 403) {
-            setError("You don't have permission to submit reports to this event");
+            setError("You don't have permission to submit incidents to this event");
           } else {
             setError("Failed to load event details");
           }
@@ -55,8 +55,8 @@ export default function NewIncident() {
   }, [eventSlug]);
 
   const handleSuccess = () => {
-    // Navigate to the user's reports page after successful submission
-    // This shows them their newly created report in context
+    // Navigate to the user's incidents page after successful submission
+    // This shows them their newly created incident in context
     router.push(`/events/${eventSlug}/my-incidents`);
   };
 
@@ -121,22 +121,22 @@ export default function NewIncident() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Submit New Report</h1>
+              <h1 className="text-3xl font-bold text-foreground">Submit New Incident</h1>
               <p className="text-muted-foreground mt-1">
-                Report an incident for <span className="font-medium">{event.name}</span>
+                Submit an incident for <span className="font-medium">{event.name}</span>
               </p>
             </div>
             
             <Button variant="outline" asChild>
-              <Link href={`/events/${eventSlug}/reports`}>
+              <Link href={`/events/${eventSlug}/incidents`}>
                 <ChevronLeft className="h-4 w-4 mr-2" />
-                Back to Reports
+                Back to Incidents
               </Link>
             </Button>
           </div>
         </div>
 
-        {/* Report Form */}
+        {/* Incident Form */}
         <IncidentForm
           eventSlug={eventSlug as string}
           eventName={event.name}

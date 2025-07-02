@@ -140,8 +140,8 @@ export function QuickJump({ isOpen, onClose, initialQuery }: QuickJumpProps) {
   // Get icon for item based on context or default
   const getItemIcon = (item: typeof searchResults[0]) => {
     if (item.href === '/dashboard') return Home;
-    if (item.href.includes('/incidents/new') || item.title.includes('🚨 Submit Report')) return AlertTriangle;
-    if (item.href.includes('/reports')) return ClipboardList;
+    if (item.href.includes('/incidents/new') || item.title.includes('🚨 Submit Incident')) return AlertTriangle;
+    if (item.href.includes('/incidents')) return ClipboardList;
     if (item.href.includes('/notifications')) return Bell;
     if (item.href.includes('/profile')) return User;
     if (item.href.includes('/settings')) return Settings;

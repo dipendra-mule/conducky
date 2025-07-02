@@ -123,8 +123,8 @@ router.get('/slug/:slug/users/:userId/activity', requireRole(['responder', 'even
   }
 });
 
-// Get user's reports by event slug and user ID
-router.get('/slug/:slug/users/:userId/reports', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+// Get user's incidents by event slug and user ID
+router.get('/slug/:slug/users/:userId/incidents', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, userId } = req.params;
     const page = parseInt(req.query.page as string) || 1;
@@ -450,8 +450,8 @@ router.delete('/:eventId/roles', requireRole(['event_admin', 'system_admin']), a
   }
 });
 
-// Create report for event
-router.post('/:eventId/reports', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), validateUploadedFiles, async (req: Request, res: Response): Promise<void> => {
+// Create incident for event
+router.post('/:eventId/incidents', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), validateUploadedFiles, async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;
@@ -530,8 +530,8 @@ router.post('/:eventId/reports', requireRole(['reporter', 'responder', 'event_ad
   }
 });
 
-// Get reports for event
-router.get('/:eventId/reports', async (req: Request, res: Response): Promise<void> => {
+// Get incidents for event
+router.get('/:eventId/incidents', async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const page = parseInt(req.query.page as string) || 1;
@@ -1113,8 +1113,8 @@ router.patch('/slug/:slug', requireRole(['event_admin', 'system_admin']), async 
   }
 });
 
-// Get all reports for an event by slug
-router.get('/slug/:slug/reports', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+// Get all incidents for an event by slug
+router.get('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     
@@ -1362,8 +1362,8 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
   }
 });
 
-// Create report for event by slug
-router.post('/slug/:slug/reports', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+// Create incident for event by slug
+router.post('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;

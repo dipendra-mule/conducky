@@ -101,7 +101,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
       {
         userId: '3',
         eventId: 'event1',
-        roleId: '4', // Reporter role ID
+        roleId: '4', // Incidenter role ID
         event: mockEvents[0],
         role: { name: 'Reporter' }
       }
@@ -113,7 +113,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
       { id: '1', userId: '1', roleId: '1', scopeType: 'system', scopeId: 'global', grantedAt: new Date(), role: { id: '1', name: 'system_admin' } },
       // Event Admin for event1
       { id: '2', userId: '1', roleId: '2', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '2', name: 'event_admin' } },
-      // Reporter for event1 (user 3 should be reporter to match test expectations)
+      // Incidenter for event1 (user 3 should be reporter to match test expectations)
       { id: '3', userId: '3', roleId: '4', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '4', name: 'reporter' } },
       // Responder for event1 (user 2 as responder)
       { id: '4', userId: '2', roleId: '3', scopeType: 'event', scopeId: 'event1', grantedAt: new Date(), role: { id: '3', name: 'responder' } },
@@ -126,100 +126,100 @@ describe('Enhanced Event Reports API Integration Tests', () => {
       { id: '3', name: 'Test Reporter', email: 'testreporter@example.com' }
     ];
     inMemoryStore.events = mockEvents;
-    inMemoryStore.reports = mockReports;
+    inMemoryStore.incidents = mockReports;
     inMemoryStore.userEventRoles = mockUserEventRoles; // Keep old structure for compatibility
     inMemoryStore.userRoles = mockUserRoles; // Add new unified structure
   });
 
-  describe('GET /api/events/slug/:slug/reports', () => {
+  describe('GET /api/events/slug/:slug/incidents', () => {
     it('should return event reports with default pagination', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports')
+        .get('/api/events/slug/devconf-2024/incidents')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
-      expect(response.body).toHaveProperty('reports');
+      expect(response.body).toHaveProperty('incidents');
       expect(response.body).toHaveProperty('total');
       expect(response.body).toHaveProperty('page');
       expect(response.body).toHaveProperty('limit');
       expect(response.body).toHaveProperty('totalPages');
 
-      expect(Array.isArray(response.body.reports)).toBe(true);
+      expect(Array.isArray(response.body.incidents)).toBe(true);
       expect(response.body.page).toBe(1);
       expect(response.body.limit).toBe(20);
     });
 
     it('should handle pagination correctly', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?page=1&limit=5')
+        .get('/api/events/slug/devconf-2024/incidents?page=1&limit=5')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
       expect(response.body.page).toBe(1);
       expect(response.body.limit).toBe(5);
-      expect(response.body.reports.length).toBeLessThanOrEqual(5);
+      expect(response.body.incidents.length).toBeLessThanOrEqual(5);
     });
 
     it('should filter reports by status', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?status=submitted')
+        .get('/api/events/slug/devconf-2024/incidents?status=submitted')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
-      response.body.reports.forEach(report => {
-        expect(report.state).toBe('submitted');
+      response.body.incidents.forEach(incident => {
+        expect(incident.state).toBe('submitted');
       });
     });
 
     it('should filter reports by severity', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?severity=high')
+        .get('/api/events/slug/devconf-2024/incidents?severity=high')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
-      response.body.reports.forEach(report => {
-        expect(report.severity).toBe('high');
+      response.body.incidents.forEach(incident => {
+        expect(incident.severity).toBe('high');
       });
     });
 
     it('should search reports by title and description', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?search=harassment')
+        .get('/api/events/slug/devconf-2024/incidents?search=harassment')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
       // Should find reports with "harassment" in title or description
-      expect(response.body.reports.length).toBeGreaterThanOrEqual(0);
+      expect(response.body.incidents.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should filter unassigned reports', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?assigned=unassigned')
+        .get('/api/events/slug/devconf-2024/incidents?assigned=unassigned')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
-      response.body.reports.forEach(report => {
-        expect(report.assignedResponder).toBeNull();
+      response.body.incidents.forEach(incident => {
+        expect(incident.assignedResponder).toBeNull();
       });
     });
 
     it('should sort reports by different fields', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?sort=title&order=asc')
+        .get('/api/events/slug/devconf-2024/incidents?sort=title&order=asc')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
       // Check if reports are sorted by title in ascending order
-      if (response.body.reports.length > 1) {
-        for (let i = 1; i < response.body.reports.length; i++) {
-          expect(response.body.reports[i].title.localeCompare(response.body.reports[i-1].title)).toBeGreaterThanOrEqual(0);
+      if (response.body.incidents.length > 1) {
+        for (let i = 1; i < response.body.incidents.length; i++) {
+          expect(response.body.incidents[i].title.localeCompare(response.body.incidents[i-1].title)).toBeGreaterThanOrEqual(0);
         }
       }
     });
 
     it('should include stats when requested', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?includeStats=true')
+        .get('/api/events/slug/devconf-2024/incidents?includeStats=true')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
@@ -234,28 +234,28 @@ describe('Enhanced Event Reports API Integration Tests', () => {
 
     it('should filter by specific user (userId parameter)', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?userId=1')
+        .get('/api/events/slug/devconf-2024/incidents?userId=1')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
-      response.body.reports.forEach(report => {
-        expect(report.reporter?.id).toBe('1');
+      response.body.incidents.forEach(incident => {
+        expect(incident.reporter?.id).toBe('1');
       });
     });
 
     it('should return empty results when no reports match filters', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?status=nonexistent')
+        .get('/api/events/slug/devconf-2024/incidents?status=nonexistent')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(0);
+      expect(response.body.incidents).toHaveLength(0);
       expect(response.body.total).toBe(0);
     });
 
     it('should require authentication', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports')
+        .get('/api/events/slug/devconf-2024/incidents')
         .set('x-test-disable-auth', 'true')
         .set('x-test-disable-auth', 'true').expect(401);
 
@@ -265,7 +265,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
 
     it('should validate pagination parameters', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?page=0&limit=0')
+        .get('/api/events/slug/devconf-2024/incidents?page=0&limit=0')
         .set('x-test-user-id', '1') // Admin user
         .expect(400);
 
@@ -275,7 +275,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
 
     it('should limit maximum page size', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports?limit=1000')
+        .get('/api/events/slug/devconf-2024/incidents?limit=1000')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
@@ -294,35 +294,35 @@ describe('Enhanced Event Reports API Integration Tests', () => {
     });
 
     it('should enforce role-based access control for reporters', async () => {
-      // Reporter should only see their own reports
+      // Incidenter should only see their own reports
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports')
-        .set('x-test-user-id', '3') // Reporter user
+        .get('/api/events/slug/devconf-2024/incidents')
+        .set('x-test-user-id', '3') // Incidenter user
         .expect(200);
 
       // All reports should belong to the reporter (but there might be none)
-      response.body.reports.forEach(report => {
-        expect(report.reporter?.id).toBe('3');
+      response.body.incidents.forEach(incident => {
+        expect(incident.reporter?.id).toBe('3');
       });
     });
 
     it('should include all required report fields', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/reports')
+        .get('/api/events/slug/devconf-2024/incidents')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
-      if (response.body.reports.length > 0) {
-        const report = response.body.reports[0];
-        expect(report).toHaveProperty('id');
-        expect(report).toHaveProperty('title');
-        expect(report).toHaveProperty('description');
-        expect(report).toHaveProperty('state');
-        expect(report).toHaveProperty('type');
-        expect(report).toHaveProperty('createdAt');
-        expect(report).toHaveProperty('updatedAt');
-        expect(report).toHaveProperty('event');
-        expect(report).toHaveProperty('userRoles');
+      if (response.body.incidents.length > 0) {
+        const incident = response.body.incidents[0];
+        expect(incident).toHaveProperty('id');
+        expect(incident).toHaveProperty('title');
+        expect(incident).toHaveProperty('description');
+        expect(incident).toHaveProperty('state');
+        expect(incident).toHaveProperty('type');
+        expect(incident).toHaveProperty('createdAt');
+        expect(incident).toHaveProperty('updatedAt');
+        expect(incident).toHaveProperty('event');
+        expect(incident).toHaveProperty('userRoles');
         expect(Array.isArray(report.userRoles)).toBe(true);
       }
     });
@@ -332,7 +332,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
 // Export and Bulk Actions Tests
 describe('Event Reports Export and Bulk Actions', () => {
   let eventId, reporterId, responderId, adminId;
-  let reportIds = [];
+  let incidentIds = [];
   let testSlug;
 
   beforeEach(async () => {
@@ -492,8 +492,8 @@ describe('Event Reports Export and Bulk Actions', () => {
 
     // Create test reports
     const now = new Date();
-    const reports = await Promise.all([
-      prisma.report.create({
+    const incidents = await Promise.all([
+      prisma.incident.create({
         data: {
           eventId,
           reporterId,
@@ -504,7 +504,7 @@ describe('Event Reports Export and Bulk Actions', () => {
           createdAt: new Date(now.getTime() - 3600000) // 1 hour ago
         }
       }),
-      prisma.report.create({
+      prisma.incident.create({
         data: {
           eventId,
           reporterId,
@@ -516,7 +516,7 @@ describe('Event Reports Export and Bulk Actions', () => {
           createdAt: new Date(now.getTime() - 1800000) // 30 minutes ago
         }
       }),
-      prisma.report.create({
+      prisma.incident.create({
         data: {
           eventId,
           reporterId,
@@ -530,13 +530,13 @@ describe('Event Reports Export and Bulk Actions', () => {
       })
     ]);
     
-    reportIds = reports.map(r => r.id);
+    incidentIds = incidents.map(r => r.id);
   });
 
   describe('Export Functionality', () => {
     test('should export reports as CSV', async () => {
       const response = await request(app)
-        .get(`/api/events/slug/${testSlug}/reports/export?format=csv`)
+        .get(`/api/events/slug/${testSlug}/incidents/export?format=csv`)
         .set('x-test-user-id', responderId)
         .expect(200);
 
@@ -552,12 +552,12 @@ describe('Event Reports Export and Bulk Actions', () => {
       expect(response.text).toContain('Test Report 3 for Export');
       
       // Verify URL field contains actual URLs
-      expect(response.text).toContain(`/events/${testSlug}/reports/`);
+      expect(response.text).toContain(`/events/${testSlug}/incidents/`);
     });
 
     test('should export reports as PDF/text', async () => {
       const response = await request(app)
-        .get(`/api/events/slug/${testSlug}/reports/export?format=pdf`)
+        .get(`/api/events/slug/${testSlug}/incidents/export?format=pdf`)
         .set('x-test-user-id', responderId)
         .expect(200);
 
@@ -569,7 +569,7 @@ describe('Event Reports Export and Bulk Actions', () => {
 
     test('should export specific reports by IDs', async () => {
       const response = await request(app)
-        .get(`/api/events/slug/${testSlug}/reports/export?format=csv&ids=${reportIds[0]},${reportIds[1]}`)
+        .get(`/api/events/slug/${testSlug}/incidents/export?format=csv&ids=${incidentIds[0]},${incidentIds[1]}`)
         .set('x-test-user-id', responderId)
         .expect(200);
 
@@ -580,33 +580,33 @@ describe('Event Reports Export and Bulk Actions', () => {
 
     test('should require valid format', async () => {
       await request(app)
-        .get(`/api/events/slug/${testSlug}/reports/export?format=invalid`)
+        .get(`/api/events/slug/${testSlug}/incidents/export?format=invalid`)
         .set('x-test-user-id', responderId)
         .expect(400);
     });
 
     test('should require authentication', async () => {
       await request(app)
-        .get(`/api/events/slug/${testSlug}/reports/export?format=csv`)
+        .get(`/api/events/slug/${testSlug}/incidents/export?format=csv`)
         .set('x-test-disable-auth', 'true').expect(401);
     });
 
     test('should require appropriate role', async () => {
       await request(app)
-        .get(`/api/events/slug/${testSlug}/reports/export?format=csv`)
+        .get(`/api/events/slug/${testSlug}/incidents/export?format=csv`)
         .set('x-test-user-id', reporterId)
-        .expect(200); // Reporter should be able to export (their own reports)
+        .expect(200); // Incidenter should be able to export (their own reports)
     });
   });
 
   describe('Bulk Actions', () => {
     test('should bulk assign reports', async () => {
       const response = await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
           action: 'assign',
-          reportIds: [reportIds[0], reportIds[1]],
+          incidentIds: [incidentIds[0], incidentIds[1]],
           assignedTo: responderId
         })
         .expect(200);
@@ -615,21 +615,21 @@ describe('Event Reports Export and Bulk Actions', () => {
       expect(response.body.errors).toHaveLength(0);
 
       // Verify assignments
-      const reports = await prisma.report.findMany({
-        where: { id: { in: [reportIds[0], reportIds[1]] } }
+      const incidents = await prisma.incident.findMany({
+        where: { id: { in: [incidentIds[0], incidentIds[1]] } }
       });
-      reports.forEach(report => {
-        expect(report.assignedResponderId).toBe(responderId);
+      incidents.forEach(incident => {
+        expect(incident.assignedResponderId).toBe(responderId);
       });
     });
 
     test('should bulk update status', async () => {
       const response = await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', adminId)
         .send({
           action: 'status',
-          reportIds: [reportIds[0], reportIds[1]],
+          incidentIds: [incidentIds[0], incidentIds[1]],
           status: 'acknowledged'
         })
         .expect(200);
@@ -638,21 +638,21 @@ describe('Event Reports Export and Bulk Actions', () => {
       expect(response.body.errors).toHaveLength(0);
 
       // Verify status updates
-      const reports = await prisma.report.findMany({
-        where: { id: { in: [reportIds[0], reportIds[1]] } }
+      const incidents = await prisma.incident.findMany({
+        where: { id: { in: [incidentIds[0], incidentIds[1]] } }
       });
-      reports.forEach(report => {
-        expect(report.state).toBe('acknowledged');
+      incidents.forEach(incident => {
+        expect(incident.state).toBe('acknowledged');
       });
     });
 
     test('should bulk delete reports', async () => {
       const response = await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', adminId)
         .send({
           action: 'delete',
-          reportIds: [reportIds[0]]
+          incidentIds: [incidentIds[0]]
         })
         .expect(200);
 
@@ -660,29 +660,29 @@ describe('Event Reports Export and Bulk Actions', () => {
       expect(response.body.errors).toHaveLength(0);
 
       // Verify deletion
-      const report = await prisma.report.findUnique({
-        where: { id: reportIds[0] }
+      const incident = await prisma.incident.findUnique({
+        where: { id: incidentIds[0] }
       });
-      expect(report).toBeNull();
+      expect(incident).toBeNull();
     });
 
     test('should validate required fields', async () => {
       await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
           action: 'assign',
-          reportIds: [reportIds[0]]
+          incidentIds: [incidentIds[0]]
           // Missing assignedTo
         })
         .expect(200); // Returns 200 but with errors
 
       await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
           action: 'status',
-          reportIds: [reportIds[0]]
+          incidentIds: [incidentIds[0]]
           // Missing status
         })
         .expect(200); // Returns 200 but with errors
@@ -690,11 +690,11 @@ describe('Event Reports Export and Bulk Actions', () => {
 
     test('should validate invalid status', async () => {
       const response = await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', adminId)
         .send({
           action: 'status',
-          reportIds: [reportIds[0]],
+          incidentIds: [incidentIds[0]],
           status: 'invalid_status'
         })
         .expect(200);
@@ -706,10 +706,10 @@ describe('Event Reports Export and Bulk Actions', () => {
 
     test('should require authentication', async () => {
       await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .send({
           action: 'assign',
-          reportIds: [reportIds[0]],
+          incidentIds: [incidentIds[0]],
           assignedTo: responderId
         })
         .set('x-test-disable-auth', 'true').expect(401);
@@ -717,43 +717,43 @@ describe('Event Reports Export and Bulk Actions', () => {
 
     test('should require appropriate role', async () => {
       await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', reporterId)
         .send({
           action: 'assign',
-          reportIds: [reportIds[0]],
+          incidentIds: [incidentIds[0]],
           assignedTo: responderId
         })
-        .expect(403); // Reporter doesn't have bulk action permissions
+        .expect(403); // Incidenter doesn't have bulk action permissions
     });
 
     test('should validate action type', async () => {
       await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
           action: 'invalid_action',
-          reportIds: [reportIds[0]]
+          incidentIds: [incidentIds[0]]
         })
         .expect(400);
     });
 
-    test('should validate reportIds array', async () => {
+    test('should validate incidentIds array', async () => {
       await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
           action: 'assign',
-          reportIds: 'not_an_array'
+          incidentIds: 'not_an_array'
         })
         .expect(400);
 
       await request(app)
-        .post(`/api/events/slug/${testSlug}/reports/bulk`)
+        .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
           action: 'assign',
-          reportIds: []
+          incidentIds: []
         })
         .expect(400);
     });

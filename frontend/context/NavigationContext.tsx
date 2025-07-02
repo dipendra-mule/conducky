@@ -174,7 +174,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     // Add critical shortcuts first - report submission has highest priority
     if (events.length === 1) {
       items.push({
-        title: `🚨 Submit Report for ${events[0].name}`,
+        title: `🚨 Submit Incident for ${events[0].name}`,
         href: `/events/${events[0].slug}/incidents/new`,
         category: 'shortcut',
         description: `Quick incident report submission (Ctrl+Shift+R)`,
@@ -183,7 +183,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     } else if (events.length > 1) {
       events.forEach(event => {
         items.push({
-          title: `🚨 Submit Report: ${event.name}`,
+          title: `🚨 Submit Incident: ${event.name}`,
           href: `/events/${event.slug}/incidents/new`,
           category: 'shortcut',
           description: `Report incident for ${event.name}`,
@@ -195,7 +195,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     // Add other shortcuts after report submission
     items.push(
       { title: 'Dashboard', href: '/dashboard', category: 'shortcut', description: 'Global dashboard' },
-      { title: 'All Reports', href: '/dashboard/incidents', category: 'shortcut', description: 'Cross-event reports' },
+      { title: 'All Incidents', href: '/dashboard/incidents', category: 'shortcut', description: 'Cross-event incidents' },
       { title: 'Notifications', href: '/dashboard/notifications', category: 'shortcut', description: 'Your notifications' },
       { title: 'Profile', href: '/profile', category: 'shortcut', description: 'Your profile settings' }
     );
@@ -220,8 +220,8 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
           context: 'event'
         },
         { 
-          title: `${event.name} Reports`, 
-          href: `/events/${event.slug}/reports`, 
+          title: `${event.name} Incidents`, 
+          href: `/events/${event.slug}/incidents`, 
           category: 'shortcut', 
           description: `${event.name} reports`,
           context: 'event'
@@ -267,11 +267,11 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
     const currentPath = router.asPath;
     
     // If we're on a deep page, try to go to logical parent
-    if (currentPath.includes('/reports/') && currentPath.match(/\/reports\/[^/]+$/)) {
+    if (currentPath.includes('/incidents/') && currentPath.match(/\/incidents\/[^/]+$/)) {
       // From report detail to report list
       const eventSlug = router.query.eventSlug as string;
       if (eventSlug) {
-        router.push(`/events/${eventSlug}/reports`);
+        router.push(`/events/${eventSlug}/incidents`);
         return;
       }
     }
@@ -343,8 +343,8 @@ function getPageTitle(pathname: string, query: Record<string, string | string[] 
   if (pathname.startsWith('/events/') && eventName) {
     if (pathname.includes('/dashboard')) return `${eventName} Dashboard`;
     if (pathname.includes('/incidents/new')) return `${eventName} - New Report`;
-    if (pathname.includes('/reports/') && query.incidentId) return `${eventName} - Report #${query.incidentId}`;
-    if (pathname.includes('/reports')) return `${eventName} Reports`;
+    if (pathname.includes('/incidents/') && query.incidentId) return `${eventName} - Report #${query.incidentId}`;
+    if (pathname.includes('/incidents')) return `${eventName} Incidents`;
     if (pathname.includes('/team/invite')) return `${eventName} - Invite Team`;
     if (pathname.includes('/team/') && query.userId) return `${eventName} - Team Member`;
     if (pathname.includes('/team')) return `${eventName} Team`;
@@ -354,7 +354,7 @@ function getPageTitle(pathname: string, query: Record<string, string | string[] 
   }
 
   if (pathname === '/dashboard') return 'Dashboard';
-  if (pathname === '/dashboard/incidents') return 'All Reports';
+  if (pathname === '/dashboard/incidents') return 'All Incidents';
   if (pathname === '/dashboard/notifications') return 'Notifications';
   if (pathname === '/profile') return 'Profile';
   if (pathname === '/profile/settings') return 'Profile Settings';

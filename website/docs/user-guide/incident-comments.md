@@ -2,7 +2,7 @@
 sidebar_position: 7
 ---
 
-# Report Comments Guide
+# Incident Comments Guide
 
 The comment system allows team members to collaborate on incident reports through threaded discussions. Comments support rich text formatting, role-based visibility controls, and powerful search capabilities.
 
@@ -21,7 +21,7 @@ Comments are the primary way to communicate about incident reports. Whether you'
 ## Comment Types
 
 ### Public Comments
-- **Visible to**: All users with access to the report (reporters, responders, admins)
+- **Visible to**: All users with access to the incident (reporters, responders, admins)
 - **Use for**: General updates, questions, coordination visible to all parties
 - **Default**: All comments are public unless specifically marked as internal
 
@@ -29,12 +29,12 @@ Comments are the primary way to communicate about incident reports. Whether you'
 - **Visible to**: Responders, admins, and SuperAdmins only
 - **Use for**: Sensitive coordination, internal discussions, response planning
 - **Permission**: Only responders/admins can create internal comments
-- **Security**: Hidden from reporters unless they're assigned to the report
+- **Security**: Hidden from reporters unless they're assigned to the incident 
 
 ## Writing Comments
 
 ### Basic Commenting
-1. **Navigate** to any report detail page
+1. **Navigate** to any incident detail page
 2. **Scroll** to the Comments section at the bottom
 3. **Type** your message in the comment form
 4. **Choose** visibility (Public/Internal) if you have permissions
@@ -166,15 +166,15 @@ The comment editor includes a helpful toolbar:
 
 ## Role-Based Access
 
-### Reporters
-- **Create**: Public comments on own reports
-- **View**: Public comments on reports they have access to
+### Incidenters
+- **Create**: Public comments on own incidents
+- **View**: Public comments on incidents they have access to
 - **Edit**: Own comments only
-- **Internal Access**: Can see internal comments on assigned reports
+- **Internal Access**: Can see internal comments on assigned incidents
 
 ### Responders  
 - **Create**: Both public and internal comments
-- **View**: All comments on reports in their events
+- **View**: All comments on incidents in their events
 - **Edit**: Own comments, change visibility levels
 - **Full Access**: No restrictions within their event scope
 

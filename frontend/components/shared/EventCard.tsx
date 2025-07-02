@@ -10,12 +10,12 @@ const statsCache = new Map<string, { data: EventCardStats; timestamp: number }>(
 const CACHE_DURATION = 30 * 1000; // 30 seconds
 
 interface EventCardStats {
-  totalReports: number;
-  urgentReports: number;
+  totalIncidents: number;
+  urgentIncidents: number;
   assignedToMe: number;
   needsResponse: number;
   recentActivity: number;
-  recentReports: Array<{
+  recentIncidents: Array<{
     id: string;
     title: string;
     state: string;
@@ -100,10 +100,10 @@ export function EventCard({ event }: EventCardProps) {
               {role}
             </Badge>
           ))}
-          {stats && stats.urgentReports > 0 && (
+          {stats && stats.urgentIncidents > 0 && (
             <Badge variant="destructive" className="text-xs flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
-              {stats.urgentReports} Urgent
+              {stats.urgentIncidents} Urgent
             </Badge>
           )}
         </div>
@@ -114,7 +114,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
           <div className="flex items-center gap-1 text-muted-foreground">
             <TrendingUp className="w-3 h-3" />
-            <span>{stats.totalReports} Reports</span>
+            <span>{stats.totalIncidents} Incidents</span>
           </div>
           {stats.needsResponse > 0 && (
             <div className="flex items-center gap-1 text-orange-600">
@@ -166,7 +166,7 @@ export function EventCard({ event }: EventCardProps) {
                 </Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports?mine=1`}>My Reports</Link>
+                <Link href={`/events/${slug}/incidents?mine=1`}>My Incidents</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
                 <Link href={`/events/${slug}/code-of-conduct`}>Code of Conduct</Link>
@@ -176,7 +176,7 @@ export function EventCard({ event }: EventCardProps) {
                 <Link href={`/events/${slug}/team`}>Manage Users</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports`}>All Reports</Link>
+                <Link href={`/events/${slug}/incidents`}>All Incidents</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
                 <Link href={`/events/${slug}/settings`}>Event Settings</Link>
@@ -195,17 +195,17 @@ export function EventCard({ event }: EventCardProps) {
                 </Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports?mine=1`}>My Reports</Link>
+                <Link href={`/events/${slug}/incidents?mine=1`}>My Incidents</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
                 <Link href={`/events/${slug}/code-of-conduct`}>Code of Conduct</Link>
               </Button>
               {/* Responder-specific actions */}
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports?assigned=me`}>Assigned to Me</Link>
+                <Link href={`/events/${slug}/incidents?assigned=me`}>Assigned to Me</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports`}>All Reports</Link>
+                <Link href={`/events/${slug}/incidents`}>All Incidents</Link>
               </Button>
             </>
           )}
@@ -220,7 +220,7 @@ export function EventCard({ event }: EventCardProps) {
                 </Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <Link href={`/events/${slug}/reports?mine=1`}>My Reports</Link>
+                <Link href={`/events/${slug}/incidents?mine=1`}>My Incidents</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
                 <Link href={`/events/${slug}/code-of-conduct`}>Code of Conduct</Link>

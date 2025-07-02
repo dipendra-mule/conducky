@@ -256,7 +256,7 @@ function NavigationControls({ user }: NavigationControlsProps) {
       <QuickJump 
         isOpen={reportJumpOpen} 
         onClose={() => setReportJumpOpen(false)}
-        initialQuery="🚨 Submit Report"
+        initialQuery="🚨 Submit Incident"
       />
 
       {/* Help Modal */}

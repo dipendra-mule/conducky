@@ -18,13 +18,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Upload, X, FileText, AlertTriangle, Clock, Zap } from "lucide-react";
 
-export interface ReportFormProps {
+export interface IncidentFormProps {
   eventSlug: string;
   eventName?: string;
   onSuccess?: () => void;
 }
 
-interface ReportFormValues {
+interface IncidentFormValues {
   title: string;
   type: string;
   description: string;
@@ -36,7 +36,7 @@ interface ReportFormValues {
   evidence?: File[];
 }
 
-const reportTypes = [
+const incidentTypes = [
   { value: "harassment", label: "Harassment" },
   { value: "safety", label: "Safety" },
   { value: "other", label: "Other" },
@@ -80,9 +80,9 @@ const urgencyLevels = [
   },
 ];
 
-const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, onSuccess }) => {
+const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventName, onSuccess }) => {
   const router = useRouter();
-  const form = useForm<ReportFormValues>({
+  const form = useForm<IncidentFormValues>({
     defaultValues: {
       title: "",
       type: "",
@@ -99,7 +99,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
   const [submitting, setSubmitting] = React.useState(false);
   const [dragActive, setDragActive] = React.useState(false);
 
-  const handleSubmit: SubmitHandler<ReportFormValues> = async (data) => {
+  const handleSubmit: SubmitHandler<IncidentFormValues> = async (data) => {
     setSubmitting(true);
     setMessage("");
     const { title, type, description, incidentAt, parties, location, contactPreference, urgency, evidence } = data;
@@ -147,7 +147,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
     
     const res = await fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/api/events/slug/${eventSlug}/reports`,
+        `/api/events/slug/${eventSlug}/incidents`,
       {
         method: "POST",
         body: formData,
@@ -156,13 +156,13 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
     );
     
     if (res.ok) {
-      setMessage("Report submitted successfully!");
+      setMessage("Incident submitted successfully!");
       form.reset();
       if (onSuccess) {
         onSuccess();
       } else {
         // Navigate to the new URL structure
-        const eventUrl = `/events/${eventSlug}/reports`;
+        const eventUrl = `/events/${eventSlug}/incidents`;
         if (router.asPath === eventUrl) {
           router.reload();
         } else {
@@ -224,7 +224,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
       
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-6 text-foreground">
-          Submit a Report
+          Submit an Incident
         </h3>
         
         <Form {...form}>
@@ -235,10 +235,10 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="report-title">Report Title *</FormLabel>
+                  <FormLabel htmlFor="incident-title">Incident Title *</FormLabel>
                   <FormControl>
                     <Input
-                      id="report-title"
+                      id="incident-title"
                       type="text"
                       {...field}
                       minLength={10}
@@ -259,14 +259,14 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="report-type">Type *</FormLabel>
+                    <FormLabel htmlFor="incident-type">Type *</FormLabel>
                     <FormControl>
                       <Select value={field.value} onValueChange={field.onChange} required>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
-                          {reportTypes.map((rt) => (
+                          {incidentTypes.map((rt) => (
                             <SelectItem key={rt.value} value={rt.value}>
                               {rt.label}
                             </SelectItem>
@@ -324,10 +324,10 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="report-description">Description *</FormLabel>
+                  <FormLabel htmlFor="incident-description">Description *</FormLabel>
                   <FormControl>
                     <Textarea
-                      id="report-description"
+                      id="incident-description"
                       {...field}
                       required
                       className="min-h-[120px]"
@@ -431,7 +431,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
                   </FormControl>
                   <FormMessage />
                   <span className="text-xs text-muted-foreground">
-                    How would you prefer to be contacted about this report?
+                    How would you prefer to be contacted about this incident?
                   </span>
                 </FormItem>
               )}
@@ -443,7 +443,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="report-evidence">Evidence Files</FormLabel>
+                  <FormLabel htmlFor="incident-evidence">Evidence Files</FormLabel>
                   <FormControl>
                     <div className="space-y-4">
                       {/* Drag and Drop Area */}
@@ -466,7 +466,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
                           Screenshots, documents, audio, video files are supported
                         </p>
                         <input
-                          id="report-evidence"
+                          id="incident-evidence"
                           type="file"
                           multiple
                           className="hidden"
@@ -482,7 +482,7 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => document.getElementById("report-evidence")?.click()}
+                          onClick={() => document.getElementById("incident-evidence")?.click()}
                         >
                           Choose Files
                         </Button>
@@ -552,4 +552,4 @@ const ReportFormComponent: React.FC<ReportFormProps> = ({ eventSlug, eventName, 
 };
 
 // Memoize the component to prevent unnecessary re-renders
-export const ReportForm = React.memo(ReportFormComponent); 
+export const IncidentForm = React.memo(IncidentFormComponent); 

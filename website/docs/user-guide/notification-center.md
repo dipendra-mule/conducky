@@ -14,12 +14,12 @@ Navigate to **Dashboard > Notifications** from the main navigation, or visit `/d
 
 The system automatically creates notifications for various events:
 
-### Report-Related Notifications
+### Incident-Related Notifications
 
 - **Report Submitted**: When a new incident report is submitted (sent to responders and admins)
-- **Report Assigned**: When you're assigned to handle a report
-- **Report Status Changed**: When a report's status is updated (sent to reporter and assigned responder)
-- **New Comment Added**: When someone adds a comment to a report you're involved with
+- **Report Assigned**: When you're assigned to handle a incident 
+- **Report Status Changed**: When a incident's status is updated (sent to reporter and assigned responder)
+- **New Comment Added**: When someone adds a comment to a incident you're involved with
 
 ### Event-Related Notifications
 
@@ -74,7 +74,7 @@ Filter notifications using multiple criteria:
 #### Individual Actions
 - **Mark as Read**: Mark a single notification as read
 - **Delete**: Remove a notification from your list
-- **View Related Item**: Click the notification to navigate to the related report or event
+- **View Related Item**: Click the notification to navigate to the related incident or event
 
 #### Bulk Actions
 - **Mark All as Read**: Mark all your notifications as read at once
@@ -120,8 +120,8 @@ The notification center adapts to different screen sizes:
 
 Notifications are automatically created when:
 
-### Report Events
-1. **New Report Submitted**: All responders and admins in the event receive a notification
+### Incident Events
+1. **New Incident Submitted**: All responders and admins in the event receive a notification
 2. **Report Assignment**: The assigned responder receives a notification
 3. **Status Changes**: Reporter and assigned responder are notified of status updates
 4. **New Comments**: Reporter, assigned responder, and other relevant parties are notified
@@ -135,17 +135,17 @@ Notifications are automatically created when:
 
 ### For Responders and Admins
 
-1. **Receive Notification**: Get notified when new reports are submitted
-2. **Review Details**: Click notification to view the full report
-3. **Take Action**: Assign, investigate, or update the report status
+1. **Receive Notification**: Get notified when new incidents are submitted
+2. **Review Details**: Click notification to view the full incident 
+3. **Take Action**: Assign, investigate, or update the incident status
 4. **Stay Updated**: Receive notifications about status changes and comments
 
 ### For Reporters
 
-1. **Submit Report**: Automatically receive confirmation notification
-2. **Track Progress**: Get notified when your report is assigned or status changes
+1. **Submit Incident**: Automatically receive confirmation notification
+2. **Track Progress**: Get notified when your incident is assigned or status changes
 3. **Participate**: Receive notifications about comments and updates
-4. **Stay Informed**: Know when your report is resolved or closed
+4. **Stay Informed**: Know when your incident is resolved or closed
 
 ## Managing Notifications
 
@@ -176,14 +176,14 @@ Notifications are automatically created when:
 1. **Check Regularly**: Visit the notification center at least daily
 2. **Prioritize by Urgency**: Handle urgent notifications immediately
 3. **Use Filters**: Filter by type or priority to focus on relevant notifications
-4. **Take Action**: Click through to related reports to take appropriate action
+4. **Take Action**: Click through to related incidents to take appropriate action
 5. **Clean Up**: Delete old notifications to keep your list manageable
 
 ### For Team Coordination
 
 1. **Respond Promptly**: Act on assignment notifications quickly
-2. **Communicate**: Add comments to reports to keep everyone informed
-3. **Update Status**: Change report status to trigger notifications for stakeholders
+2. **Communicate**: Add comments to incidents to keep everyone informed
+3. **Update Status**: Change incident status to trigger notifications for stakeholders
 4. **Monitor Team Activity**: Use notifications to stay aware of team actions
 
 ## Troubleshooting
@@ -198,20 +198,20 @@ Notifications are automatically created when:
 **Missing Notifications**
 - Use the refresh button to reload notifications
 - Check if notifications were accidentally deleted
-- Verify the event/report still exists and you have access
+- Verify the event/incident still exists and you have access
 
 **Performance Issues**
 - Use filters to reduce the number of notifications displayed
 - Consider deleting old notifications you no longer need
 - Check your internet connection for loading issues
 
-## Integration with Reports
+## Integration with Incidents
 
-Notifications are tightly integrated with the report management system:
+Notifications are tightly integrated with the incident management system:
 
-- **Direct Navigation**: Click notifications to go directly to related reports
+- **Direct Navigation**: Click notifications to go directly to related incidents
 - **Context Preservation**: Maintains your current context when navigating
-- **Real-Time Updates**: Notifications update in real-time as report events occur
+- **Real-Time Updates**: Notifications update in real-time as incident events occur
 - **Role-Based Content**: Notification content adapts to your role and permissions
 
 The Notification Center ensures you never miss important incident-related activities and can respond quickly to critical situations across all your events. 

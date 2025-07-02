@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 
 interface ReportMetrics {
-  totalReports: number;
+  totalIncidents: number;
   reportsByStatus: Record<string, number>;
   reportsBySeverity: Record<string, number>;
   reportsByEvent: Array<{
@@ -41,8 +41,8 @@ interface ReportMetrics {
     resolved: number;
   }>;
   averageResolutionTime: number;
-  pendingReports: number;
-  escalatedReports: number;
+  pendingIncidents: number;
+  escalatedIncidents: number;
 }
 
 interface Organization {
@@ -52,7 +52,7 @@ interface Organization {
   role: string;
 }
 
-export default function OrganizationReports() {
+export default function OrganizationIncidents() {
   const router = useRouter();
   const { user } = useContext(UserContext);
   const { orgSlug } = router.query;
@@ -100,7 +100,7 @@ export default function OrganizationReports() {
       // TODO: Replace with actual API call when backend endpoint is ready
       // For now, use mock data that demonstrates the functionality
       const mockMetrics: ReportMetrics = {
-        totalReports: 147,
+        totalIncidents: 147,
         reportsByStatus: {
           'submitted': 23,
           'in_review': 18,
@@ -128,8 +128,8 @@ export default function OrganizationReports() {
           { month: 'Feb 2025', count: 30, resolved: 27 },
         ],
         averageResolutionTime: 4.2,
-        pendingReports: 53,
-        escalatedReports: 7,
+        pendingIncidents: 53,
+        escalatedIncidents: 7,
       };
 
       setMetrics(mockMetrics);
@@ -185,7 +185,7 @@ export default function OrganizationReports() {
       <div className="min-h-screen bg-background p-6">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Organization Reports</h1>
+            <h1 className="text-3xl font-bold text-foreground">Organization Incidents</h1>
             <p className="text-muted-foreground">Loading report analytics...</p>
           </div>
         </div>
@@ -198,7 +198,7 @@ export default function OrganizationReports() {
       <div className="min-h-screen bg-background p-6">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Organization Reports</h1>
+            <h1 className="text-3xl font-bold text-foreground">Organization Incidents</h1>
           </div>
           <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4 rounded-lg">
             <span className="text-red-800 dark:text-red-200">{error}</span>
@@ -223,7 +223,7 @@ export default function OrganizationReports() {
   return (
     <>
       <Head>
-        <title>{organization.name} - Reports Overview - Conducky</title>
+        <title>{organization.name} - Incidents Overview - Conducky</title>
       </Head>
 
       <div className="min-h-screen bg-background p-6">
@@ -231,7 +231,7 @@ export default function OrganizationReports() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Reports Overview</h1>
+              <h1 className="text-3xl font-bold text-foreground">Incidents Overview</h1>
               <p className="text-muted-foreground">
                 Analytics and insights for {organization.name}
               </p>
@@ -263,11 +263,11 @@ export default function OrganizationReports() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.totalReports}</div>
+                <div className="text-2xl font-bold">{metrics.totalIncidents}</div>
                 <p className="text-xs text-muted-foreground">
                   Across all events
                 </p>
@@ -276,11 +276,11 @@ export default function OrganizationReports() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
+                <CardTitle className="text-sm font-medium">Pending Incidents</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.pendingReports}</div>
+                <div className="text-2xl font-bold">{metrics.pendingIncidents}</div>
                 <p className="text-xs text-muted-foreground">
                   Awaiting action
                 </p>
@@ -302,11 +302,11 @@ export default function OrganizationReports() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Escalated Reports</CardTitle>
+                <CardTitle className="text-sm font-medium">Escalated Incidents</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.escalatedReports}</div>
+                <div className="text-2xl font-bold">{metrics.escalatedIncidents}</div>
                 <p className="text-xs text-muted-foreground">
                   Requiring attention
                 </p>
@@ -316,12 +316,12 @@ export default function OrganizationReports() {
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Reports by Status */}
+            {/* Incidents by Status */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <PieChart className="w-5 h-5 mr-2" />
-                  Reports by Status
+                  Incidents by Status
                 </CardTitle>
                 <CardDescription>Distribution of report statuses</CardDescription>
               </CardHeader>
@@ -341,12 +341,12 @@ export default function OrganizationReports() {
               </CardContent>
             </Card>
 
-            {/* Reports by Severity */}
+            {/* Incidents by Severity */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <BarChart3 className="w-5 h-5 mr-2" />
-                  Reports by Severity
+                  Incidents by Severity
                 </CardTitle>
                 <CardDescription>Severity distribution across reports</CardDescription>
               </CardHeader>
@@ -367,12 +367,12 @@ export default function OrganizationReports() {
             </Card>
           </div>
 
-          {/* Reports by Event */}
+          {/* Incidents by Event */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Calendar className="w-5 h-5 mr-2" />
-                Reports by Event
+                Incidents by Event
               </CardTitle>
               <CardDescription>Report distribution across organization events</CardDescription>
             </CardHeader>
@@ -450,7 +450,7 @@ export default function OrganizationReports() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button variant="outline" onClick={() => handleExport('csv')}>
                   <Download className="w-4 h-4 mr-2" />
-                  Export All Reports (CSV)
+                  Export All Incidents (CSV)
                 </Button>
                 <Button variant="outline" onClick={() => handleExport('pdf')}>
                   <Download className="w-4 h-4 mr-2" />

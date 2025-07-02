@@ -270,7 +270,7 @@ export default function OrganizationEvents() {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Reports</span>
+                        <span className="text-sm text-muted-foreground">Incidents</span>
                         <span className="text-sm font-medium">{event._count.incidents}</span>
                       </div>
                       
@@ -296,8 +296,8 @@ export default function OrganizationEvents() {
                       
                       {event._count.incidents > 0 && (
                         <Button asChild size="sm" variant="outline">
-                          <Link href={`/events/${event.slug}/reports`}>
-                            View Reports
+                          <Link href={`/events/${event.slug}/incidents`}>
+                            View Incidents
                           </Link>
                         </Button>
                       )}
@@ -325,7 +325,7 @@ export default function OrganizationEvents() {
                   <div className="text-2xl font-bold">
                     {filteredEvents.reduce((sum, event) => sum + event._count.incidents, 0)}
                   </div>
-                  <div className="text-sm text-muted-foreground">Total Reports</div>
+                  <div className="text-sm text-muted-foreground">Total Incidents</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">

@@ -29,7 +29,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
     app = require("../../index");
   });
 
-  it("should return 403 if user does not have required role for PATCH /events/:eventId/reports/:reportId/state", async () => {
+  it("should return 403 if user does not have required role for PATCH /events/:eventId/reports/:incidentId/state", async () => {
     // Add only Reporter role for user 1, event 1 using unified RBAC structure
     inMemoryStore.userRoles.push({
       id: "1",
@@ -50,7 +50,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
       user: { id: "1", email: "admin@example.com", name: "Admin" },
     });
     
-    inMemoryStore.reports.push({
+    inMemoryStore.incidents.push({
       id: "r6",
       eventId: "1",
       type: "harassment",
@@ -63,7 +63,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
     const agent = request.agent(app);
     // Patch the session or authentication as needed here if required by your app
     const res = await agent
-      .patch("/api/events/1/reports/r6/state")
+      .patch("/api/events/1/incidents/r6/state")
       .send({ state: "acknowledged" })
       .set("Accept", "application/json");
     expect(res.statusCode).toBe(403);

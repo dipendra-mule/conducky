@@ -356,7 +356,7 @@ export class UserService {
    * Get user's reports across all accessible events
    */
   async getUserReports(userId: string, query: UserReportsQuery): Promise<ServiceResult<{ 
-    reports: UserReport[]; 
+    incidents: UserReport[]; 
     total: number; 
     page: number; 
     limit: number; 
@@ -453,7 +453,7 @@ export class UserService {
       if (eventRoles.size === 0) {
         return {
           success: true,
-          data: { reports: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0, canViewAssignments: false }
+          data: { incidents: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0, canViewAssignments: false }
         };
       }
 
@@ -538,7 +538,7 @@ export class UserService {
           // User doesn't have access to this event
           return {
             success: true,
-            data: { reports: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0, canViewAssignments: false }
+            data: { incidents: [], total: 0, page: pageNum, limit: limitNum, totalPages: 0, canViewAssignments: false }
           };
         }
       }
@@ -631,7 +631,7 @@ export class UserService {
       return {
         success: true,
         data: {
-          reports: reportsWithRoles,
+          incidents: reportsWithRoles,
           total,
           page: pageNum,
           limit: limitNum,

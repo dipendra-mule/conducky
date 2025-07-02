@@ -209,7 +209,7 @@ describe('Team Management Endpoints', () => {
     it('should deny access to reporters', async () => {
       await request(app)
         .get('/api/events/slug/event1/users/1')
-        .set('x-test-user-id', '3') // Reporter user
+        .set('x-test-user-id', '3') // Incidenter user
         .expect(403);
     });
 
@@ -254,15 +254,15 @@ describe('Team Management Endpoints', () => {
     it('should deny access to reporters', async () => {
       await request(app)
         .get('/api/events/slug/event1/users/1/activity')
-        .set('x-test-user-id', '3') // Reporter user
+        .set('x-test-user-id', '3') // Incidenter user
         .expect(403);
     });
   });
 
-  describe('GET /api/events/slug/:slug/users/:userId/reports', () => {
+  describe('GET /api/events/slug/:slug/users/:userId/incidents', () => {
     it('should get user reports (admin access)', async () => {
       const res = await request(app)
-        .get('/api/events/slug/event1/users/1/reports')
+        .get('/api/events/slug/event1/users/1/incidents')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
@@ -273,12 +273,12 @@ describe('Team Management Endpoints', () => {
 
     it('should filter by report type', async () => {
       const submittedRes = await request(app)
-        .get('/api/events/slug/event1/users/1/reports?type=submitted')
+        .get('/api/events/slug/event1/users/1/incidents?type=submitted')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
       const assignedRes = await request(app)
-        .get('/api/events/slug/event1/users/1/reports?type=assigned')
+        .get('/api/events/slug/event1/users/1/incidents?type=assigned')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
@@ -288,7 +288,7 @@ describe('Team Management Endpoints', () => {
 
     it('should support pagination', async () => {
       const res = await request(app)
-        .get('/api/events/slug/event1/users/1/reports?page=1&limit=10')
+        .get('/api/events/slug/event1/users/1/incidents?page=1&limit=10')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
@@ -297,8 +297,8 @@ describe('Team Management Endpoints', () => {
 
     it('should deny access to reporters', async () => {
       await request(app)
-        .get('/api/events/slug/event1/users/1/reports')
-        .set('x-test-user-id', '3') // Reporter user
+        .get('/api/events/slug/event1/users/1/incidents')
+        .set('x-test-user-id', '3') // Incidenter user
         .expect(403);
     });
   });

@@ -7,7 +7,7 @@ import { PartiesEditForm } from "./PartiesEditForm";
 import { DescriptionEditForm } from "./DescriptionEditForm";
 import { TypeEditForm } from "./TypeEditForm";
 
-interface ReportMetaTableProps {
+interface IncidentMetaTableProps {
   id: string;
   type: string;
   description: string;
@@ -31,7 +31,7 @@ interface ReportMetaTableProps {
   onTypeEdit?: (type: string) => Promise<void>;
 }
 
-export function ReportMetaTable({ 
+export function IncidentMetaTable({ 
   id, 
   type, 
   description, 
@@ -52,7 +52,7 @@ export function ReportMetaTable({
   onPartiesEdit,
   onDescriptionEdit,
   onTypeEdit
-}: ReportMetaTableProps) {
+}: IncidentMetaTableProps) {
   const [editingField, setEditingField] = useState<string | null>(null);
 
   // Format contact preference for display
@@ -163,7 +163,7 @@ export function ReportMetaTable({
 
   return (
     <div className="space-y-0 bg-background rounded-lg border">
-      <MetaField label="Report ID">
+      <MetaField label="Incident ID">
         <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
           {id}
         </span>

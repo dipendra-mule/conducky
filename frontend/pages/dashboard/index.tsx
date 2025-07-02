@@ -139,7 +139,7 @@ export default function GlobalDashboard() {
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">Need to Report an Incident?</h2>
-                    <p className="text-muted-foreground">Submit a report quickly and securely</p>
+                    <p className="text-muted-foreground">Submit an incident quickly and securely</p>
                   </div>
                 </div>
                 

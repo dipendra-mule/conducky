@@ -77,7 +77,7 @@ interface ReportStats {
   total: number;
 }
 
-interface EnhancedReportListProps {
+interface EnhancedIncidentListProps {
   eventSlug?: string; // If provided, shows event-specific reports
   userId?: string; // If provided, filters to user's reports
   showBulkActions?: boolean;
@@ -93,15 +93,15 @@ export function EnhancedIncidentList({
   showPinning = true,
   showExport = true,
   className
-}: EnhancedReportListProps) {
+}: EnhancedIncidentListProps) {
   
   // State management
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [selectedReports, setSelectedReports] = useState<Set<string>>(new Set());
-  const [pinnedReports, setPinnedReports] = useState<Set<string>>(new Set());
+  const [selectedIncidents, setSelectedIncidents] = useState<Set<string>>(new Set());
+  const [pinnedIncidents, setPinnedIncidents] = useState<Set<string>>(new Set());
   const [canViewAssignments, setCanViewAssignments] = useState(false);
   
   // Filter and search state
@@ -115,16 +115,16 @@ export function EnhancedIncidentList({
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalReports, setTotalReports] = useState(0);
+  const [totalIncidents, setTotalIncidents] = useState(0);
   const pageSize = 20; // Fixed page size for now
 
   // Build API URL based on context
   const apiUrl = useMemo(() => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
     if (eventSlug) {
-      return `${baseUrl}/api/events/slug/${eventSlug}/reports`;
+      return `${baseUrl}/api/events/slug/${eventSlug}/incidents`;
     } else {
-      return `${baseUrl}/api/users/me/reports`;
+      return `${baseUrl}/api/users/me/incidents`;
     }
   }, [eventSlug]);
 
@@ -149,7 +149,7 @@ export function EnhancedIncidentList({
   }, [currentPage, pageSize, search, statusFilter, severityFilter, assignedFilter, userId, sortField, sortOrder]);
 
   // Fetch reports
-  const fetchReports = async () => {
+  const fetchIncidents = async () => {
     try {
       setLoading(true);
       setError('');
@@ -166,7 +166,7 @@ export function EnhancedIncidentList({
       setIncidents(data.incidents || []);
       setStats(data.stats || null);
       setTotalPages(data.totalPages || 1);
-      setTotalReports(data.total || 0);
+      setTotalIncidents(data.total || 0);
       setCanViewAssignments(data.canViewAssignments || false);
       
     } catch (err) {
@@ -182,7 +182,7 @@ export function EnhancedIncidentList({
     const stored = localStorage.getItem(key);
     if (stored) {
       try {
-        setPinnedReports(new Set(JSON.parse(stored)));
+        setPinnedIncidents(new Set(JSON.parse(stored)));
       } catch {
         // Ignore invalid JSON
       }
@@ -192,12 +192,12 @@ export function EnhancedIncidentList({
   // Save pinned reports to localStorage
   useEffect(() => {
     const key = eventSlug ? `pinned_reports_${eventSlug}` : 'pinned_reports_global';
-    localStorage.setItem(key, JSON.stringify(Array.from(pinnedReports)));
-  }, [pinnedReports, eventSlug]);
+    localStorage.setItem(key, JSON.stringify(Array.from(pinnedIncidents)));
+  }, [pinnedIncidents, eventSlug]);
 
   // Fetch reports when dependencies change
   useEffect(() => {
-    fetchReports();
+    fetchIncidents();
   }, [buildQueryParams]);
 
   // Reset page when filters change
@@ -214,7 +214,7 @@ export function EnhancedIncidentList({
 
   // Handle pinning
   const togglePin = (incidentId: string) => {
-    setPinnedReports(prev => {
+    setPinnedIncidents(prev => {
       const newSet = new Set(prev);
       if (newSet.has(incidentId)) {
         newSet.delete(incidentId);
@@ -227,7 +227,7 @@ export function EnhancedIncidentList({
 
   // Handle selection
   const toggleSelection = (incidentId: string) => {
-    setSelectedReports(prev => {
+    setSelectedIncidents(prev => {
       const newSet = new Set(prev);
       if (newSet.has(incidentId)) {
         newSet.delete(incidentId);
@@ -239,7 +239,7 @@ export function EnhancedIncidentList({
   };
 
   const clearSelection = () => {
-    setSelectedReports(new Set());
+    setSelectedIncidents(new Set());
   };
 
   // Handle sorting
@@ -255,7 +255,7 @@ export function EnhancedIncidentList({
   // Handle export
   const handleExport = async (format: 'csv' | 'pdf') => {
     try {
-      const selectedIds = Array.from(selectedReports);
+      const selectedIds = Array.from(selectedIncidents);
       const reportsToExport = selectedIds.length > 0 
         ? incidents.filter(incident => selectedIds.includes(incident.id))
         : incidents;
@@ -293,7 +293,7 @@ export function EnhancedIncidentList({
         // Add title
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
-        const title = eventSlug ? `Event Reports - ${eventSlug}` : 'Reports Export';
+        const title = eventSlug ? `Event Incidents - ${eventSlug}` : 'Incidents Export';
         doc.text(title, margin, yPosition);
         yPosition += lineHeight * 2;
         
@@ -304,7 +304,7 @@ export function EnhancedIncidentList({
         yPosition += lineHeight * 2;
         
         // Add summary
-        doc.text(`Total Reports: ${reportsToExport.length}`, margin, yPosition);
+        doc.text(`Total Incidents: ${reportsToExport.length}`, margin, yPosition);
         yPosition += lineHeight * 1.5;
         
         // Add line separator
@@ -392,11 +392,11 @@ export function EnhancedIncidentList({
   };
 
   // Separate pinned and regular reports
-  const { pinnedReportsList, regularReportsList } = useMemo(() => {
-    const pinned = incidents.filter(incident => pinnedReports.has(incident.id));
-    const regular = incidents.filter(incident => !pinnedReports.has(incident.id));
-    return { pinnedReportsList: pinned, regularReportsList: regular };
-  }, [incidents, pinnedReports]);
+  const { pinnedIncidentsList, regularIncidentsList } = useMemo(() => {
+    const pinned = incidents.filter(incident => pinnedIncidents.has(incident.id));
+    const regular = incidents.filter(incident => !pinnedIncidents.has(incident.id));
+    return { pinnedIncidentsList: pinned, regularIncidentsList: regular };
+  }, [incidents, pinnedIncidents]);
 
   // Get state badge color
   const getStateBadgeColor = (state: string) => {
@@ -490,7 +490,7 @@ export function EnhancedIncidentList({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search reports by title or description..."
+              placeholder="Search incidents by title or description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
@@ -532,7 +532,7 @@ export function EnhancedIncidentList({
                   <SelectValue placeholder="Assignment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Reports</SelectItem>
+                  <SelectItem value="all">All Incidents</SelectItem>
                   <SelectItem value="me">Assigned to Me</SelectItem>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
                 </SelectContent>
@@ -554,7 +554,7 @@ export function EnhancedIncidentList({
               Clear Filters
             </Button>
 
-            <Button variant="outline" onClick={fetchReports}>
+            <Button variant="outline" onClick={fetchIncidents}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -580,10 +580,10 @@ export function EnhancedIncidentList({
           </div>
 
           {/* Bulk Actions */}
-          {showBulkActions && selectedReports.size > 0 && (
+          {showBulkActions && selectedIncidents.size > 0 && (
             <div className="flex items-center gap-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <span className="text-sm text-blue-700 dark:text-blue-300">
-                {selectedReports.size} report{selectedReports.size === 1 ? '' : 's'} selected
+                {selectedIncidents.size} report{selectedIncidents.size === 1 ? '' : 's'} selected
               </span>
               <Button size="sm" variant="outline" onClick={clearSelection}>
                 Clear Selection
@@ -599,12 +599,12 @@ export function EnhancedIncidentList({
         </div>
       </Card>
 
-      {/* Reports Table */}
+      {/* Incidents Table */}
       <Card>
         {loading ? (
           <div className="p-8 text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading reports...</p>
+            <p className="text-muted-foreground">Loading incidents...</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center">
@@ -613,13 +613,13 @@ export function EnhancedIncidentList({
           </div>
         ) : (
           <>
-            {/* Pinned Reports Section */}
-            {showPinning && pinnedReportsList.length > 0 && (
+            {/* Pinned Incidents Section */}
+            {showPinning && pinnedIncidentsList.length > 0 && (
               <div className="border-b">
                 <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20">
                   <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 flex items-center">
                     <Pin className="h-4 w-4 mr-2" />
-                    Pinned Reports ({pinnedReportsList.length})
+                    Pinned Incidents ({pinnedIncidentsList.length})
                   </h3>
                 </div>
                 <div className="overflow-x-auto">
@@ -669,12 +669,12 @@ export function EnhancedIncidentList({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pinnedReportsList.map((report) => (
+                      {pinnedIncidentsList.map((report) => (
                         <TableRow key={report.id} className="bg-yellow-50/50 dark:bg-yellow-900/10">
                           {showBulkActions && (
                             <TableCell>
                               <Checkbox
-                                checked={selectedReports.has(report.id)}
+                                checked={selectedIncidents.has(report.id)}
                                 onCheckedChange={() => toggleSelection(report.id)}
                               />
                             </TableCell>
@@ -758,10 +758,10 @@ export function EnhancedIncidentList({
               </div>
             )}
 
-            {/* Regular Reports Section */}
+            {/* Regular Incidents Section */}
             <div className="overflow-x-auto">
               <Table>
-                {(pinnedReportsList.length === 0 || !showPinning) && (
+                {(pinnedIncidentsList.length === 0 || !showPinning) && (
                   <TableHeader>
                     <TableRow>
                       {showBulkActions && <TableHead className="w-12"></TableHead>}
@@ -808,7 +808,7 @@ export function EnhancedIncidentList({
                   </TableHeader>
                 )}
                 <TableBody>
-                  {regularReportsList.length === 0 ? (
+                  {regularIncidentsList.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={
                         (showBulkActions ? 1 : 0) + 
@@ -819,19 +819,19 @@ export function EnhancedIncidentList({
                       } className="text-center py-8">
                         <div className="text-muted-foreground">
                           {search || statusFilter || severityFilter || assignedFilter ? 
-                            'No reports match your search criteria.' : 
-                            'No reports found.'
+                            'No incidents match your search criteria.' : 
+                            'No incidents found.'
                           }
                         </div>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    regularReportsList.map((report) => (
+                    regularIncidentsList.map((report) => (
                       <TableRow key={report.id} className="hover:bg-muted/50">
                         {showBulkActions && (
                           <TableCell>
                             <Checkbox
-                              checked={selectedReports.has(report.id)}
+                              checked={selectedIncidents.has(report.id)}
                               onCheckedChange={() => toggleSelection(report.id)}
                             />
                           </TableCell>
@@ -927,7 +927,7 @@ export function EnhancedIncidentList({
             {totalPages > 1 && (
               <div className="flex items-center justify-between p-4 border-t">
                 <div className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalReports)} of {totalReports} reports
+                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalIncidents)} of {totalIncidents} reports
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button

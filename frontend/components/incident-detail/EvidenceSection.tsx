@@ -19,7 +19,7 @@ interface EvidenceSectionProps {
 export function EvidenceSection({
   evidenceFiles,
   apiBaseUrl,
-  report,
+  incident,
   isResponderOrAbove,
   deletingEvidenceId,
   setDeletingEvidenceId,
@@ -232,7 +232,7 @@ export function EvidenceSection({
       )}
 
       {/* Evidence Display */}
-      {(!report || !evidenceFiles) ? (
+      {(!incident || !evidenceFiles) ? (
         <div className="text-muted-foreground text-center py-8">
           No evidence files.
         </div>
@@ -259,7 +259,7 @@ export function EvidenceSection({
       )}
       
       {/* Upload Section */}
-      {report && (
+      {incident && (
         <div className="border-t border-border pt-4 space-y-3">
           <form 
             onSubmit={e => { 

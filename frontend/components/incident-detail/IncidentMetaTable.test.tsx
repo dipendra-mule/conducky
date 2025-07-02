@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { ReportMetaTable } from './ReportMetaTable';
+import { IncidentMetaTable } from './IncidentMetaTable';
 
 // Mock the edit form components
 jest.mock('./LocationEditForm', () => ({
@@ -21,7 +21,7 @@ jest.mock('./ContactPreferenceEditForm', () => ({
   )
 }));
 
-describe('ReportMetaTable', () => {
+describe('IncidentMetaTable', () => {
   const defaultProps = {
     id: 'report-123',
     type: 'harassment',
@@ -40,9 +40,9 @@ describe('ReportMetaTable', () => {
   };
 
   it('renders all report metadata fields', () => {
-    render(<ReportMetaTable {...defaultProps} />);
+    render(<IncidentMetaTable {...defaultProps} />);
 
-    expect(screen.getByText('Report ID')).toBeInTheDocument();
+    expect(screen.getByText('Incident ID')).toBeInTheDocument();
     expect(screen.getByText('report-123')).toBeInTheDocument();
     
     expect(screen.getByText('Type')).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe('ReportMetaTable', () => {
       canEditParties: true
     };
 
-    render(<ReportMetaTable {...propsWithMissingFields} />);
+    render(<IncidentMetaTable {...propsWithMissingFields} />);
 
     const notSpecifiedElements = screen.getAllByText('Not specified');
     expect(notSpecifiedElements).toHaveLength(3); // location, incidentAt, parties
@@ -91,7 +91,7 @@ describe('ReportMetaTable', () => {
 
     testCases.forEach(({ preference, expected }) => {
       const { rerender } = render(
-        <ReportMetaTable {...defaultProps} contactPreference={preference} />
+        <IncidentMetaTable {...defaultProps} contactPreference={preference} />
       );
       
       expect(screen.getByText(expected)).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe('ReportMetaTable', () => {
       canEditType: true
     };
 
-    render(<ReportMetaTable {...propsWithEditPermissions} />);
+    render(<IncidentMetaTable {...propsWithEditPermissions} />);
 
     // Should show edit buttons (pencil icons) for editable fields
     const editButtons = screen.getAllByRole('button');
@@ -120,7 +120,7 @@ describe('ReportMetaTable', () => {
   });
 
   it('does not show edit buttons when user lacks edit permissions', () => {
-    render(<ReportMetaTable {...defaultProps} />);
+    render(<IncidentMetaTable {...defaultProps} />);
 
     // Should not show any edit buttons since all permissions are false
     const editButtons = screen.queryAllByRole('button');
@@ -134,7 +134,7 @@ describe('ReportMetaTable', () => {
       onLocationEdit: jest.fn()
     };
 
-    render(<ReportMetaTable {...propsWithLocationEdit} />);
+    render(<IncidentMetaTable {...propsWithLocationEdit} />);
 
     // Find and click the edit button for location
     const editButtons = screen.getAllByRole('button');
@@ -154,7 +154,7 @@ describe('ReportMetaTable', () => {
       onLocationEdit: mockOnLocationEdit
     };
 
-    render(<ReportMetaTable {...propsWithLocationEdit} />);
+    render(<IncidentMetaTable {...propsWithLocationEdit} />);
 
     // Open edit form
     const editButtons = screen.getAllByRole('button');
@@ -180,7 +180,7 @@ describe('ReportMetaTable', () => {
       onLocationEdit: jest.fn()
     };
 
-    render(<ReportMetaTable {...propsWithLocationEdit} />);
+    render(<IncidentMetaTable {...propsWithLocationEdit} />);
 
     // Open edit form
     const editButtons = screen.getAllByRole('button');

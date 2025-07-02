@@ -296,10 +296,10 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
           isActive: router.asPath.startsWith(`/orgs/${targetOrgSlug}/events`),
         },
         {
-          title: "Reports Overview",
-          url: `/orgs/${targetOrgSlug}/reports`,
+          title: "Incidents Overview",
+          url: `/orgs/${targetOrgSlug}/incidents`,
           icon: BookOpen,
-          isActive: router.asPath.startsWith(`/orgs/${targetOrgSlug}/reports`),
+          isActive: router.asPath.startsWith(`/orgs/${targetOrgSlug}/incidents`),
         },
         {
           title: "Team",
@@ -361,8 +361,8 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
             isActive: router.asPath === `/events/${targetEventSlug}/dashboard`,
           },
           {
-            title: "Reports",
-            url: `/events/${targetEventSlug}/reports`,
+            title: "Incidents",
+            url: `/events/${targetEventSlug}/incidents`,
             icon: ClipboardList,
             items: [
               {
@@ -372,7 +372,7 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
               // Add "All Incidents" for Responders and Admins
               ...(isEventResponder ? [{
                 title: "All Incidents",
-                url: `/events/${targetEventSlug}/reports`,
+                url: `/events/${targetEventSlug}/incidents`,
               }] : []),
               {
                 title: "Submit Incident",

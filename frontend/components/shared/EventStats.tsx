@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Card } from "../ui/card";
 
 interface EventStatsData {
-  totalReports: number;
-  myReports?: number;
-  assignedReports?: number;
+  totalIncidents: number;
+  myIncidents?: number;
+  assignedIncidents?: number;
   needsResponseCount?: number;
-  resolvedReports?: number;
+  resolvedIncidents?: number;
   totalUsers?: number;
   pendingInvites?: number;
 }
@@ -72,23 +72,23 @@ export function EventStats({ eventSlug, userRoles }: EventStatsProps) {
   const getStatsForRole = () => {
     if (isAdmin) {
       return [
-        { label: "Total Reports", value: stats.totalReports, color: "text-blue-600" },
+        { label: "Total Incidents", value: stats.totalIncidents, color: "text-blue-600" },
         { label: "Total Users", value: stats.totalUsers || 0, color: "text-green-600" },
         { label: "Needs Response", value: stats.needsResponseCount || 0, color: "text-orange-600" },
         { label: "Pending Invites", value: stats.pendingInvites || 0, color: "text-purple-600" },
       ];
     } else if (isResponder) {
       return [
-        { label: "Total Reports", value: stats.totalReports, color: "text-blue-600" },
-        { label: "Assigned to Me", value: stats.assignedReports || 0, color: "text-orange-600" },
+        { label: "Total Incidents", value: stats.totalIncidents, color: "text-blue-600" },
+        { label: "Assigned to Me", value: stats.assignedIncidents || 0, color: "text-orange-600" },
         { label: "Needs Response", value: stats.needsResponseCount || 0, color: "text-red-600" },
-        { label: "Resolved", value: stats.resolvedReports || 0, color: "text-green-600" },
+        { label: "Resolved", value: stats.resolvedIncidents || 0, color: "text-green-600" },
       ];
     } else if (isReporter) {
       return [
-        { label: "My Incidents", value: stats.myReports || 0, color: "text-blue-600" },
-        { label: "Resolved", value: stats.resolvedReports || 0, color: "text-green-600" },
-        { label: "Total Reports", value: stats.totalReports, color: "text-gray-600" },
+        { label: "My Incidents", value: stats.myIncidents || 0, color: "text-blue-600" },
+        { label: "Resolved", value: stats.resolvedIncidents || 0, color: "text-green-600" },
+        { label: "Total Incidents", value: stats.totalIncidents, color: "text-gray-600" },
       ];
     }
     return [];

@@ -51,7 +51,7 @@ interface EventsData {
     totalEvents: number;
     activeEvents: number;
     totalUsers: number;
-    totalReports: number;
+    totalIncidents: number;
   };
 }
 
@@ -269,11 +269,11 @@ export default function SystemEventsManagement() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data?.statistics.totalReports || 0}</div>
+                  <div className="text-2xl font-bold">{data?.statistics.totalIncidents || 0}</div>
                   <p className="text-xs text-muted-foreground">
                     All-time reports
                   </p>
@@ -333,7 +333,7 @@ export default function SystemEventsManagement() {
                         <TableHead>Event</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Users</TableHead>
-                        <TableHead>Reports</TableHead>
+                        <TableHead>Incidents</TableHead>
                         <TableHead>Created</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>

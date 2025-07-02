@@ -1,7 +1,7 @@
 /* global jest, describe, it, expect */
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import ReportDetailView from './IncidentDetailView';
+import IncidentDetailView from './IncidentDetailView';
 
 // Mock Card, Table, Button, Avatar for isolation
 jest.mock("./ui/card", () => ({
@@ -17,7 +17,7 @@ jest.mock("@/components/ui/button", () => ({
   Button: ({ children, ...props }) => <button {...props}>{children}</button>,
 }));
 
-describe("ReportDetailView", () => {
+describe("IncidentDetailView", () => {
   const baseReport = {
     id: "r1",
     type: "incident",
@@ -41,7 +41,7 @@ describe("ReportDetailView", () => {
   it("renders report details", () => {
     render(
       <IncidentDetailView
-        report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
+        incident={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}
       />
@@ -56,7 +56,7 @@ describe("ReportDetailView", () => {
     const onStateChange = jest.fn();
     render(
       <IncidentDetailView
-        report={baseReport}
+        incident={baseReport}
         user={user}
         userRoles={userRoles}
         onStateChange={onStateChange}
@@ -73,7 +73,7 @@ describe("ReportDetailView", () => {
     const setAssignmentFields = jest.fn();
     render(
       <IncidentDetailView
-        report={baseReport}
+        incident={baseReport}
         user={user}
         userRoles={["event_admin"]}
         adminMode={true}
@@ -95,7 +95,7 @@ describe("ReportDetailView", () => {
     const onEvidenceDelete = jest.fn();
     render(
       <IncidentDetailView
-        report={baseReport}
+        incident={baseReport}
         user={user}
         userRoles={userRoles}
         evidenceFiles={evidenceFiles}
@@ -178,7 +178,7 @@ describe("ReportDetailView", () => {
     const apiBaseUrl = "https://api.example.com";
     render(
       <IncidentDetailView
-        report={baseReport}
+        incident={baseReport}
         user={user}
         userRoles={userRoles}
         evidenceFiles={evidenceFiles}
@@ -205,7 +205,7 @@ describe("ReportDetailView", () => {
     const reporterUser = { id: "u1", name: "Alice", email: "alice@example.com", roles: [] };
     render(
       <IncidentDetailView
-        report={{ ...baseReport, reporterId: "u1" }}
+        incident={{ ...baseReport, reporterId: "u1" }}
         user={reporterUser}
         userRoles={[]}
         evidenceFiles={evidenceFiles}
@@ -219,7 +219,7 @@ describe("ReportDetailView", () => {
   it("shows the report title as the heading", () => {
     render(
       <IncidentDetailView
-        report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
+        incident={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}
       />
@@ -230,7 +230,7 @@ describe("ReportDetailView", () => {
   it("shows edit button for reporter", () => {
     render(
       <IncidentDetailView
-        report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
+        incident={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}
       />
@@ -241,7 +241,7 @@ describe("ReportDetailView", () => {
   it("shows edit button for admin", () => {
     render(
       <IncidentDetailView
-        report={{ ...baseReport, title: "Test Title", reporterId: "u2" }}
+        incident={{ ...baseReport, title: "Test Title", reporterId: "u2" }}
         user={{ id: "admin", name: "Admin", roles: ["event_admin"] }}
         userRoles={["event_admin"]}
       />
@@ -253,14 +253,14 @@ describe("ReportDetailView", () => {
     const onTitleEdit = jest.fn(() => Promise.resolve());
     render(
       <IncidentDetailView
-        report={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
+        incident={{ ...baseReport, title: "Test Title", reporterId: "u1" }}
         user={{ id: "u1", name: "Alice", roles: [] }}
         userRoles={[]}
         onTitleEdit={onTitleEdit}
       />
     );
     fireEvent.click(screen.getByLabelText('Edit title'));
-    const input = screen.getByPlaceholderText("Report Title");
+    const input = screen.getByPlaceholderText("Incident Title");
     fireEvent.change(input, { target: { value: "short" } });
     fireEvent.click(screen.getByText("Save"));
     expect(await screen.findByText(/between 10 and 70/)).toBeInTheDocument();

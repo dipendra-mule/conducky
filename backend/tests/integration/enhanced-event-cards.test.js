@@ -37,11 +37,11 @@ describe('Enhanced Event Card Stats API', () => {
         
         // Verify recent reports structure if any exist
         if (res.body.recentReports.length > 0) {
-          const report = res.body.recentReports[0];
-          expect(report).toHaveProperty('id');
-          expect(report).toHaveProperty('title');
-          expect(report).toHaveProperty('state');
-          expect(report).toHaveProperty('createdAt');
+          const incident = res.body.recentReports[0];
+          expect(incident).toHaveProperty('id');
+          expect(incident).toHaveProperty('title');
+          expect(incident).toHaveProperty('state');
+          expect(incident).toHaveProperty('createdAt');
         }
       }
     });

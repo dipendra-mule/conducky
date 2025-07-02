@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Welcome to the Conducky User Guide!
 
-This section is for **all users** of Conducky, including event attendees, Code of Conduct team members, and event administrators. If you're using Conducky's interface to report incidents, respond to reports, or manage events, this guide is for you.
+This section is for **all users** of Conducky, including event attendees, Code of Conduct team members, and event administrators. If you're using Conducky's interface to incident reports, respond to incidents, or manage events, this guide is for you.
 
 ## 🚀 New to Conducky?
 
@@ -40,10 +40,10 @@ This section is for **all users** of Conducky, including event attendees, Code o
 - **[Invite Links](./invite-links)** - Creating and managing invite links (for Event Admins)
 - **[Public Event Pages](./public-event-pages)** - Understanding public event information
 
-### Report Management
+### Incident Management
 - **[Report Submission](./getting-started#your-first-event)** - How to submit incident reports
-- **[Report Comments](./report-comments)** - Communication and collaboration on reports
-- **[Cross-Event Reports](./cross-event-reports)** - Managing reports across multiple events
+- **[Report Comments](./report-comments)** - Communication and collaboration on incidents
+- **[Cross-Event Incidents](./cross-event-reports)** - Managing incidents across multiple events
 
 ### Communication & Updates
 - **[Notification Center](./notification-center)** - Managing alerts and updates
@@ -56,16 +56,16 @@ This section is for **all users** of Conducky, including event attendees, Code o
 ## 👥 Who This Guide Is For
 
 ### Event Attendees (Reporters)
-If you're attending an event and may need to report incidents:
+If you're attending an event and may need to incident reports:
 - **Start with**: [Quick Start](./quick-start) → [Report Submission](./getting-started#your-first-event)
 - **Key sections**: Authentication, Navigation, FAQ
-- **Your role**: Submit reports, track your submissions, communicate with response teams
+- **Your role**: Submit incidents, track your submissions, communicate with response teams
 
 ### Code of Conduct Team Members (Responders)
 If you're part of the safety/response team for events:
 - **Start with**: [Quick Start](./quick-start) → [Getting Started](./getting-started) → [Navigation](./navigation)
-- **Key sections**: Report Comments, Cross-Event Reports, Notification Center
-- **Your role**: Review and respond to reports, manage incident workflows, maintain team communication
+- **Key sections**: Report Comments, Cross-Event Incidents, Notification Center
+- **Your role**: Review and respond to incidents, manage incident workflows, maintain team communication
 
 ### Event Administrators (Event Admins)
 If you manage events and their safety teams:
@@ -75,7 +75,7 @@ If you manage events and their safety teams:
 
 ### System Users (Multi-Event)
 If you participate in multiple events with different roles:
-- **Start with**: [Navigation](./navigation) → [Cross-Event Reports](./cross-event-reports)
+- **Start with**: [Navigation](./navigation) → [Cross-Event Incidents](./cross-event-reports)
 - **Key sections**: Profile Management, Notification Center, Event Management
 - **Your role**: Efficiently manage multiple event contexts and responsibilities
 
@@ -83,7 +83,7 @@ If you participate in multiple events with different roles:
 
 Understanding your role helps you focus on the most relevant documentation:
 
-| Role | Can Submit Reports | Can View All Reports | Can Manage Users | Can Configure Events |
+| Role | Can Submit Incidents | Can View All Incidents | Can Manage Users | Can Configure Events |
 |------|-------------------|---------------------|------------------|---------------------|
 | **Reporter** | ✅ | ❌ (own only) | ❌ | ❌ |
 | **Responder** | ✅ | ✅ | ❌ | ❌ |
@@ -95,10 +95,10 @@ Understanding your role helps you focus on the most relevant documentation:
 ## 🔗 Quick Navigation
 
 ### By Task
-- **I need to submit a report** → [Quick Start](./quick-start) → [Getting Started](./getting-started#your-first-event)
+- **I need to submit an incident** → [Quick Start](./quick-start) → [Getting Started](./getting-started#your-first-event)
 - **I can't access something** → [Troubleshooting](./troubleshooting) → [FAQ](./faq)
 - **I need to invite someone** → [Invite Links](./invite-links) → [User Management](./user-management)
-- **I'm managing multiple events** → [Cross-Event Reports](./cross-event-reports) → [Navigation](./navigation)
+- **I'm managing multiple events** → [Cross-Event Incidents](./cross-event-reports) → [Navigation](./navigation)
 - **I need to train my team** → [Quick Start](./quick-start) → [Navigation](./navigation) → [Report Comments](./report-comments)
 
 ### By Experience Level
@@ -132,7 +132,7 @@ If you need to integrate Conducky with other systems:
 ### Contact Support
 - **Event-specific issues**: Contact your event administrators
 - **Account or system issues**: Contact your system administrators  
-- **Bug reports**: [GitHub Issues](https://github.com/mattstratton/conducky/issues)
+- **Bug incidents**: [GitHub Issues](https://github.com/mattstratton/conducky/issues)
 - **Community help**: [GitHub Discussions](https://github.com/mattstratton/conducky/discussions)
 
 ---

@@ -29,7 +29,7 @@ describe("EventNavBar", () => {
     // The Sheet dialog should be present
     const dialog = screen.getByRole('dialog');
     expect(dialog).toBeInTheDocument();
-    // 'My Reports' should be present inside the dialog
+    // 'My Incidents' should be present inside the dialog
     expect(within(dialog).getByText("My Incidents")).toBeInTheDocument();
     // Close Sheet
     const closeBtn = screen.getByLabelText(/close event navigation/i);

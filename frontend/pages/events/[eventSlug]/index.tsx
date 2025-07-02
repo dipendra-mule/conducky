@@ -255,7 +255,7 @@ export default function PublicEventPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-gray-600 dark:text-gray-400">
-              Our incident management system ensures that all reports are handled professionally, 
+              Our incident management system ensures that all incidents are handled professionally, 
               confidentially, and with care. Here's how the process works:
             </p>
             
@@ -438,7 +438,7 @@ export default function PublicEventPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-600 dark:text-gray-400">
-                To submit reports, participate in discussions, or join the response team, 
+                To submit incidents, participate in discussions, or join the response team, 
                 you'll need to be invited to this event.
               </p>
               

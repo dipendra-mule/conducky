@@ -195,7 +195,7 @@ export function UserManager({ eventSlug, rolesList }: UserManagerProps) {
                       ) : (
                         <>
                           <Link href={`/events/${eventSlug}/team/${eu.id}`}><Button className="bg-blue-600 text-white">View</Button></Link>
-                          <Link href={`/events/${eventSlug}/reports?user=${eu.id}`}><Button className="bg-purple-600 text-white">User&apos;s Reports</Button></Link>
+                          <Link href={`/events/${eventSlug}/incidents?user=${eu.id}`}><Button className="bg-purple-600 text-white">User&apos;s Incidents</Button></Link>
                           <Button onClick={() => handleEdit(eu)} className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white">Edit</Button>
                           <Button onClick={() => handleRemove(eu)} className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white">Remove</Button>
                         </>
@@ -233,7 +233,7 @@ export function UserManager({ eventSlug, rolesList }: UserManagerProps) {
                   ) : (
                     <>
                       <Link href={`/events/${eventSlug}/team/${eu.id}`}><Button className="bg-blue-600 text-white">View</Button></Link>
-                      <Link href={`/events/${eventSlug}/reports?user=${eu.id}`}><Button className="bg-purple-600 text-white">User&apos;s Reports</Button></Link>
+                      <Link href={`/events/${eventSlug}/incidents?user=${eu.id}`}><Button className="bg-purple-600 text-white">User&apos;s Incidents</Button></Link>
                       <Button onClick={() => handleEdit(eu)} className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white">Edit</Button>
                       <Button onClick={() => handleRemove(eu)} className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white">Remove</Button>
                     </>

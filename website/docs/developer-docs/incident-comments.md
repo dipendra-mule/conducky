@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
 ---
-# Report Comments System
+# Incident Comments System
 
 ## Overview
 
@@ -31,9 +31,9 @@ The comment system allows users to collaborate on incident reports through threa
 ## Permissions
 
 ### Add Comment
-- **Responders, Admins, SuperAdmins**: Can add comments to any report in their events
-- **Reporters**: Can add comments to their own reports
-- **Assigned Users**: Can comment on reports assigned to them
+- **Responders, Admins, SuperAdmins**: Can add comments to any incident in their events
+- **Reporters**: Can add comments to their own incidents
+- **Assigned Users**: Can comment on incidents assigned to them
 
 ### Edit Comment
 - **Comment Author**: Can edit their own comments at any time
@@ -47,16 +47,16 @@ The comment system allows users to collaborate on incident reports through threa
 
 ### Internal Comments
 - **Creation**: Only Responders, Admins, and SuperAdmins can create internal comments
-- **Visibility**: Internal comments are hidden from Reporters unless they're assigned to the report
+- **Visibility**: Internal comments are hidden from Reporters unless they're assigned to the incident 
 - **Use Cases**: Sensitive information, internal coordination, response planning
 
 ## API Endpoints
 
 ### Core Operations
-- `GET /api/events/slug/:slug/reports/:reportId/comments` - List comments with pagination/filtering
-- `POST /api/events/slug/:slug/reports/:reportId/comments` - Create new comment
-- `PATCH /api/events/slug/:slug/reports/:reportId/comments/:commentId` - Update comment
-- `DELETE /api/events/slug/:slug/reports/:reportId/comments/:commentId` - Delete comment
+- `GET /api/events/slug/:slug/incidents/:incidentId/comments` - List comments with pagination/filtering
+- `POST /api/events/slug/:slug/incidents/:incidentId/comments` - Create new comment
+- `PATCH /api/events/slug/:slug/incidents/:incidentId/comments/:commentId` - Update comment
+- `DELETE /api/events/slug/:slug/incidents/:incidentId/comments/:commentId` - Delete comment
 
 ### Query Parameters (GET)
 - `page`, `limit` - Pagination controls
@@ -88,7 +88,7 @@ See the [API Endpoints documentation](./api-endpoints.md#comments) for complete 
 ### Planned Features
 - **Edit History**: Track and display comment edit history
 - **Audit Logging**: Complete audit trail for all comment operations
-- **Advanced Search**: Search across multiple reports and events
+- **Advanced Search**: Search across multiple incidents and events
 - **Comment Reactions**: Emoji reactions for quick feedback
 - **File Attachments**: Attach images and documents to comments
 

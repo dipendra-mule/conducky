@@ -8,7 +8,7 @@ beforeEach(() => {
   inMemoryStore.roles.length = 3;
   inMemoryStore.users.length = 1;
   inMemoryStore.userEventRoles.length = 1;
-  inMemoryStore.reports.length = 1;
+  inMemoryStore.incidents.length = 1;
   inMemoryStore.auditLogs.length = 0;
 });
 

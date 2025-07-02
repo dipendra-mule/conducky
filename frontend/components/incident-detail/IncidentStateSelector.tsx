@@ -1,6 +1,6 @@
 import React from "react";
 
-interface ReportStateSelectorProps {
+interface IncidentStateSelectorProps {
   currentState: string;
   allowedTransitions: string[];
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -9,14 +9,14 @@ interface ReportStateSelectorProps {
   success?: string;
 }
 
-export function ReportStateSelector({
+export function IncidentStateSelector({
   currentState,
   allowedTransitions,
   onChange,
   loading = false,
   error = "",
   success = "",
-}: ReportStateSelectorProps) {
+}: IncidentStateSelectorProps) {
   return (
     <div className="w-full max-w-xs">
       <label htmlFor="report-state" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State</label>

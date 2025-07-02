@@ -2,16 +2,16 @@ import React, { useState, ChangeEvent } from "react";
 import { Card } from "./ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { TitleEditForm } from './incident-detail/TitleEditForm';
-import { ReportStateSelector } from './incident-detail/ReportStateSelector';
+import { IncidentStateSelector } from './incident-detail/IncidentStateSelector';
 import { StateManagementSection } from './incident-detail/StateManagementSection';
 import { AssignmentSection } from './incident-detail/AssignmentSection';
 import { EvidenceSection } from './incident-detail/EvidenceSection';
 import { CommentsSection } from './incident-detail/CommentsSection';
-import { ReportMetaTable } from './incident-detail/ReportMetaTable';
+import { IncidentMetaTable } from './incident-detail/IncidentMetaTable';
 import { MobileQuickActions } from './incident-detail/MobileQuickActions';
 import { Pencil, ChevronDown } from "lucide-react";
 
-export interface ReportDetailViewProps {
+export interface IncidentDetailViewProps {
   incident: any;
   user: any;
   userRoles?: string[];
@@ -53,12 +53,12 @@ export interface ReportDetailViewProps {
   }>;
   apiBaseUrl?: string;
   onTitleEdit?: (title: string) => Promise<void>;
-  onReportUpdate?: (updatedReport: any) => void; // New callback for report updates
+  onIncidentUpdate?: (updatedIncident: any) => void; // New callback for incident updates
   [key: string]: any;
 }
 
-export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
-  report,
+export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
+  incident,
   user,
   userRoles = [],
   comments = [], // Deprecated but kept for backward compatibility
@@ -87,7 +87,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
   stateHistory = [],
   apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
   onTitleEdit,
-  onReportUpdate,
+  onIncidentUpdate,
   ...rest
 }) => {
   const isSystemAdmin = user && user.roles && user.roles.includes("system_admin");
@@ -98,7 +98,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
     ["event_admin", "system_admin"].includes(r)
   );
   const canChangeState = isSystemAdmin || isResponderOrAbove;
-  const canEditTitle = user && (user.id === report.reporterId || isAdminOrSystemAdmin);
+  const canEditTitle = user && (user.id === incident.reporterId || isAdminOrSystemAdmin);
 
   const [commentBody, setCommentBody] = useState("");
   const [commentVisibility, setCommentVisibility] = useState("public");
@@ -139,7 +139,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
   if (loading) return <Card>Loading...</Card>;
   if (error) return <Card className="text-red-600">{error}</Card>;
-  if (!report) return null;
+  if (!incident) return null;
 
   return (
     <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 lg:px-8 py-4 space-y-4">
@@ -149,7 +149,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
           <div className="flex-1">
             {editingTitle ? (
               <TitleEditForm
-                initialTitle={report.title || ""}
+                initialTitle={incident.title || ""}
                 onSave={async (title) => {
                   if (onTitleEdit) {
                     await onTitleEdit(title);
@@ -161,7 +161,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
             ) : (
               <div className="space-y-2">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold break-words">
-                  {report.title || <span className="italic text-gray-400">(untitled)</span>}
+                  {incident.title || <span className="italic text-gray-400">(untitled)</span>}
                   {canEditTitle && (
                     <button 
                       type="button" 
@@ -174,7 +174,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
                   )}
                 </h1>
                 <div className="text-sm text-muted-foreground">
-                  Report ID: {report.id}
+                  Incident ID: {incident.id}
                 </div>
               </div>
             )}
@@ -188,7 +188,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
           onClick={() => toggleSection('details')}
           className="w-full p-4 sm:p-6 flex items-center justify-between bg-background hover:bg-muted/50 transition-colors lg:cursor-default lg:pointer-events-none"
         >
-          <h2 className="text-lg font-semibold">Report Details</h2>
+          <h2 className="text-lg font-semibold">Incident Details</h2>
           <ChevronDown 
             className={`h-5 w-5 transition-transform lg:hidden ${
               collapsedSections.details ? 'rotate-180' : ''
@@ -197,24 +197,24 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
         </button>
         <div className={`${collapsedSections.details ? 'hidden' : 'block'} lg:block`}>
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <ReportMetaTable
-              id={report.id}
-              type={report.type}
-              description={report.description}
-              reporter={report.reporter}
-              location={report.location}
-              contactPreference={report.contactPreference}
-              incidentAt={report.incidentAt}
-              parties={report.parties}
-              canEditLocation={isResponderOrAbove || (user && user.id === report.reporterId)}
-              canEditContactPreference={user && user.id === report.reporterId}
-              canEditIncidentAt={isResponderOrAbove || (user && user.id === report.reporterId)}
-              canEditParties={isResponderOrAbove || (user && user.id === report.reporterId)}
-              canEditDescription={isAdminOrSystemAdmin || (user && user.id === report.reporterId)}
-              canEditType={isResponderOrAbove || (user && user.id === report.reporterId)}
+            <IncidentMetaTable
+              id={incident.id}
+              type={incident.type}
+              description={incident.description}
+              reporter={incident.reporter}
+              location={incident.location}
+              contactPreference={incident.contactPreference}
+              incidentAt={incident.incidentAt}
+              parties={incident.parties}
+              canEditLocation={isResponderOrAbove || (user && user.id === incident.reporterId)}
+              canEditContactPreference={user && user.id === incident.reporterId}
+              canEditIncidentAt={isResponderOrAbove || (user && user.id === incident.reporterId)}
+              canEditParties={isResponderOrAbove || (user && user.id === incident.reporterId)}
+              canEditDescription={isAdminOrSystemAdmin || (user && user.id === incident.reporterId)}
+              canEditType={isResponderOrAbove || (user && user.id === incident.reporterId)}
               onLocationEdit={async (location) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/location`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/location`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -230,8 +230,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.incident) {
-                    onReportUpdate(responseData.incident);
+                  if (onIncidentUpdate && responseData.incident) {
+                    onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update location:', error);
@@ -241,7 +241,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onContactPreferenceEdit={async (contactPreference) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/contact-preference`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/contact-preference`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -257,8 +257,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.incident) {
-                    onReportUpdate(responseData.incident);
+                  if (onIncidentUpdate && responseData.incident) {
+                    onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update contact preference:', error);
@@ -268,7 +268,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onIncidentAtEdit={async (incidentAt) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/incident-date`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/incident-date`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -284,8 +284,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.incident) {
-                    onReportUpdate(responseData.incident);
+                  if (onIncidentUpdate && responseData.incident) {
+                    onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update incident date:', error);
@@ -295,7 +295,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onPartiesEdit={async (parties) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/parties`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/parties`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -311,8 +311,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.incident) {
-                    onReportUpdate(responseData.incident);
+                  if (onIncidentUpdate && responseData.incident) {
+                    onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update parties involved:', error);
@@ -322,7 +322,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onDescriptionEdit={async (description) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/description`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/description`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -338,8 +338,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.incident) {
-                    onReportUpdate(responseData.incident);
+                  if (onIncidentUpdate && responseData.incident) {
+                    onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update description:', error);
@@ -349,7 +349,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
               }}
               onTypeEdit={async (type) => {
                 try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${report.eventId}/incidents/${report.id}/type`, {
+                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/type`, {
                     method: 'PATCH',
                     headers: {
                       'Content-Type': 'application/json',
@@ -365,8 +365,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
 
                   // Update local state with the response data
                   const responseData = await response.json();
-                  if (onReportUpdate && responseData.incident) {
-                    onReportUpdate(responseData.incident);
+                  if (onIncidentUpdate && responseData.incident) {
+                    onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
                   console.error('Failed to update type:', error);
@@ -396,8 +396,8 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
             {onEnhancedStateChange ? (
               <StateManagementSection
-                currentState={report.state}
-                allowedTransitions={getAllowedTransitions(report.state)}
+                currentState={incident.state}
+                allowedTransitions={getAllowedTransitions(incident.state)}
                 onStateChange={onEnhancedStateChange}
                 loading={stateChangeLoading}
                 error={stateChangeError}
@@ -417,9 +417,9 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
                       {canChangeState ? (
                         editingState ? (
                           <div className="flex items-center gap-2">
-                            <ReportStateSelector
-                              currentState={report.state}
-                              allowedTransitions={getAllowedTransitions(report.state)}
+                            <IncidentStateSelector
+                              currentState={incident.state}
+                              allowedTransitions={getAllowedTransitions(incident.state)}
                               onChange={onStateChange}
                               loading={stateChangeLoading}
                               error={stateChangeError}
@@ -429,14 +429,14 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
                           </div>
                         ) : (
                           <span className="flex items-center gap-2">
-                            {report.state}
+                            {incident.state}
                             <button type="button" onClick={() => setEditingState(true)} className="ml-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Edit state">
                               <Pencil size={16} />
                             </button>
                           </span>
                         )
                       ) : (
-                        report.state
+                        incident.state
                       )}
                     </TableCell>
                   </TableRow>
@@ -482,7 +482,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
             <EvidenceSection
               evidenceFiles={evidenceFiles}
               apiBaseUrl={apiBaseUrl}
-              report={report}
+              incident={incident}
               isResponderOrAbove={isResponderOrAbove}
               deletingEvidenceId={deletingEvidenceId}
               setDeletingEvidenceId={setDeletingEvidenceId}
@@ -513,7 +513,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
             {eventSlug && (
               <CommentsSection
-                incidentId={report.id}
+                incidentId={incident.id}
                 eventSlug={eventSlug}
                 user={user}
                 isResponderOrAbove={isResponderOrAbove}
@@ -539,7 +539,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
       {/* Mobile Quick Actions - Fixed floating button */}
       <MobileQuickActions
         canAddComment={!!eventSlug}
-        canUploadEvidence={isResponderOrAbove || (user && user.id === report.reporterId)}
+        canUploadEvidence={isResponderOrAbove || (user && user.id === incident.reporterId)}
         canEditIncident={canEditTitle}
         onAddComment={() => {
           // Scroll to comments section and focus input
@@ -580,7 +580,7 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
           // Copy current URL to clipboard
           if (navigator.share) {
             navigator.share({
-              title: report.title || 'Report',
+              title: incident.title || 'Report',
               url: window.location.href
             });
           } else {
@@ -593,4 +593,4 @@ export const ReportDetailView: React.FC<ReportDetailViewProps> = ({
   );
 };
 
-export default ReportDetailView; 
+export default IncidentDetailView; 

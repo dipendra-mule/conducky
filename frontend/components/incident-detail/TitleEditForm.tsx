@@ -49,12 +49,12 @@ export function TitleEditForm({ initialTitle, onSave, onCancel }: TitleEditFormP
           control={form.control}
           render={({ field }) => (
             <FormItem className="w-80 max-w-full">
-              <FormLabel htmlFor="edit-title">Report Title</FormLabel>
+              <FormLabel htmlFor="edit-title">Incident Title</FormLabel>
               <FormControl>
                 <input
                   id="edit-title"
                   type="text"
-                  placeholder="Report Title"
+                  placeholder="Incident Title"
                   autoFocus
                   className="border px-2 py-1 rounded w-full dark:bg-gray-800 dark:text-gray-100"
                   {...field}

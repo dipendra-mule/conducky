@@ -171,7 +171,7 @@ export default function OrganizationDashboard() {
   }
 
   const activeEvents = events.filter(event => event._count.incidents > 0);
-  const totalReports = events.reduce((sum, event) => sum + event._count.incidents, 0);
+  const totalIncidents = events.reduce((sum, event) => sum + event._count.incidents, 0);
 
   return (
     <>
@@ -233,11 +233,11 @@ export default function OrganizationDashboard() {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
               <ClipboardList className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalReports}</div>
+              <div className="text-2xl font-bold">{totalIncidents}</div>
             </CardContent>
           </Card>
           
@@ -357,9 +357,9 @@ export default function OrganizationDashboard() {
               </Button>
               
               <Button asChild variant="outline" className="h-auto p-4 flex-col">
-                <Link href={`/orgs/${orgSlug}/reports`}>
+                <Link href={`/orgs/${orgSlug}/incidents`}>
                   <ClipboardList className="w-6 h-6 mb-2" />
-                  View Reports
+                  View Incidents
                 </Link>
               </Button>
               

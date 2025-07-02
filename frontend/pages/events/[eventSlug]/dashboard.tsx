@@ -143,7 +143,7 @@ export default function EventDashboard() {
           <Card className="p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Please Log In</h2>
             <p className="text-muted-foreground mb-6">
-              You need to log in to access the full event dashboard and submit reports.
+              You need to log in to access the full event dashboard and submit incidents.
             </p>
             <Link href="/login">
               <Button size="lg">Log In</Button>
@@ -193,8 +193,8 @@ export default function EventDashboard() {
               <Link href={`/events/${eventSlug}/incidents/new`}>
                 <Button>Submit New Report</Button>
               </Link>
-              <Link href={`/events/${eventSlug}/reports`}>
-                <Button variant="outline">View My Reports</Button>
+              <Link href={`/events/${eventSlug}/incidents`}>
+                <Button variant="outline">View My Incidents</Button>
               </Link>
             </div>
           </Card>
@@ -212,8 +212,8 @@ export default function EventDashboard() {
               }
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link href={`/events/${eventSlug}/reports`}>
-                <Button>Manage Reports</Button>
+              <Link href={`/events/${eventSlug}/incidents`}>
+                <Button>Manage Incidents</Button>
               </Link>
               {isAdmin && (
                 <>

@@ -102,8 +102,8 @@ router.get('/me/events', async (req: any, res: Response): Promise<void> => {
   }
 });
 
-// Get user reports
-router.get('/me/reports', async (req: any, res: Response): Promise<void> => {
+// Get user incidents
+router.get('/me/incidents', async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
       res.status(401).json({ error: 'Not authenticated' });

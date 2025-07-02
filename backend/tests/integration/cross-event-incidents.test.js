@@ -148,31 +148,31 @@ describe('Cross-Event Reports API Integration Tests', () => {
       { id: '3', name: 'Another User', email: 'user@example.com' }
     ];
     inMemoryStore.events = mockEvents;
-    inMemoryStore.reports = mockReports;
+    inMemoryStore.incidents = mockReports;
     inMemoryStore.userRoles = mockUserRoles; // Use unified RBAC data
     inMemoryStore.userEventRoles = []; // Clear legacy data
   });
 
-  describe('GET /api/users/me/reports', () => {
+  describe('GET /api/users/me/incidents', () => {
     it('should return all reports across user events with default pagination', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports')
+        .get('/api/users/me/incidents')
         .expect(200);
 
-      expect(response.body).toHaveProperty('reports');
+      expect(response.body).toHaveProperty('incidents');
       expect(response.body).toHaveProperty('total');
       expect(response.body).toHaveProperty('page');
       expect(response.body).toHaveProperty('limit');
       expect(response.body).toHaveProperty('totalPages');
 
-      expect(response.body.reports).toHaveLength(3);
+      expect(response.body.incidents).toHaveLength(3);
       expect(response.body.total).toBe(3);
       expect(response.body.page).toBe(1);
       expect(response.body.limit).toBe(20);
       expect(response.body.totalPages).toBe(1);
 
       // Check that reports include user roles
-      response.body.reports.forEach(report => {
+      response.body.incidents.forEach(report => {
         expect(report).toHaveProperty('userRoles');
         expect(Array.isArray(report.userRoles)).toBe(true);
       });
@@ -180,7 +180,7 @@ describe('Cross-Event Reports API Integration Tests', () => {
 
     it('should handle pagination correctly', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?page=1&limit=2')
+        .get('/api/users/me/incidents?page=1&limit=2')
         .expect(200);
 
       expect(response.body.page).toBe(1);
@@ -190,92 +190,92 @@ describe('Cross-Event Reports API Integration Tests', () => {
 
     it('should filter reports by status', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?status=submitted')
+        .get('/api/users/me/incidents?status=submitted')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(1);
-      expect(response.body.reports[0].state).toBe('submitted');
+      expect(response.body.incidents).toHaveLength(1);
+      expect(response.body.incidents[0].state).toBe('submitted');
     });
 
     it('should filter reports by severity', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?severity=high')
+        .get('/api/users/me/incidents?severity=high')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(1);
-      expect(response.body.reports[0].severity).toBe('high');
+      expect(response.body.incidents).toHaveLength(1);
+      expect(response.body.incidents[0].severity).toBe('high');
     });
 
     it('should filter reports by event', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?event=devconf-2024')
+        .get('/api/users/me/incidents?event=devconf-2024')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(2);
-      response.body.reports.forEach(report => {
+      expect(response.body.incidents).toHaveLength(2);
+      response.body.incidents.forEach(report => {
         expect(report.event.slug).toBe('devconf-2024');
       });
     });
 
     it('should search reports by title and description', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?search=harassment')
+        .get('/api/users/me/incidents?search=harassment')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(1);
-      expect(response.body.reports[0].title).toContain('Harassment');
+      expect(response.body.incidents).toHaveLength(1);
+      expect(response.body.incidents[0].title).toContain('Harassment');
     });
 
     it('should filter reports assigned to current user', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?assigned=me')
+        .get('/api/users/me/incidents?assigned=me')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(2);
-      response.body.reports.forEach(report => {
+      expect(response.body.incidents).toHaveLength(2);
+      response.body.incidents.forEach(report => {
         expect(report.assignedResponder?.id).toBe('1');
       });
     });
 
     it('should filter unassigned reports', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?assigned=unassigned')
+        .get('/api/users/me/incidents?assigned=unassigned')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(1);
-      expect(response.body.reports[0].assignedResponder).toBeNull();
+      expect(response.body.incidents).toHaveLength(1);
+      expect(response.body.incidents[0].assignedResponder).toBeNull();
     });
 
     it('should sort reports by different fields', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?sort=title&order=asc')
+        .get('/api/users/me/incidents?sort=title&order=asc')
         .expect(200);
 
-      expect(response.body.reports[0].title).toBe('Code of Conduct Violation');
+      expect(response.body.incidents[0].title).toBe('Code of Conduct Violation');
     });
 
     it('should handle multiple filters combined', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?status=investigating&event=pydata-chicago')
+        .get('/api/users/me/incidents?status=investigating&event=pydata-chicago')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(1);
-      expect(response.body.reports[0].state).toBe('investigating');
-      expect(response.body.reports[0].event.slug).toBe('pydata-chicago');
+      expect(response.body.incidents).toHaveLength(1);
+      expect(response.body.incidents[0].state).toBe('investigating');
+      expect(response.body.incidents[0].event.slug).toBe('pydata-chicago');
     });
 
     it('should return empty results when no reports match filters', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?status=nonexistent')
+        .get('/api/users/me/incidents?status=nonexistent')
         .expect(200);
 
-      expect(response.body.reports).toHaveLength(0);
+      expect(response.body.incidents).toHaveLength(0);
       expect(response.body.total).toBe(0);
     });
 
     it('should require authentication', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports')
+        .get('/api/users/me/incidents')
         .set('x-test-disable-auth', 'true')
         .expect(401);
 
@@ -290,7 +290,7 @@ describe('Cross-Event Reports API Integration Tests', () => {
 
     it('should validate pagination parameters', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?page=0&limit=0')
+        .get('/api/users/me/incidents?page=0&limit=0')
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
@@ -299,7 +299,7 @@ describe('Cross-Event Reports API Integration Tests', () => {
 
     it('should limit maximum page size', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports?limit=1000')
+        .get('/api/users/me/incidents?limit=1000')
         .expect(400);
 
       expect(response.body).toHaveProperty('error');
@@ -308,33 +308,33 @@ describe('Cross-Event Reports API Integration Tests', () => {
 
     it('should include all required report fields', async () => {
       const response = await request(app)
-        .get('/api/users/me/reports')
+        .get('/api/users/me/incidents')
         .expect(200);
 
-      const report = response.body.reports[0];
+      const incident = response.body.incidents[0];
       
       // Check required fields
-      expect(report).toHaveProperty('id');
-      expect(report).toHaveProperty('title');
-      expect(report).toHaveProperty('description');
-      expect(report).toHaveProperty('state');
-      expect(report).toHaveProperty('type');
-      expect(report).toHaveProperty('createdAt');
-      expect(report).toHaveProperty('updatedAt');
-      expect(report).toHaveProperty('event');
-      expect(report).toHaveProperty('reporter');
-      expect(report).toHaveProperty('evidenceFiles');
-      expect(report).toHaveProperty('_count');
-      expect(report).toHaveProperty('userRoles');
+      expect(incident).toHaveProperty('id');
+      expect(incident).toHaveProperty('title');
+      expect(incident).toHaveProperty('description');
+      expect(incident).toHaveProperty('state');
+      expect(incident).toHaveProperty('type');
+      expect(incident).toHaveProperty('createdAt');
+      expect(incident).toHaveProperty('updatedAt');
+      expect(incident).toHaveProperty('event');
+      expect(incident).toHaveProperty('reporter');
+      expect(incident).toHaveProperty('evidenceFiles');
+      expect(incident).toHaveProperty('_count');
+      expect(incident).toHaveProperty('userRoles');
 
       // Check event structure
-      expect(report.event).toHaveProperty('id');
-      expect(report.event).toHaveProperty('name');
-      expect(report.event).toHaveProperty('slug');
+      expect(incident.event).toHaveProperty('id');
+      expect(incident.event).toHaveProperty('name');
+      expect(incident.event).toHaveProperty('slug');
 
       // Check evidence files structure
-      if (report.evidenceFiles.length > 0) {
-        const evidence = report.evidenceFiles[0];
+      if (incident.evidenceFiles.length > 0) {
+        const evidence = incident.evidenceFiles[0];
         expect(evidence).toHaveProperty('id');
         expect(evidence).toHaveProperty('filename');
         expect(evidence).toHaveProperty('mimetype');
@@ -342,23 +342,23 @@ describe('Cross-Event Reports API Integration Tests', () => {
       }
 
       // Check comment count
-      expect(report._count).toHaveProperty('comments');
-      expect(typeof report._count.comments).toBe('number');
+      expect(incident._count).toHaveProperty('comments');
+      expect(typeof incident._count.comments).toBe('number');
     });
 
     it('should return canViewAssignments flag based on user roles', async () => {
       // Test with user who has responder role (should have assignment permissions)
       const responderResponse = await request(app)
-        .get('/api/users/me/reports')
+        .get('/api/users/me/incidents')
         .set('x-test-user-id', '3') // Responder user
         .expect(200);
 
       expect(responderResponse.body.canViewAssignments).toBe(true);
 
-      // Test with user who only has reporter role (should not have assignment permissions)
+      // Test with user who has only reporter role (should not have assignment permissions)
       const reporterResponse = await request(app)
-        .get('/api/users/me/reports')
-        .set('x-test-user-id', '2') // Reporter user
+        .get('/api/users/me/incidents')
+        .set('x-test-user-id', '4') // Reporter user
         .expect(200);
 
       expect(reporterResponse.body.canViewAssignments).toBe(false);
