@@ -23,7 +23,7 @@ interface EventRecentActivityProps {
 }
 
 export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivityProps) {
-  const [incidents, setIncidents] = useState<Report[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -98,39 +98,39 @@ export function EventRecentActivity({ eventSlug, userRoles }: EventRecentActivit
         <div className="text-center text-muted-foreground py-8">Loading recent activity...</div>
       ) : error ? (
         <div className="text-center text-destructive py-8">{error}</div>
-      ) : reports.length === 0 ? (
+      ) : incidents.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">
-          No reports yet. Submit the first one!
+          No incidents yet. Submit the first one!
         </div>
       ) : (
         <div className="space-y-3">
-          {reports.map((report) => (
+          {incidents.map((incident) => (
             <div
-              key={report.id}
+              key={incident.id}
               className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-medium text-foreground truncate">
-                    {report.title || report.type}
+                    {incident.title || incident.type}
                   </h3>
-                  <Badge className={getStateColor(report.state)}>
-                    {report.state}
+                  <Badge className={getStateColor(incident.state)}>
+                    {incident.state}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-3 w-3" />
-                  <span>{formatDate(report.createdAt)}</span>
-                  {report.reporter && (isAdmin || isResponder) && (
+                  <span>{formatDate(incident.createdAt)}</span>
+                  {incident.reporter && (isAdmin || isResponder) && (
                     <>
                       <span>•</span>
-                      <span>by {report.reporter.email || "anonymous"}</span>
+                      <span>by {incident.reporter.email || "anonymous"}</span>
                     </>
                   )}
                 </div>
               </div>
               <Button asChild variant="ghost" size="sm">
-                <Link href={`/events/${eventSlug}/incidents/${report.id}`}>
+                <Link href={`/events/${eventSlug}/incidents/${incident.id}`}>
                   View
                 </Link>
               </Button>

@@ -24,7 +24,7 @@ export async function createNotification({
   title,
   message,
   eventId = null,
-  reportId = null,
+  incidentId = null,
   actionData = null,
   actionUrl = null
 }: {
@@ -34,7 +34,7 @@ export async function createNotification({
   title: string;
   message: string;
   eventId?: string | null;
-  reportId?: string | null;
+  incidentId?: string | null;
   actionData?: any;
   actionUrl?: string | null;
 }) {
@@ -47,7 +47,7 @@ export async function createNotification({
         title,
         message,
         eventId,
-        incidentId: reportId,
+        incidentId,
         actionData,
         actionUrl,
       },
@@ -93,11 +93,11 @@ export async function createNotification({
 }
 
 /**
- * Notify users about report events
+ * Notify users about incident events
  */
 export async function notifyReportEvent(incidentId: string, type: string, excludeUserId: string | null = null) {
   try {
-    // Get the report with event and reporter info
+    // Get the incident with event and reporter info
     const incident = await prisma.incident.findUnique({
       where: { id: incidentId },
       include: {
@@ -108,7 +108,7 @@ export async function notifyReportEvent(incidentId: string, type: string, exclud
 
     if (!incident) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('Report not found for notification:', incidentId);
+        console.error('Incident not found for notification:', incidentId);
       }
       return;
     }
@@ -149,36 +149,36 @@ export async function notifyReportEvent(incidentId: string, type: string, exclud
         switch (type) {
           case 'incident_submitted':
           case 'submitted': // backward compatibility
-            title = 'New Report Submitted';
-            message = `A new report has been submitted for ${incident.event.name}`;
+            title = 'New Incident Submitted';
+            message = `A new incident has been submitted for ${incident.event.name}`;
             priority = 'high';
             break;
           case 'incident_assigned':
           case 'assigned': // backward compatibility
-            title = 'Report Assigned';
-            message = `Report #${incident.id.substring(0, 8)} has been assigned`;
+            title = 'Incident Assigned';
+            message = `Incident #${incident.id.substring(0, 8)} has been assigned`;
             priority = 'normal';
             break;
           case 'incident_status_changed':
           case 'status_changed': // backward compatibility
-            title = 'Report Status Updated';
-            message = `Report #${incident.id.substring(0, 8)} status has been updated`;
+            title = 'Incident Status Updated';
+            message = `Incident #${incident.id.substring(0, 8)} status has been updated`;
             priority = 'normal';
             break;
           case 'incident_comment_added':
           case 'comment_added': // backward compatibility
             title = 'New Comment Added';
-            message = `A new comment has been added to report #${incident.id.substring(0, 8)}`;
+            message = `A new comment has been added to incident #${incident.id.substring(0, 8)}`;
             priority = 'normal';
             break;
           default:
-            title = 'Report Update';
-            message = `Report #${incident.id.substring(0, 8)} has been updated`;
+            title = 'Incident Update';
+            message = `Incident #${incident.id.substring(0, 8)} has been updated`;
             priority = 'normal';
         }
 
         const frontendBaseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
-        const actionUrl = `${frontendBaseUrl}/events/${incident.event.slug}/reports/${incident.id}`;
+        const actionUrl = `${frontendBaseUrl}/events/${incident.event.slug}/incidents/${incident.id}`;
         
         // Map notification types with fallback error handling
         const getNotificationType = (inputType: string): ReportNotificationType => {
@@ -207,7 +207,7 @@ export async function notifyReportEvent(incidentId: string, type: string, exclud
           title,
           message,
           eventId: incident.eventId,
-          reportId: incident.id,
+          incidentId: incident.id,
           actionUrl,
         });
       });
@@ -216,11 +216,11 @@ export async function notifyReportEvent(incidentId: string, type: string, exclud
     
     // Only log in non-test environments
     if (process.env.NODE_ENV !== 'test') {
-      console.log(`Created ${notifications.length} notifications for report ${incidentId}`);
+      console.log(`Created ${notifications.length} notifications for incident ${incidentId}`);
     }
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
-      console.error('Failed to notify report event:', error);
+      console.error('Failed to notify incident event:', error);
     }
   }
 }

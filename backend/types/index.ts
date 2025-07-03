@@ -177,13 +177,13 @@ export enum ReportPriority {
  * Comment entity for report discussions
  */
 export interface Comment extends BaseEntity {
-  reportId: string;
+  incidentId: string;
   userId?: string | null;
   authorName?: string | null;
   content: string;
   isInternal: boolean;
   isAnonymous: boolean;
-  report?: Report;
+  incident?: Report;
   user?: User;
 }
 
@@ -191,7 +191,7 @@ export interface Comment extends BaseEntity {
  * Evidence entity for report attachments
  */
 export interface Evidence extends BaseEntity {
-  reportId: string;
+  incidentId: string;
   fileName: string;
   originalName: string;
   filePath: string;
@@ -199,7 +199,7 @@ export interface Evidence extends BaseEntity {
   mimeType: string;
   uploadedByUserId?: string | null;
   description?: string | null;
-  report?: Report;
+  incident?: Report;
   uploadedBy?: User;
 }
 
@@ -207,13 +207,13 @@ export interface Evidence extends BaseEntity {
  * Status history for tracking report state changes
  */
 export interface StatusHistory extends BaseEntity {
-  reportId: string;
+  incidentId: string;
   fromStatus?: ReportStatus | null;
   toStatus: ReportStatus;
   changedByUserId?: string | null;
   reason?: string | null;
   notes?: string | null;
-  report?: Report;
+  incident?: Report;
   changedBy?: User;
 }
 
@@ -372,7 +372,7 @@ export interface UpdateReportRequest {
  * Comment creation request body
  */
 export interface CreateCommentRequest {
-  reportId: string;
+  incidentId: string;
   content: string;
   isInternal?: boolean;
   isAnonymous?: boolean;

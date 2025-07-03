@@ -285,7 +285,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
 
     it('should return 404 for non-existent event', async () => {
       const response = await request(app)
-        .get('/api/events/slug/non-existent-event/reports')
+        .get('/api/events/slug/non-existent-event/incidents')
         .set('x-test-user-id', '1') // Admin user
         .expect(404);
 
