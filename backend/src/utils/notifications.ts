@@ -95,7 +95,7 @@ export async function createNotification({
 /**
  * Notify users about incident events
  */
-export async function notifyReportEvent(incidentId: string, type: string, excludeUserId: string | null = null) {
+export async function notifyIncidentEvent(incidentId: string, type: string, excludeUserId: string | null = null) {
   try {
     // Get the incident with event and reporter info
     const incident = await prisma.incident.findUnique({
@@ -178,7 +178,7 @@ export async function notifyReportEvent(incidentId: string, type: string, exclud
         }
 
         const frontendBaseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
-        const actionUrl = `${frontendBaseUrl}/events/${incident.event.slug}/incidents/${incident.id}`;
+        const actionUrl = `${frontendBaseUrl}/events/${encodeURIComponent(incident.event.slug)}/incidents/${incident.id}`;
         
         // Map notification types with fallback error handling
         const getNotificationType = (inputType: string): ReportNotificationType => {

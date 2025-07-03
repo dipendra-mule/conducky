@@ -384,7 +384,7 @@ export class NotificationService {
   /**
    * Create notifications for incident events
    */
-  async notifyReportEvent(incidentId: string, type: string, excludeUserId: string | null = null): Promise<ServiceResult<{ notificationsCreated: number }>> {
+  async notifyIncidentEvent(incidentId: string, type: string, excludeUserId: string | null = null): Promise<ServiceResult<{ notificationsCreated: number }>> {
     try {
       // Get incident with event and related users
       const incident = await this.prisma.incident.findUnique({

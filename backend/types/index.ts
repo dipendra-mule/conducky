@@ -58,7 +58,7 @@ export interface Event extends BaseEntity {
  * Event settings and configuration
  */
 export interface EventSettings {
-  allowAnonymousReports?: boolean;
+  allowAnonymousIncidents?: boolean;
   requireReporterContact?: boolean;
   customFields?: CustomField[];
   emailNotifications?: EmailNotificationSettings;
@@ -80,7 +80,7 @@ export interface CustomField {
  * Email notification settings
  */
 export interface EmailNotificationSettings {
-  notifyOnNewReport?: boolean;
+  notifyOnNewIncident?: boolean;
   notifyOnStatusChange?: boolean;
   notifyOnNewComment?: boolean;
   recipientEmails?: string[];
@@ -119,9 +119,9 @@ export interface UserEventRole extends BaseEntity {
 }
 
 /**
- * Report entity - the core incident report
+ * Incident entity - the core incident report
  */
-export interface Report extends BaseEntity {
+export interface Incident extends BaseEntity {
   eventId: string;
   reporterName?: string | null;
   reporterEmail?: string | null;
@@ -136,8 +136,8 @@ export interface Report extends BaseEntity {
   reportedPersonContact?: string | null;
   witnessNames?: string | null;
   witnessContacts?: string | null;
-  status: ReportStatus;
-  priority: ReportPriority;
+  status: IncidentStatus;
+  priority: IncidentPriority;
   assignedToUserId?: string | null;
   internalNotes?: string | null;
   resolution?: string | null;
@@ -151,9 +151,9 @@ export interface Report extends BaseEntity {
 }
 
 /**
- * Report status enumeration
+ * Incident status enumeration
  */
-export enum ReportStatus {
+export enum IncidentStatus {
   SUBMITTED = 'submitted',
   IN_REVIEW = 'in_review', 
   INVESTIGATING = 'investigating',
@@ -164,9 +164,9 @@ export enum ReportStatus {
 }
 
 /**
- * Report priority enumeration
+ * Incident priority enumeration
  */
-export enum ReportPriority {
+export enum IncidentPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
@@ -174,7 +174,7 @@ export enum ReportPriority {
 }
 
 /**
- * Comment entity for report discussions
+ * Comment entity for incident discussions
  */
 export interface Comment extends BaseEntity {
   incidentId: string;
@@ -183,12 +183,12 @@ export interface Comment extends BaseEntity {
   content: string;
   isInternal: boolean;
   isAnonymous: boolean;
-  incident?: Report;
+  incident?: Incident;
   user?: User;
 }
 
 /**
- * Evidence entity for report attachments
+ * Evidence entity for incident attachments
  */
 export interface Evidence extends BaseEntity {
   incidentId: string;
@@ -199,21 +199,21 @@ export interface Evidence extends BaseEntity {
   mimeType: string;
   uploadedByUserId?: string | null;
   description?: string | null;
-  incident?: Report;
+  incident?: Incident;
   uploadedBy?: User;
 }
 
 /**
- * Status history for tracking report state changes
+ * Status history for tracking incident state changes
  */
 export interface StatusHistory extends BaseEntity {
   incidentId: string;
-  fromStatus?: ReportStatus | null;
-  toStatus: ReportStatus;
+  fromStatus?: IncidentStatus | null;
+  toStatus: IncidentStatus;
   changedByUserId?: string | null;
   reason?: string | null;
   notes?: string | null;
-  incident?: Report;
+  incident?: Incident;
   changedBy?: User;
 }
 
@@ -254,9 +254,9 @@ export interface Notification extends BaseEntity {
  * Notification type enumeration
  */
 export enum NotificationType {
-  REPORT_CREATED = 'report_created',
-  REPORT_ASSIGNED = 'report_assigned',
-  REPORT_STATUS_CHANGED = 'report_status_changed',
+  INCIDENT_CREATED = 'incident_created',
+  INCIDENT_ASSIGNED = 'incident_assigned',
+  INCIDENT_STATUS_CHANGED = 'incident_status_changed',
   NEW_COMMENT = 'new_comment',
   EVIDENCE_UPLOADED = 'evidence_uploaded',
   USER_INVITED = 'user_invited',
@@ -334,9 +334,9 @@ export interface PasswordResetConfirmRequest {
 }
 
 /**
- * Report creation request body
+ * Incident creation request body
  */
-export interface CreateReportRequest {
+export interface CreateIncidentRequest {
   eventId: string;
   reporterName?: string;
   reporterEmail?: string;
@@ -355,13 +355,13 @@ export interface CreateReportRequest {
 }
 
 /**
- * Report update request body
+ * Incident update request body
  */
-export interface UpdateReportRequest {
+export interface UpdateIncidentRequest {
   title?: string;
   description?: string;
-  status?: ReportStatus;
-  priority?: ReportPriority;
+  status?: IncidentStatus;
+  priority?: IncidentPriority;
   assignedToUserId?: string;
   internalNotes?: string;
   resolution?: string;
@@ -458,13 +458,13 @@ export interface AuthResponse {
 }
 
 /**
- * Report list item for summary views
+ * Incident list item for summary views
  */
-export interface ReportListItem {
+export interface IncidentListItem {
   id: string;
   title: string;
-  status: ReportStatus;
-  priority: ReportPriority;
+  status: IncidentStatus;
+  priority: IncidentPriority;
   reporterName?: string;
   isAnonymous: boolean;
   incidentDate?: Date;
@@ -482,13 +482,13 @@ export interface ReportListItem {
  * Event statistics response
  */
 export interface EventStats {
-  totalReports: number;
-  reportsByStatus: Record<ReportStatus, number>;
-  reportsByPriority: Record<ReportPriority, number>;
+  totalIncidents: number;
+  incidentsByStatus: Record<IncidentStatus, number>;
+  incidentsByPriority: Record<IncidentPriority, number>;
   recentActivity: {
-    newReports: number;
-    resolvedReports: number;
-    pendingReports: number;
+    newIncidents: number;
+    resolvedIncidents: number;
+    pendingIncidents: number;
   };
   assignmentStats: {
     assigned: number;
