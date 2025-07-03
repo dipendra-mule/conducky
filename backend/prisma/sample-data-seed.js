@@ -397,9 +397,9 @@ async function main() {
     console.log(`👥 Event roles assigned for ${event.name}`);
   }
 
-  // Create realistic reports with comments
-  console.log('📋 Creating sample reports...');
-  const sampleReports = [
+  // Create realistic incidents with comments
+  console.log('📋 Creating sample incidents...');
+  const sampleIncidents = [
     {
       eventSlug: 'devopsdays-chicago-2024',
       reporterName: 'Nancy Nixon',
@@ -483,44 +483,44 @@ async function main() {
     },
   ];
 
-  let reportCount = 0;
-  for (const report of sampleReports) {
-    const createdReport = await prisma.report.create({
+  let incidentCount = 0;
+  for (const incident of sampleIncidents) {
+    const createdIncident = await prisma.incident.create({
       data: {
-        eventId: eventRecords[report.eventSlug].id,
-        reporterId: userRecords[report.reporterName].id,
-        type: report.type,
-        title: report.title,
-        description: report.description,
-        state: report.state,
-        severity: report.severity,
-        incidentAt: report.incidentAt,
-        parties: report.parties,
-        location: report.location,
-        assignedResponderId: report.assignedResponder ? userRecords[report.assignedResponder].id : null,
-        resolution: report.resolution || null,
+        eventId: eventRecords[incident.eventSlug].id,
+        reporterId: userRecords[incident.reporterName].id,
+        type: incident.type,
+        title: incident.title,
+        description: incident.description,
+        state: incident.state,
+        severity: incident.severity,
+        incidentAt: incident.incidentAt,
+        parties: incident.parties,
+        location: incident.location,
+        assignedResponderId: incident.assignedResponder ? userRecords[incident.assignedResponder].id : null,
+        resolution: incident.resolution || null,
         contactPreference: 'email',
       },
     });
-    reportCount++;
+    incidentCount++;
 
-    // Add comments to reports based on their state
-    if (report.state !== 'submitted') {
-      await prisma.reportComment.create({
+    // Add comments to incidents based on their state
+    if (incident.state !== 'submitted') {
+      await prisma.incidentComment.create({
         data: {
-          reportId: createdReport.id,
-          authorId: userRecords[report.assignedResponder || 'Henry Harris'].id,
+          incidentId: createdIncident.id,
+          authorId: userRecords[incident.assignedResponder || 'Henry Harris'].id,
           body: 'Thank you for reporting this incident. We take all reports seriously and will investigate promptly.',
           isMarkdown: false,
           visibility: 'public',
         },
       });
 
-      if (report.state === 'investigating' || report.state === 'resolved' || report.state === 'closed') {
-        await prisma.reportComment.create({
+      if (incident.state === 'investigating' || incident.state === 'resolved' || incident.state === 'closed') {
+        await prisma.incidentComment.create({
           data: {
-            reportId: createdReport.id,
-            authorId: userRecords[report.assignedResponder || 'Henry Harris'].id,
+            incidentId: createdIncident.id,
+            authorId: userRecords[incident.assignedResponder || 'Henry Harris'].id,
             body: 'We have begun our investigation and are gathering more information. We will keep you updated on our progress.',
             isMarkdown: false,
             visibility: 'public',
@@ -528,12 +528,12 @@ async function main() {
         });
       }
 
-      if (report.state === 'resolved' || report.state === 'closed') {
-        await prisma.reportComment.create({
+      if (incident.state === 'resolved' || incident.state === 'closed') {
+        await prisma.incidentComment.create({
           data: {
-            reportId: createdReport.id,
-            authorId: userRecords[report.assignedResponder || 'Henry Harris'].id,
-            body: report.resolution ? `**Resolution:** ${report.resolution}` : 'This matter has been resolved. Thank you for bringing it to our attention.',
+            incidentId: createdIncident.id,
+            authorId: userRecords[incident.assignedResponder || 'Henry Harris'].id,
+            body: incident.resolution ? `**Resolution:** ${incident.resolution}` : 'This matter has been resolved. Thank you for bringing it to our attention.',
             isMarkdown: true,
             visibility: 'public',
           },
@@ -541,13 +541,13 @@ async function main() {
       }
     }
 
-    console.log(`📋 Report created: ${report.title} (${report.eventSlug})`);
+    console.log(`📋 Incident created: ${incident.title} (${incident.eventSlug})`);
   }
 
-  // Create additional sample reports for variety
-  console.log('📋 Creating additional sample reports...');
-  const reportTypes = ['harassment', 'safety', 'other'];
-  const reportStates = ['submitted', 'acknowledged', 'investigating', 'resolved', 'closed'];
+  // Create additional sample incidents for variety
+  console.log('📋 Creating additional sample incidents...');
+  const incidentTypes = ['harassment', 'safety', 'other'];
+  const incidentStates = ['submitted', 'acknowledged', 'investigating', 'resolved', 'closed'];
   const severities = ['low', 'medium', 'high', 'critical'];
   
   for (const [index, eventSlug] of Object.keys(eventRecords).entries()) {
@@ -556,27 +556,27 @@ async function main() {
       const reporterName = event.reporterUsers[i % event.reporterUsers.length];
       const responderName = event.responderUsers[i % event.responderUsers.length];
       
-      const createdReport = await prisma.report.create({
+      const createdIncident = await prisma.incident.create({
         data: {
           eventId: eventRecords[eventSlug].id,
           reporterId: userRecords[reporterName].id,
-          type: reportTypes[i % reportTypes.length],
-          title: `Sample Report #${index * 3 + i + 1}`,
-          description: `This is a sample report created for testing purposes. It demonstrates various types of incidents that might occur at events.`,
-          state: reportStates[i % reportStates.length],
+          type: incidentTypes[i % incidentTypes.length],
+          title: `Sample Incident #${index * 3 + i + 1}`,
+          description: `This is a sample incident created for testing purposes. It demonstrates various types of incidents that might occur at events.`,
+          state: incidentStates[i % incidentStates.length],
           severity: severities[i % severities.length],
           assignedResponderId: userRecords[responderName].id,
           contactPreference: 'email',
         },
       });
-      reportCount++;
+      incidentCount++;
       
-      // Add a comment to each additional report
-      await prisma.reportComment.create({
+      // Add a comment to each additional incident
+      await prisma.incidentComment.create({
         data: {
-          reportId: createdReport.id,
+          incidentId: createdIncident.id,
           authorId: userRecords[responderName].id,
-          body: 'This is a sample comment for testing the report system.',
+          body: 'This is a sample comment for testing the incident system.',
           isMarkdown: false,
           visibility: 'public',
         },
@@ -590,7 +590,7 @@ async function main() {
   console.log(`👥 Users: ${users.length} created`);
   console.log(`🏢 Organizations: ${organizations.length} created`);
   console.log(`🎪 Events: ${events.length} created`);
-  console.log(`📋 Reports: ${reportCount} created with comments`);
+  console.log(`📋 Incidents: ${incidentCount} created with comments`);
   console.log('');
   console.log('🔐 Test Login Credentials:');
   console.log('Email: matt@mattstratton.com (System Admin)');
