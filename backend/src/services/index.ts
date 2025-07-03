@@ -13,8 +13,8 @@ export type {
   ProfileUpdateData,
   PasswordChangeData,
   UserEvent,
-  UserReport,
-  UserReportsQuery,
+  UserIncident,
+  UserIncidentsQuery,
   QuickStats,
   ActivityItem,
   AvatarUpload

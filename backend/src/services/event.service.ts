@@ -1093,7 +1093,7 @@ export class EventService {
   /**
    * Get user's reports for an event
    */
-  async getUserReports(slug: string, userId: string, options: { page: number; limit: number; type?: string }): Promise<ServiceResult<{ reports: any[]; total: number }>> {
+  async getUserIncidents(slug: string, userId: string, options: { page: number; limit: number; type?: string }): Promise<ServiceResult<{ reports: any[]; total: number }>> {
     try {
       const eventId = await this.getEventIdBySlug(slug);
       if (!eventId) {

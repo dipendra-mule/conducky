@@ -138,7 +138,7 @@ router.get('/me/incidents', async (req: any, res: Response): Promise<void> => {
       order: req.query.order as string
     };
     
-    const result = await userService.getUserReports(req.user.id, query);
+    const result = await userService.getUserIncidents(req.user.id, query);
     
     if (!result.success) {
       res.status(500).json({ error: result.error });

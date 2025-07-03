@@ -690,7 +690,7 @@ describe("Event endpoints", () => {
     });
 
     it("should return 400 or 404 if missing eventId", async () => {
-      const res = await request(app).get("/api/events//reports/r1");
+      const res = await request(app).get("/api/events//incidents/r1");
       expect([400, 404]).toContain(res.statusCode);
     });
 

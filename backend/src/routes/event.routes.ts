@@ -6,7 +6,7 @@ import { InviteService } from '../services/invite.service';
 import { CommentService } from '../services/comment.service';
 import { NotificationService } from '../services/notification.service';
 import { UnifiedRBACService } from '../services/unified-rbac.service';
-import { notifyReportEvent } from '../utils/notifications';
+import { notifyIncidentEvent } from '../utils/notifications';
 import { requireRole } from '../middleware/rbac';
 import { UserResponse } from '../types';
 import { PrismaClient, CommentVisibility } from '@prisma/client';
@@ -131,7 +131,7 @@ router.get('/slug/:slug/users/:userId/incidents', requireRole(['responder', 'eve
     const limit = parseInt(req.query.limit as string) || 20;
     const type = req.query.type as string; // 'submitted' or 'assigned'
     
-    const result = await eventService.getUserReports(slug, userId, { page, limit, type });
+    const result = await eventService.getUserIncidents(slug, userId, { page, limit, type });
     
     if (!result.success) {
       if (result.error?.includes('not found')) {
@@ -516,7 +516,7 @@ router.post('/:eventId/incidents', requireRole(['reporter', 'responder', 'event_
     // Trigger notifications for new report submission
     try {
       if (result.data?.incident?.id) {
-        await notifyReportEvent(result.data.incident.id, 'incident_submitted', user.id);
+        await notifyIncidentEvent(result.data.incident.id, 'incident_submitted', user.id);
       }
     } catch (notificationError) {
       console.error('Failed to send notifications for new incident:', notificationError);
@@ -661,13 +661,13 @@ router.patch('/:eventId/incidents/:incidentId/state', requireRole(['event_admin'
     try {
       // Always notify about state change if state actually changed
       if (oldState !== stateValue) {
-        await notifyReportEvent(incidentId, 'incident_status_changed', userId);
+        await notifyIncidentEvent(incidentId, 'incident_status_changed', userId);
       }
       
       // Notify about assignment if assignment changed
       if (assignedUserId && assignedUserId !== oldAssignedUserId) {
         // For assignments, don't exclude the assigned user even if they assigned it to themselves
-        await notifyReportEvent(incidentId, 'incident_assigned', null);
+        await notifyIncidentEvent(incidentId, 'incident_assigned', null);
       }
     } catch (notificationError) {
       console.error('Failed to send notifications:', notificationError);
@@ -1435,7 +1435,7 @@ router.post('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'even
     // Trigger notifications for new report submission
     try {
       if (result.data?.incident?.id) {
-        await notifyReportEvent(result.data.incident.id, 'incident_submitted', user.id);
+        await notifyIncidentEvent(result.data.incident.id, 'incident_submitted', user.id);
       }
     } catch (notificationError) {
       console.error('Failed to send notifications for new incident:', notificationError);
@@ -1911,7 +1911,7 @@ router.post('/slug/:slug/incidents/:incidentId/comments', requireRole(['reporter
 
     // Create notifications for comment added (exclude the comment author)
     try {
-      await notifyReportEvent(incidentId, 'comment_added', user.id);
+      await notifyIncidentEvent(incidentId, 'comment_added', user.id);
     } catch (error) {
       console.error('Failed to create comment notification:', error);
       // Don't fail the request if notification creation fails

@@ -17,7 +17,7 @@ export interface NotificationCreateData {
   title: string;
   message: string;
   eventId?: string | null;
-  reportId?: string | null;
+  incidentId?: string | null;
   actionData?: any;
   actionUrl?: string | null;
 }
@@ -34,7 +34,7 @@ export interface NotificationWithDetails {
   createdAt: Date;
   updatedAt: Date;
   eventId?: string | null;
-  reportId?: string | null;
+  incidentId?: string | null;
   actionData?: any;
   actionUrl?: string | null;
   event?: {
@@ -42,7 +42,7 @@ export interface NotificationWithDetails {
     name: string;
     slug: string;
   } | null;
-  report?: {
+  incident?: {
     id: string;
     title: string;
     state: string;
@@ -382,11 +382,11 @@ export class NotificationService {
   }
 
   /**
-   * Create notifications for report events
+   * Create notifications for incident events
    */
-  async notifyReportEvent(incidentId: string, type: string, excludeUserId: string | null = null): Promise<ServiceResult<{ notificationsCreated: number }>> {
+  async notifyIncidentEvent(incidentId: string, type: string, excludeUserId: string | null = null): Promise<ServiceResult<{ notificationsCreated: number }>> {
     try {
-      // Get report with event and related users
+      // Get incident with event and related users
       const incident = await this.prisma.incident.findUnique({
         where: { id: incidentId },
         include: {
@@ -399,7 +399,7 @@ export class NotificationService {
       if (!incident) {
         return {
           success: false,
-          error: 'Report not found'
+          error: 'Incident not found'
         };
       }
 
@@ -444,23 +444,23 @@ export class NotificationService {
 
          switch (type) {
            case 'incident_submitted':
-             title = 'New Report Submitted';
-             message = `A new report "${incident.title}" has been submitted for ${incident.event.name}`;
+             title = 'New Incident Submitted';
+             message = `A new incident "${incident.title}" has been submitted for ${incident.event.name}`;
              notificationType = 'incident_submitted';
              break;
            case 'incident_assigned':
-             title = 'Report Assigned';
-             message = `Report "${incident.title}" has been assigned in ${incident.event.name}`;
+             title = 'Incident Assigned';
+             message = `Incident "${incident.title}" has been assigned in ${incident.event.name}`;
              notificationType = 'incident_assigned';
              break;
            case 'incident_status_changed':
-             title = 'Report Status Updated';
-             message = `Report "${incident.title}" status has been updated in ${incident.event.name}`;
+             title = 'Incident Status Updated';
+             message = `Incident "${incident.title}" status has been updated in ${incident.event.name}`;
              notificationType = 'incident_status_changed';
              break;
            case 'comment_added':
              title = 'New Comment Added';
-             message = `A new comment has been added to report "${incident.title}" in ${incident.event.name}`;
+             message = `A new comment has been added to incident "${incident.title}" in ${incident.event.name}`;
              notificationType = 'incident_comment_added';
              break;
            default:
@@ -476,7 +476,7 @@ export class NotificationService {
             message,
             eventId: incident.eventId,
             incidentId: incident.id,
-            actionUrl: `/events/${incident.event.slug}/reports/${incident.id}`,
+            actionUrl: `/events/${incident.event.slug}/incidents/${incident.id}`,
             isRead: false
           }
         });
@@ -490,10 +490,10 @@ export class NotificationService {
         data: { notificationsCreated }
       };
     } catch (error: any) {
-      console.error('Error creating report event notifications:', error);
+      console.error('Error creating incident event notifications:', error);
       return {
         success: false,
-        error: 'Failed to create report event notifications.'
+        error: 'Failed to create incident event notifications.'
       };
     }
   }

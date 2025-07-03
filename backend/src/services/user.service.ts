@@ -21,7 +21,7 @@ export interface UserEvent {
   roles: string[];
 }
 
-export interface UserReport {
+export interface UserIncident {
   id: string;
   title: string;
   description: string;
@@ -55,7 +55,7 @@ export interface UserReport {
   userRoles: string[];
 }
 
-export interface UserReportsQuery {
+export interface UserIncidentsQuery {
   page?: number;
   limit?: number;
   search?: string;
@@ -69,7 +69,7 @@ export interface UserReportsQuery {
 
 export interface QuickStats {
   eventCount: number;
-  reportCount: number;
+  incidentCount: number;
   needsResponseCount: number;
 }
 
@@ -78,7 +78,7 @@ export interface ActivityItem {
   message: string;
   timestamp: string;
   eventSlug?: string;
-  reportId?: string;
+  incidentId?: string;
 }
 
 export interface AvatarUpload {
@@ -355,8 +355,8 @@ export class UserService {
   /**
    * Get user's reports across all accessible events
    */
-  async getUserReports(userId: string, query: UserReportsQuery): Promise<ServiceResult<{ 
-    incidents: UserReport[]; 
+  async getUserIncidents(userId: string, query: UserIncidentsQuery): Promise<ServiceResult<{ 
+    incidents: UserIncident[]; 
     total: number; 
     page: number; 
     limit: number; 
@@ -759,7 +759,7 @@ export class UserService {
         ...responderIds.map(r => r.id),
         ...adminIds.map(r => r.id)
       ]);
-      const reportCount = uniqueReportIds.size;
+      const incidentCount = uniqueReportIds.size;
 
       // Needs response: reports assigned to user as responder and not closed/resolved
       const needsResponseCount = await this.prisma.incident.count({
@@ -771,7 +771,7 @@ export class UserService {
 
       return {
         success: true,
-        data: { eventCount, reportCount, needsResponseCount }
+        data: { eventCount, incidentCount, needsResponseCount }
       };
     } catch (error: any) {
       console.error('Error fetching quick stats:', error);
@@ -854,7 +854,7 @@ export class UserService {
           message: `You submitted a new report in ${incident.event.name}`,
           timestamp: incident.createdAt.toISOString(),
           eventSlug: incident.event.slug,
-          reportId: incident.id
+          incidentId: incident.id
         });
       });
 
@@ -865,7 +865,7 @@ export class UserService {
           message: `A report was assigned to you in ${incident.event.name}`,
           timestamp: incident.updatedAt.toISOString(),
           eventSlug: incident.event.slug,
-          reportId: incident.id
+          incidentId: incident.id
         });
       });
 
@@ -876,7 +876,7 @@ export class UserService {
           message: `You commented on "${comment.incident.title}" in ${comment.incident.event.name}`,
           timestamp: comment.createdAt.toISOString(),
           eventSlug: comment.incident.event.slug,
-          reportId: comment.incidentId
+          incidentId: comment.incidentId
         });
       });
 
@@ -905,7 +905,7 @@ export class UserService {
           message: message,
           timestamp: log.timestamp.toISOString(),
           eventSlug: log.event?.slug,
-          reportId: log.targetType === 'Report' ? log.targetId : undefined
+          incidentId: log.targetType === 'Report' ? log.targetId : undefined
         });
       });
 

@@ -164,7 +164,7 @@ export class UserController {
     }
   }
 
-  async getUserReports(req: Request, res: Response): Promise<void> {
+  async getUserIncidents(req: Request, res: Response): Promise<void> {
     try {
       const user = req.user as any; const userId = user?.id;
       
@@ -181,7 +181,7 @@ export class UserController {
       const sort = req.query.sortBy as string || 'createdAt';
       const order = req.query.sortOrder as 'asc' | 'desc' || 'desc';
 
-      const result = await this.userService.getUserReports(userId, {
+      const result = await this.userService.getUserIncidents(userId, {
         page,
         limit,
         event,

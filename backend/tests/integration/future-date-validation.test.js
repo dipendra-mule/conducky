@@ -8,7 +8,7 @@ describe("Report Creation Future Date Validation Tests", () => {
       const futureDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
       
       const res = await request(app)
-        .post("/api/events/slug/event1/reports")
+        .post("/api/events/slug/event1/incidents")
         .set("x-test-user-id", "2") // Regular user with reporter role
         .send({ 
           type: "harassment", 
@@ -26,7 +26,7 @@ describe("Report Creation Future Date Validation Tests", () => {
       const nearFutureDate = new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString();
       
       const res = await request(app)
-        .post("/api/events/slug/event1/reports")
+        .post("/api/events/slug/event1/incidents")
         .set("x-test-user-id", "2") // Regular user with reporter role
         .send({ 
           type: "harassment", 
@@ -40,7 +40,7 @@ describe("Report Creation Future Date Validation Tests", () => {
 
     it("should reject invalid incident date format", async () => {
       const res = await request(app)
-        .post("/api/events/slug/event1/reports")
+        .post("/api/events/slug/event1/incidents")
         .set("x-test-user-id", "2") // Regular user with reporter role
         .send({ 
           type: "harassment", 
@@ -58,7 +58,7 @@ describe("Report Creation Future Date Validation Tests", () => {
       const pastDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       
       const res = await request(app)
-        .post("/api/events/slug/event1/reports")
+        .post("/api/events/slug/event1/incidents")
         .set("x-test-user-id", "2") // Regular user with reporter role
         .send({ 
           type: "harassment", 
@@ -75,7 +75,7 @@ describe("Report Creation Future Date Validation Tests", () => {
       const currentDate = new Date().toISOString();
       
       const res = await request(app)
-        .post("/api/events/slug/event1/reports")
+        .post("/api/events/slug/event1/incidents")
         .set("x-test-user-id", "2") // Regular user with reporter role
         .send({ 
           type: "harassment", 
@@ -92,7 +92,7 @@ describe("Report Creation Future Date Validation Tests", () => {
       const slightlyBeyondTwentyFourHours = new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 1000).toISOString();
       
       const res = await request(app)
-        .post("/api/events/slug/event1/reports")
+        .post("/api/events/slug/event1/incidents")
         .set("x-test-user-id", "2") // Regular user with reporter role
         .send({ 
           type: "harassment", 
@@ -107,7 +107,7 @@ describe("Report Creation Future Date Validation Tests", () => {
 
     it("should allow creating reports without incident date", async () => {
       const res = await request(app)
-        .post("/api/events/slug/event1/reports")
+        .post("/api/events/slug/event1/incidents")
         .set("x-test-user-id", "2") // Regular user with reporter role
         .send({ 
           type: "harassment", 

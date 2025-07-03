@@ -480,7 +480,7 @@ export default function ReportDetail() {
   // Add a function to upload more evidence files
   const canUploadEvidence =
     user &&
-    report &&
+    incident &&
     incident.reporterId &&
     (user.id === incident.reporterId || isAdminOrSystemAdmin);
     
@@ -542,7 +542,7 @@ export default function ReportDetail() {
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence/${file.id}`,
+          `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence/${file.id}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -579,7 +579,7 @@ export default function ReportDetail() {
     
     if ((fieldsToSave.state === 'resolved' || fieldsToSave.state === 'closed') && 
         !fieldsToSave.resolution?.trim()) {
-      setAssignmentError('Resolution is required when report is resolved or closed.');
+      setAssignmentError('Resolution is required when incident is resolved or closed.');
       setAssignmentLoading(false);
       return;
     }
@@ -651,20 +651,20 @@ export default function ReportDetail() {
   
   if (!eventSlug || !incidentId) {
     return <div className="max-w-2xl mx-auto mt-12 p-6 bg-red-100 text-red-800 rounded shadow text-center">
-      Invalid URL: Missing event or report ID
+      Invalid URL: Missing event or incident ID
     </div>;
   }
 
   if (fetchError) {
     return <div className="max-w-2xl mx-auto mt-12 p-6 bg-red-100 text-red-800 rounded shadow text-center">{fetchError}</div>;
   }
-  if (!report) {
+  if (!incident) {
     return <div>Loading...</div>;
   }
 
-  return (
+      return (
     <IncidentDetailView
-      report={report}
+      incident={incident}
       user={user}
       userRoles={userRoles}
       comments={comments}
@@ -693,9 +693,9 @@ export default function ReportDetail() {
       stateHistory={stateHistory}
       apiBaseUrl={process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}
       onTitleEdit={handleTitleEdit}
-      onReportUpdate={(updatedReport) => {
-        // Update the report state with the new data from field edits
-        setIncident(updatedReport);
+      onIncidentUpdate={(updatedIncident) => {
+        // Update the incident state with the new data from field edits
+        setIncident(updatedIncident);
       }}
     />
   );
