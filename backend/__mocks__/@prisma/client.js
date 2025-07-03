@@ -1018,6 +1018,27 @@ class PrismaClient {
           ) || null
         );
       }),
+      create: jest.fn(({ data, include }) => {
+        if (!inMemoryStore.eventInvites) inMemoryStore.eventInvites = [];
+        const newInvite = {
+          id: `invite-${inMemoryStore.eventInvites.length + 1}`,
+          createdAt: new Date(),
+          useCount: 0,
+          disabled: false,
+          ...data,
+        };
+        inMemoryStore.eventInvites.push(newInvite);
+        
+        // Handle includes
+        if (include && include.role) {
+          const role = inMemoryStore.unifiedRoles.find(r => r.id === data.roleId);
+          if (role) {
+            newInvite.role = role;
+          }
+        }
+        
+        return newInvite;
+      }),
       update: jest.fn(({ where, data }) => {
         const idx = (inMemoryStore.eventInvites || []).findIndex(
           (i) => (where.id && i.id === where.id) || (where.code && i.code === where.code),
