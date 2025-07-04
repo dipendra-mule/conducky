@@ -615,9 +615,16 @@ router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Reques
       return;
     }
 
-    if (!role || !['Admin', 'Responder'].includes(role)) {
+    // Map legacy role names to unified role names
+    const roleMapping: { [key: string]: string } = {
+      'Admin': 'event_admin',
+      'Responder': 'responder',
+      'Reporter': 'reporter'
+    };
+
+    if (!role || !['Admin', 'Responder', 'Reporter'].includes(role)) {
       res.status(400).json({
-        error: 'Role must be Admin or Responder',
+        error: 'Role must be Admin, Responder, or Reporter',
       });
       return;
     }
@@ -634,9 +641,12 @@ router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Reques
       return;
     }
 
-    // Find the role
-    const roleRecord = await prisma.role.findUnique({
-      where: { name: role },
+    // Get unified role name
+    const unifiedRoleName = roleMapping[role];
+    
+    // Find the unified role
+    const roleRecord = await prisma.unifiedRole.findUnique({
+      where: { name: unifiedRoleName },
     });
 
     if (!roleRecord) {
