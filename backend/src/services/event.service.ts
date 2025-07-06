@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Organization, OrganizationRole, OrganizationLogo, OrganizationInviteLink } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+import { randomUUID } from 'crypto';
 
 export interface EventCreateData {
   name: string;
@@ -241,7 +242,7 @@ export class EventService {
       const userEventRole = {
         userId,
         eventId,
-        roleId: `unified-${userId}-${eventId}`,
+        roleId: randomUUID(),
         role: { name: unifiedRoleName },
         user: { id: userId }
       };
@@ -434,7 +435,7 @@ export class EventService {
       const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
       
       // Return unified role names directly (no more mapping to display names)
-      const roles = userRoles.map((userRole: any) => userRole.role.name);
+      const roles = userRoles.map((userRole: { role: { name: string } }) => userRole.role.name);
 
       return {
         success: true,

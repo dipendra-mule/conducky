@@ -1247,7 +1247,7 @@ export class IncidentService {
 
       // Use unified RBAC service to get user roles
       const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', incident.eventId);
-      const roles = userRoles.map((userRole: any) => {
+      const roles = userRoles.map((userRole: { role: { name: string } }) => {
         // Map unified role names back to display names
         switch (userRole.role.name) {
           case 'system_admin': return 'system_admin';

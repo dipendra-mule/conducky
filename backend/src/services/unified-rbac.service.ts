@@ -3,12 +3,32 @@ import { PrismaClient } from '@prisma/client';
 // Follow the same pattern as organization.service.ts
 const defaultPrisma = new PrismaClient();
 
-// Type for RoleScope enum (until Prisma types are updated)
+// Type definitions for better type safety
 type RoleScope = 'system' | 'organization' | 'event';
+
+// Interface for user role data with proper typing
+interface UserRoleWithDetails {
+  userId: string;
+  roleId: string;
+  scopeType: RoleScope;
+  scopeId: string;
+  grantedAt: Date;
+  grantedById: string | null;
+  role: {
+    id: string;
+    name: string;
+    level: number;
+  };
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+}
 
 // Simple cache for user roles to improve performance
 interface UserRoleCache {
-  roles: any[];
+  roles: UserRoleWithDetails[];
   timestamp: number;
 }
 
@@ -28,7 +48,7 @@ export class UnifiedRBACService {
   /**
    * Get user roles with caching for performance optimization
    */
-  private async getCachedUserRoles(userId: string): Promise<any[]> {
+  private async getCachedUserRoles(userId: string): Promise<UserRoleWithDetails[]> {
     const now = Date.now();
     const cached = this.userRoleCache.get(userId);
     
@@ -79,7 +99,7 @@ export class UnifiedRBACService {
   ): Promise<boolean> {
     try {
       const userRoles = await this.getUserRoles(userId, scopeType, scopeId);
-      return userRoles.some((userRole: any) => roleNames.includes(userRole.role.name));
+      return userRoles.some((userRole: UserRoleWithDetails) => roleNames.includes(userRole.role.name));
     } catch (error) {
       // Log error safely without exposing sensitive details
       if (process.env.NODE_ENV === 'development') {
@@ -134,7 +154,7 @@ export class UnifiedRBACService {
       ]);
 
       // Check if user is system admin (from cached roles)
-      const isSystemAdmin = userRoles.some((ur: any) => 
+      const isSystemAdmin = userRoles.some((ur: UserRoleWithDetails) => 
         ur.role.name === 'system_admin' && ur.scopeType === 'system'
       );
       
@@ -143,7 +163,7 @@ export class UnifiedRBACService {
       }
 
       // Check direct event roles (from cached roles)
-      const hasDirectRole = userRoles.some((ur: any) => 
+      const hasDirectRole = userRoles.some((ur: UserRoleWithDetails) => 
         ur.scopeType === 'event' && 
         ur.scopeId === eventId && 
         roleNames.includes(ur.role.name)
@@ -155,7 +175,7 @@ export class UnifiedRBACService {
 
       // Check organization admin role inheritance (from cached roles)
       if (event?.organizationId) {
-        const hasOrgAdminRole = userRoles.some((ur: any) => 
+        const hasOrgAdminRole = userRoles.some((ur: UserRoleWithDetails) => 
           ur.scopeType === 'organization' && 
           ur.scopeId === event.organizationId && 
           ur.role.name === 'org_admin'

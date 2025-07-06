@@ -2,7 +2,24 @@ import { PrismaClient, Organization, OrganizationRole, OrganizationLogo, Organiz
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 
+// Type for user role data from unified RBAC system
+interface UserRoleWithDetails {
+  userId: string;
+  grantedAt: Date;
+  grantedById: string | null;
+  role: {
+    name: string;
+  };
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+}
+
 // Synthetic OrganizationMembership type for backward compatibility
+// Note: This interface is maintained for backward compatibility but the actual
+// implementation uses unified RBAC data structures
 export interface OrganizationMembership {
   id: string;
   organizationId: string;
@@ -148,8 +165,8 @@ export class OrganizationService {
         },
       });
       
-      // Convert to simplified member structure
-      const members = orgUserRoles.map((userRole: any) => ({
+      // Convert to simplified member structure with proper type safety
+      const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
         userId: userRole.userId,
         role: userRole.role.name,
         grantedAt: userRole.grantedAt,
@@ -219,8 +236,8 @@ export class OrganizationService {
         },
       });
       
-      // Convert to simplified member structure
-      const members = orgUserRoles.map((userRole: any) => ({
+      // Convert to simplified member structure with proper type safety
+      const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
         userId: userRole.userId,
         role: userRole.role.name,
         grantedAt: userRole.grantedAt,
@@ -361,8 +378,8 @@ export class OrganizationService {
             },
           });
           
-          // Convert to simplified member structure
-          const members = orgUserRoles.map((userRole: any) => ({
+          // Convert to simplified member structure with proper type safety
+          const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
             userId: userRole.userId,
             role: userRole.role.name,
             grantedAt: userRole.grantedAt,
