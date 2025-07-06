@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Organization, OrganizationRole, OrganizationLogo, OrganizationInviteLink } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+import { randomUUID } from 'crypto';
 
 export interface EventCreateData {
   name: string;
@@ -224,28 +225,6 @@ export class EventService {
         roleToCheck = 'Event Admin'; // Map Admin to Event Admin for old system compatibility
       }
       
-      // Also try the original role name if the mapped one doesn't exist
-      let role = await this.prisma.role.findUnique({ where: { name: roleToCheck } });
-      
-      // If mapped role doesn't exist, try the original name
-      if (!role && roleToCheck !== roleName) {
-        role = await this.prisma.role.findUnique({ where: { name: roleName } });
-        roleToCheck = roleName; // Use the original name for further processing
-      }
-      
-      // If "Event Admin" doesn't exist, try "Admin" (for test compatibility)
-      if (!role && roleToCheck === 'Event Admin') {
-        role = await this.prisma.role.findUnique({ where: { name: 'Admin' } });
-        roleToCheck = 'Admin';
-      }
-      
-      if (!role) {
-        return {
-          success: false,
-          error: 'Role does not exist.'
-        };
-      }
-
       // Map role names to unified format
       const unifiedRoleName = this.mapToUnifiedRoleName(roleName);
       
@@ -263,8 +242,8 @@ export class EventService {
       const userEventRole = {
         userId,
         eventId,
-        roleId: role.id,
-        role: { name: roleName },
+        roleId: randomUUID(),
+        role: { name: unifiedRoleName },
         user: { id: userId }
       };
 
@@ -456,7 +435,7 @@ export class EventService {
       const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', eventId);
       
       // Return unified role names directly (no more mapping to display names)
-      const roles = userRoles.map((userRole: any) => userRole.role.name);
+      const roles = userRoles.map((userRole: { role: { name: string } }) => userRole.role.name);
 
       return {
         success: true,

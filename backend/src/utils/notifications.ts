@@ -132,7 +132,11 @@ export async function notifyIncidentEvent(incidentId: string, type: string, excl
     });
     
     // Transform to match expected structure for backward compatibility
-    const eventUsers = eventUserRoles.map((userRole: any) => ({
+    const eventUsers = eventUserRoles.map((userRole: { 
+      userId: string; 
+      user: { id: string; name: string | null; email: string };
+      role: { name: string };
+    }) => ({
       userId: userRole.userId,
       user: userRole.user,
       role: userRole.role

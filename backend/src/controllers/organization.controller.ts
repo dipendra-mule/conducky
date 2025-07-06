@@ -541,7 +541,6 @@ export class OrganizationController {
           _count: {
             select: {
               incidents: true,
-              userEventRoles: true,
             },
           },
         },

@@ -323,7 +323,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         expect(incident).toHaveProperty('updatedAt');
         expect(incident).toHaveProperty('event');
         expect(incident).toHaveProperty('userRoles');
-        expect(Array.isArray(report.userRoles)).toBe(true);
+        expect(Array.isArray(incident.userRoles)).toBe(true);
       }
     });
   });

@@ -201,7 +201,7 @@ app.get('/api/session', async (req: any, res: any) => {
       const { UnifiedRBACService } = await import('./src/services/unified-rbac.service');
       const unifiedRBAC = new UnifiedRBACService(prisma);
       const systemRoles = await unifiedRBAC.getUserRoles(req.user.id, 'system', 'SYSTEM');
-      const roles = systemRoles.map((userRole: any) => userRole.role.name);
+      const roles = systemRoles.map((userRole: { role: { name: string } }) => userRole.role.name);
 
       // Get avatar if exists
       const avatar = await prisma.userAvatar.findUnique({
