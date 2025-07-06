@@ -1,6 +1,16 @@
-import { PrismaClient, Organization, OrganizationMembership, OrganizationRole, OrganizationLogo, OrganizationInviteLink } from '@prisma/client';
+import { PrismaClient, Organization, OrganizationRole, OrganizationLogo, OrganizationInviteLink } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+
+// Synthetic OrganizationMembership type for backward compatibility
+export interface OrganizationMembership {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: OrganizationRole;
+  createdAt: Date;
+  createdById: string | null;
+}
 
 const prisma = new PrismaClient();
 
@@ -22,17 +32,21 @@ export interface UpdateOrganizationData {
   settings?: string;
 }
 
-export interface OrganizationWithMemberships extends Organization {
-  memberships: (OrganizationMembership & {
+export interface OrganizationWithMembers extends Organization {
+  members: {
+    userId: string;
+    role: string;
+    grantedAt: Date;
+    grantedById: string | null;
     user: {
       id: string;
       name: string | null;
       email: string;
     };
-  })[];
+  }[];
   _count: {
     events: number;
-    memberships: number;
+    members: number;
   };
 }
 
@@ -99,7 +113,7 @@ export class OrganizationService {
    */
   async getOrganizationById(
     organizationId: string
-  ): Promise<ServiceResult<{ organization: OrganizationWithMemberships }>> {
+  ): Promise<ServiceResult<{ organization: OrganizationWithMembers }>> {
     try {
       // Get basic organization data
       const organization = await prisma.organization.findUnique({
@@ -134,38 +148,28 @@ export class OrganizationService {
         },
       });
       
-      // Convert unified roles to synthetic membership objects
-      const memberships = orgUserRoles.map((userRole: any) => {
-        // Convert unified role back to legacy role
-        const legacyRole = userRole.role.name === 'org_admin' ? 'org_admin' : 'org_viewer';
+      // Convert to simplified member structure
+      const members = orgUserRoles.map((userRole: any) => ({
+        userId: userRole.userId,
+        role: userRole.role.name,
+        grantedAt: userRole.grantedAt,
+        grantedById: userRole.grantedById,
+        user: userRole.user,
+      }));
 
-        return {
-          id: `synthetic-${userRole.userId}-${organizationId}`,
-          organizationId,
-          userId: userRole.userId,
-          role: legacyRole as any,
-          createdAt: userRole.grantedAt,
-          createdById: userRole.grantedById,
-          user: userRole.user,
-        };
-      });
-
-      // Get memberships count
-      const membershipsCount = memberships.length;
-
-      // Return organization with synthetic memberships structure
-      const organizationWithMemberships = {
+      // Return organization with simplified member structure
+      const organizationWithMembers = {
         ...organization,
-        memberships: memberships,
+        members: members,
         _count: {
           events: organization._count.events,
-          memberships: membershipsCount,
+          members: members.length,
         },
       };
 
       return {
         success: true,
-        data: { organization: organizationWithMemberships },
+        data: { organization: organizationWithMembers },
       };
     } catch (error: any) {
       return {
@@ -180,7 +184,7 @@ export class OrganizationService {
    */
   async getOrganizationBySlug(
     slug: string
-  ): Promise<ServiceResult<{ organization: OrganizationWithMemberships }>> {
+  ): Promise<ServiceResult<{ organization: OrganizationWithMembers }>> {
     try {
       // Get basic organization data
       const organization = await prisma.organization.findUnique({
@@ -215,38 +219,28 @@ export class OrganizationService {
         },
       });
       
-      // Convert unified roles to synthetic membership objects
-      const memberships = orgUserRoles.map((userRole: any) => {
-        // Convert unified role back to legacy role
-        const legacyRole = userRole.role.name === 'org_admin' ? 'org_admin' : 'org_viewer';
+      // Convert to simplified member structure
+      const members = orgUserRoles.map((userRole: any) => ({
+        userId: userRole.userId,
+        role: userRole.role.name,
+        grantedAt: userRole.grantedAt,
+        grantedById: userRole.grantedById,
+        user: userRole.user,
+      }));
 
-        return {
-          id: `synthetic-${userRole.userId}-${organization.id}`,
-          organizationId: organization.id,
-          userId: userRole.userId,
-          role: legacyRole as any,
-          createdAt: userRole.grantedAt,
-          createdById: userRole.grantedById,
-          user: userRole.user,
-        };
-      });
-
-      // Get memberships count
-      const membershipsCount = memberships.length;
-
-      // Return organization with synthetic memberships structure
-      const organizationWithMemberships = {
+      // Return organization with simplified member structure
+      const organizationWithMembers = {
         ...organization,
-        memberships: memberships,
+        members: members,
         _count: {
           events: organization._count.events,
-          memberships: membershipsCount,
+          members: members.length,
         },
       };
 
       return {
         success: true,
-        data: { organization: organizationWithMemberships },
+        data: { organization: organizationWithMembers },
       };
     } catch (error: any) {
       return {
@@ -336,7 +330,7 @@ export class OrganizationService {
   /**
    * List all organizations (System Admin only)
    */
-  async listOrganizations(): Promise<ServiceResult<{ organizations: OrganizationWithMemberships[] }>> {
+  async listOrganizations(): Promise<ServiceResult<{ organizations: OrganizationWithMembers[] }>> {
     try {
       // Get basic organization data
       const organizations = await prisma.organization.findMany({
@@ -350,8 +344,8 @@ export class OrganizationService {
         orderBy: { createdAt: 'desc' },
       });
 
-      // For each organization, get memberships from unified RBAC
-      const organizationsWithMemberships = await Promise.all(
+      // For each organization, get members from unified RBAC
+      const organizationsWithMembers = await Promise.all(
         organizations.map(async (org) => {
           // Get all users with roles in this organization
           const orgUserRoles = await prisma.userRole.findMany({
@@ -367,29 +361,22 @@ export class OrganizationService {
             },
           });
           
-          // Convert unified roles to synthetic membership objects
-          const memberships = orgUserRoles.map((userRole: any) => {
-            // Convert unified role back to legacy role
-            const legacyRole = userRole.role.name === 'org_admin' ? 'org_admin' : 'org_viewer';
+          // Convert to simplified member structure
+          const members = orgUserRoles.map((userRole: any) => ({
+            userId: userRole.userId,
+            role: userRole.role.name,
+            grantedAt: userRole.grantedAt,
+            grantedById: userRole.grantedById,
+            user: userRole.user,
+          }));
 
-            return {
-              id: `synthetic-${userRole.userId}-${org.id}`,
-              organizationId: org.id,
-              userId: userRole.userId,
-              role: legacyRole as any,
-              createdAt: userRole.grantedAt,
-              createdById: userRole.grantedById,
-              user: userRole.user,
-            };
-          });
-
-          // Return organization with synthetic memberships structure
+          // Return organization with simplified member structure
           return {
             ...org,
-            memberships: memberships,
+            members: members,
             _count: {
               events: org._count?.events || 0,
-              memberships: memberships.length,
+              members: members.length,
             },
           };
         })
@@ -397,7 +384,7 @@ export class OrganizationService {
 
       return {
         success: true,
-        data: { organizations: organizationsWithMemberships },
+        data: { organizations: organizationsWithMembers },
       };
     } catch (error: any) {
       return {

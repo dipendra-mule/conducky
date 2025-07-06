@@ -242,7 +242,7 @@ describe("Event endpoints", () => {
         .post(`/api/events/${eventId}/roles`)
         .send({ userId: "1", roleName: "NotARole" });
       expect(res.statusCode).toBe(400);
-      expect(res.body).toHaveProperty("error", "Role does not exist.");
+      expect(res.body).toHaveProperty("error", "Failed to assign role.");
     });
   });
 

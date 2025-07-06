@@ -81,7 +81,6 @@ model User {
   passwordHash   String? // Optional for social login users
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  userEventRoles UserEventRole[]
   incidents      Incident[] @relation("ReporterIncidents")
   auditLogs      AuditLog[]
   incidentComments IncidentComment[]
@@ -92,9 +91,7 @@ model User {
   notifications  Notification[]
   socialAccounts SocialAccount[]
   notificationSettings UserNotificationSettings?
-  organizationMemberships OrganizationMembership[]
   createdOrganizations Organization[] @relation("OrganizationCreator")
-  createdMemberships OrganizationMembership[] @relation("MembershipCreator")
   createdOrgInvites OrganizationInviteLink[] @relation("OrganizationInviteCreator")
   // Unified role system relations
   userRoles      UserRole[]
@@ -116,7 +113,6 @@ model Event {
   updatedAt      DateTime @updatedAt
   organizationId String?  // Nullable initially for migration
   organization   Organization? @relation(fields: [organizationId], references: [id])
-  userEventRoles UserEventRole[]
   incidents      Incident[]
   auditLogs      AuditLog[]
   inviteLinks    EventInviteLink[]
@@ -124,22 +120,7 @@ model Event {
   notifications  Notification[]
 }
 
-model Role {
-  id   String @id @default(uuid())
-  name String @unique // e.g., Reporter, Responder, Admin, SuperAdmin
-  userEventRoles UserEventRole[]
-}
-
-model UserEventRole {
-  id      String @id @default(uuid())
-  user    User   @relation(fields: [userId], references: [id])
-  userId  String
-  event   Event? @relation(fields: [eventId], references: [id])
-  eventId String?
-  role    Role   @relation(fields: [roleId], references: [id])
-  roleId  String
-  @@unique([userId, eventId, roleId])
-}
+// Legacy Role and UserEventRole models removed - using unified RBAC system
 
 model Incident {
   id          String   @id @default(uuid())
@@ -388,26 +369,13 @@ model Organization {
   createdById String
   
   // Relationships
-  memberships OrganizationMembership[]
   events      Event[]
   auditLogs   AuditLog[]
   logo        OrganizationLogo?
   inviteLinks OrganizationInviteLink[]
 }
 
-model OrganizationMembership {
-  id             String           @id @default(uuid())
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String
-  role           OrganizationRole
-  createdAt      DateTime         @default(now())
-  createdBy      User?            @relation("MembershipCreator", fields: [createdById], references: [id])
-  createdById    String?
-  
-  @@unique([organizationId, userId])
-}
+// Legacy OrganizationMembership model removed - using unified RBAC system
 
 model OrganizationLogo {
   id             String       @id @default(uuid())
