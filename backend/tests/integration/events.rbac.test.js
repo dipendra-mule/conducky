@@ -23,7 +23,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
     // Clear both old and new role structures
     inMemoryStore.userEventRoles = [];
     inMemoryStore.userRoles = [];
-    inMemoryStore.reports = [];
+    inMemoryStore.incidents = [];
     
     // Require app after store setup to ensure shared state
     app = require("../../index");

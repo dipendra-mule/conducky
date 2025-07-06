@@ -173,7 +173,7 @@ beforeEach(() => {
       user: { id: "3", email: "reporter@example.com", name: "Reporter", createdAt: new Date('2024-01-03') },
     },
   ];
-  inMemoryStore.reports = [];
+      inMemoryStore.incidents = [];
   inMemoryStore.auditLogs = [];
   inMemoryStore.reportComments = [];
 });

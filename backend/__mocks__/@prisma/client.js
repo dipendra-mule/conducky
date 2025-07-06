@@ -735,7 +735,7 @@ class PrismaClient {
         return results.length;
       }),
       findFirst: jest.fn(({ where, orderBy }) => {
-        let results = [...inMemoryStore.reports];
+        let results = [...inMemoryStore.incidents];
         
         const applyWhereCondition = (results, condition) => {
           if (condition.eventId) {
@@ -813,7 +813,7 @@ class PrismaClient {
         return results[0] || null;
       }),
       groupBy: jest.fn(({ by, where, _count }) => {
-        let results = [...inMemoryStore.reports];
+        let results = [...inMemoryStore.incidents];
         
         // Apply where filters using the same logic as findMany
         const applyWhereCondition = (results, condition) => {
@@ -1063,13 +1063,33 @@ class PrismaClient {
       }),
     };
     this.evidenceFile = {
-      create: jest.fn(({ data }) => {
+      create: jest.fn(({ data, include }) => {
         if (!inMemoryStore.evidenceFiles) inMemoryStore.evidenceFiles = [];
         const newEvidence = {
           id: `e${inMemoryStore.evidenceFiles.length + 1}`,
+          createdAt: new Date(),
           ...data,
         };
         inMemoryStore.evidenceFiles.push(newEvidence);
+        
+        // Handle includes
+        if (include) {
+          const result = { ...newEvidence };
+          
+          if (include.uploader && newEvidence.uploaderId) {
+            const uploader = inMemoryStore.users.find(u => u.id === newEvidence.uploaderId);
+            if (uploader) {
+              result.uploader = {
+                id: uploader.id,
+                name: uploader.name,
+                email: uploader.email
+              };
+            }
+          }
+          
+          return result;
+        }
+        
         return newEvidence;
       }),
       // findUnique should only be used for id, not reportId (reportId is not unique)
@@ -1090,8 +1110,22 @@ class PrismaClient {
           if (include) {
             const result = { ...found };
             
-            if (include.report) {
-              const report = inMemoryStore.reports.find(r => r.id === found.reportId);
+            if (include.incident) {
+              const incident = inMemoryStore.incidents.find(r => r.id === found.incidentId);
+              if (incident) {
+                result.incident = { ...incident };
+                
+                // Handle nested includes
+                if (include.incident.include && include.incident.include.event) {
+                  const event = inMemoryStore.events.find(e => e.id === incident.eventId);
+                  if (event) {
+                    result.incident.event = event;
+                  }
+                }
+              }
+            } else if (include.report) {
+              // Legacy support for old report field
+              const report = inMemoryStore.incidents.find(r => r.id === found.reportId || found.incidentId);
               if (report) {
                 result.report = { ...report };
                 
@@ -1112,20 +1146,57 @@ class PrismaClient {
         }
         return null;
       }),
-      // findMany should be used for reportId
-      findMany: jest.fn(({ where }) => {
+      // findMany should be used for incidentId
+      findMany: jest.fn(({ where, select }) => {
         if (!inMemoryStore.evidenceFiles) return [];
-        if (where.reportId) {
-          return inMemoryStore.evidenceFiles.filter(
-            (e) => e.reportId === where.reportId,
-          );
+        let results = [...inMemoryStore.evidenceFiles];
+        
+        if (where) {
+          if (where.incidentId) {
+            results = results.filter((e) => e.incidentId === where.incidentId);
+          }
+          if (where.reportId) {
+            // Legacy support for old reportId field
+            results = results.filter((e) => e.reportId === where.reportId);
+          }
         }
-        return [];
+        
+        // Apply select if provided
+        if (select) {
+          results = results.map(evidence => {
+            const selected = {};
+            Object.keys(select).forEach(key => {
+              if (select[key]) {
+                if (key === 'uploader' && evidence.uploaderId) {
+                  // Handle uploader relationship
+                  const uploader = inMemoryStore.users.find(u => u.id === evidence.uploaderId);
+                  if (uploader) {
+                    selected[key] = {
+                      id: uploader.id,
+                      name: uploader.name,
+                      email: uploader.email
+                    };
+                  }
+                } else if (evidence[key] !== undefined) {
+                  selected[key] = evidence[key];
+                }
+              }
+            });
+            return selected;
+          });
+        }
+        
+        return results;
       }),
       deleteMany: jest.fn(({ where }) => {
         if (!inMemoryStore.evidenceFiles) return { count: 0 };
         const before = inMemoryStore.evidenceFiles.length;
-        if (where.reportId) {
+        if (where.incidentId) {
+          inMemoryStore.evidenceFiles = inMemoryStore.evidenceFiles.filter(
+            (e) => e.incidentId !== where.incidentId
+          );
+        } else if (where.reportId) {
+          // Legacy support for old reportId field
           inMemoryStore.evidenceFiles = inMemoryStore.evidenceFiles.filter(
             (e) => e.reportId !== where.reportId
           );
@@ -1302,7 +1373,7 @@ class PrismaClient {
               result.event = inMemoryStore.events.find(e => e.id === notification.eventId) || null;
             }
             if (include.report && notification.reportId) {
-              result.report = inMemoryStore.reports.find(r => r.id === notification.reportId) || null;
+              result.report = inMemoryStore.incidents.find(r => r.id === notification.reportId) || null;
             }
             return result;
           });
