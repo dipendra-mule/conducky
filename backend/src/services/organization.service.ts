@@ -50,7 +50,7 @@ export interface UpdateOrganizationData {
 }
 
 export interface OrganizationWithMembers extends Organization {
-  members: {
+  memberships: {
     userId: string;
     role: string;
     grantedAt: Date;
@@ -63,7 +63,7 @@ export interface OrganizationWithMembers extends Organization {
   }[];
   _count: {
     events: number;
-    members: number;
+    memberships: number;
   };
 }
 
@@ -177,10 +177,10 @@ export class OrganizationService {
       // Return organization with simplified member structure
       const organizationWithMembers = {
         ...organization,
-        members: members,
+        memberships: members,
         _count: {
           events: organization._count.events,
-          members: members.length,
+          memberships: members.length,
         },
       };
 
@@ -248,10 +248,10 @@ export class OrganizationService {
       // Return organization with simplified member structure
       const organizationWithMembers = {
         ...organization,
-        members: members,
+        memberships: members,
         _count: {
           events: organization._count.events,
-          members: members.length,
+          memberships: members.length,
         },
       };
 
@@ -390,10 +390,10 @@ export class OrganizationService {
           // Return organization with simplified member structure
           return {
             ...org,
-            members: members,
+            memberships: members,
             _count: {
               events: org._count?.events || 0,
-              members: members.length,
+              memberships: members.length,
             },
           };
         })
