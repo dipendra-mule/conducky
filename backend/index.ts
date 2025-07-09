@@ -49,7 +49,8 @@ import {
   adminRoutes,
   userNotificationSettingsRoutes,
   configRoutes,
-  organizationRoutes
+  organizationRoutes,
+  auditRoutes
 } from './src/routes';
 
 // Import middleware
@@ -166,6 +167,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/user/notification-settings', userNotificationSettingsRoutes); // Fix 404 error for /api/user/notification-settings
 app.use('/api/config', configRoutes); // Mount configRoutes at /api/config
 app.use('/api/organizations', organizationRoutes); // Organization management routes
+app.use('/api/audit', auditRoutes); // Audit log routes
 
 // Missing API routes that frontend expects
 // Session route (frontend expects /api/session)

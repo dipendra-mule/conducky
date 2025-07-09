@@ -1,6 +1,7 @@
 import { PrismaClient, CommentVisibility } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { Prisma } from '@prisma/client';
+import { logAudit } from '../utils/audit';
 
 export interface CommentCreateData {
   incidentId: string;
@@ -60,11 +61,12 @@ export class CommentService {
    */
   async createComment(data: CommentCreateData): Promise<ServiceResult<{ comment: CommentWithDetails }>> {
     try {
-      const { incidentId, authorId, body, visibility = 'public', isMarkdown = false } = data;
-
-      // Verify report exists
+      const { incidentId, authorId, body, visibility = 'public', isMarkdown = false } = data;      // Verify report exists
       const incident = await this.prisma.incident.findUnique({
-        where: { id: incidentId }
+        where: { id: incidentId },
+        include: {
+          event: true
+        }
       });
 
       if (!incident) {
@@ -92,6 +94,15 @@ export class CommentService {
             }
           }
         }
+      });
+
+      // Log comment creation
+      await logAudit({
+        action: 'comment_created',
+        targetType: 'IncidentComment',
+        targetId: comment.id,
+        userId: authorId || undefined,
+        eventId: incident.eventId
       });
 
       return {
@@ -263,10 +274,16 @@ export class CommentService {
    * Update a comment
    */
   async updateComment(commentId: string, data: CommentUpdateData, userId?: string): Promise<ServiceResult<{ comment: CommentWithDetails }>> {
-    try {
-      // Check if comment exists and user has permission
+    try {      // Check if comment exists and user has permission
       const existingComment = await this.prisma.incidentComment.findUnique({
-        where: { id: commentId }
+        where: { id: commentId },
+        include: {
+          incident: {
+            include: {
+              event: true
+            }
+          }
+        }
       });
 
       if (!existingComment) {
@@ -299,6 +316,15 @@ export class CommentService {
         }
       });
 
+      // Log comment update
+      await logAudit({
+        action: 'comment_updated',
+        targetType: 'IncidentComment',
+        targetId: comment.id,
+        userId: userId || undefined,
+        eventId: existingComment.incident.eventId
+      });
+
       return {
         success: true,
         data: { comment }
@@ -316,10 +342,16 @@ export class CommentService {
    * Delete a comment
    */
   async deleteComment(commentId: string, userId?: string): Promise<ServiceResult<{ message: string }>> {
-    try {
-      // Check if comment exists and user has permission
+    try {      // Check if comment exists and user has permission
       const existingComment = await this.prisma.incidentComment.findUnique({
-        where: { id: commentId }
+        where: { id: commentId },
+        include: {
+          incident: {
+            include: {
+              event: true
+            }
+          }
+        }
       });
 
       if (!existingComment) {
@@ -340,6 +372,15 @@ export class CommentService {
       // Delete the comment
       await this.prisma.incidentComment.delete({
         where: { id: commentId }
+      });
+
+      // Log comment deletion
+      await logAudit({
+        action: 'comment_deleted',
+        targetType: 'IncidentComment',
+        targetId: commentId,
+        userId: userId || undefined,
+        eventId: existingComment.incident.eventId
       });
 
       return {

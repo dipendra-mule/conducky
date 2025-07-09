@@ -903,20 +903,60 @@ class PrismaClient {
           if (where.eventId) {
             results = results.filter((log) => log.eventId === where.eventId);
           }
+          if (where.organizationId) {
+            results = results.filter((log) => log.organizationId === where.organizationId);
+          }
           if (where.targetType) {
             results = results.filter((log) => log.targetType === where.targetType);
           }
           if (where.targetId) {
             results = results.filter((log) => log.targetId === where.targetId);
           }
+          if (where.action) {
+            results = results.filter((log) => log.action === where.action);
+          }
+          // Handle timestamp filtering
+          if (where.timestamp) {
+            if (where.timestamp.gte) {
+              results = results.filter((log) => new Date(log.timestamp) >= new Date(where.timestamp.gte));
+            }
+            if (where.timestamp.lte) {
+              results = results.filter((log) => new Date(log.timestamp) <= new Date(where.timestamp.lte));
+            }
+          }
+          // Handle OR conditions for organization filtering
+          if (where.OR) {
+            const orResults = [];
+            for (const orCondition of where.OR) {
+              let tempResults = [...inMemoryStore.auditLogs];
+              if (orCondition.organizationId) {
+                tempResults = tempResults.filter((log) => log.organizationId === orCondition.organizationId);
+              }
+              if (orCondition.organizationId === null) {
+                tempResults = tempResults.filter((log) => log.organizationId === null);
+              }
+              orResults.push(...tempResults);
+            }
+            results = orResults;
+          }
         }
         
-        // Apply ordering - use timestamp instead of createdAt
+        // Apply ordering
         if (orderBy) {
           if (orderBy.timestamp === 'desc') {
             results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           } else if (orderBy.timestamp === 'asc') {
             results.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          }
+          if (orderBy.action === 'desc') {
+            results.sort((a, b) => b.action.localeCompare(a.action));
+          } else if (orderBy.action === 'asc') {
+            results.sort((a, b) => a.action.localeCompare(b.action));
+          }
+          if (orderBy.targetType === 'desc') {
+            results.sort((a, b) => b.targetType.localeCompare(a.targetType));
+          } else if (orderBy.targetType === 'asc') {
+            results.sort((a, b) => a.targetType.localeCompare(b.targetType));
           }
           // Also support createdAt for backward compatibility
           if (orderBy.createdAt === 'desc') {
@@ -956,6 +996,42 @@ class PrismaClient {
           }
           if (where.eventId) {
             results = results.filter((log) => log.eventId === where.eventId);
+          }
+          if (where.organizationId) {
+            results = results.filter((log) => log.organizationId === where.organizationId);
+          }
+          if (where.targetType) {
+            results = results.filter((log) => log.targetType === where.targetType);
+          }
+          if (where.targetId) {
+            results = results.filter((log) => log.targetId === where.targetId);
+          }
+          if (where.action) {
+            results = results.filter((log) => log.action === where.action);
+          }
+          // Handle timestamp filtering
+          if (where.timestamp) {
+            if (where.timestamp.gte) {
+              results = results.filter((log) => new Date(log.timestamp) >= new Date(where.timestamp.gte));
+            }
+            if (where.timestamp.lte) {
+              results = results.filter((log) => new Date(log.timestamp) <= new Date(where.timestamp.lte));
+            }
+          }
+          // Handle OR conditions for organization filtering
+          if (where.OR) {
+            const orResults = [];
+            for (const orCondition of where.OR) {
+              let tempResults = [...inMemoryStore.auditLogs];
+              if (orCondition.organizationId) {
+                tempResults = tempResults.filter((log) => log.organizationId === orCondition.organizationId);
+              }
+              if (orCondition.organizationId === null) {
+                tempResults = tempResults.filter((log) => log.organizationId === null);
+              }
+              orResults.push(...tempResults);
+            }
+            results = orResults;
           }
         }
         

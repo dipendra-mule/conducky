@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+import { logAudit } from '../utils/audit';
 
 export interface IncidentCreateData {
   eventId: string;
@@ -228,10 +229,24 @@ export class IncidentService {
         data: incidentData,
       });
 
+      // Audit log: incident created
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: reporterId,
+          action: 'create_incident',
+          targetType: 'incident',
+          targetId: incident.id,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for incident creation:', auditError);
+        // Don't fail the incident creation if audit logging fails
+      }
+
       // If evidence files are provided, store in DB
       if (evidenceFiles && evidenceFiles.length > 0) {
         for (const file of evidenceFiles) {
-          await this.prisma.evidenceFile.create({
+          const evidenceFile = await this.prisma.evidenceFile.create({
             data: {
               incidentId: incident.id,
               filename: file.filename,
@@ -241,6 +256,20 @@ export class IncidentService {
               uploaderId: file.uploaderId || null,
             },
           });
+
+          // Audit log: evidence uploaded
+          try {
+            await logAudit({
+              eventId: eventId,
+              userId: file.uploaderId || reporterId,
+              action: 'upload_evidence',
+              targetType: 'evidence',
+              targetId: evidenceFile.id,
+            });
+          } catch (auditError) {
+            console.error('Failed to log audit for evidence upload:', auditError);
+            // Don't fail the process if audit logging fails
+          }
         }
       }
 
@@ -680,12 +709,29 @@ export class IncidentService {
         }
       }
 
+      // Store original title for audit log
+      const originalTitle = incident.title;
+
       // Update title
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
         data: { title },
         include: { reporter: true },
       });
+
+      // Audit log: title updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: `update_incident_title`,
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for title update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
 
       return {
         success: true,
@@ -776,6 +822,9 @@ export class IncidentService {
     try {
       const incident = await this.prisma.incident.findUnique({
         where: { id: incidentId },
+        include: {
+          event: true
+        }
       });
 
       if (!incident) {
@@ -807,6 +856,15 @@ export class IncidentService {
           include: {
             uploader: { select: { id: true, name: true, email: true } },
           },
+        });
+
+        // Log evidence file upload
+        await logAudit({
+          action: 'evidence_file_uploaded',
+          targetType: 'EvidenceFile',
+          targetId: evidence.id,
+          userId: file.uploaderId || undefined,
+          eventId: incident.eventId
         });
 
         created.push({
@@ -916,6 +974,13 @@ export class IncidentService {
     try {
       const evidence = await this.prisma.evidenceFile.findUnique({
         where: { id: evidenceId },
+        include: {
+          incident: {
+            include: {
+              event: true
+            }
+          }
+        }
       });
 
       if (!evidence) {
@@ -926,6 +991,15 @@ export class IncidentService {
       }
 
       await this.prisma.evidenceFile.delete({ where: { id: evidenceId } });
+
+      // Log evidence file deletion
+      await logAudit({
+        action: 'evidence_file_deleted',
+        targetType: 'EvidenceFile',
+        targetId: evidence.id,
+        userId: evidence.uploaderId || undefined,
+        eventId: evidence.incident.eventId
+      });
 
       return {
         success: true,
@@ -1354,12 +1428,29 @@ export class IncidentService {
         }
       }
 
+      // Store original location for audit log
+      const originalLocation = incident.location;
+
       // Update location
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
         data: { location: location || null } as any,
         include: { reporter: true },
       });
+
+      // Audit log: location updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: 'update_incident_location',
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for location update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
 
       return {
         success: true,
@@ -1413,12 +1504,29 @@ export class IncidentService {
         }
       }
 
+      // Store original contact preference for audit log
+      const originalContactPreference = incident.contactPreference;
+
       // Update contact preference
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
         data: { contactPreference } as any,
         include: { reporter: true },
       });
+
+      // Audit log: contact preference updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: 'update_incident_contact_preference',
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for contact preference update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
 
       return {
         success: true,
@@ -1477,12 +1585,29 @@ export class IncidentService {
         }
       }
 
+      // Store original type for audit log
+      const originalType = incident.type;
+
       // Update type
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
         data: { type: type as any },
         include: { reporter: true },
       });
+
+      // Audit log: type updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: 'update_incident_type',
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for type update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
 
       return {
         success: true,
@@ -1547,12 +1672,29 @@ export class IncidentService {
         }
       }
 
+      // Store original description for audit log
+      const originalDescription = incident.description;
+
       // Update description
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
         data: { description: description.trim() },
         include: { reporter: true },
       });
+
+      // Audit log: description updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: 'update_incident_description',
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for description update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
 
       return {
         success: true,
@@ -1625,12 +1767,29 @@ export class IncidentService {
         }
       }
 
+      // Store original incident date for audit log
+      const originalIncidentDate = incident.incidentAt;
+
       // Update incident date
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
         data: { incidentAt: incidentDate },
         include: { reporter: true },
       });
+
+      // Audit log: incident date updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: 'update_incident_date',
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for incident date update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
 
       return {
         success: true,
@@ -1688,12 +1847,29 @@ export class IncidentService {
         }
       }
 
+      // Store original parties for audit log
+      const originalParties = incident.parties;
+
       // Update parties
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
         data: { parties: parties ? parties.trim() : null },
         include: { reporter: true },
       });
+
+      // Audit log: parties updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: 'update_incident_parties',
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        console.error('Failed to log audit for parties update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
 
       return {
         success: true,
@@ -2033,6 +2209,19 @@ export class IncidentService {
                   data: { assignedResponderId: assignedTo }
                 });
                 updated++;
+
+                // Audit log: incident assigned
+                try {
+                  await logAudit({
+                    eventId: eventId,
+                    userId: userId,
+                    action: 'assign_incident',
+                    targetType: 'incident',
+                    targetId: incidentId,
+                  });
+                } catch (auditError) {
+                  console.error('Failed to log audit for bulk assign:', auditError);
+                }
               } else {
                 errors.push(`Report ${incidentId}: assignedTo is required for assign action`);
               }
@@ -2052,6 +2241,19 @@ export class IncidentService {
                   data: { state: status as any }
                 });
                 updated++;
+
+                // Audit log: incident status changed
+                try {
+                  await logAudit({
+                    eventId: eventId,
+                    userId: userId,
+                    action: 'update_incident_status',
+                    targetType: 'incident',
+                    targetId: incidentId,
+                  });
+                } catch (auditError) {
+                  console.error('Failed to log audit for bulk status change:', auditError);
+                }
               } else {
                 errors.push(`Report ${incidentId}: status is required for status action`);
               }
@@ -2073,6 +2275,19 @@ export class IncidentService {
                 where: { id: incidentId }
               });
               updated++;
+
+              // Audit log: incident deleted
+              try {
+                await logAudit({
+                  eventId: eventId,
+                  userId: userId,
+                  action: 'delete_incident',
+                  targetType: 'incident',
+                  targetId: incidentId,
+                });
+              } catch (auditError) {
+                console.error('Failed to log audit for bulk delete:', auditError);
+              }
               break;
 
             default:

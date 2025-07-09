@@ -1,6 +1,7 @@
 import { PrismaClient, Organization, OrganizationRole, OrganizationLogo, OrganizationInviteLink } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+import { logAudit } from '../utils/audit';
 
 // Type for user role data from unified RBAC system
 interface UserRoleWithDetails {
@@ -112,6 +113,14 @@ export class OrganizationService {
         organization.id,
         createdById
       );
+
+      // Log organization creation
+      await logAudit({
+        action: 'organization_created',
+        targetType: 'Organization',
+        targetId: organization.id,
+        userId: createdById
+      });
 
       return {
         success: true,
@@ -295,6 +304,13 @@ export class OrganizationService {
       const organization = await prisma.organization.update({
         where: { id: organizationId },
         data,
+      });
+
+      // Log organization update
+      await logAudit({
+        action: 'organization_updated',
+        targetType: 'Organization',
+        targetId: organizationId
       });
 
       return {
@@ -536,6 +552,14 @@ export class OrganizationService {
           error: 'Failed to grant new organization role',
         };
       }
+
+      // Log organization role change
+      await logAudit({
+        action: 'organization_role_changed',
+        targetType: 'OrganizationMembership',
+        targetId: userId,
+        userId: userId
+      });
 
       // Return synthetic membership object for backward compatibility
       const membership: OrganizationMembership = {
@@ -853,6 +877,14 @@ export class OrganizationService {
 
       const url = `${process.env.FRONTEND_BASE_URL || 'http://localhost:3000'}/org-invite/${code}`;
 
+      // Log organization invite creation
+      await logAudit({
+        action: 'organization_invite_created',
+        targetType: 'OrganizationInviteLink',
+        targetId: inviteLink.id,
+        userId: createdByUserId
+      });
+
       return {
         success: true,
         data: { 
@@ -910,6 +942,13 @@ export class OrganizationService {
       const inviteLink = await prisma.organizationInviteLink.update({
         where: { id: inviteId },
         data: { disabled },
+      });
+
+      // Log organization invite update
+      await logAudit({
+        action: disabled ? 'organization_invite_disabled' : 'organization_invite_enabled',
+        targetType: 'OrganizationInviteLink',
+        targetId: inviteId
       });
 
       return {

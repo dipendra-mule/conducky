@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { ServiceResult } from '../types';
 import { emailService } from '../utils/email';
 import { UnifiedRBACService } from './unified-rbac.service';
+import { logAudit } from '../utils/audit';
 
 export interface PasswordValidation {
   isValid: boolean;
@@ -201,6 +202,14 @@ export class AuthService {
           ''
         );
       }
+
+      // Log user registration
+      await logAudit({
+        action: 'user_registered',
+        targetType: 'User',
+        targetId: user.id,
+        userId: user.id
+      });
 
       return {
         success: true,
