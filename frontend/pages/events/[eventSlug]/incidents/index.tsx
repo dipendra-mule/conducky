@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Card } from "../../../../components/ui/card";
 import { UserContext } from "../../../_app";
 import { EnhancedIncidentList } from "../../../../components/incidents/EnhancedIncidentList";
+import { useLogger } from "../../../../hooks/useLogger";
 
 // Define UserContext type
 interface UserContextType {
@@ -17,6 +18,7 @@ export default function EventIncidentsPage() {
   const router = useRouter();
   const { eventSlug } = router.query;
   const { user } = useContext(UserContext) as UserContextType;
+  const { error: logError } = useLogger();
   const [loading, setLoading] = useState<boolean>(true);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
 
@@ -35,7 +37,10 @@ export default function EventIncidentsPage() {
             data = { error: await response.text() };
           }
           if (!response.ok) {
-            console.error('Error fetching user roles:', data.error || data);
+            logError('Error fetching user roles', { 
+              eventSlug: typeof eventSlug === 'string' ? eventSlug : eventSlug?.[0], 
+              userId: user.id 
+            }, new Error(data.error || JSON.stringify(data)));
             setAccessDenied(true);
             setLoading(false);
             return;
@@ -52,7 +57,10 @@ export default function EventIncidentsPage() {
           setLoading(false);
         })
         .catch(error => {
-          console.error('Network or parsing error fetching user roles:', error);
+          logError('Network or parsing error fetching user roles', { 
+            eventSlug: typeof eventSlug === 'string' ? eventSlug : eventSlug?.[0], 
+            userId: user.id 
+          }, error);
           setAccessDenied(true);
           setLoading(false);
         });

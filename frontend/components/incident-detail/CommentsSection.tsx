@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, ChevronLeft, ChevronRight, Link, Check, Quote } from "lucide-react";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { SafeReactMarkdown } from "@/components/ui/secure-markdown";
+import { useLogger } from '@/hooks/useLogger';
 
 interface User {
   id: string;

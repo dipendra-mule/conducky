@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import DOMPurify from 'dompurify';
+import { useLogger } from '@/hooks/useLogger';
 
 export type MarkdownType = 'comment' | 'event' | 'general';
 

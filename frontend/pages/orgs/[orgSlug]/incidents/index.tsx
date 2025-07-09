@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { useLogger } from '@/hooks/useLogger';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,7 @@ interface Organization {
 export default function OrganizationIncidents() {
   const router = useRouter();
   const { user } = useContext(UserContext);
+  const { error: logError, info: logInfo } = useLogger();
   const { orgSlug } = router.query;
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [metrics, setMetrics] = useState<ReportMetrics | null>(null);
@@ -96,9 +98,8 @@ export default function OrganizationIncidents() {
         name: data.organization.name,
         slug: data.organization.slug,
         role: userRole,
-      });
-    } catch (err) {
-      console.error('Error fetching organization:', err);
+      });    } catch (err) {
+      logError('Error fetching organization', { orgSlug }, err as Error);
       setError('Failed to load organization');
     }
   };
@@ -142,22 +143,20 @@ export default function OrganizationIncidents() {
         escalatedIncidents: 7,
       };
 
-      setMetrics(mockMetrics);
-    } catch (err) {
-      console.error('Error fetching report metrics:', err);
+      setMetrics(mockMetrics);    } catch (err) {
+      logError('Error fetching report metrics', { orgSlug }, err as Error);
       setError('Failed to load report metrics');
     } finally {
       setLoading(false);
     }
   };
-
   const handleExport = async (format: 'csv' | 'pdf') => {
     try {
       // TODO: Implement actual export functionality
-      console.log(`Exporting reports as ${format} for organization ${orgSlug}`);
+      logInfo(`Exporting reports as ${format} for organization`, { orgSlug, format });
       // This would call an API endpoint to generate and download the export
     } catch (err) {
-      console.error('Export failed:', err);
+      logError('Export failed', { orgSlug, format }, err as Error);
     }
   };
 

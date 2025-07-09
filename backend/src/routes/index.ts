@@ -9,6 +9,7 @@ import userNotificationSettingsRoutes from './user-notification-settings';
 import configRoutes from './config.routes';
 import organizationRoutes from './organization.routes';
 import auditRoutes from './audit.routes';
+import logsRoutes from './logs.routes';
 import logger from '../config/logger';
 
 export {
@@ -22,5 +23,6 @@ export {
   userNotificationSettingsRoutes,
   configRoutes,
   organizationRoutes,
-  auditRoutes
+  auditRoutes,
+  logsRoutes
 };

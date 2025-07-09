@@ -14,6 +14,7 @@ import { AuditLogTable } from '@/components/audit/AuditLogTable';
 import { fetchEventAuditLogs } from '@/lib/audit';
 import { AuditLogEntry, AuditLogFilters, AuditLogPagination } from '@/types/audit';
 import { Shield, Calendar, Users, Activity } from 'lucide-react';
+import { useLogger } from '@/hooks/useLogger';
 
 interface Event {
   id: string;

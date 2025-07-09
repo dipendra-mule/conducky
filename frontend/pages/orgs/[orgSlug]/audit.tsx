@@ -14,6 +14,7 @@ import { AuditLogTable } from '@/components/audit/AuditLogTable';
 import { fetchOrganizationAuditLogs } from '@/lib/audit';
 import { AuditLogEntry, AuditLogFilters, AuditLogPagination } from '@/types/audit';
 import { Shield, Building, Users, Activity, Calendar } from 'lucide-react';
+import { useLogger } from '@/hooks/useLogger';
 
 interface Organization {
   id: string;

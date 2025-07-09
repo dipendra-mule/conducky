@@ -8,6 +8,7 @@ import {
 import { useSidebar } from "@/components/ui/sidebar";
 import { Check, ChevronDown, Building2 } from "lucide-react";
 import { useRouter } from "next/router";
+import { useLogger } from '@/hooks/useLogger';
 
 export function NavOrganizations({
   organizations,

@@ -18,6 +18,7 @@ import {
   Shield
 } from 'lucide-react';
 import Link from 'next/link';
+import { useLogger } from '@/hooks/useLogger';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 

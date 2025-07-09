@@ -54,7 +54,8 @@ import {
   userNotificationSettingsRoutes,
   configRoutes,
   organizationRoutes,
-  auditRoutes
+  auditRoutes,
+  logsRoutes
 } from './src/routes';
 
 // Import middleware
@@ -179,6 +180,7 @@ app.use('/api/user/notification-settings', userNotificationSettingsRoutes); // F
 app.use('/api/config', configRoutes); // Mount configRoutes at /api/config
 app.use('/api/organizations', organizationRoutes); // Organization management routes
 app.use('/api/audit', auditRoutes); // Audit log routes
+app.use('/api', logsRoutes); // Frontend logging endpoint
 
 // Missing API routes that frontend expects
 // Session route (frontend expects /api/session)

@@ -1,6 +1,7 @@
 import React, { useContext, useRef, useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { UserContext } from "./_app";
+import { useLogger } from "@/hooks/useLogger";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -22,6 +23,7 @@ interface UserContextType {
 
 export default function ProfilePage() {
   const { user, setUser } = useContext(UserContext) as UserContextType;
+  const { error: logError } = useLogger();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -57,10 +59,9 @@ export default function ProfilePage() {
         body: formData,
         credentials: "include",
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+      if (!res.ok) {        const data = await res.json().catch(() => ({}));
         if (process.env.NODE_ENV === 'development') {
-          console.error("[Avatar Upload] Failed to upload avatar", data.error);
+          logError('Failed to upload avatar', { userId: user?.id }, new Error(data.error));
         }
         setError(data.error || "Failed to upload avatar.");
       } else {
@@ -71,9 +72,8 @@ export default function ProfilePage() {
         });
         const sessionData = await sessionRes.json();
         setUser(sessionData.user);
-      }
-    } catch (err) {
-      console.error("[Avatar Upload] Network error", err);
+      }    } catch (err) {
+      logError('Avatar upload network error', { userId: user?.id }, err as Error);
       setError("Network error");
     } finally {
       setUploading(false);
@@ -92,9 +92,8 @@ export default function ProfilePage() {
         method: "DELETE",
         credentials: "include",
       });
-      if (!res.ok && res.status !== 204) {
-        const data = await res.json().catch(() => ({}));
-        console.error("[Avatar Delete] Failed to remove avatar", data.error);
+      if (!res.ok && res.status !== 204) {        const data = await res.json().catch(() => ({}));
+        logError('Failed to remove avatar', { userId: user?.id }, new Error(data.error));
         setError(data.error || "Failed to remove avatar.");
       } else {
         setSuccess("Avatar removed.");
@@ -104,9 +103,8 @@ export default function ProfilePage() {
         });
         const sessionData = await sessionRes.json();
         setUser(sessionData.user);
-      }
-    } catch (err) {
-      console.error("[Avatar Delete] Network error", err);
+      }    } catch (err) {
+      logError('Avatar delete network error', { userId: user?.id }, err as Error);
       setError("Network error");
     } finally {
       setUploading(false);

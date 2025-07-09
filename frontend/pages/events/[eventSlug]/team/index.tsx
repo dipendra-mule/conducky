@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/router';
+import { useLogger } from '@/hooks/useLogger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { UserContext } from '@/pages/_app';
 import { AppBreadcrumbs } from '@/components/AppBreadcrumbs';
+import { logger } from '@/lib/logger';
 
 interface TeamMember {
   id: string;
@@ -54,6 +56,7 @@ export default function EventTeam() {
   const router = useRouter();
   const { eventSlug } = router.query;
   const { user } = useContext(UserContext);
+  const { error: logError } = useLogger();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +121,10 @@ export default function EventTeam() {
           setUserEventRoles([]);
         }
       } catch (error) {
-        console.error('Error fetching user event roles:', error);
+        logError('Error fetching user event roles', { 
+          eventSlug: typeof eventSlug === 'string' ? eventSlug : eventSlug?.[0], 
+          userId: user?.id 
+        }, error as Error);
         setUserEventRoles([]);
       }
     };
@@ -160,7 +166,9 @@ export default function EventTeam() {
         setMembers(data.users || []);
 
       } catch (err) {
-        console.error('Error fetching team members:', err);
+        logError('Error fetching team members', { 
+          eventSlug: typeof eventSlug === 'string' ? eventSlug : eventSlug?.[0] 
+        }, err as Error);
         setError('Failed to load team members. Please try again.');
       } finally {
         setLoading(false);
@@ -208,7 +216,11 @@ export default function EventTeam() {
       setShowRoleDialog(false);
       setSelectedMember(null);
     } catch (err) {
-      console.error('Error updating user role:', err);
+      logError('Error updating user role', { 
+        eventSlug: typeof eventSlug === 'string' ? eventSlug : eventSlug?.[0],
+        userId,
+        role 
+      }, err as Error);
       setError('Failed to update user role. Please try again.');
     }
   };
@@ -230,7 +242,10 @@ export default function EventTeam() {
       setShowRemoveDialog(false);
       setMemberToRemove(null);
     } catch (err) {
-      console.error('Error removing user:', err);
+      logError('Error removing user', { 
+        eventSlug: typeof eventSlug === 'string' ? eventSlug : eventSlug?.[0],
+        userId 
+      }, err as Error);
       setError('Failed to remove user. Please try again.');
     }
   };
