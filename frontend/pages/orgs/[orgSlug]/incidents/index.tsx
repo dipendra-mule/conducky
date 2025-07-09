@@ -68,7 +68,6 @@ export default function OrganizationIncidents() {
       fetchReportMetrics();
     }
   }, [orgSlug, user, timeRange]);
-
   const fetchOrganizationData = async () => {
     try {
       const response = await fetch(
@@ -81,11 +80,22 @@ export default function OrganizationIncidents() {
       }
 
       const data = await response.json();
+      
+      // Find the current user's role in the organization
+      const currentUser = user;
+      let userRole = 'org_viewer'; // default role
+      if (currentUser && data.organization?.memberships) {
+        const userMembership = data.organization.memberships.find(
+          (m: { user: { id: string } }) => m.user.id === currentUser.id
+        );
+        userRole = userMembership?.role || 'org_viewer';
+      }
+      
       setOrganization({
         id: data.organization.id,
         name: data.organization.name,
         slug: data.organization.slug,
-        role: data.userRole || 'org_viewer',
+        role: userRole,
       });
     } catch (err) {
       console.error('Error fetching organization:', err);

@@ -166,7 +166,7 @@ export class OrganizationService {
       });
       
       // Convert to simplified member structure with proper type safety
-      const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
+      const memberships = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
         userId: userRole.userId,
         role: userRole.role.name,
         grantedAt: userRole.grantedAt,
@@ -177,10 +177,10 @@ export class OrganizationService {
       // Return organization with simplified member structure
       const organizationWithMembers = {
         ...organization,
-        memberships: members,
+        memberships: memberships,
         _count: {
           events: organization._count.events,
-          memberships: members.length,
+          memberships: memberships.length,
         },
       };
 
@@ -237,7 +237,7 @@ export class OrganizationService {
       });
       
       // Convert to simplified member structure with proper type safety
-      const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
+      const memberships = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
         userId: userRole.userId,
         role: userRole.role.name,
         grantedAt: userRole.grantedAt,
@@ -248,10 +248,10 @@ export class OrganizationService {
       // Return organization with simplified member structure
       const organizationWithMembers = {
         ...organization,
-        memberships: members,
+        memberships: memberships,
         _count: {
           events: organization._count.events,
-          memberships: members.length,
+          memberships: memberships.length,
         },
       };
 
@@ -379,7 +379,7 @@ export class OrganizationService {
           });
           
           // Convert to simplified member structure with proper type safety
-          const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
+          const memberships = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
             userId: userRole.userId,
             role: userRole.role.name,
             grantedAt: userRole.grantedAt,
@@ -390,10 +390,10 @@ export class OrganizationService {
           // Return organization with simplified member structure
           return {
             ...org,
-            memberships: members,
+            memberships: memberships,
             _count: {
               events: org._count?.events || 0,
-              memberships: members.length,
+              memberships: memberships.length,
             },
           };
         })
