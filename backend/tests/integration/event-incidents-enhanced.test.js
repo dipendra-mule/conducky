@@ -260,7 +260,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         .set('x-test-disable-auth', 'true').expect(401);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Not authenticated');
+      expect(response.body.error).toBe('Authentication required');
     });
 
     it('should validate pagination parameters', async () => {

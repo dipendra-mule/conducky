@@ -69,6 +69,14 @@ export function requireAuth(req: any, res: Response, next: NextFunction) {
   if (req.isAuthenticated && req.isAuthenticated()) {
     return next();
   }
+  
+  logger.warn('Authentication required', {
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    path: req.path,
+    method: req.method
+  });
+  
   return res.status(401).json({ error: 'Authentication required' });
 }
 

@@ -53,15 +53,15 @@ export class DatabaseRateLimiter {
               gte: windowStart
             }
           }
-        });
-
-        if (existingRecord) {
+        });        if (existingRecord) {
           if (existingRecord.attempts >= config.max) {
             // Rate limit exceeded
+            const retryAfterSeconds = Math.ceil(config.windowMs / 1000);
+            res.set('Retry-After', retryAfterSeconds.toString());
             return res.status(429).json({
               error: 'Rate limit exceeded',
               message: config.message || 'Too many requests, please try again later.',
-              retryAfter: Math.ceil(config.windowMs / 1000)
+              retryAfter: retryAfterSeconds
             });
           }
 
@@ -107,7 +107,7 @@ export class DatabaseRateLimiter {
     
     // Get IP address (handle proxies)
     const forwarded = req.get('X-Forwarded-For');
-    const ip = forwarded ? forwarded.split(',')[0].trim() : req.ip || req.connection.remoteAddress || 'unknown';
+    const ip = forwarded ? forwarded.split(',')[0].trim() : req.ip || req.socket.remoteAddress || 'unknown';
     return `ip:${ip}`;
   }
 

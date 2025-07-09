@@ -63,7 +63,7 @@ export function requireRole(allowedRoles: RoleName[]) {
       
       // Check authentication
       if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -120,7 +120,7 @@ export function requireRole(allowedRoles: RoleName[]) {
 export function requireSystemAdmin() {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: "Not authenticated" });
+      res.status(401).json({ error: "Authentication required" });
       return;
     }
 
@@ -155,7 +155,7 @@ export const requireSuperAdmin = requireSystemAdmin;
 export function requireOrgRole(allowedRoles: string[], organizationId?: string) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: "Not authenticated" });
+      res.status(401).json({ error: "Authentication required" });
       return;
     }
 
@@ -189,7 +189,7 @@ export function requireOrgRole(allowedRoles: string[], organizationId?: string) 
 export function requireEventRole(allowedRoles: string[], eventId?: string) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: "Not authenticated" });
+      res.status(401).json({ error: "Authentication required" });
       return;
     }
 

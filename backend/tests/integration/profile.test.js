@@ -91,12 +91,11 @@ describe("Profile Management API", () => {
 
     it("should require authentication", async () => {
       const res = await request(app)
-        .patch('/users/me/profile')
-        .set("x-test-disable-auth", "true")
+        .patch('/users/me/profile')        .set("x-test-disable-auth", "true")
         .send({ name: "Test" });
 
       expect(res.statusCode).toBe(401);
-      expect(res.body.error).toBe("Not authenticated");
+      expect(res.body.error).toBe("Authentication required");
     });
   });
 
@@ -155,10 +154,8 @@ describe("Profile Management API", () => {
     it("should require both passwords", async () => {
       const res = await request(app)
         .patch("/api/users/me/password")
-        .send({ currentPassword: "test" });
-
-      expect(res.statusCode).toBe(400);
-      expect(res.body.error).toContain("Current password and new password are required");
+        .send({ currentPassword: "test" });      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toContain("Current and new password are required");
     });
 
     it("should require authentication", async () => {
@@ -167,11 +164,10 @@ describe("Profile Management API", () => {
         .set("x-test-disable-auth", "true")
         .send({
           currentPassword: "current",
-          newPassword: "NewPassword123!"
-        });
+          newPassword: "NewPassword123!"        });
 
       expect(res.statusCode).toBe(401);
-      expect(res.body.error).toBe("Not authenticated");
+      expect(res.body.error).toBe("Authentication required");
     });
   });
 
@@ -259,15 +255,13 @@ describe("Profile Management API", () => {
 
       expect(res.statusCode).toBe(404);
       expect(res.body.error).toContain("not a member");
-    });
-
-    it("should require authentication", async () => {
+    });    it("should require authentication", async () => {
       const res = await request(app)
         .delete(`/users/me/events/${mockEvent.id}`)
         .set("x-test-disable-auth", "true");
 
       expect(res.statusCode).toBe(401);
-      expect(res.body.error).toBe("Not authenticated");
+      expect(res.body.error).toBe("Authentication required");
     });
   });
 
@@ -330,12 +324,11 @@ describe("Profile Management API", () => {
     });
 
     it("should require authentication", async () => {
-      const res = await request(app)
-        .get("/api/users/me/events")
+      const res = await request(app)        .get("/api/users/me/events")
         .set("x-test-disable-auth", "true");
 
       expect(res.statusCode).toBe(401);
-      expect(res.body.error).toBe("Not authenticated");
+      expect(res.body.error).toBe("Authentication required");
     });
   });
 
@@ -466,13 +459,12 @@ describe("Profile Management API", () => {
       expect(res.body.error).toContain("already a member");
     });
 
-    it("should require authentication", async () => {
-      const res = await request(app)
+    it("should require authentication", async () => {      const res = await request(app)
         .post("/api/invites/ABC123/redeem")
         .set("x-test-disable-auth", "true");
 
       expect(res.statusCode).toBe(401);
-      expect(res.body.error).toBe("Not authenticated");
+      expect(res.body.error).toBe("Authentication required");
     });
   });
 }); 

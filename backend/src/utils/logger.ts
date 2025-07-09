@@ -73,7 +73,7 @@ class Logger {
     const context: LogContext = {
       method: req.method,
       url: req.url,
-      ip: req.ip || req.connection.remoteAddress,
+      ip: req.ip || req.socket.remoteAddress,
       userAgent: req.get('User-Agent'),
       userId: (req.user as any)?.id,
       ...additionalContext

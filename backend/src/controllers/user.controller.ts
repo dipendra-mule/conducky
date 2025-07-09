@@ -20,7 +20,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -43,7 +43,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -147,7 +147,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -170,7 +170,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -208,7 +208,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -231,7 +231,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -255,7 +255,7 @@ export class UserController {
       const { eventId } = req.params;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 

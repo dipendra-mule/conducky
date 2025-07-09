@@ -129,7 +129,7 @@ export class AuthController {
       const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 

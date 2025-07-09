@@ -21,7 +21,7 @@ router.patch('/:notificationId/read', requireAuth, async (req: any, res: Respons
   try {
     // Check authentication first
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -66,7 +66,7 @@ router.delete('/:notificationId', requireAuth, async (req: any, res: Response): 
   try {
     // Check authentication first
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 

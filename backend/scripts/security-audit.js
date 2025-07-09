@@ -188,7 +188,8 @@ async function scanDirectory(dir, checks) {
 async function runSecurityAudit() {
   logger.info('Starting comprehensive security audit...\n');
 
-  const backendDir = path.join(__dirname, '..', 'src');
+  const projectRoot = path.join(__dirname, '..', '..');
+  const backendDir = path.join(projectRoot, 'backend', 'src');
   const allIssues = [];
   const summary = {
     CRITICAL: 0,
@@ -226,12 +227,12 @@ async function runSecurityAudit() {
   return { allIssues, summary };
 }
 
-async function checkDependencyVulnerabilities() {
+async function checkDependencyVulnerabilities(projectRoot) {
   logger.info('🔍 Checking for dependency vulnerabilities...');
   
   try {
     const { stdout } = await execAsync('cd backend && npm audit --json', { 
-      cwd: path.join(__dirname, '..', '..')
+      cwd: projectRoot
     });
     
     const auditResult = JSON.parse(stdout);
@@ -251,7 +252,7 @@ async function checkDependencyVulnerabilities() {
   }
 }
 
-async function generateSecurityReport(issues, summary, vulnCount) {
+async function generateSecurityReport(issues, summary, vulnCount, projectRoot) {
   const reportContent = `# Security Audit Report
 Date: ${new Date().toISOString()}
 
@@ -325,15 +326,16 @@ ${summary.MEDIUM > 0 ? `
 *This report was generated automatically. Manual security review recommended.*
 `;
 
-  const reportPath = path.join(__dirname, '..', '..', 'reference', 'security-audit-report.md');
+  const reportPath = path.join(projectRoot, 'reference', 'security-audit-report.md');
   fs.writeFileSync(reportPath, reportContent);
   logger.success('Security report generated: reference/security-audit-report.md');
 }
 
 async function main() {
   try {
+    const projectRoot = path.join(__dirname, '..', '..');
     const { allIssues, summary } = await runSecurityAudit();
-    const vulnCount = await checkDependencyVulnerabilities();
+    const vulnCount = await checkDependencyVulnerabilities(projectRoot);
     
     console.log('\n📊 Security Audit Summary:');
     console.log(`   Critical: ${summary.CRITICAL}`);
@@ -342,7 +344,7 @@ async function main() {
     console.log(`   Low: ${summary.LOW}`);
     console.log(`   Dependencies: ${vulnCount} vulnerabilities`);
     
-    await generateSecurityReport(allIssues, summary, vulnCount);
+    await generateSecurityReport(allIssues, summary, vulnCount, projectRoot);
     
     const totalScore = summary.CRITICAL * 10 + summary.HIGH * 5 + summary.MEDIUM * 2 + summary.LOW * 1;
     

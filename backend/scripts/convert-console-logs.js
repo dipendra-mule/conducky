@@ -50,9 +50,10 @@ function findConsoleStatements(dir) {
       
       const content = fs.readFileSync(filePath, 'utf-8');
       const lines = content.split('\n');
-      
-      lines.forEach((line, index) => {
-        if (line.includes('console.')) {
+        lines.forEach((line, index) => {
+        // Use precise regex to match console method calls
+        const consoleRegex = /\bconsole\.(log|error|warn|info|debug|trace)\s*\(/;
+        if (consoleRegex.test(line)) {
           results.push({
             file: filePath,
             line: index + 1,

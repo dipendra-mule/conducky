@@ -27,7 +27,7 @@ router.patch('/me/profile', requireAuth, async (req: any, res: Response): Promis
     const { name, email } = req.body;
     
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -59,7 +59,7 @@ router.patch('/me/password', requireAuth, async (req: any, res: Response): Promi
     const { currentPassword, newPassword } = req.body;
     
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
       if (!currentPassword || !newPassword) {
@@ -88,7 +88,7 @@ router.patch('/me/password', requireAuth, async (req: any, res: Response): Promi
 router.get('/me/events', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -113,7 +113,7 @@ router.get('/me/events', requireAuth, async (req: any, res: Response): Promise<v
 router.get('/me/incidents', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -166,7 +166,7 @@ router.get('/me/incidents', requireAuth, async (req: any, res: Response): Promis
 router.delete('/me/events/:eventId', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -198,7 +198,7 @@ router.delete('/me/events/:eventId', requireAuth, async (req: any, res: Response
 router.get('/me/quickstats', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -223,7 +223,7 @@ router.get('/me/quickstats', requireAuth, async (req: any, res: Response): Promi
 router.get('/me/activity', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -342,7 +342,7 @@ router.delete('/:userId/avatar', async (req: any, res: Response): Promise<void> 
 router.get('/me/notifications', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -427,7 +427,7 @@ router.get('/me/notifications', requireAuth, async (req: any, res: Response): Pr
 router.get('/me/notifications/stats', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -483,7 +483,7 @@ router.get('/me/notifications/stats', requireAuth, async (req: any, res: Respons
 router.patch('/me/notifications/read-all', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 

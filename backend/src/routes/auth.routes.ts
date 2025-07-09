@@ -115,7 +115,7 @@ router.get('/session', async (req: any, res: Response): Promise<void> => {
 router.get('/session-debug', async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      res.json({ error: 'Not authenticated' });
+      res.json({ error: 'Authentication required' });
       return;
     }
 

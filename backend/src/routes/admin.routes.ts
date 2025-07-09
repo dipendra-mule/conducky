@@ -613,7 +613,7 @@ router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Reques
     const currentUser = (req as any).user;
     if (!currentUser) {
       res.status(401).json({
-        error: 'User not authenticated',
+        error: 'Authentication required',
       });
       return;
     }
@@ -880,7 +880,7 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
     // Get current user for test email recipient
     const currentUser = req.user;
     if (!currentUser) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     // Get user's email from database

@@ -283,7 +283,7 @@ router.get('/slug/:slug/user-role', requireRole(['reporter', 'responder', 'event
     const user = req.user as any;
     
     if (!user?.id) {
-      res.status(401).json({ error: 'User not authenticated.' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -480,7 +480,7 @@ router.post('/:eventId/incidents', reportCreationRateLimit, requireRole(['report
     // Get authenticated user
     const user = req.user as any;
     if (!user?.id) {
-      res.status(401).json({ error: 'User not authenticated.' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -907,7 +907,7 @@ router.post('/:eventId/incidents/:incidentId/evidence', fileUploadRateLimit, req
     const uploaderId = user?.id;
     
     if (!uploaderId) {
-      res.status(401).json({ error: 'User not authenticated.' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -1153,7 +1153,7 @@ router.get('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event
     // Get authenticated user for role-based access
     const user = req.user as any;
     if (!user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -1220,7 +1220,7 @@ router.get('/slug/:slug/incidents/export', requireRole(['reporter', 'responder',
 
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -1335,7 +1335,7 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
     // Get authenticated user
     const user = req.user as any;
     if (!user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -1438,7 +1438,7 @@ router.post('/slug/:slug/incidents', reportCreationRateLimit, requireRole(['repo
     // Get authenticated user
     const user = req.user as any;
     if (!user || !user.id) {
-      res.status(401).json({ error: 'User not authenticated.' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -1500,7 +1500,7 @@ router.get('/slug/:slug/my-roles', async (req: Request, res: Response): Promise<
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -1529,7 +1529,7 @@ router.get('/slug/:slug/incidents/:incidentId', async (req: Request, res: Respon
   
   // Check authentication
   if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-    res.status(401).json({ error: 'Not authenticated' });
+    res.status(401).json({ error: 'Authentication required' });
     return;
   }
 
@@ -1661,7 +1661,7 @@ router.post('/slug/:slug/invites', requireRole(['event_admin', 'system_admin']),
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -1880,7 +1880,7 @@ router.post('/slug/:slug/incidents/:incidentId/comments', commentCreationRateLim
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -1981,7 +1981,7 @@ router.get('/slug/:slug/incidents/:incidentId/comments', requireRole(['reporter'
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -2078,7 +2078,7 @@ router.patch('/slug/:slug/incidents/:incidentId', requireRole(['responder', 'eve
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -2144,7 +2144,7 @@ router.patch('/slug/:slug/incidents/:incidentId/title', requireRole(['reporter',
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -2198,7 +2198,7 @@ router.post('/slug/:slug/incidents/:incidentId/evidence', fileUploadRateLimit, r
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -2280,7 +2280,7 @@ router.get('/slug/:slug/incidents/:incidentId/evidence', requireRole(['reporter'
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -2338,7 +2338,7 @@ router.delete('/slug/:slug/incidents/:incidentId/evidence/:evidenceId', requireR
     
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
