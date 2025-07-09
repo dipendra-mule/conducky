@@ -110,17 +110,8 @@ export const apiSecurityHeaders = (req: Request, res: Response, next: NextFuncti
  */
 export const corsSecurityOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    // Debug logging for CORS
-    console.log(`CORS: Processing origin: ${origin}`);
-    console.log(`CORS: NODE_ENV: ${process.env.NODE_ENV}`);
-    console.log(`CORS: FRONTEND_URL: ${process.env.FRONTEND_URL}`);
-    console.log(`CORS: FRONTEND_BASE_URL: ${process.env.FRONTEND_BASE_URL}`);
-    console.log(`CORS: CORS_ORIGIN: ${process.env.CORS_ORIGIN}`);
-    console.log(`CORS: PRODUCTION_DOMAIN: ${process.env.PRODUCTION_DOMAIN}`);
-    
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) {
-      console.log('CORS: No origin provided, allowing request');
       return callback(null, true);
     }
     
@@ -132,8 +123,6 @@ export const corsSecurityOptions = {
       'http://localhost:3001',
     ].filter(Boolean);
     
-    console.log('CORS: All allowed origins:', allowedOrigins);
-    
     // In production, be more strict about origins
     if (process.env.NODE_ENV === 'production') {
       const productionOrigins = [
@@ -143,11 +132,8 @@ export const corsSecurityOptions = {
         process.env.PRODUCTION_DOMAIN,
       ].filter(Boolean);
       
-      console.log('CORS: Production origins:', productionOrigins);
-      
       if (productionOrigins.length > 0) {
         if (productionOrigins.includes(origin)) {
-          console.log(`CORS: Allowing origin in production: ${origin}`);
           return callback(null, true);
         } else {
           console.warn(`CORS: Rejecting origin in production: ${origin}. Allowed:`, productionOrigins);
@@ -158,7 +144,6 @@ export const corsSecurityOptions = {
     
     // Development and other environments: allow localhost and configured origins
     if (allowedOrigins.includes(origin)) {
-      console.log(`CORS: Allowing origin: ${origin}`);
       return callback(null, true);
     } else {
       console.warn(`CORS: Rejecting origin: ${origin}. Allowed origins:`, allowedOrigins);
