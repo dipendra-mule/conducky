@@ -65,7 +65,7 @@ export function AuditLogTable({
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [searchTerm, filters, onFiltersChange]);
+  }, [searchTerm]);
 
   const handleFilterChange = (key: string, value: string | undefined) => {
     onFiltersChange({ ...filters, [key]: value });
