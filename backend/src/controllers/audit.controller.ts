@@ -122,8 +122,9 @@ export const getEventAuditLogs = [
           }
         },
         orderBy,
-        skip: offset,
-        take: limitNum      });
+          skip: offset,
+          take: limitNum
+        });
 
       const response: AuditLogResponse = {
         logs: logs.map(log => ({
