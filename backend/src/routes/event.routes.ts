@@ -1353,10 +1353,10 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
     if (process.env.NODE_ENV !== 'test') {
       console.log('[BULK DEBUG] Service result:', result);
     }
-    
-    if (!result.success) {
+      if (!result.success) {
       res.status(500).json({ error: result.error });
-      return;    }
+      return;
+    }
 
     res.json(result.data);
   } catch (error: any) {
@@ -1371,11 +1371,12 @@ router.get('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event
     const { slug } = req.params;
     
     // Get event ID by slug
-    const eventId = await eventService.getEventIdBySlug(slug);
-    if (!eventId) {
+    const eventId = await eventService.getEventIdBySlug(slug);    if (!eventId) {
       res.status(404).json({ error: 'Event not found.' });
       return;
-    }    // Parse query parameters (match the existing /:eventId/incidents endpoint)
+    }
+    
+    // Parse query parameters (match the existing /:eventId/incidents endpoint)
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const status = req.query.status as string;

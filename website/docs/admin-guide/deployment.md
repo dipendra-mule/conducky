@@ -21,16 +21,19 @@ Conducky requires specific environment variables to function properly. See the [
 ### Quick Reference
 
 **Backend** (`.env` in `/backend`):
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `SESSION_SECRET` - Secret for session management
 - `FRONTEND_BASE_URL` - URL of your frontend deployment
 - `CORS_ORIGIN` - Public URL of frontend for CORS
-
 - `PORT` - Backend port (optional, defaults to 4000)
+- `NODE_ENV` - Set this to "production" when running in a production environment
 
 **Frontend** (`.env` in `/frontend`):
+
 - `NEXT_PUBLIC_API_URL` - Backend API URL for client-side calls
 - `BACKEND_API_URL` - Backend API URL for server-side calls
+- `NODE_ENV` - Set this to "production" when running in a production environment
 
 ## Deployment Options
 
