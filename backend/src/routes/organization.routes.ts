@@ -4,6 +4,10 @@ import { requireAuth } from '../middleware/auth';
 import { requireSystemAdmin } from '../utils/rbac';
 import { createUploadMiddleware } from '../utils/upload';
 
+// Import security middleware
+import { fileUploadRateLimit } from '../middleware/rate-limit';
+import { validateOrganization, handleValidationErrors } from '../middleware/validation';
+
 const router = Router();
 const organizationController = new OrganizationController();
 
@@ -162,7 +166,7 @@ router.use(requireAuth);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/', requireSystemAdmin(), organizationController.createOrganization.bind(organizationController));
+router.post('/', validateOrganization, handleValidationErrors, requireSystemAdmin(), organizationController.createOrganization.bind(organizationController));
 
 /**
  * @swagger
@@ -521,7 +525,7 @@ router.get('/slug/:orgSlug', organizationController.getOrganizationBySlug.bind(o
  */
 router.get('/:organizationId', organizationController.getOrganization.bind(organizationController));
 
-router.put('/:organizationId', organizationController.updateOrganization.bind(organizationController));
+router.put('/:organizationId', validateOrganization, handleValidationErrors, organizationController.updateOrganization.bind(organizationController));
 
 router.delete('/:organizationId', requireSystemAdmin(), organizationController.deleteOrganization.bind(organizationController));
 
@@ -946,10 +950,10 @@ router.get('/:organizationId/events', organizationController.getEvents.bind(orga
  */
 
 // Upload organization logo (Org Admin only)
-router.post('/:organizationId/logo', uploadLogo.single('logo'), organizationController.uploadLogo.bind(organizationController));
+router.post('/:organizationId/logo', fileUploadRateLimit, uploadLogo.single('logo'), organizationController.uploadLogo.bind(organizationController));
 
 // Upload organization logo by slug (Org Admin only)
-router.post('/slug/:orgSlug/logo', uploadLogo.single('logo'), organizationController.uploadLogoBySlug.bind(organizationController));
+router.post('/slug/:orgSlug/logo', fileUploadRateLimit, uploadLogo.single('logo'), organizationController.uploadLogoBySlug.bind(organizationController));
 
 // Get organization logo
 router.get('/:organizationId/logo', organizationController.getLogo.bind(organizationController));

@@ -4,6 +4,10 @@ import { requireSystemAdmin } from '../utils/rbac';
 import { PrismaClient } from '@prisma/client';
 import { reinitializeOAuthStrategies } from '../config/passport';
 
+// Import security middleware
+import { strictRateLimit } from '../middleware/rate-limit';
+import { validateEvent, handleValidationErrors } from '../middleware/validation';
+
 // Extend Request interface to include user
 interface AuthenticatedRequest extends Request {
   user: AuthUser;
@@ -130,7 +134,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
  * POST /api/admin/events
  * Create a new event (System Admin only) - simplified version for basic event creation
  */
-router.post('/events', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.post('/events', strictRateLimit, validateEvent, handleValidationErrors, requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, slug, description } = req.body;
     

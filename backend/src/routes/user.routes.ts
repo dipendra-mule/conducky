@@ -5,6 +5,10 @@ import { requireAuth } from '../middleware/auth';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 
+// Import security middleware
+import { fileUploadRateLimit } from '../middleware/rate-limit';
+import { validateUser, handleValidationErrors } from '../middleware/validation';
+
 const router = Router();
 const prisma = new PrismaClient();
 const userService = new UserService(prisma);
@@ -263,7 +267,7 @@ router.get('/:userId/avatar', async (req: Request, res: Response): Promise<void>
 });
 
 // Upload user avatar  
-router.post('/:userId/avatar', uploadAvatar.single('avatar'), async (req: any, res: Response): Promise<void> => {
+router.post('/:userId/avatar', fileUploadRateLimit, uploadAvatar.single('avatar'), async (req: any, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
     

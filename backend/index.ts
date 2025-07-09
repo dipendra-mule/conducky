@@ -14,6 +14,10 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import helmet from 'helmet';
 
+// Import comprehensive security middleware
+import { securityHeaders, apiSecurityHeaders, corsSecurityOptions, inputSecurityCheck, requestSizeLimit } from './src/middleware/security';
+import { generalRateLimit } from './src/middleware/rate-limit';
+
 // Import passport configuration
 import './src/config/passport';
 
@@ -77,37 +81,20 @@ process.on('SIGTERM', async () => {
 });
 
 // CRITICAL SECURITY: Add comprehensive security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Needed for Next.js dev
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-    },
-  },
-  crossOriginEmbedderPolicy: false, // Needed for file uploads
-  crossOriginResourcePolicy: false, // Allow cross-origin access to avatars/images
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+// Replace basic helmet configuration with comprehensive security middleware
+app.use(securityHeaders);
 
-// Additional security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
+// Apply API security headers to all API routes
+app.use('/api', apiSecurityHeaders);
+
+// Add request size limiting
+app.use(requestSizeLimit);
+
+// Add input security checks to all routes
+app.use(inputSecurityCheck);
+
+// Add general rate limiting to all routes
+app.use(generalRateLimit);
 
 // Request logger (only in development)
 if (process.env.NODE_ENV === 'development') {
@@ -122,20 +109,8 @@ if (process.env.NODE_ENV === 'test') {
   app.use(testAuthMiddleware);
 }
 
-// CORS middleware (allow frontend dev server)
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'Cookie',
-      ...(process.env.NODE_ENV === 'test' ? ['x-test-user-id', 'x-test-disable-auth'] : [])
-    ],
-  }),
-);
+// CORS middleware with comprehensive security configuration
+app.use(cors(corsSecurityOptions));
 
 // Body parsing middleware
 app.use(express.json());
