@@ -50,7 +50,7 @@ export interface UpdateOrganizationData {
 }
 
 export interface OrganizationWithMembers extends Organization {
-  members: {
+  memberships: {
     userId: string;
     role: string;
     grantedAt: Date;
@@ -63,7 +63,7 @@ export interface OrganizationWithMembers extends Organization {
   }[];
   _count: {
     events: number;
-    members: number;
+    memberships: number;
   };
 }
 
@@ -166,7 +166,7 @@ export class OrganizationService {
       });
       
       // Convert to simplified member structure with proper type safety
-      const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
+      const memberships = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
         userId: userRole.userId,
         role: userRole.role.name,
         grantedAt: userRole.grantedAt,
@@ -177,10 +177,10 @@ export class OrganizationService {
       // Return organization with simplified member structure
       const organizationWithMembers = {
         ...organization,
-        members: members,
+        memberships: memberships,
         _count: {
           events: organization._count.events,
-          members: members.length,
+          memberships: memberships.length,
         },
       };
 
@@ -237,7 +237,7 @@ export class OrganizationService {
       });
       
       // Convert to simplified member structure with proper type safety
-      const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
+      const memberships = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
         userId: userRole.userId,
         role: userRole.role.name,
         grantedAt: userRole.grantedAt,
@@ -248,10 +248,10 @@ export class OrganizationService {
       // Return organization with simplified member structure
       const organizationWithMembers = {
         ...organization,
-        members: members,
+        memberships: memberships,
         _count: {
           events: organization._count.events,
-          members: members.length,
+          memberships: memberships.length,
         },
       };
 
@@ -379,7 +379,7 @@ export class OrganizationService {
           });
           
           // Convert to simplified member structure with proper type safety
-          const members = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
+          const memberships = orgUserRoles.map((userRole: UserRoleWithDetails) => ({
             userId: userRole.userId,
             role: userRole.role.name,
             grantedAt: userRole.grantedAt,
@@ -390,10 +390,10 @@ export class OrganizationService {
           // Return organization with simplified member structure
           return {
             ...org,
-            members: members,
+            memberships: memberships,
             _count: {
               events: org._count?.events || 0,
-              members: members.length,
+              memberships: memberships.length,
             },
           };
         })
