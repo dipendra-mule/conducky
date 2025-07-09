@@ -104,9 +104,9 @@ export function IncidentMetaTable({
           break;
         case 'type':
           await onTypeEdit?.(value || "other");
-          break;
-      }
-      setEditingField(null);    } catch (error) {
+          break;      }
+      setEditingField(null);
+    } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         logError(`Failed to update ${field}`, { field, incidentId: id }, error as Error);
       }

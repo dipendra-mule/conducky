@@ -73,9 +73,19 @@ class FrontendLogger {
         return LogLevel.INFO;
     }
   }
-
   private generateSessionId(): string {
-    return `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Use crypto.getRandomValues() for cryptographically secure session IDs
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+      const array = new Uint8Array(16);
+      window.crypto.getRandomValues(array);
+      const randomString = Array.from(array, byte => byte.toString(36)).join('').slice(0, 9);
+      return `sess_${Date.now()}_${randomString}`;
+    }
+    
+    // Fallback for environments without crypto.getRandomValues (like SSR)
+    // Use a combination of timestamp and a longer random string for better entropy
+    const randomPart = Date.now().toString(36) + Math.random().toString(36).slice(2, 11);
+    return `sess_${Date.now()}_${randomPart}`;
   }
 
   private shouldLog(level: LogLevel): boolean {
@@ -106,14 +116,27 @@ class FrontendLogger {
 
     return entry;
   }
-
   private sanitizeData(data: any): any {
     if (!data) return data;
     
-    // Remove sensitive information
-    const sensitiveKeys = [
-      'password', 'token', 'authorization', 'cookie', 'session',
-      'secret', 'key', 'private', 'confidential', 'ssn', 'creditcard'
+    // Remove sensitive information with more precise matching
+    const sensitivePatterns = [
+      /^password$/i,
+      /^token$/i,
+      /^authorization$/i,
+      /^cookie$/i,
+      /^session$/i,
+      /^secret$/i,
+      /^key$/i,
+      /^private$/i,
+      /^confidential$/i,
+      /^ssn$/i,
+      /^creditcard$/i,
+      /.*password.*/i,
+      /.*token.*/i,
+      /.*secret.*/i,
+      /.*private.*/i,
+      /.*auth.*/i
     ];
     
     const sanitized = JSON.parse(JSON.stringify(data));
@@ -122,7 +145,7 @@ class FrontendLogger {
       if (typeof obj !== 'object' || obj === null) return obj;
       
       for (const key in obj) {
-        if (sensitiveKeys.some(sensitive => key.toLowerCase().includes(sensitive))) {
+        if (sensitivePatterns.some(pattern => pattern.test(key))) {
           obj[key] = '[REDACTED]';
         } else if (typeof obj[key] === 'object') {
           obj[key] = sanitizeObject(obj[key]);
@@ -171,25 +194,40 @@ class FrontendLogger {
     if (this.logBuffer.length > this.maxBufferSize) {
       this.logBuffer = this.logBuffer.slice(-this.maxBufferSize);
     }
-  }
-  private async sendToRemoteLogging(entry: LogEntry): Promise<void> {
+  }  private async sendToRemoteLogging(entry: LogEntry): Promise<void> {
     if (!this.enableRemoteLogging || typeof window === 'undefined') return;
 
-    try {
-      // In production, this would send to a logging service like Sentry, LogRocket, etc.
-      // For now, we'll implement a simple endpoint that could be expanded
-      await fetch('/api/logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(entry),
-      });
-    } catch (error) {
-      // Fallback to console if remote logging fails
-      console.error('Failed to send log to remote service:', error);
+    const maxRetries = 3;
+    let retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      try {
+        const response = await fetch('/api/logs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(entry),
+        });
+
+        if (response.ok) {
+          return; // Success
+        }
+
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      } catch (error) {
+        retryCount++;
+        if (retryCount >= maxRetries) {
+          // Fallback to console if all retries fail
+          console.error('Failed to send log to remote service after retries:', error);
+          return;
+        }
+          // Exponential backoff: wait 1s, 2s, 4s
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount - 1) * 1000));
+      }
     }
   }
+
   private setupGlobalErrorHandling(): void {
     // Only set up error handling in browser environment
     if (typeof window === 'undefined') return;

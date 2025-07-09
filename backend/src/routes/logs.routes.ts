@@ -60,9 +60,32 @@ router.post('/logs',  // Validation
     body('message').isString().isLength({ min: 1, max: 1000 }).withMessage('Message must be a string (1-1000 chars)'),
     body('timestamp').isISO8601().withMessage('Timestamp must be a valid ISO 8601 date'),
     body('source').equals('frontend').withMessage('Source must be "frontend"'),
-    body('context').optional().isObject().withMessage('Context must be an object'),
-    body('data').optional(),
-    body('error').optional().isObject().withMessage('Error must be an object')
+    body('context').optional().isObject().custom((value) => {
+      // Limit context object size to prevent memory issues
+      const contextString = JSON.stringify(value || {});
+      if (contextString.length > 10000) { // 10KB limit
+        throw new Error('Context object too large (max 10KB)');
+      }
+      return true;
+    }),
+    body('data').optional().custom((value) => {
+      // Limit data payload size to prevent memory issues  
+      if (value !== null && value !== undefined) {
+        const dataString = JSON.stringify(value);
+        if (dataString.length > 50000) { // 50KB limit
+          throw new Error('Data payload too large (max 50KB)');
+        }
+      }
+      return true;
+    }),
+    body('error').optional().isObject().custom((value) => {
+      // Limit error object size
+      const errorString = JSON.stringify(value || {});
+      if (errorString.length > 5000) { // 5KB limit
+        throw new Error('Error object too large (max 5KB)');
+      }
+      return true;
+    })
   ],
   async (req: Request, res: Response) => {
     try {

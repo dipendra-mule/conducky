@@ -593,3 +593,14 @@ According to the original Phase 2 scope, the following areas still need attentio
 
 ---
 NOTE: for any "future" work that is put off, please create github issues for them
+
+PR 359 Feedback:
+
+SSR Compatibility
+The logger uses browser-specific APIs (window, navigator, performance) without proper SSR guards in multiple places. While some guards exist, the performance monitoring setup and global error handling could cause issues during server-side rendering.
+
+Input Validation
+The validation allows any object for context and data fields without size limits or structure validation. This could lead to memory issues or log storage problems with large payloads.
+
+Memory Leak Risk
+The useLogger hook creates new callback functions on every render due to baseContext dependency. This could cause performance issues and memory leaks in components that re-render frequently.

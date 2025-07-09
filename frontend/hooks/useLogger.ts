@@ -8,7 +8,7 @@
  * - Performance monitoring
  */
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { logger, LogContext } from '@/lib/logger';
 
 export interface UseLoggerOptions {
@@ -37,14 +37,13 @@ export function useLogger(options: UseLoggerOptions = {}) {
 
   const renderCount = useRef(0);
   const mountTime = useRef<number>(0);
-
-  // Base context for all logs from this component
-  const baseContext: LogContext = {
+  // Base context for all logs from this component - memoized to prevent unnecessary re-renders
+  const baseContext: LogContext = useMemo(() => ({
     componentName,
     userId,
     eventSlug,
     organizationSlug,
-  };
+  }), [componentName, userId, eventSlug, organizationSlug]);
 
   // Track component mount
   useEffect(() => {
