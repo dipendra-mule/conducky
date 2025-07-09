@@ -53,7 +53,7 @@ export default function EventAuditPage() {
   const [authLoading, setAuthLoading] = useState(true);
   
   // Check if user has required permissions
-  const hasRequiredRole = userEventRoles.includes('event_admin') || userEventRoles.includes('system_admin');
+  const hasRequiredRole = userEventRoles.includes('event_admin') || user?.roles?.includes('system_admin');
 
   // Fetch event details
   useEffect(() => {
