@@ -21,6 +21,7 @@ import logger from './src/config/logger';
 // Import comprehensive security middleware
 import { securityHeaders, apiSecurityHeaders, corsSecurityOptions, inputSecurityCheck, requestSizeLimit } from './src/middleware/security';
 import { generalRateLimit } from './src/middleware/rate-limit';
+import { databaseMonitoringMiddleware, performanceReportMiddleware } from './src/middleware/database-monitoring.middleware';
 
 // Import passport configuration
 import './src/config/passport';
@@ -116,6 +117,12 @@ if (process.env.NODE_ENV === 'development') {
     skip: (req: any, res: any) => res.statusCode < 400 // Only log errors in production
   }));
 }
+
+// Database performance monitoring
+app.use(databaseMonitoringMiddleware);
+
+// Add performance report endpoint for admin users
+app.use(performanceReportMiddleware);
 
 // Add test-only authentication middleware for tests
 if (process.env.NODE_ENV === 'test') {

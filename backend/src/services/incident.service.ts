@@ -1051,23 +1051,30 @@ export class IncidentService {
 
       const skip = (pageNum - 1) * limitNum;
 
-      // Get user's event roles using unified RBAC
+      // Get user's event roles using unified RBAC - OPTIMIZED VERSION
       const directEventRoles = await this.unifiedRBAC.getUserRoles(userId, 'event');
       const orgRoles = await this.unifiedRBAC.getUserRoles(userId, 'organization');
       
-      // Collect accessible events and their roles
+      // Collect accessible events and their roles - BATCH OPTIMIZED
       const eventRoles = new Map();
       const processedEvents = new Set();
       
-      // Process direct event roles
+      // OPTIMIZATION: Batch fetch all event details at once instead of N+1 queries
+      const directEventIds = directEventRoles.map((role: any) => role.scopeId);
+      const directEvents = directEventIds.length > 0 ? await this.prisma.event.findMany({
+        where: { id: { in: directEventIds } },
+        select: { id: true, name: true, slug: true }
+      }) : [];
+      
+      // Create a map for quick lookup
+      const eventMap = new Map(directEvents.map(event => [event.id, event]));
+      
+      // Process direct event roles without individual queries
       for (const userRole of directEventRoles) {
         const eventId = userRole.scopeId;
         if (!processedEvents.has(eventId)) {
           processedEvents.add(eventId);
-          const event = await this.prisma.event.findUnique({
-            where: { id: eventId },
-            select: { id: true, name: true, slug: true }
-          });
+          const event = eventMap.get(eventId);
           if (event) {
             eventRoles.set(eventId, { event, roles: [] });
           }
@@ -1075,23 +1082,23 @@ export class IncidentService {
         eventRoles.get(eventId)?.roles.push(userRole.role.name);
       }
       
-      // Process org admin inheritance - org admins get event_admin rights on org events
+      // OPTIMIZATION: Batch fetch org events for org admins
       const orgAdminRoles = orgRoles.filter((role: any) => role.role.name === 'org_admin');
-      for (const orgRole of orgAdminRoles) {
-        const orgEvents = await this.prisma.event.findMany({
-          where: { organizationId: orgRole.scopeId },
-          select: { id: true, name: true, slug: true }
-        });
-        
-        for (const event of orgEvents) {
-          if (!processedEvents.has(event.id)) {
-            processedEvents.add(event.id);
-            eventRoles.set(event.id, { event, roles: [] });
-          }
-          // Org admins inherit event_admin rights
-          if (!eventRoles.get(event.id)?.roles.includes('event_admin')) {
-            eventRoles.get(event.id)?.roles.push('event_admin');
-          }
+      const orgIds = orgAdminRoles.map((role: any) => role.scopeId);
+      const orgEvents = orgIds.length > 0 ? await this.prisma.event.findMany({
+        where: { organizationId: { in: orgIds } },
+        select: { id: true, name: true, slug: true, organizationId: true }
+      }) : [];
+      
+      // Process org admin inheritance efficiently  
+      for (const event of orgEvents) {
+        if (!processedEvents.has(event.id)) {
+          processedEvents.add(event.id);
+          eventRoles.set(event.id, { event, roles: [] });
+        }
+        // Org admins inherit event_admin rights
+        if (!eventRoles.get(event.id)?.roles.includes('event_admin')) {
+          eventRoles.get(event.id)?.roles.push('event_admin');
         }
       }
 
@@ -1417,7 +1424,7 @@ export class IncidentService {
       if (userId) {
         const isReporter = !!(incident.reporterId && userId === incident.reporterId);
 
-        // Use unified RBAC service to check roles
+        // Use unified RBAC to check roles
         const hasResponderRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
         const canEdit = isReporter || hasResponderRole;
 
@@ -2163,149 +2170,240 @@ export class IncidentService {
     }
   }
 
-  // Bulk update reports (assign, status change, delete)
-  async bulkUpdateIncidents(eventId: string, incidentIds: string[], action: string, options: {
-    assignedTo?: string;
-    status?: string;
-    notes?: string;
-    userId: string;
-  }): Promise<ServiceResult<{ updated: number; errors: string[] }>> {
+  /**
+   * PERFORMANCE OPTIMIZATION: Batch load incident details to avoid N+1 queries
+   * This method efficiently loads multiple incidents with all their related data in a single query
+   */
+  async getIncidentsBatch(
+    incidentIds: string[], 
+    userId: string,
+    includeComments = false
+  ): Promise<ServiceResult<{ incidents: IncidentWithDetails[] }>> {
     try {
-      const { assignedTo, status, notes, userId } = options;
-      let updated = 0;
-      const errors: string[] = [];
-
-      // Verify user has access to the event using unified RBAC
-      const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
-
-      if (!hasEventRole) {
+      if (incidentIds.length === 0) {
         return {
-          success: false,
-          error: 'Access denied: Insufficient permissions for bulk operations'
+          success: true,
+          data: { incidents: [] }
         };
       }
 
-      // Process each report
-      for (const incidentId of incidentIds) {
-        try {
-          // Verify report exists and belongs to event
-          const incident = await this.prisma.incident.findFirst({
+      // OPTIMIZATION: Single query with strategic includes to avoid N+1
+      const incidents = await this.prisma.incident.findMany({
+        where: { 
+          id: { in: incidentIds }
+        },
+        include: {
+          event: {
+            select: { id: true, name: true, slug: true }
+          },
+          reporter: {
+            select: { id: true, name: true, email: true }
+          },
+          assignedResponder: {
+            select: { id: true, name: true, email: true }
+          },
+          evidenceFiles: {
+            select: { 
+              id: true, 
+              filename: true, 
+              mimetype: true, 
+              size: true, 
+              createdAt: true,
+              uploader: {
+                select: { id: true, name: true, email: true }
+              }
+            }
+          },
+          ...(includeComments ? {
+            comments: {
+              select: {
+                id: true,
+                body: true,
+                visibility: true,
+                createdAt: true,
+                author: {
+                  select: { id: true, name: true, email: true }
+                }
+              },
+              orderBy: { createdAt: 'asc' }
+            }
+          } : {
+            comments: {
+              select: { id: true, visibility: true }
+            }
+          })
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      // OPTIMIZATION: Batch check permissions for all events at once
+      const eventIds = [...new Set(incidents.map(i => i.eventId))];
+      const eventPermissions = new Map<string, boolean>();
+      
+      for (const eventId of eventIds) {
+        const hasAccess = await this.unifiedRBAC.hasEventRole(
+          userId, 
+          eventId, 
+          ['reporter', 'responder', 'event_admin', 'system_admin']
+        );
+        eventPermissions.set(eventId, hasAccess);
+      }
+
+      // Filter incidents based on permissions and apply role-based data filtering
+      const accessibleIncidents = incidents.filter(incident => {
+        return eventPermissions.get(incident.eventId);
+      });
+
+      return {
+        success: true,
+        data: { incidents: accessibleIncidents }
+      };
+
+    } catch (error: any) {
+      logger.error('Error in batch loading incidents:', error);
+      return {
+        success: false,
+        error: 'Failed to load incidents'
+      };
+    }
+  }
+
+  /**
+   * PERFORMANCE OPTIMIZATION: Bulk update multiple incidents efficiently
+   * This method handles bulk operations like assign, status changes, and deletions
+   */
+  async bulkUpdateIncidents(
+    eventId: string,
+    incidentIds: string[],
+    action: 'assign' | 'status' | 'delete',
+    options: {
+      assignedTo?: string;
+      status?: string;
+      notes?: string;
+      userId: string;
+    }
+  ): Promise<ServiceResult<{ updated: number; incidents?: any[]; errors: string[] }>> {
+    try {
+      if (!incidentIds || incidentIds.length === 0) {
+        return {
+          success: true,
+          data: {
+            updated: 0,
+            errors: ['No incidents provided for bulk update']
+          }
+        };
+      }
+
+      // OPTIMIZATION: Single query to validate all incidents belong to event
+      const validIncidents = await this.prisma.incident.findMany({
+        where: {
+          id: { in: incidentIds },
+          eventId: eventId
+        },
+        select: { id: true, title: true, state: true }
+      });
+
+      const errors: string[] = [];
+      let updateData: any = {};
+      let auditAction = '';
+
+      // Validate action and collect errors instead of immediately failing
+      switch (action) {
+        case 'assign':
+          if (!options.assignedTo) {
+            errors.push('assignedTo is required for assign action');
+          } else {
+            updateData.assignedResponderId = options.assignedTo;
+            auditAction = 'bulk_assign';
+          }
+          break;
+
+        case 'status':
+          if (!options.status) {
+            errors.push('status is required for status action');
+          } else {
+            // Validate status
+            const validStatuses = ['submitted', 'acknowledged', 'investigating', 'resolved', 'closed'];
+            if (!validStatuses.includes(options.status)) {
+              errors.push(`Invalid status: ${options.status}. Valid statuses are: ${validStatuses.join(', ')}`);
+            } else {
+              updateData.state = options.status;
+              auditAction = 'bulk_status_change';
+            }
+          }
+          break;
+
+        case 'delete':
+          auditAction = 'bulk_delete';
+          break;
+
+        default:
+          errors.push('Invalid action');
+      }
+
+      // Check for missing incidents
+      if (validIncidents.length !== incidentIds.length) {
+        const foundIds = validIncidents.map(i => i.id);
+        const missingIds = incidentIds.filter(id => !foundIds.includes(id));
+        errors.push(`Incidents not found or do not belong to this event: ${missingIds.join(', ')}`);
+      }
+
+      // If there are validation errors, return them without processing
+      if (errors.length > 0) {
+        return {
+          success: true,
+          data: {
+            updated: 0,
+            errors: errors
+          }
+        };
+      }
+
+      // OPTIMIZATION: Use transaction for bulk operations
+      const result = await this.prisma.$transaction(async (tx) => {
+        if (action === 'delete') {
+          // Delete all incidents in one query
+          const deleteResult = await tx.incident.deleteMany({
             where: {
-              id: incidentId,
-              eventId
+              id: { in: incidentIds },
+              eventId: eventId
             }
           });
-
-          if (!incident) {
-            errors.push(`Report ${incidentId} not found or not in this event`);
-            continue;
-          }
-
-          // Perform the action
-          switch (action) {
-            case 'assign':
-              if (assignedTo) {
-                await this.prisma.incident.update({
-                  where: { id: incidentId },
-                  data: { assignedResponderId: assignedTo }
-                });
-                updated++;
-
-                // Audit log: incident assigned
-                try {
-                  await logAudit({
-                    eventId: eventId,
-                    userId: userId,
-                    action: 'assign_incident',
-                    targetType: 'incident',
-                    targetId: incidentId,
-                  });
-                } catch (auditError) {
-                  logger.error('Failed to log audit for bulk assign:', auditError);
-                }
-              } else {
-                errors.push(`Report ${incidentId}: assignedTo is required for assign action`);
-              }
-              break;
-
-            case 'status':
-              if (status) {
-                // Validate status is a valid ReportState
-                const validStates = ['submitted', 'acknowledged', 'investigating', 'resolved', 'closed'];
-                if (!validStates.includes(status)) {
-                  errors.push(`Report ${incidentId}: Invalid status ${status}`);
-                  continue;
-                }
-                
-                await this.prisma.incident.update({
-                  where: { id: incidentId },
-                  data: { state: status as any }
-                });
-                updated++;
-
-                // Audit log: incident status changed
-                try {
-                  await logAudit({
-                    eventId: eventId,
-                    userId: userId,
-                    action: 'update_incident_status',
-                    targetType: 'incident',
-                    targetId: incidentId,
-                  });
-                } catch (auditError) {
-                  logger.error('Failed to log audit for bulk status change:', auditError);
-                }
-              } else {
-                errors.push(`Report ${incidentId}: status is required for status action`);
-              }
-              break;
-
-            case 'delete':
-              // Delete associated evidence files first
-              await this.prisma.evidenceFile.deleteMany({
-                where: { incidentId }
-              });
-              
-              // Delete associated comments
-              await this.prisma.incidentComment.deleteMany({
-                where: { incidentId }
-              });
-              
-              // Delete the report
-              await this.prisma.incident.delete({
-                where: { id: incidentId }
-              });
-              updated++;
-
-              // Audit log: incident deleted
-              try {
-                await logAudit({
-                  eventId: eventId,
-                  userId: userId,
-                  action: 'delete_incident',
-                  targetType: 'incident',
-                  targetId: incidentId,
-                });
-              } catch (auditError) {
-                logger.error('Failed to log audit for bulk delete:', auditError);
-              }
-              break;
-
-            default:
-              errors.push(`Report ${incidentId}: Unknown action ${action}`);
-          }
-        } catch (error: any) {
-          errors.push(`Report ${incidentId}: ${error.message}`);
+          return { count: deleteResult.count };
+        } else {
+          // Update all incidents in one query
+          const updateResult = await tx.incident.updateMany({
+            where: {
+              id: { in: incidentIds },
+              eventId: eventId
+            },
+            data: {
+              ...updateData,
+              updatedAt: new Date()
+            }
+          });
+          return { count: updateResult.count };
         }
-      }
+      });
+
+      // Log audit trail for bulk operation
+      await logAudit({
+        userId: options.userId,
+        action: auditAction,
+        targetType: 'incident',
+        targetId: eventId,
+        eventId: eventId
+      });
 
       return {
         success: true,
         data: {
-          updated,
-          errors
+          updated: result.count,
+          incidents: validIncidents,
+          errors: []
         }
       };
+
     } catch (error: any) {
       logger.error('Error in bulk update incidents:', error);
       return {

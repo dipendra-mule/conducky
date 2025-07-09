@@ -105,8 +105,8 @@ Detailed AWS deployment instructions coming soon.
 
 After deployment:
 
-1. **Create the first SuperAdmin user**:
-   - When you first access the application, you will be prompted to create a SuperAdmin user.
+1. **Create the first SystemAdmin user**:
+   - When you first access the application, you will be prompted to create a SystemAdmin user.
 
 2. **Create your first event** via the admin interface
 

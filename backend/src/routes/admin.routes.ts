@@ -4,6 +4,7 @@ import { requireSystemAdmin } from '../utils/rbac';
 import { PrismaClient } from '@prisma/client';
 import { reinitializeOAuthStrategies } from '../config/passport';
 import logger from '../config/logger';
+import { databaseMonitor } from '../services/database-monitoring.service';
 
 // Import security middleware
 import { strictRateLimit } from '../middleware/rate-limit';
@@ -1147,4 +1148,59 @@ router.get('/oauth-providers', async (req: Request, res: Response) => {
   }
 });
 
-export default router; 
+/**
+ * GET /api/admin/database/performance
+ * Get database performance metrics and analysis
+ */
+router.get('/database/performance', requireAuth, requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const report = databaseMonitor.generateReport();
+    
+    logger.info('Database performance report requested', {
+      userId: req.user.id,
+      email: req.user.email,
+      metricsCount: (report as any).summary?.totalQueries || 0
+    });
+
+    res.json({
+      success: true,
+      data: report,
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Failed to generate database performance report:', error);
+    res.status(500).json({ 
+      message: 'Failed to generate performance report',
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    });
+  }
+});
+
+/**
+ * POST /api/admin/database/performance/reset
+ * Reset database performance metrics
+ */
+router.post('/database/performance/reset', requireAuth, requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    databaseMonitor.resetMetrics();
+    
+    logger.info('Database performance metrics reset', {
+      userId: req.user.id,
+      email: req.user.email
+    });
+
+    res.json({
+      success: true,
+      message: 'Performance metrics reset successfully',
+      resetAt: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Failed to reset database performance metrics:', error);
+    res.status(500).json({ 
+      message: 'Failed to reset performance metrics',
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    });
+  }
+});
+
+export default router;

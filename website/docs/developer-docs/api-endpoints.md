@@ -59,21 +59,21 @@ All organization routes are mounted at `/api/organizations`:
 #### Create Organization
 
 - **POST** `/api/organizations`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Body:** `{ name, slug, description?, website? }`
 - **Response:** `{ message, organization }`
-- **Description:** Creates a new organization. Only SuperAdmins can create organizations.
+- **Description:** Creates a new organization. Only SystemAdmins can create organizations.
 
 #### List All Organizations
 
 - **GET** `/api/organizations`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Query Parameters:**
   - `search` (string, optional): Search term for organization name or description
   - `page` (integer, optional): Page number for pagination (default: 1)
   - `limit` (integer, optional): Number of organizations per page (default: 20)
 - **Response:** `{ organizations: [...], pagination: { page, limit, total, totalPages } }`
-- **Description:** Get all organizations in the system. Only accessible to SuperAdmins.
+- **Description:** Get all organizations in the system. Only accessible to SystemAdmins.
 
 #### Get User's Organizations
 
@@ -107,7 +107,7 @@ All organization routes are mounted at `/api/organizations`:
 #### Delete Organization
 
 - **DELETE** `/api/organizations/:organizationId`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Response:** `{ message }`
 - **Description:** Delete an organization and all its associated data.
 
@@ -256,9 +256,9 @@ All authentication routes are mounted at `/api/auth`:
 ### Register
 
 - **POST** `/api/auth/register`
-- **Description:** Register a new user. The first user becomes Global Admin (SuperAdmin).
+- **Description:** Register a new user. The first user becomes Global Admin (SystemAdmin).
 - **Body:** `{ email, password, name }`
-- **Response:** `{ message, user, madeSuperAdmin? }`
+- **Response:** `{ message, user, madeSystemAdmin? }`
 
 ### Register with Invite
 
@@ -316,16 +316,16 @@ All authentication routes are mounted at `/api/auth`:
 
 ---
 
-## SuperAdmin Management
+## SystemAdmin Management
 
-System administration endpoints for SuperAdmin users only.
+System administration endpoints for SystemAdmin users only.
 
 ### Event Management
 
 #### Create Event
 
 - **POST** `/api/admin/events`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Body:** `{ name, slug, description }`
 - **Response:** `{ message, event: { id, name, slug, description, setupRequired } }`
 - **Description:** Creates a new event with basic information. Event is created with `isActive: false` and requires admin setup to complete configuration.
@@ -333,21 +333,21 @@ System administration endpoints for SuperAdmin users only.
 #### List All Events
 
 - **GET** `/api/admin/events`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Response:** `{ events: [...], statistics: { totalEvents, activeEvents, totalUsers, totalIncidents } }`
 - **Description:** Get all events in the system with statistics and metadata.
 
 #### Get Event Details
 
 - **GET** `/api/admin/events/:eventId`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Response:** `{ event }`
 - **Description:** Get detailed information about a specific event.
 
 #### Create Admin Invite
 
 - **POST** `/api/admin/events/:eventId/invites`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Body:** `{ email, role }` (role defaults to "Admin")
 - **Response:** `{ message, invite: { id, code, email, role, expiresAt } }`
 - **Description:** Create an admin invite for an event. Returns invite code that can be shared with the event organizer.
@@ -355,17 +355,158 @@ System administration endpoints for SuperAdmin users only.
 #### List Event Invites
 
 - **GET** `/api/admin/events/:eventId/invites`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Response:** `{ invites: [...] }`
 - **Description:** Get all pending invites for an event.
 
 #### Update Invite Status
 
 - **PATCH** `/api/admin/events/:eventId/invites/:inviteId`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Body:** `{ status }` ("pending", "accepted", "expired", "revoked")
 - **Response:** `{ message, invite }`
 - **Description:** Update the status of an invite (e.g., revoke an unused invite).
+
+### Database Performance Monitoring
+
+SystemAdmins can monitor database performance and query optimization through dedicated endpoints.
+
+#### Get Database Performance Metrics
+
+- **GET** `/api/admin/database/performance`
+- **Role:** SystemAdmin only
+- **Response:** See [Performance Report Structure](#performance-report-structure) below
+- **Description:** Get comprehensive database performance metrics, including slow queries, N+1 patterns, and optimization recommendations.
+- **Authentication:** Requires session-based authentication
+- **Rate Limiting:** Standard admin rate limits apply
+
+**Example Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalQueries": 1247,
+      "slowQueries": 3,
+      "verySlowQueries": 1,
+      "averageExecutionTime": 45.67,
+      "nPlusOneDetected": 2
+    },
+    "performance": {
+      "slowQueries": [
+        {
+          "pattern": "SELECT * FROM incidents WHERE eventId = ?",
+          "count": 15,
+          "averageDuration": 156.7,
+          "totalDuration": 2350,
+          "lastExecuted": "2025-07-09T21:30:00.000Z"
+        }
+      ],
+      "frequentQueries": [
+        {
+          "pattern": "SELECT * FROM users WHERE id = ?",
+          "count": 234,
+          "averageDuration": 12.3,
+          "totalDuration": 2876,
+          "lastExecuted": "2025-07-09T21:45:30.000Z"
+        }
+      ],
+      "nPlusOnePatterns": [
+        {
+          "requestId": "req-12345",
+          "queryCount": 16,
+          "description": "Potential N+1 pattern detected"
+        }
+      ]
+    },
+    "recommendations": [
+      "1 very slow queries (>500ms) detected. Consider adding indexes or optimizing queries.",
+      "2 potential N+1 query patterns detected. Consider using 'include' or 'select' to reduce queries."
+    ]
+  },
+  "generatedAt": "2025-07-09T21:46:00.000Z"
+}
+```
+
+#### Reset Database Performance Metrics
+
+- **POST** `/api/admin/database/performance/reset`
+- **Role:** SystemAdmin only
+- **Body:** None required
+- **Response:** `{ success: true, message: "Performance metrics reset successfully", resetAt: "2025-07-09T21:46:00.000Z" }`
+- **Description:** Reset all collected database performance metrics. Use this to start fresh monitoring or after implementing optimizations.
+- **Authentication:** Requires session-based authentication
+- **Rate Limiting:** Standard admin rate limits apply
+
+**Use Cases:**
+
+- Clear metrics after implementing database optimizations
+- Start fresh monitoring for a new time period
+- Reset after troubleshooting performance issues
+
+### Performance Report Structure
+
+The performance monitoring system tracks the following metrics:
+
+#### Summary Metrics
+
+- **totalQueries**: Total number of queries executed since last reset
+- **slowQueries**: Number of queries taking 100-500ms to execute
+- **verySlowQueries**: Number of queries taking more than 500ms to execute
+- **averageExecutionTime**: Average query execution time in milliseconds
+- **nPlusOneDetected**: Number of potential N+1 query patterns detected
+
+#### Performance Details
+
+- **slowQueries**: Array of the top 10 slowest query patterns with execution statistics
+- **frequentQueries**: Array of the top 10 most frequently executed queries
+- **nPlusOnePatterns**: Array of detected N+1 query patterns with request context
+
+#### Query Pattern Structure
+
+Each query pattern includes:
+
+- **pattern**: Normalized SQL query with parameters replaced by placeholders
+- **count**: Number of times this query was executed
+- **averageDuration**: Average execution time in milliseconds
+- **totalDuration**: Total cumulative execution time
+- **lastExecuted**: ISO timestamp of last execution
+
+#### Recommendations
+
+Automated optimization suggestions based on detected patterns:
+
+- Slow query optimization recommendations
+- N+1 query pattern detection and suggestions
+- Index recommendations for frequent queries
+- General performance improvement suggestions
+
+### Monitoring Best Practices
+
+#### Regular Monitoring
+
+1. **Check performance metrics regularly** during high-traffic periods
+2. **Monitor for N+1 patterns** especially after deploying new features
+3. **Review slow queries** and consider adding database indexes
+4. **Reset metrics periodically** to focus on current performance
+
+#### Performance Optimization Workflow
+
+1. **Baseline**: Take performance snapshot before changes
+2. **Implement**: Apply database optimizations (indexes, query improvements)
+3. **Reset**: Clear metrics to measure impact
+4. **Monitor**: Check if optimizations improved performance
+5. **Iterate**: Repeat process for remaining performance issues
+
+#### Database Index Recommendations
+
+The system automatically detects common query patterns that would benefit from indexes:
+
+- Event-scoped queries (`eventId` filters)
+- User-scoped queries (`userId`, `reporterId`, `assignedResponderId`)
+- Status and severity filtering
+- Time-based sorting and filtering
 
 ---
 
@@ -376,7 +517,7 @@ Event routes are mounted at `/api/events` and `/events`:
 ### Get Event by ID
 
 - **GET** `/api/events/:eventId`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Response:** `{ event }`
 
 ### Get Event by Slug
@@ -388,7 +529,7 @@ Event routes are mounted at `/api/events` and `/events`:
 ### Update Event (by Slug)
 
 - **PATCH** `/api/events/slug/:slug` or `/events/slug/:slug`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `{ name?, newSlug?, description?, logo?, startDate?, endDate?, website?, codeOfConduct?, contactEmail? }` (at least one required)
 - **Response:** `{ event }`
 
@@ -404,13 +545,13 @@ Event routes are mounted at `/api/events` and `/events`:
 #### List Users for Event (by ID)
 
 - **GET** `/api/events/:eventId/users`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Response:** `{ users }`
 
 #### List Users for Event (by Slug)
 
 - **GET** `/api/events/slug/:slug/users` or `/events/slug/:slug/users`
-- **Role:** Reporter, Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter, Responder, Admin, or SystemAdmin for the event
 - **Query Parameters:**
   - `search` (string, optional): Filter users by name or email
   - `sort` (string, optional): Sort by `name`, `email`, or `role` (default: `name`)
@@ -423,27 +564,27 @@ Event routes are mounted at `/api/events` and `/events`:
 #### Update Event User
 
 - **PATCH** `/api/events/slug/:slug/users/:userId` or `/events/slug/:slug/users/:userId`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `{ name, email, role }`
 - **Response:** `{ message }`
 
 #### Remove User from Event
 
 - **DELETE** `/api/events/slug/:slug/users/:userId` or `/events/slug/:slug/users/:userId`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Response:** `{ message }`
 
 #### Get Individual User Profile
 
 - **GET** `/api/events/slug/:slug/users/:userId` or `/events/slug/:slug/users/:userId`
-- **Role:** Responder, Admin, or SuperAdmin for the event
+- **Role:** Responder, Admin, or SystemAdmin for the event
 - **Description:** Get detailed profile information for a specific user in the event
 - **Response:** `{ user: { id, name, email, avatarUrl }, roles: [...], joinDate: string, lastActivity: string|null }`
 
 #### Get User Activity Timeline
 
 - **GET** `/api/events/slug/:slug/users/:userId/activity` or `/events/slug/:slug/users/:userId/activity`
-- **Role:** Responder, Admin, or SuperAdmin for the event
+- **Role:** Responder, Admin, or SystemAdmin for the event
 - **Description:** Get chronological activity timeline for a specific user in the event
 - **Query Parameters:**
   - `page` (integer, optional): Page number for pagination (default: 1)
@@ -457,7 +598,7 @@ Event routes are mounted at `/api/events` and `/events`:
 #### Get User Incidents
 
 - **GET** `/api/events/slug/:slug/users/:userId/incidents` or `/events/slug/:slug/users/:userId/incidents`
-- **Role:** Responder, Admin, or SuperAdmin for the event
+- **Role:** Responder, Admin, or SystemAdmin for the event
 - **Description:** Get all incidents submitted by or assigned to a specific user in the event
 - **Query Parameters:**
   - `type` (string, optional): Filter by incident type (`submitted`, `assigned`, `all`) (default: `all`)
@@ -470,14 +611,14 @@ Event routes are mounted at `/api/events` and `/events`:
 #### Assign Role to User
 
 - **POST** `/api/events/:eventId/roles`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `{ userId, roleName }`
 - **Response:** `{ message, userEventRole }`
 
 #### Remove Role from User
 
 - **DELETE** `/api/events/:eventId/roles`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `{ userId, roleName }`
 - **Response:** `{ message }`
 
@@ -486,14 +627,14 @@ Event routes are mounted at `/api/events` and `/events`:
 #### Upload Event Logo (by ID)
 
 - **POST** `/api/events/:eventId/logo`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `multipart/form-data` with a `logo` file field
 - **Response:** `{ event }`
 
 #### Upload Event Logo (by Slug)
 
 - **POST** `/api/events/slug/:slug/logo` or `/events/slug/:slug/logo`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `multipart/form-data` with a `logo` file field
 - **Response:** `{ event }`
 
@@ -540,14 +681,14 @@ Event routes are mounted at `/api/events` and `/events`:
 #### Update Report State
 
 - **PATCH** `/api/events/:eventId/incidents/:incidentId/state`
-- **Role:** Admin, SuperAdmin, or Responder
+- **Role:** Admin, SystemAdmin, or Responder
 - **Body:** `{ state }` (or `{ status }` for compatibility)
 - **Response:** `{ incident }`
 
 #### Update Report Title
 
 - **PATCH** `/api/events/:eventId/incidents/:incidentId/title`
-- **Role:** Admin, SuperAdmin, or Reporter (own incidents only)
+- **Role:** Admin, SystemAdmin, or Reporter (own incidents only)
 - **Body:** `{ title }` (string, 10–70 chars)
 - **Response:** `{ incident }`
 
@@ -556,33 +697,33 @@ Event routes are mounted at `/api/events` and `/events`:
 #### Create Report
 
 - **POST** `/api/events/slug/:slug/incidents` or `/events/slug/:slug/incidents`
-- **Role:** Reporter, Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter, Responder, Admin, or SystemAdmin for the event
 - **Body:** `title` (string, required, 10–70 chars), `type`, `description`, `location` (string, optional), `contactPreference` (enum, optional: email|phone|in_person|no_contact, default: email), `evidence[]` (multipart/form-data, zero or more files)
 - **Response:** `{ incident }`
 
 #### List Incidents
 
 - **GET** `/api/events/slug/:slug/incidents` or `/events/slug/:slug/incidents`
-- **Role:** Reporter, Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter, Responder, Admin, or SystemAdmin for the event
 - **Response:** `{ incidents }`
 
 #### Get Report by ID
 
 - **GET** `/api/events/slug/:slug/incidents/:incidentId` or `/events/slug/:slug/incidents/:incidentId`
-- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter (own incidents), Responder, Admin, or SystemAdmin for the event
 - **Response:** `{ incident }`
 
 #### Update Report
 
 - **PATCH** `/api/events/slug/:slug/incidents/:incidentId` or `/events/slug/:slug/incidents/:incidentId`
-- **Role:** Responder, Admin, or SuperAdmin for the event
+- **Role:** Responder, Admin, or SystemAdmin for the event
 - **Body:** `{ assignedResponderId?, severity?, resolution?, state? }` (at least one required)
 - **Response:** `{ incident }`
 
 #### Update Report Title
 
 - **PATCH** `/api/events/slug/:slug/incidents/:incidentId/title` or `/events/slug/:slug/incidents/:incidentId/title`
-- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter (own incidents), Responder, Admin, or SystemAdmin for the event
 - **Body:** `{ title }` (string, 10–70 chars)
 - **Response:** `{ incident }`
 
@@ -613,7 +754,7 @@ Evidence routes are available both through the main incidents module and as stan
 #### Upload Evidence
 
 - **POST** `/api/events/:eventId/incidents/:incidentId/evidence`
-- **Role:** Admin, SuperAdmin, or Responder
+- **Role:** Admin, SystemAdmin, or Responder
 - **Body:** `multipart/form-data` with `evidence[]` files
 - **Response:** `{ files }`
 
@@ -630,7 +771,7 @@ Evidence routes are available both through the main incidents module and as stan
 #### Delete Evidence File
 
 - **DELETE** `/api/events/:eventId/incidents/:incidentId/evidence/:evidenceId`
-- **Role:** Admin, SuperAdmin, or Responder
+- **Role:** Admin, SystemAdmin, or Responder
 - **Response:** `{ message }`
 
 ### Evidence Management via Event Slug
@@ -638,7 +779,7 @@ Evidence routes are available both through the main incidents module and as stan
 #### Upload Evidence
 
 - **POST** `/api/events/slug/:slug/incidents/:incidentId/evidence` or `/events/slug/:slug/incidents/:incidentId/evidence`
-- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter (own incidents), Responder, Admin, or SystemAdmin for the event
 - **Body:** `multipart/form-data` with `evidence[]` files
 - **Response:** `{ files }`
 - **Notes:** Reporters can only upload evidence to their own incidents
@@ -646,13 +787,13 @@ Evidence routes are available both through the main incidents module and as stan
 #### Get Evidence Files
 
 - **GET** `/api/events/slug/:slug/incidents/:incidentId/evidence` or `/events/slug/:slug/incidents/:incidentId/evidence`
-- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter (own incidents), Responder, Admin, or SystemAdmin for the event
 - **Response:** `{ files }`
 
 #### Delete Evidence File
 
 - **DELETE** `/api/events/slug/:slug/incidents/:incidentId/evidence/:evidenceId` or `/events/slug/:slug/incidents/:incidentId/evidence/:evidenceId`
-- **Role:** Responder, Admin, or SuperAdmin for the event
+- **Role:** Responder, Admin, or SystemAdmin for the event
 - **Response:** `{ message }`
 
 ### Standalone Evidence Routes
@@ -695,20 +836,20 @@ Evidence routes are available both through the main incidents module and as stan
 ### Create Comment
 
 - **POST** `/api/events/slug/:slug/incidents/:incidentId/comments` or `/events/slug/:slug/incidents/:incidentId/comments`
-- **Role:** Reporter, Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter, Responder, Admin, or SystemAdmin for the event
 - **Body:** `{ body, visibility?, isMarkdown? }`
   - `visibility`: 'public' or 'internal', default: 'public'
   - `isMarkdown`: boolean, default: false (enables markdown rendering)
 - **Response:** `{ comment }`
 - **Notes:**
-  - Only Responders, Admins, and SuperAdmins can create internal comments
+  - Only Responders, Admins, and SystemAdmins can create internal comments
   - Markdown support includes formatting, links, lists, and code blocks
   - Creates notifications for other users with access to the incident 
 
 ### Get Comments (Enhanced with Pagination, Filtering & Search)
 
 - **GET** `/api/events/slug/:slug/incidents/:incidentId/comments` or `/events/slug/:slug/incidents/:incidentId/comments`
-- **Role:** Reporter (own incidents), Responder, Admin, or SuperAdmin for the event
+- **Role:** Reporter (own incidents), Responder, Admin, or SystemAdmin for the event
 - **Query Parameters:**
   - `page` (integer, optional): Page number (default: 1)
   - `limit` (integer, optional): Items per page (default: 10, max: 100)
@@ -727,7 +868,7 @@ Evidence routes are available both through the main incidents module and as stan
 ### Update Comment
 
 - **PATCH** `/api/events/slug/:slug/incidents/:incidentId/comments/:commentId` or `/events/slug/:slug/incidents/:incidentId/comments/:commentId`
-- **Role:** Comment author, or Admin/SuperAdmin for the event
+- **Role:** Comment author, or Admin/SystemAdmin for the event
 - **Body:** `{ body?, visibility?, isMarkdown? }` (at least one required)
 - **Response:** `{ comment }`
 - **Notes:**
@@ -738,10 +879,10 @@ Evidence routes are available both through the main incidents module and as stan
 ### Delete Comment
 
 - **DELETE** `/api/events/slug/:slug/incidents/:incidentId/comments/:commentId` or `/events/slug/:slug/incidents/:incidentId/comments/:commentId`
-- **Role:** Comment author, or Admin/SuperAdmin for the event
+- **Role:** Comment author, or Admin/SystemAdmin for the event
 - **Response:** `{ message }`
 - **Notes:**
-  - Only the comment author or Admin/SuperAdmin can delete comments
+  - Only the comment author or Admin/SystemAdmin can delete comments
   - Deletion is permanent and cannot be undone
 
 ---
@@ -767,20 +908,20 @@ Evidence routes are available both through the main incidents module and as stan
 #### List Event Invites
 
 - **GET** `/api/events/slug/:slug/invites` or `/events/slug/:slug/invites`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Response:** `{ invites }`
 
 #### Create Event Invite
 
 - **POST** `/api/events/slug/:slug/invites` or `/events/slug/:slug/invites`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `{ maxUses?, expiresAt?, note?, role? }`
 - **Response:** `{ invite }`
 
 #### Update Event Invite
 
 - **PATCH** `/api/events/slug/:slug/invites/:inviteId` or `/events/slug/:slug/invites/:inviteId`
-- **Role:** Admin or SuperAdmin for the event
+- **Role:** Admin or SystemAdmin for the event
 - **Body:** `{ disabled?, expiresAt?, maxUses?, note? }`
 - **Response:** `{ invite }`
 
@@ -906,17 +1047,17 @@ Notification routes are mounted at `/api/notifications`:
 #### Update System Settings
 
 - **PATCH** `/api/admin/system/settings`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Description:** Update system configuration settings.
 - **Body:** `{ showPublicEventList?: boolean }`
 - **Response:** `{ message: "Settings updated successfully", settings: { showPublicEventList: boolean } }`
 
-### SuperAdmin Event Management
+### SystemAdmin Event Management
 
-#### Create Event (SuperAdmin)
+#### Create Event (SystemAdmin)
 
 - **POST** `/api/admin/events`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Description:** Create a new event with basic information. Event is created as inactive until admin setup is complete.
 - **Body:** `{ name, slug, description }`
   - `name` (string, required): Display name for the event
@@ -926,35 +1067,35 @@ Notification routes are mounted at `/api/notifications`:
 - **Notes:**
   - Slug must be unique across the system
   - Event is created with `isActive: false`
-  - SuperAdmin is not automatically assigned event roles
+  - SystemAdmin is not automatically assigned event roles
 
-#### List All Events (SuperAdmin)
+#### List All Events (SystemAdmin)
 
 - **GET** `/api/admin/events`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Description:** Get a list of all events in the system with basic statistics.
 - **Response:** `{ events: [{ id, name, slug, description, isActive, createdAt, updatedAt, userCount, reportCount }] }`
 
-#### Get Event Details (SuperAdmin)
+#### Get Event Details (SystemAdmin)
 
 - **GET** `/api/admin/events/:eventId`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Description:** Get detailed information about a specific event.
 - **Response:** `{ event: { id, name, slug, description, isActive, createdAt, updatedAt, userCount, reportCount, recentActivity } }`
 
-### SuperAdmin Invite Management
+### SystemAdmin Invite Management
 
-#### List Event Invites (SuperAdmin)
+#### List Event Invites (SystemAdmin)
 
 - **GET** `/api/admin/events/:eventId/invites`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Description:** Get all invite links for a specific event.
 - **Response:** `{ invites: [{ id, code, role, maxUses, usedCount, expiresAt, isDisabled, note, createdAt }] }`
 
-#### Create Admin Invite (SuperAdmin)
+#### Create Admin Invite (SystemAdmin)
 
 - **POST** `/api/admin/events/:eventId/invites`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Description:** Create a new admin invite link for an event. Used to assign event administrators.
 - **Body:** `{ note?, maxUses?, expiresAt? }`
   - `note` (string, optional): Note about the invite (recommended to include email)
@@ -966,10 +1107,10 @@ Notification routes are mounted at `/api/notifications`:
   - Returns full invite URL for easy sharing
   - Invite code is automatically generated
 
-#### Update Invite (SuperAdmin)
+#### Update Invite (SystemAdmin)
 
 - **PATCH** `/api/admin/events/:eventId/invites/:inviteId`
-- **Role:** SuperAdmin only
+- **Role:** SystemAdmin only
 - **Description:** Update an existing invite (typically to disable/enable).
 - **Body:** `{ isDisabled?, note?, maxUses?, expiresAt? }`
 - **Response:** `{ invite: { id, code, role, maxUses, usedCount, expiresAt, isDisabled, note, updatedAt } }`
@@ -987,8 +1128,8 @@ Notification routes are mounted at `/api/notifications`:
 ### Admin Test
 
 - **GET** `/admin-only`
-- **Description:** Test SuperAdmin role-based access control.
-- **Role:** SuperAdmin only
+- **Description:** Test SystemAdmin role-based access control.
+- **Role:** SystemAdmin only
 - **Response:** `{ message }`
 
 ---
@@ -1010,7 +1151,7 @@ Notification routes are mounted at `/api/notifications`:
 - Role-based access control is enforced at the API level using middleware
 - Event-scoped permissions are validated for all event-related operations
 - Reporters have limited access (own incidents only for most operations)
-- Responders, Admins, and SuperAdmins have escalating levels of access
+- Responders, Admins, and SystemAdmins have escalating levels of access
 
 ### File Uploads
 
@@ -1031,4 +1172,4 @@ Notification routes are mounted at `/api/notifications`:
 - **Reporters**: View own incidents, edit own titles, add comments, upload evidence to own incidents
 - **Responders**: Additionally change states, assign incidents, upload evidence to any report, see internal comments
 - **Admins**: Full access within their events, manage users and invites
-- **SuperAdmins**: Global access, create events, manage system settings
+- **SystemAdmins**: Global access, create events, manage system settings
