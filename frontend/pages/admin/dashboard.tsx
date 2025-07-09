@@ -346,9 +346,8 @@ export default function AdminDashboard() {
                 <CardDescription>
                   Common administrative tasks
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              </CardHeader>              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <Button 
                     variant="outline" 
                     onClick={() => router.push('/admin/events')}
@@ -364,6 +363,14 @@ export default function AdminDashboard() {
                   >
                     <Plus className="h-6 w-6" />
                     Create Event
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => router.push('/admin/system/audit')}
+                    className="h-20 flex-col gap-2"
+                  >
+                    <AlertCircle className="h-6 w-6" />
+                    Audit Logs
                   </Button>
                   <Button 
                     variant="outline" 

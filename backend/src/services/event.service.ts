@@ -2,6 +2,7 @@ import { PrismaClient, Organization, OrganizationRole, OrganizationLogo, Organiz
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { randomUUID } from 'crypto';
+import { logAudit } from '../utils/audit';
 
 export interface EventCreateData {
   name: string;
@@ -134,6 +135,14 @@ export class EventService {
 
       const event = await this.prisma.event.create({ data: { name, slug } });
       
+      // Log event creation
+      await logAudit({
+        action: 'event_created',
+        targetType: 'Event',
+        targetId: event.id,
+        eventId: event.id
+      });
+      
       return {
         success: true,
         data: { event }
@@ -238,6 +247,15 @@ export class EventService {
         };
       }
 
+      // Log role assignment
+      await logAudit({
+        action: 'user_role_assigned',
+        targetType: 'UserRole',
+        targetId: userId,
+        userId: userId,
+        eventId: eventId
+      });
+
       // Create synthetic userEventRole for backward compatibility
       const userEventRole = {
         userId,
@@ -286,6 +304,15 @@ export class EventService {
           error: 'Failed to remove role.'
         };
       }
+
+      // Log role removal
+      await logAudit({
+        action: 'user_role_removed',
+        targetType: 'UserRole',
+        targetId: userId,
+        userId: userId,
+        eventId: eventId
+      });
 
       // Note: Legacy system cleanup no longer needed as we're using unified RBAC
 
@@ -765,6 +792,14 @@ export class EventService {
       const event = await this.prisma.event.update({
         where: { id: eventId },
         data: updateEventData,
+      });
+      
+      // Log event update
+      await logAudit({
+        action: 'event_updated',
+        targetType: 'Event',
+        targetId: eventId,
+        eventId: eventId
       });
       
       return {

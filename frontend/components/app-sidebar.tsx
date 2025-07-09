@@ -248,6 +248,10 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
               url: "/admin/system/settings",
             },
             {
+              title: "Audit Logs",
+              url: "/admin/system/audit",
+            },
+            {
               title: "Backups",
               url: "/admin/system/backups",
             },
@@ -316,6 +320,13 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
           url: `/orgs/${targetOrgSlug}/settings`,
           icon: Settings2,
           isActive: router.asPath.startsWith(`/orgs/${targetOrgSlug}/settings`),
+        });
+        
+        orgNavItems.push({
+          title: "Audit Logs",
+          url: `/orgs/${targetOrgSlug}/audit`,
+          icon: Shield,
+          isActive: router.asPath === `/orgs/${targetOrgSlug}/audit`,
         });
       }
     }
@@ -424,6 +435,10 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
               {
                 title: "Notifications",
                 url: `/events/${targetEventSlug}/settings/notifications`,
+              },
+              {
+                title: "Audit Logs",
+                url: `/events/${targetEventSlug}/audit`,
               },
             ],
           });

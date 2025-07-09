@@ -404,114 +404,712 @@ For questions or improvements, see the project README or contact the maintainers
 
 ---
 
-## Recent Test Additions (June 2024)
+## Running Backend Tests
 
-### Automated Tests
+### Prerequisites
 
-- **Frontend:**
-  - Evidence file download link uses the correct backend API URL.
-  - Reporter can see and use the evidence upload form.
-- **Backend:**
-  - Access control for report detail endpoint: only the reporter, event responders, or event admins can access a report; others receive 403 Forbidden.
-  - Evidence upload, listing, and download endpoints are covered for all allowed roles.
+- Node.js and npm installed on your machine
+- All backend dependencies installed (`npm install` in the `backend/` directory)
 
-### Manual Testing Instructions
+### Run All Tests
 
-- Log in as a reporter, responder, admin, and an unrelated user. Attempt to view a report detail page:
-  - Reporter, responder, and admin should see the report.
-  - Unauthorized users should see a clear error message.
-  - Unauthenticated users should be prompted to log in.
-- Try uploading evidence as each allowed role and verify the file appears in the evidence list.
-- Click an evidence file link to confirm it downloads or opens as expected.
+```sh
+npm test
+```
 
-## Testing Reports
+### Run Tests with Coverage Report
 
-### Report Title
+```sh
+npm run test:coverage
+```
 
-- **Automated tests:**
-  - Backend integration tests cover:
-    - Report creation requires a title (10–70 chars).
-    - Editing the title (PATCH endpoint) with permissions and validation.
-    - Title is present in all report API responses.
-  - Frontend tests cover:
-    - Report form requires and validates the title.
-    - Title is shown in all report lists and is the clickable link.
-    - Title editing in the detail view (authorized users only).
+- Coverage results will be shown in the terminal and a summary will be written to the `coverage/` directory.
 
-- **Manual testing:**
-  1. Submit a new report; verify the title is required and validated.
-  2. View report lists; verify the title is shown and is a clickable link.
-  3. Open a report detail page; verify the title is displayed.
-  4. As the reporter or admin, edit the title; verify validation and update.
-  5. As a responder or unauthorized user, verify you cannot edit the title.
+### Run Tests in Docker Compose
 
-## Testing Dark Mode (Shadcn Implementation)
+If you prefer to run tests inside the backend container:
 
-Dark mode is now managed using [Shadcn's recommended approach](https://ui.shadcn.com/docs/dark-mode/next) with the `next-themes` package.
+```sh
+docker compose run backend npm test
+```
 
-### How to Test
+---
 
-1. **Toggle Dark Mode**
-   - Use the dark mode toggle button in the UI (usually in the header or navigation).
-   - The UI should immediately switch between light and dark themes.
+## Writing New Backend Tests
 
-2. **Persistence**
-   - Refresh the page after toggling. The selected theme should persist across reloads and navigation.
+- **Unit tests** go in `backend/tests/unit/`
+- **Integration tests** go in `backend/tests/integration/`
+- Use [Jest](https://jestjs.io/) for all backend tests
+- Use [supertest](https://github.com/ladjs/supertest) for HTTP endpoint tests
 
-3. **System Preference**
-   - If the theme is set to "system", the app should follow your OS/browser color scheme.
-   - Change your system's dark/light mode and verify the app updates accordingly.
+### Example: Unit Test
 
-4. **Manual Testing**
-   - Check all major pages and components in both light and dark mode for visual issues or contrast problems.
+See `backend/tests/unit/rbac.test.js` for a sample unit test of middleware logic.
 
-### Troubleshooting
+### Example: Integration Test
 
-- If the theme does not persist, ensure localStorage is not blocked and cookies are enabled.
-- If the toggle does not work, check for errors in the browser console and verify the `ThemeProvider` is correctly set up in `_app.tsx`.
+See `backend/tests/integration/audit-test.test.js` for a sample integration test of an API endpoint.
 
-## Mobile Navigation (Shadcn Sheet)
+> **Note:** Integration tests currently mock database dependencies for fast feedback. In the future, we plan to set up full stack integration tests with a test database and seeded data for true end-to-end coverage.
 
-The mobile navigation menu is now implemented using the Shadcn Sheet component in the Header. To test:
+---
 
-### Manual Testing
-1. Resize your browser to mobile width or use a mobile device.
-2. Tap the hamburger menu to open the Sheet.
-3. Verify that navigation links, user info, logout, and dark mode toggle are present.
-4. Tap a link or the close button to close the Sheet.
-5. Press `Escape` to close the Sheet.
-6. Use `Tab`/`Shift+Tab` to cycle through focusable elements; focus should be trapped within the Sheet.
-7. Ensure the Sheet closes when a navigation link is clicked.
+## Interpreting Coverage Reports
 
-### Automated Testing
-- Add tests to verify that the Sheet opens and closes on trigger.
-- Test that focus is trapped within the Sheet when open.
-- Test that pressing `Escape` closes the Sheet.
-- Test that clicking a navigation link closes the Sheet.
+- After running `npm run test:coverage`, a summary will be shown in the terminal.
+- Detailed HTML reports are available in the `backend/coverage/` directory. Open `index.html` in your browser to explore coverage by file and line.
+- Aim for high coverage, but prioritize meaningful tests over 100% coverage.
 
-The Sheet replaces the previous custom mobile drawer logic. Remove or update any tests that referenced the old implementation.
+---
 
-## Event-Level Navigation (EventNavBar)
+## Testing Comment System Features
 
-The event-level navigation now uses Shadcn UI components:
-- **Mobile:** Uses Shadcn Sheet for the menu, matching the Header's mobile nav.
-- **Desktop:** Uses Shadcn NavigationMenu for accessible, consistent navigation.
+### Frontend Comment Testing
 
-### Manual Testing
-1. On desktop, verify the event nav renders as a horizontal menu with all expected links and the Submit Report button.
-2. On mobile, tap the hamburger menu to open the Sheet and verify all links and actions are present.
-3. Test keyboard navigation (Tab, Shift+Tab, Enter, Escape) for both desktop and mobile navs.
-4. Ensure focus is trapped in the Sheet when open and returns to the trigger when closed.
-5. Confirm that clicking a link in the Sheet closes the menu.
+The comment system has comprehensive test coverage for all major features:
 
-### Automated Testing
-- Add tests to verify:
-  - NavigationMenu renders all expected links and actions on desktop.
-  - Sheet opens and closes on trigger in mobile view.
-  - Focus management and accessibility for both navs.
-  - Clicking a Sheet link closes the menu.
+#### Core Component Tests
+- **CommentsSection.tsx**: Tests pagination, search, filtering, and markdown rendering
+- **MarkdownEditor.tsx**: Tests markdown toolbar, preview mode, and content handling
+- **Comment rendering**: Tests public/internal visibility and role-based access
 
-Remove or update any tests that referenced the old nav implementation.
+#### Key Test Scenarios
+```bash
+# Run comment-specific tests
+npm test -- --testNamePattern="Comment"
+
+# Test markdown editor specifically
+npm test -- components/MarkdownEditor.test.tsx
+
+# Test comment integration with reports
+npm test -- components/ReportDetailView.test.tsx
+```
+
+#### Manual Testing Checklist
+- **Markdown Rendering**: Test bold, italic, headers, lists, links, code blocks
+- **Search Functionality**: Test real-time search with debouncing
+- **Pagination**: Test comment navigation across multiple pages
+- **Quote Reply**: Test quoting comments and auto-scroll behavior
+- **Role Permissions**: Test internal/public comment visibility
+- **Mobile Responsiveness**: Test on mobile devices and small screens
+- **Accessibility**: Test keyboard navigation and screen reader compatibility
+
+### Backend Comment API Testing
+
+Comprehensive API testing is located in `backend/tests/integration/`:
+
+#### Test Coverage
+- **Authentication**: All endpoints require proper authentication
+- **Role-based Access**: Comments respect event roles and permissions
+- **CRUD Operations**: Create, read, update, delete with proper validation
+- **Pagination & Search**: Advanced filtering and search capabilities
+- **Data Integrity**: Proper relationship handling and cascading
+
+#### Running Comment API Tests
+```bash
+# Run all comment-related backend tests
+cd backend && npm test -- --testPathPattern=comment
+
+# Run specific comment integration tests
+cd backend && npm test -- tests/integration/comments.test.js
+
+# Run with verbose output for debugging
+cd backend && npm test -- --testPathPattern=comment --verbose
+```
+
+#### Security Testing
+- **XSS Prevention**: Tests that user input is properly sanitized
+- **Permission Validation**: Tests that users can only access authorized comments
+- **Internal Comment Isolation**: Tests that internal comments are properly hidden
+
+### Performance Testing
+- **Search Performance**: Test search with large comment datasets
+- **Pagination Efficiency**: Test pagination with thousands of comments  
+- **Markdown Rendering**: Test rendering performance with complex markdown
+
+### Regression Testing
+When modifying comment features, always run:
+```bash
+# Full comment test suite
+npm run test:all
+
+# Specific comment functionality
+npm test -- --testNamePattern="comment|Comment|markdown|Markdown"
+```
+
+## Troubleshooting
+
+- If you see errors about missing Prisma binaries, ensure your `schema.prisma` includes the correct `binaryTargets` and run `npx prisma generate`.
+- **React Markdown Issues**: If you see Jest ES module errors with react-markdown, check that the mock in `__mocks__/react-markdown.js` is properly configured.
+- **Comment Pagination**: If pagination tests fail, ensure test data includes enough comments to test multiple pages.
+- **Search Functionality**: If search tests are flaky, check that search debouncing is properly handled in test environments.
+- If tests fail due to missing database records, check if the test mocks DB dependencies or if a test database is needed.
+
+---
+
+For questions or improvements, see the project README or contact the maintainers.
+
+---
+
+## Running Backend Tests
+
+### Prerequisites
+
+- Node.js and npm installed on your machine
+- All backend dependencies installed (`npm install` in the `backend/` directory)
+
+### Run All Tests
+
+```sh
+npm test
+```
+
+### Run Tests with Coverage Report
+
+```sh
+npm run test:coverage
+```
+
+- Coverage results will be shown in the terminal and a summary will be written to the `coverage/` directory.
+
+### Run Tests in Docker Compose
+
+If you prefer to run tests inside the backend container:
+
+```sh
+docker compose run backend npm test
+```
+
+---
+
+## Writing New Backend Tests
+
+- **Unit tests** go in `backend/tests/unit/`
+- **Integration tests** go in `backend/tests/integration/`
+- Use [Jest](https://jestjs.io/) for all backend tests
+- Use [supertest](https://github.com/ladjs/supertest) for HTTP endpoint tests
+
+### Example: Unit Test
+
+See `backend/tests/unit/rbac.test.js` for a sample unit test of middleware logic.
+
+### Example: Integration Test
+
+See `backend/tests/integration/audit-test.test.js` for a sample integration test of an API endpoint.
+
+> **Note:** Integration tests currently mock database dependencies for fast feedback. In the future, we plan to set up full stack integration tests with a test database and seeded data for true end-to-end coverage.
+
+---
+
+## Interpreting Coverage Reports
+
+- After running `npm run test:coverage`, a summary will be shown in the terminal.
+- Detailed HTML reports are available in the `backend/coverage/` directory. Open `index.html` in your browser to explore coverage by file and line.
+- Aim for high coverage, but prioritize meaningful tests over 100% coverage.
+
+---
+
+## Testing Comment System Features
+
+### Frontend Comment Testing
+
+The comment system has comprehensive test coverage for all major features:
+
+#### Core Component Tests
+- **CommentsSection.tsx**: Tests pagination, search, filtering, and markdown rendering
+- **MarkdownEditor.tsx**: Tests markdown toolbar, preview mode, and content handling
+- **Comment rendering**: Tests public/internal visibility and role-based access
+
+#### Key Test Scenarios
+```bash
+# Run comment-specific tests
+npm test -- --testNamePattern="Comment"
+
+# Test markdown editor specifically
+npm test -- components/MarkdownEditor.test.tsx
+
+# Test comment integration with reports
+npm test -- components/ReportDetailView.test.tsx
+```
+
+#### Manual Testing Checklist
+- **Markdown Rendering**: Test bold, italic, headers, lists, links, code blocks
+- **Search Functionality**: Test real-time search with debouncing
+- **Pagination**: Test comment navigation across multiple pages
+- **Quote Reply**: Test quoting comments and auto-scroll behavior
+- **Role Permissions**: Test internal/public comment visibility
+- **Mobile Responsiveness**: Test on mobile devices and small screens
+- **Accessibility**: Test keyboard navigation and screen reader compatibility
+
+### Backend Comment API Testing
+
+Comprehensive API testing is located in `backend/tests/integration/`:
+
+#### Test Coverage
+- **Authentication**: All endpoints require proper authentication
+- **Role-based Access**: Comments respect event roles and permissions
+- **CRUD Operations**: Create, read, update, delete with proper validation
+- **Pagination & Search**: Advanced filtering and search capabilities
+- **Data Integrity**: Proper relationship handling and cascading
+
+#### Running Comment API Tests
+```bash
+# Run all comment-related backend tests
+cd backend && npm test -- --testPathPattern=comment
+
+# Run specific comment integration tests
+cd backend && npm test -- tests/integration/comments.test.js
+
+# Run with verbose output for debugging
+cd backend && npm test -- --testPathPattern=comment --verbose
+```
+
+#### Security Testing
+- **XSS Prevention**: Tests that user input is properly sanitized
+- **Permission Validation**: Tests that users can only access authorized comments
+- **Internal Comment Isolation**: Tests that internal comments are properly hidden
+
+### Performance Testing
+- **Search Performance**: Test search with large comment datasets
+- **Pagination Efficiency**: Test pagination with thousands of comments  
+- **Markdown Rendering**: Test rendering performance with complex markdown
+
+### Regression Testing
+When modifying comment features, always run:
+```bash
+# Full comment test suite
+npm run test:all
+
+# Specific comment functionality
+npm test -- --testNamePattern="comment|Comment|markdown|Markdown"
+```
+
+## Troubleshooting
+
+- If you see errors about missing Prisma binaries, ensure your `schema.prisma` includes the correct `binaryTargets` and run `npx prisma generate`.
+- **React Markdown Issues**: If you see Jest ES module errors with react-markdown, check that the mock in `__mocks__/react-markdown.js` is properly configured.
+- **Comment Pagination**: If pagination tests fail, ensure test data includes enough comments to test multiple pages.
+- **Search Functionality**: If search tests are flaky, check that search debouncing is properly handled in test environments.
+- If tests fail due to missing database records, check if the test mocks DB dependencies or if a test database is needed.
+
+---
+
+For questions or improvements, see the project README or contact the maintainers.
+
+---
+
+## Running Backend Tests
+
+### Prerequisites
+
+- Node.js and npm installed on your machine
+- All backend dependencies installed (`npm install` in the `backend/` directory)
+
+### Run All Tests
+
+```sh
+npm test
+```
+
+### Run Tests with Coverage Report
+
+```sh
+npm run test:coverage
+```
+
+- Coverage results will be shown in the terminal and a summary will be written to the `coverage/` directory.
+
+### Run Tests in Docker Compose
+
+If you prefer to run tests inside the backend container:
+
+```sh
+docker compose run backend npm test
+```
+
+---
+
+## Writing New Backend Tests
+
+- **Unit tests** go in `backend/tests/unit/`
+- **Integration tests** go in `backend/tests/integration/`
+- Use [Jest](https://jestjs.io/) for all backend tests
+- Use [supertest](https://github.com/ladjs/supertest) for HTTP endpoint tests
+
+### Example: Unit Test
+
+See `backend/tests/unit/rbac.test.js` for a sample unit test of middleware logic.
+
+### Example: Integration Test
+
+See `backend/tests/integration/audit-test.test.js` for a sample integration test of an API endpoint.
+
+> **Note:** Integration tests currently mock database dependencies for fast feedback. In the future, we plan to set up full stack integration tests with a test database and seeded data for true end-to-end coverage.
+
+---
+
+## Interpreting Coverage Reports
+
+- After running `npm run test:coverage`, a summary will be shown in the terminal.
+- Detailed HTML reports are available in the `backend/coverage/` directory. Open `index.html` in your browser to explore coverage by file and line.
+- Aim for high coverage, but prioritize meaningful tests over 100% coverage.
+
+---
+
+## Testing Comment System Features
+
+### Frontend Comment Testing
+
+The comment system has comprehensive test coverage for all major features:
+
+#### Core Component Tests
+- **CommentsSection.tsx**: Tests pagination, search, filtering, and markdown rendering
+- **MarkdownEditor.tsx**: Tests markdown toolbar, preview mode, and content handling
+- **Comment rendering**: Tests public/internal visibility and role-based access
+
+#### Key Test Scenarios
+```bash
+# Run comment-specific tests
+npm test -- --testNamePattern="Comment"
+
+# Test markdown editor specifically
+npm test -- components/MarkdownEditor.test.tsx
+
+# Test comment integration with reports
+npm test -- components/ReportDetailView.test.tsx
+```
+
+#### Manual Testing Checklist
+- **Markdown Rendering**: Test bold, italic, headers, lists, links, code blocks
+- **Search Functionality**: Test real-time search with debouncing
+- **Pagination**: Test comment navigation across multiple pages
+- **Quote Reply**: Test quoting comments and auto-scroll behavior
+- **Role Permissions**: Test internal/public comment visibility
+- **Mobile Responsiveness**: Test on mobile devices and small screens
+- **Accessibility**: Test keyboard navigation and screen reader compatibility
+
+### Backend Comment API Testing
+
+Comprehensive API testing is located in `backend/tests/integration/`:
+
+#### Test Coverage
+- **Authentication**: All endpoints require proper authentication
+- **Role-based Access**: Comments respect event roles and permissions
+- **CRUD Operations**: Create, read, update, delete with proper validation
+- **Pagination & Search**: Advanced filtering and search capabilities
+- **Data Integrity**: Proper relationship handling and cascading
+
+#### Running Comment API Tests
+```bash
+# Run all comment-related backend tests
+cd backend && npm test -- --testPathPattern=comment
+
+# Run specific comment integration tests
+cd backend && npm test -- tests/integration/comments.test.js
+
+# Run with verbose output for debugging
+cd backend && npm test -- --testPathPattern=comment --verbose
+```
+
+#### Security Testing
+- **XSS Prevention**: Tests that user input is properly sanitized
+- **Permission Validation**: Tests that users can only access authorized comments
+- **Internal Comment Isolation**: Tests that internal comments are properly hidden
+
+### Performance Testing
+- **Search Performance**: Test search with large comment datasets
+- **Pagination Efficiency**: Test pagination with thousands of comments  
+- **Markdown Rendering**: Test rendering performance with complex markdown
+
+### Regression Testing
+When modifying comment features, always run:
+```bash
+# Full comment test suite
+npm run test:all
+
+# Specific comment functionality
+npm test -- --testNamePattern="comment|Comment|markdown|Markdown"
+```
+
+## Troubleshooting
+
+- If you see errors about missing Prisma binaries, ensure your `schema.prisma` includes the correct `binaryTargets` and run `npx prisma generate`.
+- **React Markdown Issues**: If you see Jest ES module errors with react-markdown, check that the mock in `__mocks__/react-markdown.js` is properly configured.
+- **Comment Pagination**: If pagination tests fail, ensure test data includes enough comments to test multiple pages.
+- **Search Functionality**: If search tests are flaky, check that search debouncing is properly handled in test environments.
+- If tests fail due to missing database records, check if the test mocks DB dependencies or if a test database is needed.
+
+---
+
+For questions or improvements, see the project README or contact the maintainers.
+
+---
+
+## Running Backend Tests
+
+### Prerequisites
+
+- Node.js and npm installed on your machine
+- All backend dependencies installed (`npm install` in the `backend/` directory)
+
+### Run All Tests
+
+```sh
+npm test
+```
+
+### Run Tests with Coverage Report
+
+```sh
+npm run test:coverage
+```
+
+- Coverage results will be shown in the terminal and a summary will be written to the `coverage/` directory.
+
+### Run Tests in Docker Compose
+
+If you prefer to run tests inside the backend container:
+
+```sh
+docker compose run backend npm test
+```
+
+---
+
+## Writing New Backend Tests
+
+- **Unit tests** go in `backend/tests/unit/`
+- **Integration tests** go in `backend/tests/integration/`
+- Use [Jest](https://jestjs.io/) for all backend tests
+- Use [supertest](https://github.com/ladjs/supertest) for HTTP endpoint tests
+
+### Example: Unit Test
+
+See `backend/tests/unit/rbac.test.js` for a sample unit test of middleware logic.
+
+### Example: Integration Test
+
+See `backend/tests/integration/audit-test.test.js` for a sample integration test of an API endpoint.
+
+> **Note:** Integration tests currently mock database dependencies for fast feedback. In the future, we plan to set up full stack integration tests with a test database and seeded data for true end-to-end coverage.
+
+---
+
+## Interpreting Coverage Reports
+
+- After running `npm run test:coverage`, a summary will be shown in the terminal.
+- Detailed HTML reports are available in the `backend/coverage/` directory. Open `index.html` in your browser to explore coverage by file and line.
+- Aim for high coverage, but prioritize meaningful tests over 100% coverage.
+
+---
+
+## Testing Comment System Features
+
+### Frontend Comment Testing
+
+The comment system has comprehensive test coverage for all major features:
+
+#### Core Component Tests
+- **CommentsSection.tsx**: Tests pagination, search, filtering, and markdown rendering
+- **MarkdownEditor.tsx**: Tests markdown toolbar, preview mode, and content handling
+- **Comment rendering**: Tests public/internal visibility and role-based access
+
+#### Key Test Scenarios
+```bash
+# Run comment-specific tests
+npm test -- --testNamePattern="Comment"
+
+# Test markdown editor specifically
+npm test -- components/MarkdownEditor.test.tsx
+
+# Test comment integration with reports
+npm test -- components/ReportDetailView.test.tsx
+```
+
+#### Manual Testing Checklist
+- **Markdown Rendering**: Test bold, italic, headers, lists, links, code blocks
+- **Search Functionality**: Test real-time search with debouncing
+- **Pagination**: Test comment navigation across multiple pages
+- **Quote Reply**: Test quoting comments and auto-scroll behavior
+- **Role Permissions**: Test internal/public comment visibility
+- **Mobile Responsiveness**: Test on mobile devices and small screens
+- **Accessibility**: Test keyboard navigation and screen reader compatibility
+
+### Backend Comment API Testing
+
+Comprehensive API testing is located in `backend/tests/integration/`:
+
+#### Test Coverage
+- **Authentication**: All endpoints require proper authentication
+- **Role-based Access**: Comments respect event roles and permissions
+- **CRUD Operations**: Create, read, update, delete with proper validation
+- **Pagination & Search**: Advanced filtering and search capabilities
+- **Data Integrity**: Proper relationship handling and cascading
+
+#### Running Comment API Tests
+```bash
+# Run all comment-related backend tests
+cd backend && npm test -- --testPathPattern=comment
+
+# Run specific comment integration tests
+cd backend && npm test -- tests/integration/comments.test.js
+
+# Run with verbose output for debugging
+cd backend && npm test -- --testPathPattern=comment --verbose
+```
+
+#### Security Testing
+- **XSS Prevention**: Tests that user input is properly sanitized
+- **Permission Validation**: Tests that users can only access authorized comments
+- **Internal Comment Isolation**: Tests that internal comments are properly hidden
+
+### Performance Testing
+- **Search Performance**: Test search with large comment datasets
+- **Pagination Efficiency**: Test pagination with thousands of comments  
+- **Markdown Rendering**: Test rendering performance with complex markdown
+
+### Regression Testing
+When modifying comment features, always run:
+```bash
+# Full comment test suite
+npm run test:all
+
+# Specific comment functionality
+npm test -- --testNamePattern="comment|Comment|markdown|Markdown"
+```
+
+## Troubleshooting
+
+- If you see errors about missing Prisma binaries, ensure your `schema.prisma` includes the correct `binaryTargets` and run `npx prisma generate`.
+- **React Markdown Issues**: If you see Jest ES module errors with react-markdown, check that the mock in `__mocks__/react-markdown.js` is properly configured.
+- **Comment Pagination**: If pagination tests fail, ensure test data includes enough comments to test multiple pages.
+- **Search Functionality**: If search tests are flaky, check that search debouncing is properly handled in test environments.
+- If tests fail due to missing database records, check if the test mocks DB dependencies or if a test database is needed.
+
+---
+
+For questions or improvements, see the project README or contact the maintainers.
+
+---
+
+## Audit Log Testing
+
+### Overview
+
+The audit log system includes comprehensive testing for both backend and frontend components to ensure security audit trails are properly tracked and displayed.
+
+### Backend Audit Tests
+
+Backend audit tests are located in `backend/src/test/audit/` and cover:
+
+- **API endpoints**: Testing all audit log retrieval endpoints (`/api/audit/events/:eventId/audit`, `/api/audit/organizations/:organizationId/audit`, `/api/audit/system/audit`)
+- **Audit logging middleware**: Ensuring actions are properly logged with correct metadata
+- **Permission checks**: Verifying role-based access control for audit log viewing
+- **Data filtering**: Testing pagination, sorting, and filtering capabilities
+- **Cross-event isolation**: Ensuring audit logs are properly scoped to their respective events/organizations
+
+### Frontend Audit Tests
+
+Frontend audit tests are located in `frontend/__tests__/` and cover:
+
+#### Component Tests (`__tests__/components/audit/AuditLogTable.test.tsx`)
+
+- **Rendering**: Displays audit logs correctly with proper formatting
+- **Loading states**: Shows skeleton loading while fetching data
+- **Error handling**: Displays appropriate error messages
+- **Empty states**: Shows message when no audit logs exist
+- **Filtering**: Tests search, action filtering, and date range filtering
+- **Pagination**: Tests page navigation and page size changes
+- **Sorting**: Tests column sorting functionality
+- **Responsive design**: Tests mobile card view and desktop table view
+- **Scope-specific features**: Tests organization column visibility in system scope
+
+#### API Utilities Tests (`__tests__/lib/audit.test.ts`)
+
+- **API calls**: Tests all audit log fetching functions
+- **Data formatting**: Tests timestamp formatting and action name formatting
+- **Action color coding**: Tests color assignment for different audit actions
+- **Error handling**: Tests API error handling and network failures
+- **Filter parameter construction**: Tests query parameter building
+
+### Testing UI Components
+
+The audit log table component uses several shadcn/ui components that need proper mocking in tests:
+
+```typescript
+// Mock UI components for testing
+jest.mock('@/components/ui/select', () => ({
+  Select: ({ children, onValueChange, ...props }) => (
+    <select 
+      data-testid="select" 
+      onChange={(e) => onValueChange?.(e.target.value)}
+      aria-label="Select option"
+      {...props}
+    >
+      {children}
+    </select>
+  ),
+  SelectContent: ({ children, ...props }) => (
+    <div data-testid="select-content" {...props}>{children}</div>
+  ),
+  SelectItem: ({ children, value, ...props }) => (
+    <option data-testid="select-item" value={value} {...props}>{children}</option>
+  ),
+  SelectTrigger: ({ children, ...props }) => (
+    <div data-testid="select-trigger" {...props}>{children}</div>
+  ),
+  SelectValue: ({ placeholder, ...props }) => (
+    <span data-testid="select-value" {...props}>{placeholder}</span>
+  ),
+}));
+```
+
+### Running Audit Tests
+
+To run only audit-related tests:
+
+```bash
+# Frontend audit tests
+docker compose exec frontend npm test -- --testPathPattern="audit"
+
+# Backend audit tests
+docker compose exec backend npm test -- --testPathPattern="audit"
+```
+
+### Manual Testing Checklist
+
+When testing audit functionality manually:
+
+1. **Event Audit Logs** (`/events/[eventSlug]/audit`)
+   - Verify event admins can access audit logs
+   - Test filtering by action type, user, and date range
+   - Verify pagination works correctly
+   - Check mobile responsiveness
+
+2. **Organization Audit Logs** (`/orgs/[orgSlug]/audit`)
+   - Verify organization admins can access audit logs
+   - Test cross-event audit log visibility
+   - Verify proper organization information display
+
+3. **System Audit Logs** (`/admin/system/audit`)
+   - Verify only system admins can access
+   - Test system-wide audit log visibility
+   - Verify organization column displays correctly
+   - Check security notice displays
+
+4. **Permission Testing**
+   - Verify unauthorized users get proper error messages
+   - Test different role combinations
+   - Ensure audit logs are properly scoped
+
+### Test Data
+
+The audit system includes comprehensive test data covering:
+
+- Different audit action types (create, update, delete, approve, etc.)
+- Various user roles and permissions
+- Multi-event and multi-organization scenarios
+- Edge cases like missing users or deleted resources
 
 ---
 

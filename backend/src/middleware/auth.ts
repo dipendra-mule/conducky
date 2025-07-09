@@ -9,6 +9,7 @@ import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import { prisma } from '../config/database';
+import { logAudit } from '../utils/audit';
 
 /**
  * User type for authenticated requests
@@ -107,17 +108,43 @@ export function testAuthMiddleware(req: any, res: Response, next: NextFunction):
  * Middleware to handle login with Passport
  */
 export function loginMiddleware(req: Request, res: Response, next: NextFunction): void {
-  return passport.authenticate('local', (err: any, user: any, info: any) => {
+  return passport.authenticate('local', async (err: any, user: any, info: any) => {
     if (err) {
       return res.status(500).json({ error: 'Authentication error', details: err.message });
     }
     if (!user) {
+      // Log failed login attempt
+      const email = req.body.email;
+      if (email) {
+        try {
+          await logAudit({
+            action: 'login_failed',
+            targetType: 'User',
+            targetId: email, // Use email as targetId since we don't have userId for failed attempts
+            userId: undefined // No userId for failed login
+          });
+        } catch (auditErr) {
+          console.error('Failed to log audit for failed login:', auditErr);
+        }
+      }
       return res.status(401).json({ error: info?.message || 'Invalid credentials' });
     }
     
-    return req.logIn(user, (loginErr: any) => {
+    return req.logIn(user, async (loginErr: any) => {
       if (loginErr) {
         return res.status(500).json({ error: 'Login failed', details: loginErr.message });
+      }
+      
+      // Log successful login
+      try {
+        await logAudit({
+          action: 'login_successful',
+          targetType: 'User',
+          targetId: user.id,
+          userId: user.id
+        });
+      } catch (auditErr) {
+        console.error('Failed to log audit for successful login:', auditErr);
       }
       
       return res.json({

@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+import { logAudit } from '../utils/audit';
 
 export interface InviteCreateData {
   eventId: string;
@@ -229,13 +230,20 @@ export class InviteService {
             select: { id: true, name: true }
           }
         }
-      });
-
-      const baseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3001';
+      });      const baseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3001';
       const inviteWithUrl = {
         ...invite,
         url: `${baseUrl}/invite/${invite.code}`
       };
+
+      // Log invite creation
+      await logAudit({
+        action: 'invite_created',
+        targetType: 'EventInviteLink',
+        targetId: invite.id,
+        userId: createdByUserId,
+        eventId: eventId
+      });
 
       return {
         success: true,
@@ -268,9 +276,7 @@ export class InviteService {
       }
       if (data.maxUses !== undefined) {
         updateData.maxUses = data.maxUses;
-      }
-
-      const invite = await this.prisma.eventInviteLink.update({
+      }      const invite = await this.prisma.eventInviteLink.update({
         where: { id: inviteId },
         data: updateData,
         include: {
@@ -278,6 +284,14 @@ export class InviteService {
             select: { id: true, name: true }
           }
         }
+      });
+
+      // Log invite update
+      await logAudit({
+        action: 'invite_updated',
+        targetType: 'EventInviteLink',
+        targetId: inviteId,
+        eventId: invite.eventId
       });
 
       return {
@@ -301,11 +315,30 @@ export class InviteService {
 
   /**
    * Delete an invite link
-   */
-  async deleteInvite(inviteId: string): Promise<ServiceResult<{ message: string }>> {
+   */  async deleteInvite(inviteId: string): Promise<ServiceResult<{ message: string }>> {
     try {
+      // Get invite info for audit log before deletion
+      const invite = await this.prisma.eventInviteLink.findUnique({
+        where: { id: inviteId }
+      });
+
+      if (!invite) {
+        return {
+          success: false,
+          error: 'Invite not found.'
+        };
+      }
+
       await this.prisma.eventInviteLink.delete({
         where: { id: inviteId }
+      });
+
+      // Log invite deletion
+      await logAudit({
+        action: 'invite_deleted',
+        targetType: 'EventInviteLink',
+        targetId: inviteId,
+        eventId: invite.eventId
       });
 
       return {

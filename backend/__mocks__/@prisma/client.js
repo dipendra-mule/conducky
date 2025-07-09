@@ -2,7 +2,7 @@
 
 // Shared persistent in-memory store for all tests
 const inMemoryStore = {
-  events: [{ id: "1", name: "Event1", slug: "event1" }],
+  events: [{ id: "1", name: "Event1", slug: "event1", organizationId: "org1" }],
   roles: [
     { id: "1", name: "System Admin" },
     { id: "2", name: "Event Admin" },
@@ -201,6 +201,32 @@ class PrismaClient {
         if (idx === -1) throw new Error("Event not found");
         inMemoryStore.events[idx] = { ...inMemoryStore.events[idx], ...data };
         return inMemoryStore.events[idx];
+      }),
+      findMany: jest.fn(({ where, select }) => {
+        let events = [...inMemoryStore.events];
+        if (where) {
+          events = events.filter(event => {
+            if (where.organizationId && event.organizationId !== where.organizationId) {
+              return false;
+            }
+            return true;
+          });
+        }
+        
+        // Apply select if provided
+        if (select) {
+          events = events.map(event => {
+            const result = {};
+            Object.keys(select).forEach(key => {
+              if (select[key] && event[key] !== undefined) {
+                result[key] = event[key];
+              }
+            });
+            return result;
+          });
+        }
+        
+        return events;
       }),
     };
     this.role = {
@@ -897,26 +923,64 @@ class PrismaClient {
         let results = [...inMemoryStore.auditLogs];
         
         if (where) {
-          if (where.userId) {
-            results = results.filter((log) => log.userId === where.userId);
-          }
-          if (where.eventId) {
-            results = results.filter((log) => log.eventId === where.eventId);
-          }
-          if (where.targetType) {
-            results = results.filter((log) => log.targetType === where.targetType);
-          }
-          if (where.targetId) {
-            results = results.filter((log) => log.targetId === where.targetId);
-          }
+          results = results.filter(log => {
+            // Helper function to check if a log matches a condition
+            const matchesCondition = (condition, log) => {
+              if (condition.userId && log.userId !== condition.userId) return false;
+              if (condition.organizationId !== undefined && log.organizationId !== condition.organizationId) return false;
+              if (condition.targetType && log.targetType !== condition.targetType) return false;
+              if (condition.targetId && log.targetId !== condition.targetId) return false;
+              if (condition.action && log.action !== condition.action) return false;
+              if (condition.timestamp) {
+                if (condition.timestamp.gte && new Date(log.timestamp) < new Date(condition.timestamp.gte)) return false;
+                if (condition.timestamp.lte && new Date(log.timestamp) > new Date(condition.timestamp.lte)) return false;
+              }
+              if (condition.eventId) {
+                if (condition.eventId.in) {
+                  if (!condition.eventId.in.includes(log.eventId)) return false;
+                } else if (log.eventId !== condition.eventId) {
+                  return false;
+                }
+              }
+              return true;
+            };
+            
+            // Handle AND conditions
+            if (where.AND) {
+              return where.AND.every(andCondition => {
+                if (andCondition.OR) {
+                  return andCondition.OR.some(orCondition => matchesCondition(orCondition, log));
+                }
+                return matchesCondition(andCondition, log);
+              });
+            }
+            
+            // Handle OR conditions
+            if (where.OR) {
+              return where.OR.some(orCondition => matchesCondition(orCondition, log));
+            }
+            
+            // Handle direct conditions
+            return matchesCondition(where, log);
+          });
         }
         
-        // Apply ordering - use timestamp instead of createdAt
+        // Apply ordering
         if (orderBy) {
           if (orderBy.timestamp === 'desc') {
             results.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           } else if (orderBy.timestamp === 'asc') {
             results.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          }
+          if (orderBy.action === 'desc') {
+            results.sort((a, b) => b.action.localeCompare(a.action));
+          } else if (orderBy.action === 'asc') {
+            results.sort((a, b) => a.action.localeCompare(b.action));
+          }
+          if (orderBy.targetType === 'desc') {
+            results.sort((a, b) => b.targetType.localeCompare(a.targetType));
+          } else if (orderBy.targetType === 'asc') {
+            results.sort((a, b) => a.targetType.localeCompare(b.targetType));
           }
           // Also support createdAt for backward compatibility
           if (orderBy.createdAt === 'desc') {
@@ -951,12 +1015,41 @@ class PrismaClient {
         let results = [...inMemoryStore.auditLogs];
         
         if (where) {
-          if (where.userId) {
-            results = results.filter((log) => log.userId === where.userId);
-          }
-          if (where.eventId) {
-            results = results.filter((log) => log.eventId === where.eventId);
-          }
+          results = results.filter(log => {
+            // Helper function to check if a log matches a condition
+            const matchesCondition = (condition, log) => {
+              if (condition.userId && log.userId !== condition.userId) return false;
+              if (condition.eventId && log.eventId !== condition.eventId) return false;
+              if (condition.organizationId !== undefined && log.organizationId !== condition.organizationId) return false;
+              if (condition.targetType && log.targetType !== condition.targetType) return false;
+              if (condition.targetId && log.targetId !== condition.targetId) return false;
+              if (condition.action && log.action !== condition.action) return false;
+              if (condition.timestamp) {
+                if (condition.timestamp.gte && new Date(log.timestamp) < new Date(condition.timestamp.gte)) return false;
+                if (condition.timestamp.lte && new Date(log.timestamp) > new Date(condition.timestamp.lte)) return false;
+              }
+              if (condition.eventId && condition.eventId.in && !condition.eventId.in.includes(log.eventId)) return false;
+              return true;
+            };
+            
+            // Handle AND conditions
+            if (where.AND) {
+              return where.AND.every(andCondition => {
+                if (andCondition.OR) {
+                  return andCondition.OR.some(orCondition => matchesCondition(orCondition, log));
+                }
+                return matchesCondition(andCondition, log);
+              });
+            }
+            
+            // Handle OR conditions
+            if (where.OR) {
+              return where.OR.some(orCondition => matchesCondition(orCondition, log));
+            }
+            
+            // Handle direct conditions
+            return matchesCondition(where, log);
+          });
         }
         
         return results.length;
