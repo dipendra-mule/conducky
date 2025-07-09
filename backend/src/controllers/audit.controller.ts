@@ -176,34 +176,59 @@ export const getOrganizationAuditLogs = [
       // Validate pagination
       const pageNum = Math.max(1, parseInt(page.toString()));
       const limitNum = Math.min(100, Math.max(1, parseInt(limit.toString())));
-      const offset = (pageNum - 1) * limitNum;
-
-      // Build where clause
-      const whereClause: any = {
-        organizationId: organizationId
-      };
-
+      const offset = (pageNum - 1) * limitNum;      // Build where clause to include both organization-level and event-level logs
+      // First, get all events for this organization
+      const organizationEvents = await prisma.event.findMany({
+        where: { organizationId: organizationId },
+        select: { id: true }
+      });
+      
+      const eventIds = organizationEvents.map(event => event.id);
+      
+      // Build additional filters
+      const additionalFilters: any = {};
+      
       if (action) {
-        whereClause.action = action;
+        additionalFilters.action = action;
       }
 
       if (targetType) {
-        whereClause.targetType = targetType;
+        additionalFilters.targetType = targetType;
       }
 
       if (userId) {
-        whereClause.userId = userId;
+        additionalFilters.userId = userId;
       }
 
       if (startDate || endDate) {
-        whereClause.timestamp = {};
+        additionalFilters.timestamp = {};
         if (startDate) {
-          whereClause.timestamp.gte = new Date(startDate.toString());
+          additionalFilters.timestamp.gte = new Date(startDate.toString());
         }
         if (endDate) {
-          whereClause.timestamp.lte = new Date(endDate.toString());
+          additionalFilters.timestamp.lte = new Date(endDate.toString());
         }
       }
+      
+      // Query for logs that are either:
+      // 1. Organization-level logs (organizationId matches, eventId is null)
+      // 2. Event-level logs (eventId matches any event in this organization)
+      const whereClause: any = {
+        AND: [
+          {
+            OR: [
+              {
+                organizationId: organizationId,
+                eventId: null // Organization-level logs
+              },
+              eventIds.length > 0 ? {
+                eventId: { in: eventIds } // Event-level logs
+              } : null
+            ].filter(Boolean) // Remove null values
+          },
+          additionalFilters
+        ]
+      };
 
       // Build order clause
       const orderBy: any = {};

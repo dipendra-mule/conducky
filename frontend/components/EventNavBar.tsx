@@ -100,6 +100,15 @@ export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openRe
                     Event Incidents
                   </Link>
                 </SheetClose>
+              )}              {isAdmin && (
+                <SheetClose asChild>
+                  <Link
+                    href={`/events/${eventSlug}/audit`}
+                    className="text-blue-600 dark:text-blue-400 underline font-medium px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
+                    Audit Logs
+                  </Link>
+                </SheetClose>
               )}
               {isAdmin && (
                 <SheetClose asChild>
@@ -142,6 +151,17 @@ export function EventNavBar({ eventSlug, eventName, user, userRoles = [], openRe
                     className="text-blue-600 dark:text-blue-400 underline font-medium px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                   >
                     Event Incidents
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            )}            {isAdmin && (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href={`/events/${eventSlug}/audit`}
+                    className="text-blue-600 dark:text-blue-400 underline font-medium px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
+                    Audit Logs
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
