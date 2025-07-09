@@ -5,6 +5,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import logger from '../config/logger';
 
 // Initialize Prisma client with configuration
 export const prisma = new PrismaClient({
@@ -21,7 +22,7 @@ export const databaseConfig = {
       await prisma.$connect();
       return true;
     } catch (error) {
-      console.error('Database connection failed:', error);
+      logger.error('Database connection failed:', error);
       return false;
     }
   },

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { requireRole } from '../middleware/rbac';
+import logger from '../config/logger';
 
 const prisma = new PrismaClient();
 
@@ -148,7 +149,7 @@ export const getEventAuditLogs = [
 
       res.json(response);
     } catch (error) {
-      console.error('Error fetching event audit logs:', error);
+      logger.error('Error fetching event audit logs:', error);
       res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   }
@@ -283,7 +284,7 @@ export const getOrganizationAuditLogs = [
 
       res.json(response);
     } catch (error) {
-      console.error('Error fetching organization audit logs:', error);
+      logger.error('Error fetching organization audit logs:', error);
       res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   }
@@ -415,7 +416,7 @@ export const getSystemAuditLogs = [
 
       res.json(response);
     } catch (error) {
-      console.error('Error fetching system audit logs:', error);
+      logger.error('Error fetching system audit logs:', error);
       res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   }

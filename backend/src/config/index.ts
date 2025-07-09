@@ -7,6 +7,7 @@
 // Import configurations for aggregation
 import { databaseConfig } from './database';
 import { environmentConfig } from './environment';
+import logger from '../config/logger';
 
 // Export configuration modules
 export { databaseConfig, prisma } from './database';

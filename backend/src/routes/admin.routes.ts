@@ -3,6 +3,7 @@ import { requireAuth, AuthUser } from '../middleware/auth';
 import { requireSystemAdmin } from '../utils/rbac';
 import { PrismaClient } from '@prisma/client';
 import { reinitializeOAuthStrategies } from '../config/passport';
+import logger from '../config/logger';
 
 // Import security middleware
 import { strictRateLimit } from '../middleware/rate-limit';
@@ -122,7 +123,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
       statistics,
     });
   } catch (error: any) {
-    console.error('Error fetching admin events:', error);
+    logger.error('Error fetching admin events:', error);
     res.status(500).json({
       error: 'Failed to fetch events',
       details: error.message,
@@ -134,13 +135,15 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
  * POST /api/admin/events
  * Create a new event (System Admin only) - simplified version for basic event creation
  */
-router.post('/events', strictRateLimit, validateEvent, handleValidationErrors, requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
+router.post('/events', strictRateLimit, validateEvent, handleValidationErrors, requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { name, slug, description } = req.body;
+    const user = req.user;
     
-    console.log('DEBUG: Event creation request received');
-    console.log('DEBUG: Request body:', JSON.stringify(req.body, null, 2));
-    console.log('DEBUG: Extracted fields:', { name, slug, description });
+    logger.debug('Event creation request received', { 
+      userId: user.id,
+      requestData: { name, slug, description }
+    });
 
     // Validation
     if (!name || name.length < 3 || name.length > 100) {
@@ -212,7 +215,11 @@ router.post('/events', strictRateLimit, validateEvent, handleValidationErrors, r
       },
     });
   } catch (error: any) {
-    console.error('Error creating event:', error);
+    logger.error('Error creating event', { 
+      error: error.message, 
+      userId: req.user?.id,
+      requestData: { name: req.body?.name, slug: req.body?.slug }
+    });
     
     if (error.code === 'P2002') {
       res.status(409).json({
@@ -269,7 +276,7 @@ router.get('/events/check-slug/:slug', requireSystemAdmin(), async (req: Request
       reason: existingEvent ? 'Slug is already taken' : null,
     });
   } catch (error: any) {
-    console.error('Error checking slug availability:', error);
+    logger.error('Error checking slug availability:', error);
     res.status(500).json({
       error: 'Failed to check slug availability',
       details: error.message,
@@ -332,7 +339,7 @@ router.get('/events/stats', requireSystemAdmin(), async (req: Request, res: Resp
       })),
     });
   } catch (error: any) {
-    console.error('Error fetching system stats:', error);
+    logger.error('Error fetching system stats:', error);
     res.status(500).json({
       error: 'Failed to fetch system statistics',
       details: error.message,
@@ -357,21 +364,21 @@ router.get('/system/settings', requireSystemAdmin(), async (req: Request, res: R
         try {
           settingsObj[setting.key] = JSON.parse(setting.value);
         } catch (parseError) {
-          console.error('Error parsing email settings:', parseError);
+          logger.error('Error parsing email settings:', parseError);
           settingsObj[setting.key] = null;
         }
       } else if (setting.key === 'googleOAuth') {
         try {
           settingsObj[setting.key] = JSON.parse(setting.value);
         } catch (parseError) {
-          console.error('Error parsing Google OAuth settings:', parseError);
+          logger.error('Error parsing Google OAuth settings:', parseError);
           settingsObj[setting.key] = null;
         }
       } else if (setting.key === 'githubOAuth') {
         try {
           settingsObj[setting.key] = JSON.parse(setting.value);
         } catch (parseError) {
-          console.error('Error parsing GitHub OAuth settings:', parseError);
+          logger.error('Error parsing GitHub OAuth settings:', parseError);
           settingsObj[setting.key] = null;
         }
       } else {
@@ -381,7 +388,7 @@ router.get('/system/settings', requireSystemAdmin(), async (req: Request, res: R
     
     res.json({ settings: settingsObj });
   } catch (err: any) {
-    console.error('Error fetching admin system settings:', err);
+    logger.error('Error fetching admin system settings:', err);
     res.status(500).json({ 
       error: 'Failed to fetch system settings',
       ...(process.env.NODE_ENV !== 'production' && { details: err.message })
@@ -435,7 +442,7 @@ router.patch('/system/settings', requireSystemAdmin(), async (req: Request, res:
     // Reinitialize OAuth strategies
     await reinitializeOAuthStrategies();
   } catch (error: any) {
-    console.error('Error updating system settings:', error);
+    logger.error('Error updating system settings:', error);
     res.status(500).json({
       error: 'Failed to update system settings',
       ...(process.env.NODE_ENV !== 'production' && { details: error.message })
@@ -475,7 +482,7 @@ router.patch('/events/:eventId/toggle', requireSystemAdmin(), async (req: Reques
       event: updatedEvent,
     });
   } catch (error) {
-    console.error('Error toggling event status:', error);
+    logger.error('Error toggling event status:', error);
     if (error instanceof Error && error.message.includes('Record to update not found')) {
       res.status(404).json({ error: 'Event not found' });
       return;
@@ -533,7 +540,7 @@ router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: R
       },
     });
   } catch (error: any) {
-    console.error('Error fetching event:', error);
+    logger.error('Error fetching event:', error);
     res.status(500).json({
       error: 'Failed to fetch event',
       details: error.message,
@@ -585,7 +592,7 @@ router.get('/events/:eventId/invites', requireSystemAdmin(), async (req: Request
       })),
     });
   } catch (error: any) {
-    console.error('Error fetching event invites:', error);
+    logger.error('Error fetching event invites:', error);
     res.status(500).json({
       error: 'Failed to fetch event invites',
       details: error.message,
@@ -606,7 +613,7 @@ router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Reques
     const currentUser = (req as any).user;
     if (!currentUser) {
       res.status(401).json({
-        error: 'User not authenticated',
+        error: 'Authentication required',
       });
       return;
     }
@@ -698,7 +705,7 @@ router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Reques
       },
     });
   } catch (error: any) {
-    console.error('Error creating event invite:', error);
+    logger.error('Error creating event invite:', error);
     res.status(500).json({
       error: 'Failed to create event invite',
       details: error.message,
@@ -734,7 +741,7 @@ router.get('/settings/email', requireSystemAdmin(), async (req: Request, res: Re
         const savedSettings = JSON.parse(emailSetting.value);
         emailSettings = { ...emailSettings, ...savedSettings };
       } catch (parseError) {
-        console.error('Error parsing saved email settings:', parseError);
+        logger.error('Error parsing saved email settings:', parseError);
         // Fall back to defaults if parsing fails
       }
     }
@@ -743,16 +750,13 @@ router.get('/settings/email', requireSystemAdmin(), async (req: Request, res: Re
       email: emailSettings
     });
   } catch (error) {
-    console.error('Error fetching email settings:', error);
+    logger.error('Error fetching email settings:', error);
     res.status(500).json({ error: 'Failed to fetch email settings.' });
   }
 });
 
 router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response) => {
   try {
-    console.log('=== PUT /settings/email REQUEST ===');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
-    
     const { 
       provider,
       fromAddress,
@@ -767,18 +771,25 @@ router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedReq
       sendgridApiKey
     } = req.body;
 
-    console.log('Extracted values:', { provider, fromAddress, fromName });
+    logger.debug('PUT /settings/email REQUEST', { 
+      userId: req.user?.id,
+      provider,
+      fromAddress,
+      hasFromName: !!fromName
+    });
+
+    logger.debug('Extracted email settings values', { provider, fromAddress, fromName });
 
     // Validate required fields based on provider
     if (!provider) {
-      console.log('ERROR: No provider provided');
+      logger.warn('Email settings validation failed: No provider provided', { userId: req.user?.id });
       return res.status(400).json({ 
         error: 'Email provider is required.' 
       });
     }
 
     if (!fromAddress) {
-      console.log('ERROR: No fromAddress provided');
+      logger.warn('Email settings validation failed: No fromAddress provided', { userId: req.user?.id });
       return res.status(400).json({ 
         error: 'From address is required.' 
       });
@@ -787,7 +798,10 @@ router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedReq
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(fromAddress)) {
-      console.log('ERROR: Invalid email format:', fromAddress);
+      logger.warn('Email settings validation failed: Invalid email format', { 
+        userId: req.user?.id,
+        fromAddress 
+      });
       return res.status(400).json({ 
         error: 'From address must be a valid email address.' 
       });
@@ -820,13 +834,16 @@ router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedReq
       }
     });
 
-    console.log('Email settings saved to database successfully');
+    logger.info('Email settings saved to database successfully', { 
+      userId: req.user?.id,
+      provider 
+    });
 
     res.json({ 
       message: 'Email settings saved successfully' 
     });
   } catch (error) {
-    console.error('Error updating email settings:', error);
+    logger.error('Error updating email settings:', error);
     res.status(500).json({ error: 'Failed to update email settings.' });
   }
 });
@@ -863,7 +880,7 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
     // Get current user for test email recipient
     const currentUser = req.user;
     if (!currentUser) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
     // Get user's email from database
@@ -878,10 +895,10 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
       });
     }
 
-    console.log(`\n=== EMAIL TEST (${provider.toUpperCase()} Provider) ===`);
-    console.log(`Testing email settings for user: ${user.email}`);
-    console.log(`From: ${fromAddress}`);
-    console.log(`From Name: ${fromName || 'Not set'}`);
+    logger.debug(`\n=== EMAIL TEST (${provider.toUpperCase()} Provider) ===`);
+    logger.debug(`Testing email settings for user: ${user.email}`);
+    logger.debug(`From: ${fromAddress}`);
+    logger.debug(`From Name: ${fromName || 'Not set'}`);
 
     // Import EmailService here to avoid circular imports
     const { EmailService } = require('../utils/email');
@@ -901,12 +918,12 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
       sendgridApiKey
     }, user.email);
 
-    console.log(`Test result: ${testResult.success ? 'SUCCESS' : 'FAILED'}`);
-    console.log(`Message: ${testResult.message}`);
+    logger.debug(`Test result: ${testResult.success ? 'SUCCESS' : 'FAILED'}`);
+    logger.debug(`Message: ${testResult.message}`);
     if (testResult.error) {
-      console.log(`Error: ${testResult.error}`);
+      logger.debug(`Error: ${testResult.error}`);
     }
-    console.log('=== END EMAIL TEST ===\n');
+    logger.debug('=== END EMAIL TEST ===\n');
 
     if (testResult.success) {
       res.json({
@@ -922,7 +939,7 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
       });
     }
   } catch (error) {
-    console.error('Error testing email connection:', error);
+    logger.error('Error testing email connection:', error);
     res.status(500).json({ 
       error: 'Failed to test email connection.',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -950,7 +967,7 @@ router.get('/settings/google-oauth', requireSystemAdmin(), async (req: Request, 
         const savedSettings = JSON.parse(googleOAuthSetting.value);
         googleOAuthSettings = { ...googleOAuthSettings, ...savedSettings };
       } catch (parseError) {
-        console.error('Error parsing saved Google OAuth settings:', parseError);
+        logger.error('Error parsing saved Google OAuth settings:', parseError);
         // Fall back to defaults if parsing fails
       }
     }
@@ -959,7 +976,7 @@ router.get('/settings/google-oauth', requireSystemAdmin(), async (req: Request, 
       googleOAuth: googleOAuthSettings
     });
   } catch (error) {
-    console.error('Error fetching Google OAuth settings:', error);
+    logger.error('Error fetching Google OAuth settings:', error);
     res.status(500).json({ error: 'Failed to fetch Google OAuth settings.' });
   }
 });
@@ -998,7 +1015,7 @@ router.put('/settings/google-oauth', requireSystemAdmin(), async (req: Authentic
       }
     });
 
-    console.log('Google OAuth settings saved to database successfully');
+    logger.info('Google OAuth settings saved to database successfully');
 
     res.json({ 
       message: 'Google OAuth settings saved successfully' 
@@ -1007,7 +1024,7 @@ router.put('/settings/google-oauth', requireSystemAdmin(), async (req: Authentic
     // Reinitialize OAuth strategies
     await reinitializeOAuthStrategies();
   } catch (error) {
-    console.error('Error updating Google OAuth settings:', error);
+    logger.error('Error updating Google OAuth settings:', error);
     res.status(500).json({ error: 'Failed to update Google OAuth settings.' });
   }
 });
@@ -1032,7 +1049,7 @@ router.get('/settings/github-oauth', requireSystemAdmin(), async (req: Request, 
         const savedSettings = JSON.parse(githubOAuthSetting.value);
         githubOAuthSettings = { ...githubOAuthSettings, ...savedSettings };
       } catch (parseError) {
-        console.error('Error parsing saved GitHub OAuth settings:', parseError);
+        logger.error('Error parsing saved GitHub OAuth settings:', parseError);
         // Fall back to defaults if parsing fails
       }
     }
@@ -1041,7 +1058,7 @@ router.get('/settings/github-oauth', requireSystemAdmin(), async (req: Request, 
       githubOAuth: githubOAuthSettings
     });
   } catch (error) {
-    console.error('Error fetching GitHub OAuth settings:', error);
+    logger.error('Error fetching GitHub OAuth settings:', error);
     res.status(500).json({ error: 'Failed to fetch GitHub OAuth settings.' });
   }
 });
@@ -1080,7 +1097,7 @@ router.put('/settings/github-oauth', requireSystemAdmin(), async (req: Authentic
       }
     });
 
-    console.log('GitHub OAuth settings saved to database successfully');
+    logger.info('GitHub OAuth settings saved to database successfully');
 
     res.json({ 
       message: 'GitHub OAuth settings saved successfully' 
@@ -1089,7 +1106,7 @@ router.put('/settings/github-oauth', requireSystemAdmin(), async (req: Authentic
     // Reinitialize OAuth strategies
     await reinitializeOAuthStrategies();
   } catch (error) {
-    console.error('Error updating GitHub OAuth settings:', error);
+    logger.error('Error updating GitHub OAuth settings:', error);
     res.status(500).json({ error: 'Failed to update GitHub OAuth settings.' });
   }
 });
@@ -1119,13 +1136,13 @@ router.get('/oauth-providers', async (req: Request, res: Response) => {
           providers.github = true;
         }
       } catch (parseError) {
-        console.error(`Error parsing ${setting.key} settings:`, parseError);
+        logger.error(`Error parsing ${setting.key} settings:`, parseError);
       }
     });
 
     res.json({ providers });
   } catch (error) {
-    console.error('Error checking OAuth providers:', error);
+    logger.error('Error checking OAuth providers:', error);
     res.status(500).json({ error: 'Failed to check OAuth providers' });
   }
 });

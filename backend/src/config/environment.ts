@@ -1,3 +1,4 @@
+import logger from '../config/logger';
 /**
  * Environment Configuration
  * 
@@ -24,15 +25,20 @@ export interface EnvironmentConfig {
 const defaultValues: Partial<EnvironmentConfig> = {
   NODE_ENV: 'development',
   PORT: 4000,
-  SESSION_SECRET: 'changeme',
+  SESSION_SECRET: process.env.NODE_ENV === 'production' ? undefined : 'dev-only-secret-changeme', // Force production to use env var
   CORS_ORIGIN: 'http://localhost:3001',
   EMAIL_PROVIDER: 'console',
   SMTP_PORT: 587,
   SMTP_SECURE: false,
 };
 
-// Parse and validate environment variables
+  // Parse and validate environment variables
 export function getEnvironmentConfig(): EnvironmentConfig {
+  // Validate required production secrets
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required in production');
+  }
+
   const config: EnvironmentConfig = {
     NODE_ENV: process.env.NODE_ENV || defaultValues.NODE_ENV!,
     PORT: parseInt(process.env.PORT || defaultValues.PORT!.toString()),

@@ -8,6 +8,7 @@ import multer from 'multer';
 // Import security middleware
 import { fileUploadRateLimit } from '../middleware/rate-limit';
 import { validateUser, handleValidationErrors } from '../middleware/validation';
+import logger from '../config/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -21,12 +22,12 @@ const uploadAvatar = multer({
 });
 
 // Update user profile
-router.patch('/me/profile', async (req: any, res: Response): Promise<void> => {
+router.patch('/me/profile', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     const { name, email } = req.body;
     
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -45,24 +46,24 @@ router.patch('/me/profile', async (req: any, res: Response): Promise<void> => {
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Profile update error:', error);
+      logger.error('Profile update error:', error);
     }
     res.status(500).json({ error: 'Failed to update profile.' });
   }
 });
 
 // Change password
-router.patch('/me/password', async (req: any, res: Response): Promise<void> => {
+// Change password
+router.patch('/me/password', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
     
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
-    
-    if (!currentPassword || !newPassword) {
-      res.status(400).json({ error: 'Current password and new password are required.' });
+      if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: 'Current and new password are required.' });
       return;
     }
     
@@ -76,17 +77,18 @@ router.patch('/me/password', async (req: any, res: Response): Promise<void> => {
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Password change error:', error);
+      logger.error('Password change error:', error);
     }
     res.status(500).json({ error: 'Failed to change password.' });
   }
 });
 
 // Get user events
-router.get('/me/events', async (req: any, res: Response): Promise<void> => {
+// Get user events
+router.get('/me/events', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -100,17 +102,18 @@ router.get('/me/events', async (req: any, res: Response): Promise<void> => {
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Get user events error:', error);
+      logger.error('Get user events error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch user events.' });
   }
 });
 
 // Get user incidents
-router.get('/me/incidents', async (req: any, res: Response): Promise<void> => {
+// Get user incidents across all events
+router.get('/me/incidents', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -152,17 +155,18 @@ router.get('/me/incidents', async (req: any, res: Response): Promise<void> => {
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Get user reports error:', error);
+      logger.error('Get user reports error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch user incidents.' });
   }
 });
 
 // Leave an event
-router.delete('/me/events/:eventId', async (req: any, res: Response): Promise<void> => {
+// Leave event
+router.delete('/me/events/:eventId', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -183,17 +187,18 @@ router.delete('/me/events/:eventId', async (req: any, res: Response): Promise<vo
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Leave event error:', error);
+      logger.error('Leave event error:', error);
     }
     res.status(500).json({ error: 'Failed to leave event.' });
   }
 });
 
 // Get quick stats
-router.get('/me/quickstats', async (req: any, res: Response): Promise<void> => {
+// Quick stats
+router.get('/me/quickstats', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -207,17 +212,18 @@ router.get('/me/quickstats', async (req: any, res: Response): Promise<void> => {
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Get quick stats error:', error);
+      logger.error('Get quick stats error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch quick stats.' });
   }
 });
 
 // Get activity
-router.get('/me/activity', async (req: any, res: Response): Promise<void> => {
+// User activity
+router.get('/me/activity', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
@@ -231,7 +237,7 @@ router.get('/me/activity', async (req: any, res: Response): Promise<void> => {
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Get activity error:', error);
+      logger.error('Get activity error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch activity.' });
   }
@@ -261,7 +267,7 @@ router.get('/:userId/avatar', async (req: Request, res: Response): Promise<void>
     
     res.send(data);
   } catch (error: any) {
-    console.error('Get user avatar error:', error);
+    logger.error('Get user avatar error:', error);
     res.status(500).json({ error: 'Failed to get user avatar.' });
   }
 });
@@ -299,7 +305,7 @@ router.post('/:userId/avatar', fileUploadRateLimit, uploadAvatar.single('avatar'
     res.status(200).json({ success: true, avatarId: result.data!.avatarId });
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Upload user avatar error:', error);
+      logger.error('Upload user avatar error:', error);
     }
     res.status(500).json({ error: 'Failed to upload avatar.', details: error.message });
   }
@@ -326,17 +332,17 @@ router.delete('/:userId/avatar', async (req: any, res: Response): Promise<void> 
     res.status(204).send();
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Delete user avatar error:', error);
+      logger.error('Delete user avatar error:', error);
     }
     res.status(500).json({ error: 'Failed to delete avatar.', details: error.message });
   }
 });
 
 // Get user's notifications with pagination and filtering
-router.get('/me/notifications', async (req: any, res: Response): Promise<void> => {
+router.get('/me/notifications', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -411,17 +417,17 @@ router.get('/me/notifications', async (req: any, res: Response): Promise<void> =
 
   } catch (err: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching notifications:', err);
+      logger.error('Error fetching notifications:', err);
     }
     res.status(500).json({ error: 'Failed to fetch notifications.' });
   }
 });
 
 // Get notification statistics for user
-router.get('/me/notifications/stats', async (req: any, res: Response): Promise<void> => {
+router.get('/me/notifications/stats', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -467,17 +473,17 @@ router.get('/me/notifications/stats', async (req: any, res: Response): Promise<v
 
   } catch (err: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching notification stats:', err);
+      logger.error('Error fetching notification stats:', err);
     }
     res.status(500).json({ error: 'Failed to fetch notification statistics.' });
   }
 });
 
 // Mark all notifications as read for the current user
-router.patch('/me/notifications/read-all', async (req: any, res: Response): Promise<void> => {
+router.patch('/me/notifications/read-all', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
@@ -500,7 +506,7 @@ router.patch('/me/notifications/read-all', async (req: any, res: Response): Prom
 
   } catch (err: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error marking all notifications as read:', err);
+      logger.error('Error marking all notifications as read:', err);
     }
     res.status(500).json({ error: 'Failed to mark notifications as read.' });
   }

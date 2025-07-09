@@ -8,6 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import validator from 'validator';
 import DOMPurify from 'isomorphic-dompurify';
+import logger from '../config/logger';
 
 /**
  * Middleware to handle validation errors
@@ -380,7 +381,7 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
           // Additional validation for sanitized content
           if (sanitizedValue !== value) {
             // Log when content was modified by sanitization
-            console.warn(`Content sanitized in ${fieldPath}:`, {
+            logger.warn(`Content sanitized in ${fieldPath}:`, {
               original: value.substring(0, 100),
               sanitized: sanitizedValue.substring(0, 100),
               ip: req.ip,
@@ -429,7 +430,7 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     
     next();
   } catch (error) {
-    console.warn('Input sanitization failed:', error, {
+    logger.warn('Input sanitization failed:', error, {
       ip: req.ip,
       userAgent: req.get('User-Agent'),
       path: req.path,

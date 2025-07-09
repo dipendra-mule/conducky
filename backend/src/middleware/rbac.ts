@@ -1,3 +1,4 @@
+import logger from '../config/logger';
 /**
  * Role-Based Access Control (RBAC) Middleware
  * 

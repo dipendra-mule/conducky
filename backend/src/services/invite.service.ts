@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
+import logger from '../config/logger';
 
 export interface InviteCreateData {
   eventId: string;
@@ -135,7 +136,7 @@ export class InviteService {
         data: { invite, event }
       };
     } catch (error: any) {
-      console.error('Error fetching invite details:', error);
+      logger.error('Error fetching invite details:', error);
       return {
         success: false,
         error: 'Failed to fetch invite details.'
@@ -169,7 +170,7 @@ export class InviteService {
         data: { invites: invitesWithUrl }
       };
     } catch (error: any) {
-      console.error('Error listing invites:', error);
+      logger.error('Error listing invites:', error);
       return {
         success: false,
         error: 'Failed to list invites.'
@@ -250,7 +251,7 @@ export class InviteService {
         data: { invite: inviteWithUrl }
       };
     } catch (error: any) {
-      console.error('Error creating invite:', error);
+      logger.error('Error creating invite:', error);
       return {
         success: false,
         error: 'Failed to create invite.'
@@ -305,7 +306,7 @@ export class InviteService {
           error: 'Invite not found.'
         };
       }
-      console.error('Error updating invite:', error);
+      logger.error('Error updating invite:', error);
       return {
         success: false,
         error: 'Failed to update invite.'
@@ -352,7 +353,7 @@ export class InviteService {
           error: 'Invite not found.'
         };
       }
-      console.error('Error deleting invite:', error);
+      logger.error('Error deleting invite:', error);
       return {
         success: false,
         error: 'Failed to delete invite.'
@@ -439,7 +440,7 @@ export class InviteService {
         }
       };
     } catch (error: any) {
-      console.error('Error redeeming invite:', error);
+      logger.error('Error redeeming invite:', error);
       return {
         success: false,
         error: 'Failed to join event.'
@@ -546,7 +547,7 @@ export class InviteService {
         }
       };
     } catch (error: any) {
-      console.error('Error registering with invite:', error);
+      logger.error('Error registering with invite:', error);
       return {
         success: false,
         error: 'Failed to register with invite.'
@@ -601,7 +602,7 @@ export class InviteService {
         data: { valid: true, invite }
       };
     } catch (error: any) {
-      console.error('Error validating invite:', error);
+      logger.error('Error validating invite:', error);
       return {
         success: false,
         error: 'Failed to validate invite.'
@@ -660,7 +661,7 @@ export class InviteService {
         data: { stats }
       };
     } catch (error: any) {
-      console.error('Error getting invite stats:', error);
+      logger.error('Error getting invite stats:', error);
       return {
         success: false,
         error: 'Failed to get invite statistics.'

@@ -6,6 +6,7 @@
 
 import { Request } from 'express';
 import { UserResponse } from '../../types';
+import logger from '../config/logger';
 
 // Re-export existing types from the current types directory
 export * from '../../types';

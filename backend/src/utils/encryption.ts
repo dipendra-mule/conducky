@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import logger from '../config/logger';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16; // For GCM, this is always 16
@@ -28,7 +29,7 @@ export function validateEncryptionKey(key: string): void {
   ];
   
   if (weakKeys.includes(key)) {
-    console.warn('⚠️  WARNING: Using a default or weak encryption key. This should be changed in production!');
+    logger.warn('⚠️  WARNING: Using a default or weak encryption key. This should be changed in production!');
   }
   
   // In production, warn if key appears to be the default dev key
@@ -81,7 +82,7 @@ export function encryptField(text: string): string {
   } catch (error) {
     // Don't log sensitive encryption errors in production
     if (process.env.NODE_ENV === 'development') {
-      console.error('Encryption error:', error);
+      logger.error('Encryption error:', error);
     }
     throw new Error('Failed to encrypt field');
   }
@@ -120,7 +121,7 @@ export function decryptField(encryptedText: string): string {
   } catch (error) {
     // Don't log sensitive decryption errors in production
     if (process.env.NODE_ENV === 'development') {
-      console.error('Decryption error:', error);
+      logger.error('Decryption error:', error);
     }
     throw new Error('Failed to decrypt field');
   }

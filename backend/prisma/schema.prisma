@@ -403,3 +403,17 @@ model OrganizationInviteLink {
   note             String?
   role             OrganizationRole
 }
+
+model RateLimit {
+  id          Int      @id @default(autoincrement())
+  identifier  String   // IP address or user ID
+  endpoint    String   // API endpoint being rate limited
+  attempts    Int      @default(1)
+  windowStart DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([identifier, endpoint, windowStart])
+  @@index([identifier, endpoint])
+  @@index([windowStart])
+}

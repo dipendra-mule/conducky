@@ -4,6 +4,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import bcrypt from 'bcrypt';
 import { PrismaClient, User, SocialProvider } from '@prisma/client';
+import logger from '../config/logger';
 
 const prisma = new PrismaClient();
 
@@ -32,13 +33,13 @@ async function getOAuthSettings() {
           oauthSettings.github = parsed;
         }
       } catch (parseError) {
-        console.error(`Error parsing ${setting.key} settings:`, parseError);
+        logger.error(`Error parsing ${setting.key} settings:`, parseError);
       }
     });
 
     return oauthSettings;
   } catch (error) {
-    console.error('Error fetching OAuth settings from database:', error);
+    logger.error('Error fetching OAuth settings from database:', error);
     return {
       google: { clientId: '', clientSecret: '', enabled: false },
       github: { clientId: '', clientSecret: '', enabled: false }
@@ -187,14 +188,14 @@ async function initializeOAuthStrategies() {
 
           return done(null, user);
         } catch (error) {
-          console.error('Google OAuth error:', error);
+          logger.error('Google OAuth error:', error);
           return done(error, false);
         }
       }
     ));
-    console.log('Google OAuth strategy initialized from database settings');
+    logger.info('Google OAuth strategy initialized from database settings');
   } else {
-    console.log('Google OAuth disabled or not configured');
+    logger.info('Google OAuth disabled or not configured');
   }
 
   // GitHub OAuth Strategy
@@ -288,20 +289,20 @@ async function initializeOAuthStrategies() {
 
           return done(null, user);
         } catch (error) {
-          console.error('GitHub OAuth error:', error);
+          logger.error('GitHub OAuth error:', error);
           return done(error, false);
         }
       }
     ));
-    console.log('GitHub OAuth strategy initialized from database settings');
+    logger.info('GitHub OAuth strategy initialized from database settings');
   } else {
-    console.log('GitHub OAuth disabled or not configured');
+    logger.info('GitHub OAuth disabled or not configured');
   }
 }
 
 // Initialize OAuth strategies on startup
 initializeOAuthStrategies().catch(error => {
-  console.error('Error initializing OAuth strategies:', error);
+  logger.error('Error initializing OAuth strategies:', error);
 });
 
 // Export a function to reinitialize strategies when settings change

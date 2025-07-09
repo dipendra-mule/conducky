@@ -271,16 +271,14 @@ describe('Cross-Event Reports API Integration Tests', () => {
 
       expect(response.body.incidents).toHaveLength(0);
       expect(response.body.total).toBe(0);
-    });
-
-    it('should require authentication', async () => {
+    });    it('should require authentication', async () => {
       const response = await request(app)
         .get('/api/users/me/incidents')
         .set('x-test-disable-auth', 'true')
         .expect(401);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Not authenticated');
+      expect(response.body.error).toBe('Authentication required');
     });
 
     it('should handle database errors gracefully', async () => {

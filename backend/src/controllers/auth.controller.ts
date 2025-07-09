@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services';
+import logger from '../config/logger';
 
 // Simple user interface that matches what Passport provides
 interface AuthUser {
@@ -35,7 +36,7 @@ export class AuthController {
         user: result.data?.user
       });
     } catch (error) {
-      console.error('Registration error:', error);
+      logger.error('Registration error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -58,7 +59,7 @@ export class AuthController {
 
       res.status(200).json({ available: result.data });
     } catch (error) {
-      console.error('Email check error:', error);
+      logger.error('Email check error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -76,7 +77,7 @@ export class AuthController {
 
       res.status(200).json({ message: result.data?.message || 'Request processed' });
     } catch (error) {
-      console.error('Forgot password error:', error);
+      logger.error('Forgot password error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -99,7 +100,7 @@ export class AuthController {
 
       res.status(200).json({ valid: true, email: result.data });
     } catch (error) {
-      console.error('Token validation error:', error);
+      logger.error('Token validation error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -117,7 +118,7 @@ export class AuthController {
 
       res.status(200).json({ message: result.data?.message || 'Password reset successful' });
     } catch (error) {
-      console.error('Reset password error:', error);
+      logger.error('Reset password error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -128,7 +129,7 @@ export class AuthController {
       const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -141,7 +142,7 @@ export class AuthController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      console.error('Session error:', error);
+      logger.error('Session error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

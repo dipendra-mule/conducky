@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { UserNotificationSettings } from '../../types';
+import logger from '../config/logger';
 
 const prisma = new PrismaClient();
 

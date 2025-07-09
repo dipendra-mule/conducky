@@ -1,3 +1,4 @@
+import logger from '../config/logger';
 // Controller exports
 export { AuthController } from './auth.controller';
 export { UserController } from './user.controller';

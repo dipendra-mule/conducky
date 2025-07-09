@@ -6,6 +6,7 @@ import multer from 'multer';
 // Import security middleware
 import { reportCreationRateLimit, fileUploadRateLimit } from '../middleware/rate-limit';
 import { validateReport, handleValidationErrors } from '../middleware/validation';
+import logger from '../config/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -31,7 +32,7 @@ router.get('/:incidentId/evidence', async (req: Request, res: Response): Promise
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get evidence files error:', error);
+    logger.error('Get evidence files error:', error);
     res.status(500).json({ error: 'Failed to fetch evidence files.' });
   }
 });
@@ -63,7 +64,7 @@ router.post('/:incidentId/evidence', fileUploadRateLimit, uploadEvidence.array('
 
     res.status(201).json(result.data);
   } catch (error: any) {
-    console.error('Upload evidence files error:', error);
+    logger.error('Upload evidence files error:', error);
     res.status(500).json({ error: 'Failed to upload evidence files.' });
   }
 });
@@ -90,7 +91,7 @@ router.get('/:incidentId/evidence/:evidenceId', async (req: Request, res: Respon
     
     res.send(data);
   } catch (error: any) {
-    console.error('Get evidence file error:', error);
+    logger.error('Get evidence file error:', error);
     res.status(500).json({ error: 'Failed to get evidence file.' });
   }
 });
@@ -109,7 +110,7 @@ router.delete('/:incidentId/evidence/:evidenceId', async (req: Request, res: Res
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Delete evidence file error:', error);
+    logger.error('Delete evidence file error:', error);
     res.status(500).json({ error: 'Failed to delete evidence file.' });
   }
 });

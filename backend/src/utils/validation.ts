@@ -1,3 +1,4 @@
+import logger from '../config/logger';
 /**
  * Validation Utilities
  * 

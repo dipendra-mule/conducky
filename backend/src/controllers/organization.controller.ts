@@ -5,6 +5,7 @@ import { logAudit } from '../utils/audit';
 import { UserResponse } from '../types';
 import { PrismaClient } from '@prisma/client';
 import { UnifiedRBACService } from '../services/unified-rbac.service';
+import logger from '../config/logger';
 
 // Extend Request type to include user
 interface AuthenticatedRequest extends Request {
@@ -67,7 +68,7 @@ export class OrganizationController {
 
       res.status(201).json(result.data);
     } catch (error: any) {
-      console.error('Error creating organization:', error);
+      logger.error('Error creating organization:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -99,7 +100,7 @@ export class OrganizationController {
       }
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error getting organization:', error);
+      logger.error('Error getting organization:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -136,7 +137,7 @@ export class OrganizationController {
       }
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error getting organization by slug:', error);
+      logger.error('Error getting organization by slug:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -184,7 +185,7 @@ export class OrganizationController {
       });
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error updating organization:', error);
+      logger.error('Error updating organization:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -227,7 +228,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error deleting organization:', error);
+      logger.error('Error deleting organization:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -260,7 +261,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error listing organizations:', error);
+      logger.error('Error listing organizations:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -317,7 +318,7 @@ export class OrganizationController {
 
       res.status(201).json(result.data);
     } catch (error: any) {
-      console.error('Error adding organization member:', error);
+      logger.error('Error adding organization member:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -373,7 +374,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error updating member role:', error);
+      logger.error('Error updating member role:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -417,7 +418,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error removing organization member:', error);
+      logger.error('Error removing organization member:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -443,7 +444,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error getting user organizations:', error);
+      logger.error('Error getting user organizations:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -495,7 +496,7 @@ export class OrganizationController {
       try {
         await unifiedRBAC.grantRole(userId, 'event_admin', 'event', event.id);
       } catch (error) {
-        console.warn('Failed to assign event admin role via unified RBAC:', error);
+        logger.warn('Failed to assign event admin role via unified RBAC:', error);
       }
 
       // Log audit event
@@ -509,7 +510,7 @@ export class OrganizationController {
 
       res.status(201).json({ event });
     } catch (error: any) {
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -549,7 +550,7 @@ export class OrganizationController {
 
       res.json({ events });
     } catch (error: any) {
-      console.error('Error getting organization events:', error);
+      logger.error('Error getting organization events:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -607,7 +608,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Upload organization logo error:', error);
+      logger.error('Upload organization logo error:', error);
       res.status(500).json({ error: 'Failed to upload logo.' });
     }
   }
@@ -674,7 +675,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Upload organization logo by slug error:', error);
+      logger.error('Upload organization logo by slug error:', error);
       res.status(500).json({ error: 'Failed to upload logo.' });
     }
   }
@@ -704,7 +705,7 @@ export class OrganizationController {
       res.setHeader('Content-Disposition', `inline; filename="${logo.filename}"`);
       res.send(logo.data);
     } catch (error: any) {
-      console.error('Get organization logo error:', error);
+      logger.error('Get organization logo error:', error);
       res.status(500).json({ error: 'Failed to get logo.' });
     }
   }
@@ -743,7 +744,7 @@ export class OrganizationController {
       res.setHeader('Content-Disposition', `inline; filename="${logo.filename}"`);
       res.send(logo.data);
     } catch (error: any) {
-      console.error('Get organization logo by slug error:', error);
+      logger.error('Get organization logo by slug error:', error);
       res.status(500).json({ error: 'Failed to get logo.' });
     }
   }
@@ -786,7 +787,7 @@ export class OrganizationController {
 
       res.status(201).json(result.data);
     } catch (error: any) {
-      console.error('Error creating organization invite link:', error);
+      logger.error('Error creating organization invite link:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -825,7 +826,7 @@ export class OrganizationController {
 
       res.json({ invites: result.data?.inviteLinks });
     } catch (error: any) {
-      console.error('Error getting organization invite links:', error);
+      logger.error('Error getting organization invite links:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -865,7 +866,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error updating organization invite link:', error);
+      logger.error('Error updating organization invite link:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -930,7 +931,7 @@ export class OrganizationController {
         organization: invite.organization,
       });
     } catch (error: any) {
-      console.error('Error getting organization invite details:', error);
+      logger.error('Error getting organization invite details:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -957,7 +958,7 @@ export class OrganizationController {
 
       res.json(result.data);
     } catch (error: any) {
-      console.error('Error using organization invite link:', error);
+      logger.error('Error using organization invite link:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

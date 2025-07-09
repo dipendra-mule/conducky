@@ -7,6 +7,7 @@ import { createUploadMiddleware } from '../utils/upload';
 // Import security middleware
 import { fileUploadRateLimit } from '../middleware/rate-limit';
 import { validateOrganization, handleValidationErrors } from '../middleware/validation';
+import logger from '../config/logger';
 
 const router = Router();
 const organizationController = new OrganizationController();

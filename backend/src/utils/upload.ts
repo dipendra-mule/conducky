@@ -1,7 +1,7 @@
 import multer = require("multer");
 import { Request } from "express";
 import crypto from 'crypto';
-import { logger } from './logger';
+import logger from '../config/logger';
 
 /**
  * Configuration options for upload middleware
@@ -39,7 +39,7 @@ function validateFileContent(file: Express.Multer.File): boolean {
   
   if (!signature) {
     // Reject unknown file types for security
-    logger.security('Rejected file with unknown signature', { 
+    logger.warn('Rejected file with unknown signature', { 
       mimetype: file.mimetype,
       filename: file.originalname 
     });
@@ -144,7 +144,7 @@ export function validateUploadedFiles(req: Request, res: any, next: any) {
     // - File size double-check
     
     // Log file upload for security monitoring
-    logger.fileUpload(file.originalname, file.mimetype, file.size, (req.user as any)?.id);
+    logger.info(`File upload: ${file.originalname}, type: ${file.mimetype}, size: ${file.size}, user: ${(req.user as any)?.id}`);
   }
   
   next();

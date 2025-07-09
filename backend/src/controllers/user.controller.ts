@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services';
+import logger from '../config/logger';
 
 // Simple user interface that matches what Passport provides
 interface AuthUser {
@@ -19,7 +20,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -32,7 +33,7 @@ export class UserController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      console.error('Update profile error:', error);
+      logger.error('Update profile error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -42,7 +43,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -56,7 +57,7 @@ export class UserController {
 
       res.status(200).json({ message: result.data?.message || 'Password changed successfully' });
     } catch (error) {
-      console.error('Change password error:', error);
+      logger.error('Change password error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -88,7 +89,7 @@ export class UserController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      console.error('Upload avatar error:', error);
+      logger.error('Upload avatar error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -118,7 +119,7 @@ export class UserController {
       
       res.send(avatar.data);
     } catch (error) {
-      console.error('Get avatar error:', error);
+      logger.error('Get avatar error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -136,7 +137,7 @@ export class UserController {
 
       res.status(200).json({ message: 'Avatar deleted successfully' });
     } catch (error) {
-      console.error('Delete avatar error:', error);
+      logger.error('Delete avatar error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -146,7 +147,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -159,7 +160,7 @@ export class UserController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      console.error('Get user events error:', error);
+      logger.error('Get user events error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -169,7 +170,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -197,7 +198,7 @@ export class UserController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      console.error('Get user reports error:', error);
+      logger.error('Get user reports error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -207,7 +208,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -220,7 +221,7 @@ export class UserController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      console.error('Get quick stats error:', error);
+      logger.error('Get quick stats error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -230,7 +231,7 @@ export class UserController {
       const user = req.user as any; const userId = user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -243,7 +244,7 @@ export class UserController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      console.error('Get activity error:', error);
+      logger.error('Get activity error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -254,7 +255,7 @@ export class UserController {
       const { eventId } = req.params;
       
       if (!userId) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 
@@ -267,7 +268,7 @@ export class UserController {
 
       res.status(200).json({ message: result.data?.message || 'Left event successfully' });
     } catch (error) {
-      console.error('Leave event error:', error);
+      logger.error('Leave event error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

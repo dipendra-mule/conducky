@@ -2,6 +2,7 @@ import nodemailer = require('nodemailer');
 import * as fs from 'fs';
 import * as path from 'path';
 import Handlebars from 'handlebars';
+import logger from '../config/logger';
 
 /**
  * Email configuration for different providers
@@ -153,14 +154,14 @@ export class EmailService {
       // Test the connection for non-console providers
       if (this.config.provider !== 'console' && this.transporter) {
         await this.transporter.verify();
-        console.log(`[Email] ${this.config.provider} transporter initialized successfully`);
+        logger.info(`[Email] ${this.config.provider} transporter initialized successfully`);
       } else {
-        console.log('[Email] Console mode initialized (emails will be logged)');
+        logger.info('[Email] Console mode initialized (emails will be logged)');
       }
 
       this.isInitialized = true;
     } catch (error: any) {
-      console.error('[Email] Failed to initialize transporter:', error);
+      logger.error('[Email] Failed to initialize transporter:', error);
       // Fall back to console mode in case of configuration errors
       this.config.provider = 'console';
       this.transporter = nodemailer.createTransport({
@@ -216,7 +217,7 @@ export class EmailService {
       return template(data);
     } catch (error: any) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('Failed to render email template:', error);
+        logger.error('Failed to render email template:', error);
       }
       throw new Error(`Template rendering failed: ${error.message}`);
     }
@@ -249,15 +250,15 @@ export class EmailService {
     try {
       if (this.config.provider === 'console') {
         // Development mode - log email to console
-        console.log('\n=== EMAIL (Console Mode) ===');
-        console.log(`From: ${mailOptions.from}`);
-        console.log(`To: ${mailOptions.to}`);
-        console.log(`Subject: ${mailOptions.subject}`);
-        console.log(`Text:\n${mailOptions.text}`);
+        logger.info('\n=== EMAIL (Console Mode) ===');
+        logger.info(`From: ${mailOptions.from}`);
+        logger.info(`To: ${mailOptions.to}`);
+        logger.info(`Subject: ${mailOptions.subject}`);
+        logger.info(`Text:\n${mailOptions.text}`);
         if (mailOptions.html) {
-          console.log(`HTML:\n${mailOptions.html}`);
+          logger.info(`HTML:\n${mailOptions.html}`);
         }
-        console.log('=== END EMAIL ===\n');
+        logger.info('=== END EMAIL ===\n');
         
         return {
           success: true,
@@ -271,7 +272,7 @@ export class EmailService {
       }
 
       const result: any = await this.transporter.sendMail(mailOptions);
-      console.log(`[Email] Sent successfully via ${this.config.provider}:`, result.messageId);
+      logger.info(`[Email] Sent successfully via ${this.config.provider}:`, result.messageId);
       
       return {
         success: true,
@@ -279,7 +280,7 @@ export class EmailService {
         provider: this.config.provider,
       };
     } catch (error: any) {
-      console.error('[Email] Failed to send email:', error);
+      logger.error('[Email] Failed to send email:', error);
       throw new Error(`Failed to send email: ${error.message}`);
     }
   }
@@ -610,7 +611,7 @@ This test was sent at: ${new Date().toISOString()}`,
       }
 
     } catch (error: any) {
-      console.error('Email test failed:', error);
+      logger.error('Email test failed:', error);
       return {
         success: false,
         message: 'Email test failed',

@@ -1,3 +1,4 @@
+import logger from '../config/logger';
 export { AuthService } from './auth.service';
 export type { 
   PasswordValidation, 

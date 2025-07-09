@@ -5,6 +5,7 @@ import { ServiceResult } from '../types';
 import { emailService } from '../utils/email';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
+import logger from '../config/logger';
 
 export interface PasswordValidation {
   isValid: boolean;
@@ -122,7 +123,7 @@ export class AuthService {
       return { allowed: true, timeRemaining: 0 };
     } catch (error: any) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('[Auth] Rate limit check error:', error);
+        logger.error('[Auth] Rate limit check error:', error);
       }
       // On error, allow the request to prevent blocking legitimate users
       return { allowed: true, timeRemaining: 0 };
@@ -219,7 +220,7 @@ export class AuthService {
         }
       };
     } catch (error: any) {
-      console.error("Registration error:", error);
+      logger.error("Registration error:", error);
       return {
         success: false,
         error: "Registration failed.",
@@ -330,7 +331,7 @@ export class AuthService {
           await emailService.sendPasswordReset(user.email, user.name || 'User', resetToken);
         } catch (emailError) {
           if (process.env.NODE_ENV === 'development') {
-            console.error('[Auth] Failed to send reset email:', emailError);
+            logger.error('[Auth] Failed to send reset email:', emailError);
           }
           // Continue - don't expose email sending errors to user
         }
@@ -359,7 +360,7 @@ export class AuthService {
       };
     } catch (error: any) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('[Auth] Forgot password error:', error);
+        logger.error('[Auth] Forgot password error:', error);
       }
       return {
         success: false,
@@ -427,7 +428,7 @@ export class AuthService {
       };
     } catch (error: any) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('[Auth] Validate reset token error:', error);
+        logger.error('[Auth] Validate reset token error:', error);
       }
       return {
         success: false,
@@ -509,7 +510,7 @@ export class AuthService {
       };
     } catch (error: any) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('[Auth] Reset password error:', error);
+        logger.error('[Auth] Reset password error:', error);
       }
       return {
         success: false,
@@ -560,7 +561,7 @@ export class AuthService {
         }
       };
     } catch (error: any) {
-      console.error('[Auth] Get session data error:', error);
+      logger.error('[Auth] Get session data error:', error);
       return {
         success: false,
         error: "Failed to get session data."

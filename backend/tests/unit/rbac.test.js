@@ -24,7 +24,7 @@ describe('requireRole middleware', () => {
     const next = jest.fn();
     await middleware(req, res, next);
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Not authenticated' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -80,7 +80,7 @@ describe('requireSystemAdmin middleware', () => {
     const next = jest.fn();
     await middleware(req, res, next);
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Not authenticated' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required' });
     expect(next).not.toHaveBeenCalled();
   });
 
