@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useRouter } from "next/router"
+import { logger } from "@/lib/logger"
 
 import { NavMain } from "@/components/nav-main"
 import { NavEvents } from "@/components/nav-projects"
@@ -117,7 +118,11 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
         // This was causing infinite re-renders and excessive API calls
         
       } catch (error) {
-        console.warn("Failed to fetch user data:", error);
+        logger.warn("Failed to fetch user data in sidebar", { 
+          error: error instanceof Error ? error.message : String(error), 
+          userId: user?.email || 'unknown',
+          context: 'sidebar_data_fetch'
+        });
       }
     };
 

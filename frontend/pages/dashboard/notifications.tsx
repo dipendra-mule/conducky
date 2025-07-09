@@ -22,6 +22,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
+import { useLogger } from '@/hooks/useLogger';
 
 interface Notification {
   id: string;

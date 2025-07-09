@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, Users, FileText, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { UserContext } from '../_app';
+import { useLogger } from '@/hooks/useLogger';
 
 
 

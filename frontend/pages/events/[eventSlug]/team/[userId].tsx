@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarIcon, ClockIcon, FileTextIcon, MessageSquareIcon, ShieldIcon } from 'lucide-react';
 import { AppBreadcrumbs } from '@/components/AppBreadcrumbs';
+import { useLogger } from '@/hooks/useLogger';
 
 interface UserProfile {
   user: {

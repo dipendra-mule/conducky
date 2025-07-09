@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PencilIcon, CheckIcon, XMarkIcon, LinkIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { CoCTeamList } from "./CoCTeamList";
+import { logger } from "@/lib/logger";
 
 interface EventMeta {
   name: string;
@@ -66,14 +67,13 @@ export default function EventMetaCard({
   const logoSrc =
     logoPreview ||
     (logoExists ? `${backendBaseUrl}/api/events/slug/${eventSlug}/logo` : null);
-
   const copyCodeOfConductLink = async () => {
     const url = `${window.location.origin}/event/${eventSlug}/code-of-conduct`;
     try {
       await navigator.clipboard.writeText(url);
       // Could add a toast notification here
     } catch (err) {
-      console.error('Failed to copy link:', err);
+      logger.error('Failed to copy code of conduct link', { eventSlug }, err as Error);
     }
   };
 

@@ -9,6 +9,7 @@ import { UserContext } from '../_app';
 import { Eye, EyeOff, Save, User, Lock, Bell, Shield } from 'lucide-react';
 import { isValidEmail } from '@/lib/utils';
 import { AuthGuard } from '@/components/shared/AuthGuard';
+import { useLogger } from '@/hooks/useLogger';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 

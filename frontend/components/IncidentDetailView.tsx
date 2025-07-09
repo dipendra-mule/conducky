@@ -10,6 +10,7 @@ import { CommentsSection } from './incident-detail/CommentsSection';
 import { IncidentMetaTable } from './incident-detail/IncidentMetaTable';
 import { MobileQuickActions } from './incident-detail/MobileQuickActions';
 import { Pencil, ChevronDown } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export interface IncidentDetailViewProps {
   incident: any;
@@ -234,7 +235,12 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                     onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
-                  console.error('Failed to update location:', error);
+                  logger.error('Failed to update location', { 
+                    error: error instanceof Error ? error.message : String(error),
+                    incidentId: incident.id,
+                    eventId: incident.eventId,
+                    context: 'incident_detail_location_update'
+                  });
                   const errorMessage = error instanceof Error ? error.message : 'Failed to update location. Please try again.';
                   alert(errorMessage);
                 }
@@ -261,7 +267,12 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                     onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
-                  console.error('Failed to update contact preference:', error);
+                  logger.error('Failed to update contact preference', { 
+                    error: error instanceof Error ? error.message : String(error),
+                    incidentId: incident.id,
+                    eventId: incident.eventId,
+                    context: 'incident_detail_contact_preference_update'
+                  });
                   const errorMessage = error instanceof Error ? error.message : 'Failed to update contact preference. Please try again.';
                   alert(errorMessage);
                 }
@@ -288,7 +299,12 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                     onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
-                  console.error('Failed to update incident date:', error);
+                  logger.error('Failed to update incident date', { 
+                    error: error instanceof Error ? error.message : String(error),
+                    incidentId: incident.id,
+                    eventId: incident.eventId,
+                    context: 'incident_detail_date_update'
+                  });
                   const errorMessage = error instanceof Error ? error.message : 'Failed to update incident date. Please try again.';
                   alert(errorMessage);
                 }
@@ -315,7 +331,12 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                     onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
-                  console.error('Failed to update parties involved:', error);
+                  logger.error('Failed to update parties involved', { 
+                    error: error instanceof Error ? error.message : String(error),
+                    incidentId: incident.id,
+                    eventId: incident.eventId,
+                    context: 'incident_detail_parties_update'
+                  });
                   const errorMessage = error instanceof Error ? error.message : 'Failed to update parties involved. Please try again.';
                   alert(errorMessage);
                 }
@@ -342,7 +363,12 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                     onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
-                  console.error('Failed to update description:', error);
+                  logger.error('Failed to update description', { 
+                    error: error instanceof Error ? error.message : String(error),
+                    incidentId: incident.id,
+                    eventId: incident.eventId,
+                    context: 'incident_detail_description_update'
+                  });
                   const errorMessage = error instanceof Error ? error.message : 'Failed to update description. Please try again.';
                   alert(errorMessage);
                 }
@@ -369,7 +395,12 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                     onIncidentUpdate(responseData.incident);
                   }
                 } catch (error) {
-                  console.error('Failed to update type:', error);
+                  logger.error('Failed to update type', { 
+                    error: error instanceof Error ? error.message : String(error),
+                    incidentId: incident.id,
+                    eventId: incident.eventId,
+                    context: 'incident_detail_type_update'
+                  });
                   const errorMessage = error instanceof Error ? error.message : 'Failed to update type. Please try again.';
                   alert(errorMessage);
                 }

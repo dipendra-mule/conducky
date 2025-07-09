@@ -612,3 +612,183 @@ Planned SuperAdmin features include:
 - Automated backup management
 - Advanced security monitoring
 - Bulk event management tools
+
+## Logging and Monitoring
+
+Conducky provides comprehensive logging capabilities to help administrators monitor system health, troubleshoot issues, and maintain security.
+
+### Backend Logging
+
+The backend uses Winston for structured logging with:
+
+**Log Levels:**
+- `error`: Critical errors requiring immediate attention
+- `warn`: Warning conditions that should be monitored
+- `info`: General informational messages
+- `http`: HTTP request logging (via Morgan middleware)
+- `debug`: Detailed debugging information (development only)
+
+**Log Locations:**
+- **Development**: Console output with colors and formatting
+- **Production & Development**: File-based logging in `/backend/logs/`
+  - `combined.log`: All log levels in JSON format
+  - `error.log`: Error-level logs only in JSON format
+- **Test**: Minimal output to avoid noise during testing
+
+**Configuration:**
+```bash
+# Environment variables for logging
+LOG_LEVEL=info          # Minimum log level to output
+NODE_ENV=production     # Environment affects log format and destination
+```
+
+**Backend Log Management:**
+- **File Location**: All backend logs are written to `/backend/logs/` directory
+- **Format**: JSON structured logging for production use
+- **HTTP Requests**: All API requests logged via Morgan middleware
+- **Log Rotation**: Set up log rotation to manage disk space usage
+- **Monitoring**: Monitor `/backend/logs/combined.log` for application events
+
+### Frontend Logging (Phase 2 - In Development)
+
+**Current State**: Frontend contains 110+ console statements requiring structured logging
+
+**Phase 2 Implementation Plan:**
+- **Client-side logging framework** for browser environments
+- **Error tracking and reporting** for production debugging  
+- **User interaction analytics** for UX improvement
+- **Security-conscious logging** with no sensitive data exposure
+- **Performance optimization** with minimal bundle impact
+
+**Development vs Production Strategy:**
+- **Development**: Structured console logging with log levels
+- **Production**: Error tracking service integration (Sentry, LogRocket, etc.)
+- **Analytics**: User behavior tracking for incident reporting flows
+
+**Current Frontend Logging:**
+- **Development**: Console output in browser DevTools
+- **Production**: Currently unstructured console statements (needs Phase 2 refactor)
+- **Error Handling**: Basic console.error throughout components
+
+### Log Management
+
+**Critical: Monitor Disk Space**
+Backend logs are written to the file system and can fill disk space:
+
+**Backend Log Files:**
+```bash
+# Check log file sizes
+ls -lh /path/to/conducky/backend/logs/
+du -sh /path/to/conducky/backend/logs/
+
+# Monitor log growth
+tail -f /path/to/conducky/backend/logs/combined.log
+tail -f /path/to/conducky/backend/logs/error.log
+```
+
+**Log Rotation Setup (Required for Production):**
+```bash
+# Example logrotate configuration for /etc/logrotate.d/conducky
+/path/to/conducky/backend/logs/*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+```
+
+**Log Analysis:**
+```bash
+# Search for errors in last 24 hours
+grep "$(date --date='yesterday' '+%Y-%m-%d')" /path/to/conducky/backend/logs/error.log
+
+# Monitor specific user actions
+grep "userId.*user-123" /path/to/conducky/backend/logs/combined.log
+
+# Check API performance
+grep "http" /path/to/conducky/backend/logs/combined.log | grep "slow"
+```
+
+**Log Access:**
+- Logs may contain user behavior patterns and system information
+- Restrict access to logs to authorized personnel only
+- Consider encryption for log storage and transmission
+
+### Monitoring and Alerts
+
+**Key Metrics to Monitor:**
+- Error rates (increase may indicate system issues)
+- Performance degradation (slow page loads, API responses)
+- Authentication failures (potential security issues)
+- Database errors (system health)
+
+**Setting Up Alerts:**
+- Configure alerts for error rate spikes
+- Monitor disk space usage for log storage
+- Set up uptime monitoring for critical endpoints
+- Alert on authentication anomalies
+
+### Troubleshooting with Logs
+
+**Common Investigation Patterns:**
+
+1. **User Reports Issue:**
+   ```bash
+   # Search for user's session or activity
+   grep "sessionId: sess_123" /var/log/conducky.log
+   
+   # Look for errors around specific time
+   grep "2024-01-15T10:30" /var/log/conducky.log | grep ERROR
+   ```
+
+2. **Performance Issues:**
+   ```bash
+   # Check for slow API responses
+   grep "slow" /var/log/conducky.log
+   
+   # Look for database connection issues
+   grep "database" /var/log/conducky.log | grep ERROR
+   ```
+
+3. **Security Concerns:**
+   ```bash
+   # Check authentication failures
+   grep "authentication" /var/log/conducky.log | grep ERROR
+   
+   # Look for suspicious patterns
+   grep "failed" /var/log/conducky.log | tail -50
+   ```
+
+### Log Rotation and Cleanup
+
+**Prevent Disk Space Issues:**
+
+1. **Set up log rotation** (using logrotate on Linux):
+   ```bash
+   # Example logrotate configuration
+   /var/log/conducky.log {
+       daily
+       rotate 30
+       compress
+       delaycompress
+       missingok
+       notifempty
+   }
+   ```
+
+2. **Monitor disk usage:**
+   ```bash
+   # Check log directory size
+   du -sh /var/log/
+   
+   # Set up automated alerts when disk usage exceeds threshold
+   ```
+
+3. **Automated cleanup:**
+   ```bash
+   # Clean logs older than 30 days
+   find /var/log -name "*.log" -mtime +30 -delete
+   ```

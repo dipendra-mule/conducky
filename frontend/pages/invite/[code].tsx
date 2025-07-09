@@ -4,6 +4,7 @@ import { useEffect, useState, useContext } from 'react';
 import { UserContext } from '../_app';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { useLogger } from '@/hooks/useLogger';
 
 interface Invite {
   id: string;

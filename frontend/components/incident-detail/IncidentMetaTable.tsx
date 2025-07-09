@@ -6,6 +6,7 @@ import { IncidentDateEditForm } from "./IncidentDateEditForm";
 import { PartiesEditForm } from "./PartiesEditForm";
 import { DescriptionEditForm } from "./DescriptionEditForm";
 import { TypeEditForm } from "./TypeEditForm";
+import { useLogger } from '@/hooks/useLogger';
 
 interface IncidentMetaTableProps {
   id: string;
@@ -53,6 +54,7 @@ export function IncidentMetaTable({
   onDescriptionEdit,
   onTypeEdit
 }: IncidentMetaTableProps) {
+  const { error: logError } = useLogger();
   const [editingField, setEditingField] = useState<string | null>(null);
 
   // Format contact preference for display
@@ -104,10 +106,9 @@ export function IncidentMetaTable({
           await onTypeEdit?.(value || "other");
           break;
       }
-      setEditingField(null);
-    } catch (error) {
+      setEditingField(null);    } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Failed to update ${field}:`, error);
+        logError(`Failed to update ${field}`, { field, incidentId: id }, error as Error);
       }
       // Error handling is done by the parent component
     }

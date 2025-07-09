@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import { logger } from '@/lib/logger';
 
 interface NavigationItem {
   title: string;
@@ -102,7 +103,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
         try {
           setFavorites(JSON.parse(stored));
         } catch (e) {
-          console.warn('Failed to parse stored favorites:', e);
+          logger.warn('Failed to parse stored favorites', { userId: user.id }, e as Error);
         }
       }
     }

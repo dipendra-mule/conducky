@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Github } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 // Define User interface
 interface User {
@@ -66,9 +67,11 @@ function Login() {
         if (response.ok) {
           const data = await response.json();
           setOauthProviders(data.providers);
-        }
-      } catch (error) {
-        console.error('Error checking OAuth providers:', error);
+        }      } catch (error) {
+        logger.warn('Error checking OAuth providers', { 
+          error: error instanceof Error ? error.message : String(error),
+          context: 'login_oauth_providers_check'
+        });
       }
     };
 
@@ -141,9 +144,12 @@ function Login() {
                     return;
                   }
                 }
-              }
-            } catch (error) {
-              console.error('Error redeeming invite:', error);
+              }            } catch (error) {
+              logger.warn('Error redeeming invite during login', { 
+                error: error instanceof Error ? error.message : String(error),
+                inviteCode: router.query.invite,
+                context: 'login_invite_redemption'
+              });
               // Fallback to normal redirect
             }
           }

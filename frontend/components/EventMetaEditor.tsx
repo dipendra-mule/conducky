@@ -9,6 +9,7 @@ import { PencilIcon, CheckIcon, XMarkIcon, LinkIcon, ArrowTopRightOnSquareIcon }
 import { SecureMarkdown } from "@/components/ui/secure-markdown";
 import { isValidEmail } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLogger } from '@/hooks/useLogger';
 
 export interface EventMeta {
   name: string;

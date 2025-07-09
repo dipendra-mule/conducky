@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useLogger } from '@/hooks/useLogger';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,6 +19,7 @@ interface ApiResponse {
 }
 
 export default function ForgotPasswordPage() {
+  const { error: logError } = useLogger();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
@@ -44,11 +46,10 @@ export default function ForgotPasswordPage() {
         setIsEmailSent(true);
       } else {
         setError(data.error || 'Failed to send reset email');
-      }
-    } catch (err) {
+      }    } catch (err) {
       setIsLoading(false);
       if (process.env.NODE_ENV === 'development') {
-        console.error('Forgot password error:', err);
+        logError('Forgot password error', { email }, err as Error);
       }
       setError(err instanceof Error ? err.message : 'Something went wrong');
     }
