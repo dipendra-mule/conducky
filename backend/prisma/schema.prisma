@@ -145,6 +145,19 @@ model Incident {
   severity            IncidentSeverity?
   resolution          String?
   notifications Notification[]
+
+  // Database indexes for query performance
+  @@index([eventId])                           // Event-based queries
+  @@index([reporterId])                        // Reporter-based queries  
+  @@index([assignedResponderId])               // Assigned incidents queries
+  @@index([state])                             // Status filtering
+  @@index([severity])                          // Severity filtering
+  @@index([createdAt])                         // Time-based sorting
+  @@index([updatedAt])                         // Last updated sorting
+  @@index([eventId, state])                    // Event incidents by status
+  @@index([eventId, reporterId])               // User's incidents in event
+  @@index([eventId, createdAt])                // Event incidents by time
+  @@index([reporterId, state])                 // User's incidents by status
 }
 
 model AuditLog {

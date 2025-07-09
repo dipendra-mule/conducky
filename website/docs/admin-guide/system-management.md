@@ -558,6 +558,215 @@ Monitor the PostgreSQL database for:
 - Follow data retention policies
 - Monitor for unusual data access patterns
 
+## Database Performance Monitoring
+
+SuperAdmins have access to comprehensive database performance monitoring tools to ensure optimal system performance and identify potential issues before they impact users.
+
+### Accessing Performance Metrics
+
+The database performance monitoring system provides real-time insights into query performance, potential N+1 patterns, and optimization opportunities.
+
+#### Via Admin API
+
+Use the dedicated performance endpoints:
+
+- **GET `/api/admin/database/performance`** - Get current performance metrics
+- **POST `/api/admin/database/performance/reset`** - Reset metrics to start fresh monitoring
+
+Both endpoints require SuperAdmin authentication and return JSON responses.
+
+#### Example Usage
+
+**Check current performance:**
+```bash
+curl -H "Cookie: your-session-cookie" \
+     http://localhost:4000/api/admin/database/performance
+```
+
+**Reset metrics after optimization:**
+```bash
+curl -X POST \
+     -H "Cookie: your-session-cookie" \
+     http://localhost:4000/api/admin/database/performance/reset
+```
+
+### Understanding Performance Metrics
+
+#### Summary Metrics
+
+- **Total Queries**: All database queries executed since last reset
+- **Slow Queries**: Queries taking 100-500ms (yellow flag)
+- **Very Slow Queries**: Queries taking >500ms (red flag)
+- **Average Execution Time**: Overall query performance indicator
+- **N+1 Patterns**: Detected inefficient query patterns
+
+#### Performance Details
+
+The system tracks:
+
+1. **Slowest Query Patterns**: Top 10 queries by execution time
+2. **Most Frequent Queries**: Top 10 queries by execution count
+3. **N+1 Detection**: Requests with suspiciously high query counts
+
+#### Query Pattern Analysis
+
+Each tracked query includes:
+
+- **Normalized Pattern**: SQL with parameters replaced by placeholders
+- **Execution Count**: How many times the query was run
+- **Average Duration**: Mean execution time in milliseconds
+- **Total Duration**: Cumulative execution time
+- **Last Executed**: Timestamp of most recent execution
+
+### Performance Optimization Workflow
+
+#### 1. Establish Baseline
+
+Before making changes:
+
+```bash
+# Reset metrics to start fresh
+curl -X POST -H "Cookie: your-session" \
+     http://localhost:4000/api/admin/database/performance/reset
+
+# Let system run under normal load for a period
+# Then check performance
+curl -H "Cookie: your-session" \
+     http://localhost:4000/api/admin/database/performance
+```
+
+#### 2. Identify Issues
+
+Look for:
+
+- **Slow Queries**: High average execution times
+- **N+1 Patterns**: High query counts per request
+- **Frequent Queries**: Opportunities for caching
+- **Missing Indexes**: Queries on non-indexed columns
+
+#### 3. Apply Optimizations
+
+Common optimizations:
+
+- **Add Database Indexes**: For frequently filtered columns
+- **Fix N+1 Queries**: Use `include` or `select` in Prisma queries
+- **Optimize Query Logic**: Reduce unnecessary data fetching
+- **Implement Caching**: For frequently accessed data
+
+#### 4. Measure Impact
+
+After changes:
+
+```bash
+# Reset metrics to measure impact
+curl -X POST -H "Cookie: your-session" \
+     http://localhost:4000/api/admin/database/performance/reset
+
+# Monitor improved performance
+curl -H "Cookie: your-session" \
+     http://localhost:4000/api/admin/database/performance
+```
+
+### Monitoring Best Practices
+
+#### Regular Monitoring Schedule
+
+- **Daily**: Check for new slow queries during peak usage
+- **Weekly**: Review N+1 patterns and frequent queries
+- **Monthly**: Reset metrics and establish new baselines
+- **After Deployments**: Monitor impact of code changes
+
+#### Performance Thresholds
+
+**Acceptable Performance:**
+- Average execution time: <50ms
+- Slow queries: <5% of total
+- Very slow queries: <1% of total
+- N+1 patterns: 0 detected
+
+**Warning Thresholds:**
+- Average execution time: 50-100ms
+- Slow queries: 5-10% of total
+- Very slow queries: 1-3% of total
+- N+1 patterns: 1-2 detected
+
+**Critical Thresholds:**
+- Average execution time: >100ms
+- Slow queries: >10% of total
+- Very slow queries: >3% of total
+- N+1 patterns: >2 detected
+
+#### Automated Recommendations
+
+The system provides automated optimization suggestions:
+
+- **Index Recommendations**: For frequently filtered columns
+- **N+1 Detection**: With specific query patterns to fix
+- **Caching Opportunities**: For frequently executed queries
+- **Query Optimization**: For slow-performing patterns
+
+### Database Index Management
+
+#### Current Indexes
+
+The system includes optimized indexes for:
+
+- **Event-scoped queries**: `incidents.eventId`, `userRoles.scopeId`
+- **User-scoped queries**: `incidents.reporterId`, `incidents.assignedResponderId`
+- **Status filtering**: `incidents.state`, `incidents.severity`
+- **Time-based queries**: `incidents.createdAt`, `incidents.updatedAt`
+- **Composite indexes**: Multi-column queries for complex filtering
+
+#### Adding New Indexes
+
+When the performance monitor suggests new indexes:
+
+1. **Identify the query pattern** from performance metrics
+2. **Analyze the WHERE clauses** to determine index columns
+3. **Add index to Prisma schema**:
+   ```prisma
+   model Incident {
+     // ... existing fields
+     @@index([eventId, state])  // Composite index
+     @@index([reporterId])      // Single column index
+   }
+   ```
+4. **Create migration**:
+   ```bash
+   npx prisma migrate dev --name add_performance_index
+   ```
+5. **Monitor impact** using performance metrics
+
+### Troubleshooting Performance Issues
+
+#### Common Issues and Solutions
+
+**High N+1 Query Count:**
+- **Cause**: Missing `include` statements in Prisma queries
+- **Solution**: Add proper relations in query includes
+- **Example**: Replace individual user queries with batch loading
+
+**Slow Event Queries:**
+- **Cause**: Missing indexes on `eventId` columns
+- **Solution**: Add composite indexes for event + filter combinations
+- **Monitor**: Check incident and user role queries
+
+**Frequent User Lookups:**
+- **Cause**: Session validation on every request
+- **Solution**: Implement user data caching
+- **Monitor**: User-related query patterns
+
+#### Emergency Performance Response
+
+When performance degrades:
+
+1. **Immediate**: Check performance metrics for sudden changes
+2. **Identify**: Look for new slow queries or N+1 patterns
+3. **Isolate**: Determine if issue is query-specific or system-wide
+4. **Mitigate**: Consider temporary query optimization or caching
+5. **Fix**: Implement proper database indexes or query improvements
+6. **Verify**: Monitor metrics to confirm resolution
+
 ## Troubleshooting System Issues
 
 ### Common SuperAdmin Issues

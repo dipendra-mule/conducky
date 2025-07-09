@@ -912,6 +912,67 @@ class PrismaClient {
           return result;
         });
       }),
+      updateMany: jest.fn(({ where, data }) => {
+        let count = 0;
+        inMemoryStore.incidents.forEach((incident, idx) => {
+          let matches = true;
+          
+          if (where.id && where.id.in) {
+            if (!where.id.in.includes(incident.id)) {
+              matches = false;
+            }
+          } else if (where.id && incident.id !== where.id) {
+            matches = false;
+          }
+          
+          if (where.eventId && incident.eventId !== where.eventId) {
+            matches = false;
+          }
+          
+          if (matches) {
+            inMemoryStore.incidents[idx] = {
+              ...incident,
+              ...data,
+              updatedAt: new Date().toISOString(),
+            };
+            count++;
+          }
+        });
+        
+        return { count };
+      }),
+      deleteMany: jest.fn(({ where }) => {
+        let count = 0;
+        const toDelete = [];
+        
+        inMemoryStore.incidents.forEach((incident, idx) => {
+          let matches = true;
+          
+          if (where.id && where.id.in) {
+            if (!where.id.in.includes(incident.id)) {
+              matches = false;
+            }
+          } else if (where.id && incident.id !== where.id) {
+            matches = false;
+          }
+          
+          if (where.eventId && incident.eventId !== where.eventId) {
+            matches = false;
+          }
+          
+          if (matches) {
+            toDelete.push(idx);
+            count++;
+          }
+        });
+        
+        // Delete from end to start to avoid index shifts
+        toDelete.reverse().forEach(idx => {
+          inMemoryStore.incidents.splice(idx, 1);
+        });
+        
+        return { count };
+      }),
     };
     this.auditLog = {
       create: jest.fn(({ data }) => {

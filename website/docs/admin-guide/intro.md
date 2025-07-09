@@ -29,9 +29,9 @@ This section is for **system administrators** and **SuperAdmins** who are respon
 - **Event administrators, responders, and attendees** (people using Conducky within events) should see the [User Guide](../user-guide/intro).
 - **Developers** (people contributing code to Conducky) should see the [Developer Docs](../developer-docs/intro).
 
-## SuperAdmin vs Event Admin
+## SystemAdmin vs Org Admin/Event Admin
 
-- **SuperAdmin**: Can create events, has system-wide access, manages the overall Conducky instance
+- **SystemAdmin**: Can create events, has system-wide access, manages the overall Conducky instance
 - **Event Admin**: Manages users, reports, and settings within a specific event (covered in User Guide)
 
 ---
