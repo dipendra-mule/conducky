@@ -12,6 +12,10 @@ import { UserResponse } from '../types';
 import { PrismaClient, CommentVisibility } from '@prisma/client';
 import { createUploadMiddleware, validateUploadedFiles } from '../utils/upload';
 
+// Import security middleware
+import { reportCreationRateLimit, commentCreationRateLimit, fileUploadRateLimit } from '../middleware/rate-limit';
+import { validateReport, validateComment, validateEvent, handleValidationErrors } from '../middleware/validation';
+
 const router = Router();
 const prisma = new PrismaClient();
 const eventService = new EventService(prisma);
@@ -317,7 +321,7 @@ router.get('/slug/:slug/user-role', requireRole(['reporter', 'responder', 'event
 // ========================================
 
 // Create event
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+router.post('/', validateEvent, handleValidationErrors, async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, slug } = req.body;
     
@@ -451,7 +455,7 @@ router.delete('/:eventId/roles', requireRole(['event_admin', 'system_admin']), a
 });
 
 // Create incident for event
-router.post('/:eventId/incidents', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), validateUploadedFiles, async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/incidents', reportCreationRateLimit, requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), validateUploadedFiles, async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;
@@ -888,7 +892,7 @@ router.patch('/:eventId/incidents/:incidentId/parties', requireRole(['event_admi
 });
 
 // Upload evidence for report
-router.post('/:eventId/incidents/:incidentId/evidence', requireRole(['event_admin', 'system_admin', 'responder']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/incidents/:incidentId/evidence', fileUploadRateLimit, requireRole(['event_admin', 'system_admin', 'responder']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { incidentId } = req.params;
     const evidenceFiles = req.files as Express.Multer.File[];
@@ -995,7 +999,7 @@ router.delete('/:eventId/incidents/:incidentId/evidence/:evidenceId', requireRol
 });
 
 // Upload event logo
-router.post('/:eventId/logo', requireRole(['event_admin', 'system_admin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/logo', fileUploadRateLimit, requireRole(['event_admin', 'system_admin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
     const logoFile = req.file;
@@ -1349,8 +1353,7 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
     if (process.env.NODE_ENV !== 'test') {
       console.log('[BULK DEBUG] Service result:', result);
     }
-    
-    if (!result.success) {
+      if (!result.success) {
       res.status(500).json({ error: result.error });
       return;
     }
@@ -1362,8 +1365,48 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
   }
 });
 
+// Get incidents for event by slug
+router.get('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { slug } = req.params;
+    
+    // Get event ID by slug
+    const eventId = await eventService.getEventIdBySlug(slug);    if (!eventId) {
+      res.status(404).json({ error: 'Event not found.' });
+      return;
+    }
+    
+    // Parse query parameters (match the existing /:eventId/incidents endpoint)
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const status = req.query.status as string;
+    const search = req.query.search as string;
+
+    const result = await incidentService.getIncidentsByEventId(eventId, {
+      page,
+      limit,
+      status,
+      search
+    });
+    
+    if (!result.success) {
+      if (result.error?.includes('not found')) {
+        res.status(404).json({ error: result.error });
+      } else {
+        res.status(500).json({ error: result.error });
+      }
+      return;
+    }
+
+    res.json(result.data);
+  } catch (error: any) {
+    console.error('Get incidents by slug error:', error);
+    res.status(500).json({ error: 'Failed to fetch incidents.' });
+  }
+});
+
 // Create incident for event by slug
-router.post('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/incidents', reportCreationRateLimit, requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;
@@ -1547,7 +1590,7 @@ router.get('/slug/:slug/logo', async (req: Request, res: Response): Promise<void
 });
 
 // Upload event logo by slug
-router.post('/slug/:slug/logo', requireRole(['event_admin', 'system_admin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/logo', fileUploadRateLimit, requireRole(['event_admin', 'system_admin']), uploadLogo.single('logo'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
     const logoFile = req.file;
@@ -1829,7 +1872,7 @@ router.patch('/slug/:slug/incidents/:incidentId/type', requireRole(['event_admin
 });
 
 // Create comment on report by slug
-router.post('/slug/:slug/incidents/:incidentId/comments', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/incidents/:incidentId/comments', commentCreationRateLimit, requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, incidentId } = req.params;
     const { body, visibility = 'public', isMarkdown = false } = req.body;
@@ -2148,7 +2191,7 @@ router.patch('/slug/:slug/incidents/:incidentId/title', requireRole(['reporter',
 });
 
 // Upload evidence for report by slug
-router.post('/slug/:slug/incidents/:incidentId/evidence', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+router.post('/slug/:slug/incidents/:incidentId/evidence', fileUploadRateLimit, requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug, incidentId } = req.params;
     

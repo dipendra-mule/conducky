@@ -8,6 +8,43 @@ This guide explains how to set up, run, and write automated tests for the backen
 ## Overview
 This document provides comprehensive testing guidance for Conducky, including unit tests, integration tests, and manual testing procedures.
 
+## Security Middleware and Rate Limiting
+
+### Rate Limiting Behavior
+
+Conducky implements comprehensive rate limiting to protect against brute force attacks and abuse. The rate limiting behavior differs between environments:
+
+- **Production**: Rate limiting is active and enforced
+- **Development**: Rate limiting is disabled to allow rapid testing and development
+- **Test**: Rate limiting is disabled to allow tests to run without interference
+
+### Environment Configuration
+
+Rate limiting is automatically disabled when:
+
+- `NODE_ENV === 'test'` (during automated testing)
+- `NODE_ENV === 'development'` (during development)
+- `NODE_ENV` is not set (defaults to development behavior)
+
+### Security Middleware Components
+
+The backend includes several security middleware layers:
+
+- **Security Headers**: CSP, HSTS, frame protection, XSS protection
+- **Rate Limiting**: Protection against brute force attacks, spam, and DoS
+- **Input Validation**: Server-side validation with sanitization
+- **Input Security Scanning**: Detection of XSS, SQL injection, path traversal, command injection
+- **File Upload Security**: Size limits, type validation, and rate limiting
+
+### Testing Security Features
+
+When testing security-related features:
+
+- Rate limiting tests run in production mode to verify rate limiting works
+- Input validation tests verify proper error handling and sanitization
+- Security headers tests ensure proper CSP and other security headers are applied
+- File upload tests verify size limits and type validation
+
 ## Social Login Testing
 
 ### OAuth Testing with Existing Accounts

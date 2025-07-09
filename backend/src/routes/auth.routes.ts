@@ -5,6 +5,10 @@ import { AuthController } from '../controllers/auth.controller';
 import { loginMiddleware, logoutMiddleware } from '../middleware/auth';
 import { PrismaClient } from '@prisma/client';
 
+// Import security middleware
+import { authRateLimit, passwordResetRateLimit } from '../middleware/rate-limit';
+import { validateUser, handleValidationErrors } from '../middleware/validation';
+
 // Extend session interface to include OAuth state
 declare module 'express-session' {
   interface SessionData {
@@ -44,10 +48,10 @@ const authService = new AuthService(prisma);
 const authController = new AuthController(authService);
 
 // Registration route
-router.post('/register', authController.register.bind(authController));
+router.post('/register', authRateLimit, authController.register.bind(authController));
 
 // Register with invite code
-router.post('/register/invite/:inviteCode', async (req: Request, res: Response): Promise<void> => {
+router.post('/register/invite/:inviteCode', authRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { inviteCode } = req.params;
     const { email, password, name } = req.body;
@@ -81,7 +85,7 @@ router.post('/register/invite/:inviteCode', async (req: Request, res: Response):
 });
 
 // Login route
-router.post('/login', loginMiddleware);
+router.post('/login', authRateLimit, loginMiddleware);
 
 // Logout route  
 router.post('/logout', logoutMiddleware);
@@ -166,7 +170,7 @@ router.get('/session-debug', async (req: any, res: Response): Promise<void> => {
 router.get('/check-email', authController.checkEmail.bind(authController));
 
 // Forgot password
-router.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
+router.post('/forgot-password', passwordResetRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email } = req.body;
     
@@ -195,7 +199,7 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
 });
 
 // Reset password
-router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+router.post('/reset-password', passwordResetRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { token, password } = req.body;
     

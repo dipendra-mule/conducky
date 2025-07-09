@@ -152,6 +152,8 @@ export const corsSecurityOptions = {
     'Authorization',
     'Cache-Control',
     'Pragma',
+    'Cookie',
+    ...(process.env.NODE_ENV === 'test' ? ['x-test-user-id', 'x-test-disable-auth'] : [])
   ],
   exposedHeaders: [
     'RateLimit-Limit',

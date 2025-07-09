@@ -3,6 +3,10 @@ import { IncidentService } from '../services/incident.service';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 
+// Import security middleware
+import { reportCreationRateLimit, fileUploadRateLimit } from '../middleware/rate-limit';
+import { validateReport, handleValidationErrors } from '../middleware/validation';
+
 const router = Router();
 const prisma = new PrismaClient();
 const incidentService = new IncidentService(prisma);
@@ -33,7 +37,7 @@ router.get('/:incidentId/evidence', async (req: Request, res: Response): Promise
 });
 
 // Upload evidence files for an incident
-router.post('/:incidentId/evidence', uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
+router.post('/:incidentId/evidence', fileUploadRateLimit, uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { incidentId } = req.params;
     

@@ -14,6 +14,21 @@ This section provides technical details for contributors and developers, includi
 
 ## Getting Started
 
+### Development Environment
+
+Conducky is designed to run in a Docker Compose environment for development. This ensures consistency across different development machines and mirrors the production environment.
+
+### Security and Rate Limiting
+
+The backend includes comprehensive security middleware:
+
+- **Rate Limiting**: Protects against brute force attacks and abuse
+- **Input Validation**: Server-side validation and sanitization
+- **Security Headers**: CSP, HSTS, and other security headers
+- **Authentication**: Session-based authentication with RBAC
+
+**Important for Development**: Rate limiting is automatically disabled in development and test environments to allow rapid testing without interference.
+
 ### Environment Variables (Standardized)
 
 Conducky uses environment variables for configuration. The required variables are now standardized and only those actually used by the codebase are included in the example files.
