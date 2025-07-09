@@ -1,6 +1,7 @@
 import { PrismaClient, NotificationType } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+import logger from '../config/logger';
 
 export interface NotificationQuery {
   page?: number;
@@ -153,7 +154,7 @@ export class NotificationService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching notifications:', error);
+      logger.error('Error fetching notifications:', error);
       return {
         success: false,
         error: 'Failed to fetch notifications.'
@@ -201,7 +202,7 @@ export class NotificationService {
         data: { message: 'Notification marked as read' }
       };
     } catch (error: any) {
-      console.error('Error marking notification as read:', error);
+      logger.error('Error marking notification as read:', error);
       return {
         success: false,
         error: 'Failed to mark notification as read.'
@@ -233,7 +234,7 @@ export class NotificationService {
         }
       };
     } catch (error: any) {
-      console.error('Error marking all notifications as read:', error);
+      logger.error('Error marking all notifications as read:', error);
       return {
         success: false,
         error: 'Failed to mark all notifications as read.'
@@ -274,7 +275,7 @@ export class NotificationService {
         data: { message: 'Notification deleted successfully' }
       };
     } catch (error: any) {
-      console.error('Error deleting notification:', error);
+      logger.error('Error deleting notification:', error);
       return {
         success: false,
         error: 'Failed to delete notification.'
@@ -328,7 +329,7 @@ export class NotificationService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching notification stats:', error);
+      logger.error('Error fetching notification stats:', error);
       return {
         success: false,
         error: 'Failed to fetch notification statistics.'
@@ -373,7 +374,7 @@ export class NotificationService {
         data: { notification }
       };
     } catch (error: any) {
-      console.error('Error creating notification:', error);
+      logger.error('Error creating notification:', error);
       return {
         success: false,
         error: 'Failed to create notification.'
@@ -490,7 +491,7 @@ export class NotificationService {
         data: { notificationsCreated }
       };
     } catch (error: any) {
-      console.error('Error creating incident event notifications:', error);
+      logger.error('Error creating incident event notifications:', error);
       return {
         success: false,
         error: 'Failed to create incident event notifications.'
@@ -515,7 +516,7 @@ export class NotificationService {
 
       return notification;
     } catch (error: any) {
-      console.error('Error creating test notification:', error);
+      logger.error('Error creating test notification:', error);
       return {
         success: false,
         error: 'Failed to create test notification.'

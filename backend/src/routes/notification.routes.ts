@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { NotificationService } from '../services/notification.service';
 import { UserResponse } from '../types';
 import { PrismaClient } from '@prisma/client';
+import { requireAuth } from '../middleware/auth';
+import logger from '../config/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -13,7 +15,7 @@ const notificationService = new NotificationService(prisma);
 
 
 // Mark notification as read
-router.patch('/:notificationId/read', async (req: any, res: Response): Promise<void> => {
+router.patch('/:notificationId/read', requireAuth, async (req: any, res: Response): Promise<void> => {
   const { notificationId } = req.params;
 
   try {
@@ -52,13 +54,13 @@ router.patch('/:notificationId/read', async (req: any, res: Response): Promise<v
     res.json({ message: 'Notification marked as read' });
 
   } catch (err: any) {
-    console.error('Error marking notification as read:', err);
+    logger.error('Error marking notification as read:', err);
     res.status(500).json({ error: 'Failed to mark notification as read.' });
   }
 });
 
 // Delete notification
-router.delete('/:notificationId', async (req: any, res: Response): Promise<void> => {
+router.delete('/:notificationId', requireAuth, async (req: any, res: Response): Promise<void> => {
   const { notificationId } = req.params;
 
   try {
@@ -83,7 +85,7 @@ router.delete('/:notificationId', async (req: any, res: Response): Promise<void>
 
     res.json(result.data);
   } catch (err: any) {
-    console.error('Error deleting notification:', err);
+    logger.error('Error deleting notification:', err);
     res.status(500).json({ error: 'Failed to delete notification.' });
   }
 });

@@ -3,6 +3,7 @@ import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { randomUUID } from 'crypto';
 import { logAudit } from '../utils/audit';
+import logger from '../config/logger';
 
 export interface EventCreateData {
   name: string;
@@ -70,7 +71,7 @@ export class EventService {
       });
       return event?.id || null;
     } catch (error) {
-      console.error('Error getting event ID by slug:', error);
+      logger.error('Error getting event ID by slug:', error);
       return null;
     }
   }
@@ -97,7 +98,7 @@ export class EventService {
 
       return roles[0]; // Return first role if no hierarchy match
     } catch (error) {
-      console.error('Error getting user role for event:', error);
+      logger.error('Error getting user role for event:', error);
       return null;
     }
   }
@@ -148,7 +149,7 @@ export class EventService {
         data: { event }
       };
     } catch (error: any) {
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', error);
       return {
         success: false,
         error: 'Event creation failed.'
@@ -170,7 +171,7 @@ export class EventService {
         data: { events }
       };
     } catch (error: any) {
-      console.error('Error listing events:', error);
+      logger.error('Error listing events:', error);
       return {
         success: false,
         error: 'Failed to list events.'
@@ -197,7 +198,7 @@ export class EventService {
         data: { event }
       };
     } catch (error: any) {
-      console.error('Error getting event details:', error);
+      logger.error('Error getting event details:', error);
       return {
         success: false,
         error: 'Failed to get event details.'
@@ -270,7 +271,7 @@ export class EventService {
         data: { userEventRole, message: 'Role assigned.' }
       };
     } catch (error: any) {
-      console.error('Error assigning user role:', error);
+      logger.error('Error assigning user role:', error);
       return {
         success: false,
         error: 'Failed to assign role.'
@@ -321,7 +322,7 @@ export class EventService {
         data: { message: 'Role removed.' }
       };
     } catch (error: any) {
-      console.error('Error removing role:', error);
+      logger.error('Error removing role:', error);
       return {
         success: false,
         error: 'Failed to remove role.'
@@ -392,7 +393,7 @@ export class EventService {
       for (const userRole of allRoles) {
         const userId = userRole.userId;
         if (!userRole.user) {
-          console.warn(`User data missing for userRole:`, userRole);
+          logger.warn(`User data missing for userRole:`, userRole);
           continue;
         }
         
@@ -422,7 +423,7 @@ export class EventService {
         data: { users: Object.values(users) }
       };
     } catch (error: any) {
-      console.error('Error listing users for event:', error);
+      logger.error('Error listing users for event:', error);
       return {
         success: false,
         error: 'Failed to list users for event.'
@@ -469,7 +470,7 @@ export class EventService {
         data: { roles }
       };
     } catch (error: any) {
-      console.error('Error fetching user roles for event:', error);
+      logger.error('Error fetching user roles for event:', error);
       return {
         success: false,
         error: 'Failed to fetch user roles for event.'
@@ -604,7 +605,7 @@ export class EventService {
         data: { users: paginatedUsers, total }
       };
     } catch (error: any) {
-      console.error('Error listing users for event:', error);
+      logger.error('Error listing users for event:', error);
       return {
         success: false,
         error: 'Failed to list users for event.'
@@ -671,7 +672,7 @@ export class EventService {
         data: { message: 'User updated.' }
       };
     } catch (error: any) {
-      console.error('Error updating user for event:', error);
+      logger.error('Error updating user for event:', error);
       return {
         success: false,
         error: 'Failed to update user for event.'
@@ -726,7 +727,7 @@ export class EventService {
         data: { message: 'User removed from event.' }
       };
     } catch (error: any) {
-      console.error('Error removing user from event:', error);
+      logger.error('Error removing user from event:', error);
       return {
         success: false,
         error: 'Failed to remove user from event.'
@@ -807,7 +808,7 @@ export class EventService {
         data: { event }
       };
     } catch (error: any) {
-      console.error('Error updating event:', error);
+      logger.error('Error updating event:', error);
       return {
         success: false,
         error: 'Failed to update event.'
@@ -849,7 +850,7 @@ export class EventService {
         data: { event }
       };
     } catch (error: any) {
-      console.error('Error uploading logo:', error);
+      logger.error('Error uploading logo:', error);
       return {
         success: false,
         error: 'Failed to upload logo.'
@@ -890,7 +891,7 @@ export class EventService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching logo:', error);
+      logger.error('Error fetching logo:', error);
       return {
         success: false,
         error: 'Failed to fetch logo.'
@@ -989,7 +990,7 @@ export class EventService {
         }
       };
     } catch (error: any) {
-      console.error('Error getting user profile:', error);
+      logger.error('Error getting user profile:', error);
       return {
         success: false,
         error: 'Failed to get user profile.'
@@ -1096,7 +1097,7 @@ export class EventService {
         }
       };
     } catch (error: any) {
-      console.error('Error getting user activity:', error);
+      logger.error('Error getting user activity:', error);
       return {
         success: false,
         error: 'Failed to get user activity.'
@@ -1177,7 +1178,7 @@ export class EventService {
         }
       };
     } catch (error: any) {
-      console.error('Error getting user reports:', error);
+      logger.error('Error getting user reports:', error);
       return {
         success: false,
         error: 'Failed to get user incidents.'
@@ -1292,7 +1293,7 @@ export class EventService {
         }
       };
     } catch (error: any) {
-      console.error('Error getting event card stats:', error);
+      logger.error('Error getting event card stats:', error);
       return {
         success: false,
         error: 'Failed to get event card statistics.'
@@ -1415,7 +1416,7 @@ export class EventService {
         }
       };
     } catch (error: any) {
-      console.error('Error getting event stats:', error);
+      logger.error('Error getting event stats:', error);
       return {
         success: false,
         error: 'Failed to get event statistics.'

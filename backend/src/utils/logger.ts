@@ -19,6 +19,7 @@ interface LogContext {
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
   private isProduction = process.env.NODE_ENV === 'production';
+  private isTest = process.env.NODE_ENV === 'test';
 
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
@@ -37,35 +38,34 @@ class Logger {
       return JSON.stringify(logEntry);
     }
   }
-
   error(message: string, context?: LogContext): void {
-    console.error(this.formatMessage(LogLevel.ERROR, message, context));
+    logger.error(this.formatMessage(LogLevel.ERROR, message, context));
   }
 
   warn(message: string, context?: LogContext): void {
-    console.warn(this.formatMessage(LogLevel.WARN, message, context));
+    logger.warn(this.formatMessage(LogLevel.WARN, message, context));
   }
 
   info(message: string, context?: LogContext): void {
     if (this.isDevelopment || this.isProduction) {
-      console.log(this.formatMessage(LogLevel.INFO, message, context));
+      logger.debug(this.formatMessage(LogLevel.INFO, message, context));
     }
   }
 
   debug(message: string, context?: LogContext): void {
     if (this.isDevelopment) {
-      console.log(this.formatMessage(LogLevel.DEBUG, message, context));
+      logger.debug(this.formatMessage(LogLevel.DEBUG, message, context));
     }
   }
 
-  // Security-specific logging
+  // Security-specific logging - always log security events
   security(message: string, context?: LogContext): void {
     const securityContext = {
       ...context,
       security: true,
       severity: 'high'
     };
-    console.error(this.formatMessage(LogLevel.ERROR, `SECURITY: ${message}`, securityContext));
+    logger.error(this.formatMessage(LogLevel.ERROR, `SECURITY: ${message}`, securityContext));
   }
 
   // Request logging helper

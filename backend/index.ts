@@ -13,6 +13,10 @@ import passport from 'passport';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import helmet from 'helmet';
+import morgan from 'morgan';
+
+// Import logger configuration
+import logger from './src/config/logger';
 
 // Import comprehensive security middleware
 import { securityHeaders, apiSecurityHeaders, corsSecurityOptions, inputSecurityCheck, requestSizeLimit } from './src/middleware/security';
@@ -27,13 +31,13 @@ import { validateEncryptionKey } from './src/utils/encryption';
 // Skip encryption validation in test environment unless specifically needed
 if (process.env.NODE_ENV !== 'test') {
   try {
-    console.log('🔐 Validating encryption key...');
+    logger.info('🔐 Validating encryption key...');
     validateEncryptionKey(process.env.ENCRYPTION_KEY || '');
-    console.log('✅ Encryption key validation passed');
+    logger.info('✅ Encryption key validation passed');
   } catch (error) {
-    console.error('❌ Encryption key validation failed:', (error as Error).message);
-    console.error('🔧 Please set a valid ENCRYPTION_KEY environment variable');
-    console.error('📖 See documentation for encryption key requirements');
+    logger.error('❌ Encryption key validation failed:', (error as Error).message);
+    logger.error('🔧 Please set a valid ENCRYPTION_KEY environment variable');
+    logger.error('📖 See documentation for encryption key requirements');
     process.exit(1);
   }
 }
@@ -75,13 +79,13 @@ if (process.env.NODE_ENV === 'production') {
 
 // Graceful shutdown handling
 process.on('SIGINT', async () => {
-  console.log('🛑 SIGINT received, shutting down gracefully...');
+  logger.info('🛑 SIGINT received, shutting down gracefully...');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  logger.info('🛑 SIGTERM received, shutting down gracefully...');
   await prisma.$disconnect();
   process.exit(0);
 });
@@ -102,12 +106,14 @@ app.use(inputSecurityCheck);
 // Add general rate limiting to all routes
 app.use(generalRateLimit);
 
-// Request logger (only in development)
+// HTTP request logging with Morgan
 if (process.env.NODE_ENV === 'development') {
-  app.use((req: any, _res: any, next: any) => {
-    console.log('[DEV] Request:', req.method, req.url);
-    next();
-  });
+  app.use(morgan('combined', { stream: (logger as any).stream }));
+} else {
+  app.use(morgan('combined', { 
+    stream: (logger as any).stream,
+    skip: (req: any, res: any) => res.statusCode < 400 // Only log errors in production
+  }));
 }
 
 // Add test-only authentication middleware for tests
@@ -402,8 +408,8 @@ app.use((req: any, res: any) => {
 if (process.env.NODE_ENV !== 'test') {
   const host = '0.0.0.0'; // Always bind to 0.0.0.0 for container compatibility
   app.listen(PORT, host, () => {
-    console.log(`Server running on ${host}:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`Server running on ${host}:${PORT}`);
+    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
 

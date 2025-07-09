@@ -4,6 +4,7 @@ import { AuthService } from '../services/auth.service';
 import { AuthController } from '../controllers/auth.controller';
 import { loginMiddleware, logoutMiddleware } from '../middleware/auth';
 import { PrismaClient } from '@prisma/client';
+import logger from '../config/logger';
 
 // Import security middleware
 import { authRateLimit, passwordResetRateLimit } from '../middleware/rate-limit';
@@ -55,8 +56,7 @@ router.post('/register/invite/:inviteCode', authRateLimit, async (req: Request, 
   try {
     const { inviteCode } = req.params;
     const { email, password, name } = req.body;
-    
-    if (!email || !password) {
+      if (!email || !password) {
       res.status(400).json({ error: 'Email and password are required.' });
       return;
     }
@@ -77,9 +77,8 @@ router.post('/register/invite/:inviteCode', authRateLimit, async (req: Request, 
       return;
     }
 
-    res.status(201).json(result.data);
-  } catch (error: any) {
-    console.error('Register with invite error:', error);
+    res.status(201).json(result.data);  } catch (error: any) {
+    logger.error('Register with invite error:', error);
     res.status(500).json({ error: 'Registration with invite failed.' });
   }
 });
@@ -106,9 +105,8 @@ router.get('/session', async (req: any, res: Response): Promise<void> => {
       });
     } else {
       res.json({ authenticated: false });
-    }
-  } catch (error: any) {
-    console.error('Session check error:', error);
+    }  } catch (error: any) {
+    logger.error('Session check error:', error);
     res.status(500).json({ error: 'Failed to check session.' });
   }
 });
@@ -159,9 +157,8 @@ router.get('/session-debug', async (req: any, res: Response): Promise<void> => {
       };
     }
 
-    res.json(diagnostics);
-  } catch (error: any) {
-    console.error('Session debug error:', error);
+    res.json(diagnostics);  } catch (error: any) {
+    logger.error('Session debug error:', error);
     res.status(500).json({ error: 'Debug failed', details: error.message });
   }
 });
@@ -191,9 +188,8 @@ router.post('/forgot-password', passwordResetRateLimit, async (req: Request, res
       return;
     }
 
-    res.json({ message: result.data?.message });
-  } catch (error: any) {
-    console.error('Forgot password error:', error);
+    res.json({ message: result.data?.message });  } catch (error: any) {
+    logger.error('Forgot password error:', error);
     res.status(500).json({ error: 'Password reset request failed.' });
   }
 });
@@ -202,8 +198,7 @@ router.post('/forgot-password', passwordResetRateLimit, async (req: Request, res
 router.post('/reset-password', passwordResetRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { token, password } = req.body;
-    
-    if (!token || !password) {
+      if (!token || !password) {
       res.status(400).json({ error: 'Token and password are required.' });
       return;
     }
@@ -215,9 +210,8 @@ router.post('/reset-password', passwordResetRateLimit, async (req: Request, res:
       return;
     }
 
-    res.json({ message: result.data?.message });
-  } catch (error: any) {
-    console.error('Reset password error:', error);
+    res.json({ message: result.data?.message });  } catch (error: any) {
+    logger.error('Reset password error:', error);
     res.status(500).json({ error: 'Password reset failed.' });
   }
 });
@@ -252,11 +246,8 @@ router.get('/validate-reset-token', async (req: Request, res: Response): Promise
       valid: result.data.valid,
       email: result.data.email,
       expiresAt: result.data.expiresAt
-    });
-  } catch (error: any) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Token validation error:', error);
-    }
+    });  } catch (error: any) {
+    logger.error('Token validation error:', error);
     res.status(500).json({ error: 'Token validation failed.' });
   }
 });
@@ -318,11 +309,10 @@ router.get('/google/callback',
     
     // Clear the state from session
     delete req.session.oauthState;
-    
-    // Save session before redirect to ensure persistence
+      // Save session before redirect to ensure persistence
     req.session.save((err) => {
-      if (err && process.env.NODE_ENV === 'development') {
-        console.error('Google OAuth session save error:', err);
+      if (err) {
+        logger.error('Google OAuth session save error:', err);
       }
       res.redirect(`${frontendUrl}${nextUrl}`);
     });
@@ -386,11 +376,10 @@ router.get('/github/callback',
     
     // Clear the state from session
     delete req.session.oauthState;
-    
-    // Save session before redirect to ensure persistence
+      // Save session before redirect to ensure persistence
     req.session.save((err) => {
-      if (err && process.env.NODE_ENV === 'development') {
-        console.error('GitHub OAuth session save error:', err);
+      if (err) {
+        logger.error('GitHub OAuth session save error:', err);
       }
       res.redirect(`${frontendUrl}${nextUrl}`);
     });

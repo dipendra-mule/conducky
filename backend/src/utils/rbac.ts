@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { UnifiedRBACService } from "../services/unified-rbac.service";
 import { EventService } from "../services/event.service";
 import { PrismaClient } from "@prisma/client";
+import logger from '../config/logger';
 
 const prisma = new PrismaClient();
 const unifiedRBAC = new UnifiedRBACService(prisma);
@@ -56,7 +57,7 @@ export function requireRole(allowedRoles: RoleName[]) {
             eventId = foundEventId;
           }
         } catch (error) {
-          console.error('[RBAC] Error fetching eventId by slug:', error);
+          logger.error('[RBAC] Error fetching eventId by slug:', error);
         }
       }
       
@@ -104,7 +105,7 @@ export function requireRole(allowedRoles: RoleName[]) {
       res.status(403).json({ error: "Forbidden: insufficient role" });
       return;
     } catch (err: any) {
-      console.error('[RBAC] Error in requireRole middleware:', err);
+      logger.error('[RBAC] Error in requireRole middleware:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -134,7 +135,7 @@ export function requireSystemAdmin() {
       
       next();
     } catch (err: any) {
-      console.error('[RBAC] Error in requireSystemAdmin middleware:', err);
+      logger.error('[RBAC] Error in requireSystemAdmin middleware:', err);
       res
         .status(500)
         .json({ error: "System Admin check failed", details: err.message });
@@ -176,7 +177,7 @@ export function requireOrgRole(allowedRoles: string[], organizationId?: string) 
       
       next();
     } catch (err: any) {
-      console.error('[RBAC] Error in requireOrgRole middleware:', err);
+      logger.error('[RBAC] Error in requireOrgRole middleware:', err);
       res.status(500).json({ error: "Organization role check failed", details: err.message });
     }
   };
@@ -219,7 +220,7 @@ export function requireEventRole(allowedRoles: string[], eventId?: string) {
       
       next();
     } catch (err: any) {
-      console.error('[RBAC] Error in requireEventRole middleware:', err);
+      logger.error('[RBAC] Error in requireEventRole middleware:', err);
       res.status(500).json({ error: "Event role check failed", details: err.message });
     }
   };

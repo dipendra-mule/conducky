@@ -10,6 +10,7 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import { prisma } from '../config/database';
 import { logAudit } from '../utils/audit';
+import logger from '../config/logger';
 
 /**
  * User type for authenticated requests
@@ -124,7 +125,7 @@ export function loginMiddleware(req: Request, res: Response, next: NextFunction)
             userId: undefined // No userId for failed login
           });
         } catch (auditErr) {
-          console.error('Failed to log audit for failed login:', auditErr);
+          logger.error('Failed to log audit for failed login:', auditErr);
         }
       }
       return res.status(401).json({ error: info?.message || 'Invalid credentials' });
@@ -144,7 +145,7 @@ export function loginMiddleware(req: Request, res: Response, next: NextFunction)
           userId: user.id
         });
       } catch (auditErr) {
-        console.error('Failed to log audit for successful login:', auditErr);
+        logger.error('Failed to log audit for successful login:', auditErr);
       }
       
       return res.json({
@@ -167,7 +168,7 @@ export function logoutMiddleware(req: Request, res: Response): void {
     // Destroy the session to fully clear it
     req.session.destroy((sessionErr: any) => {
       if (sessionErr) {
-        console.error('Session destruction failed:', sessionErr);
+        logger.error('Session destruction failed:', sessionErr);
         return res.status(500).json({ error: 'Logout failed.' });
       }
       

@@ -9,6 +9,10 @@ dist/
 # Generated files
 /generated/prisma
 
+# Log files
+logs/
+*.log
+
 # Test outputs
 ctrf/
 junit.xml

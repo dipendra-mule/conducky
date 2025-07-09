@@ -1,5 +1,6 @@
 import helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
+import logger from '../config/logger';
 
 /**
  * Security headers middleware configuration
@@ -136,7 +137,7 @@ export const corsSecurityOptions = {
         if (productionOrigins.includes(origin)) {
           return callback(null, true);
         } else {
-          console.warn(`CORS: Rejecting origin in production: ${origin}. Allowed:`, productionOrigins);
+          logger.warn(`CORS: Rejecting origin in production: ${origin}. Allowed:`, productionOrigins);
           return callback(new Error('Not allowed by CORS'), false);
         }
       }
@@ -146,7 +147,7 @@ export const corsSecurityOptions = {
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      console.warn(`CORS: Rejecting origin: ${origin}. Allowed origins:`, allowedOrigins);
+      logger.warn(`CORS: Rejecting origin: ${origin}. Allowed origins:`, allowedOrigins);
       return callback(new Error('Not allowed by CORS'), false);
     }
   },
@@ -361,7 +362,7 @@ export const inputSecurityCheck = (req: Request, res: Response, next: NextFuncti
     const bodyAttack = checkForAttacks(req.body, 'body');
     if (bodyAttack) {
       // Log the security violation for monitoring
-      console.warn(`Security violation detected: ${bodyAttack}`, {
+      logger.warn(`Security violation detected: ${bodyAttack}`, {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         path: req.path,
@@ -380,7 +381,7 @@ export const inputSecurityCheck = (req: Request, res: Response, next: NextFuncti
   if (req.query) {
     const queryAttack = checkForAttacks(req.query, 'query');
     if (queryAttack) {
-      console.warn(`Security violation detected: ${queryAttack}`, {
+      logger.warn(`Security violation detected: ${queryAttack}`, {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         path: req.path,
@@ -399,7 +400,7 @@ export const inputSecurityCheck = (req: Request, res: Response, next: NextFuncti
   if (req.params) {
     const paramsAttack = checkForAttacks(req.params, 'params');
     if (paramsAttack) {
-      console.warn(`Security violation detected: ${paramsAttack}`, {
+      logger.warn(`Security violation detected: ${paramsAttack}`, {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         path: req.path,

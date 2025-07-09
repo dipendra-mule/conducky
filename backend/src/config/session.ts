@@ -6,7 +6,7 @@
 
 import session from 'express-session';
 import { Request, Response, NextFunction } from 'express';
-import { logger } from '../utils/logger';
+import logger from '../config/logger';
 
 // Session timeout in milliseconds (2 hours for production, 24 hours for dev)
 const SESSION_TIMEOUT = process.env.NODE_ENV === 'production' 
@@ -47,7 +47,7 @@ export function sessionSecurity(req: Request, res: Response, next: NextFunction)
   // Check for session timeout (2 hours of inactivity)
   const inactivityTimeout = 2 * 60 * 60 * 1000; // 2 hours
   if (now - session.lastActivity > inactivityTimeout) {
-    logger.security('Session expired due to inactivity', {
+    logger.warn('Session expired due to inactivity', {
       userId: (req.user as any)?.id,
       lastActivity: new Date(session.lastActivity).toISOString(),
       ip: req.ip
@@ -65,7 +65,7 @@ export function sessionSecurity(req: Request, res: Response, next: NextFunction)
   // Check for absolute session timeout (8 hours max)
   const absoluteTimeout = 8 * 60 * 60 * 1000; // 8 hours
   if (now - session.createdAt > absoluteTimeout) {
-    logger.security('Session expired due to absolute timeout', {
+    logger.warn('Session expired due to absolute timeout', {
       userId: (req.user as any)?.id,
       createdAt: new Date(session.createdAt).toISOString(),
       ip: req.ip
@@ -134,12 +134,11 @@ export const getSessionConfig = (environment: string = process.env.NODE_ENV || '
           sameSite: 'lax' as const,
         },
       });
-    
-    case 'test':
+      case 'test':
       return session({
         ...baseConfig,
         cookie: {
-          secure: false,
+          secure: false, // Keep false for test environment
           httpOnly: true,
           maxAge: 60 * 60 * 1000, // 1 hour for tests
           sameSite: 'lax' as const,

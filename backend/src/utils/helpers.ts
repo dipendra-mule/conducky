@@ -7,6 +7,7 @@
 import crypto from 'crypto';
 import { prisma } from '../config/database';
 import { UnifiedRBACService } from '../services/unified-rbac.service';
+import logger from '../config/logger';
 
 /**
  * Get event ID by slug

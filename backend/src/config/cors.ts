@@ -5,6 +5,7 @@
  */
 
 import cors from 'cors';
+import logger from '../config/logger';
 
 // CORS configuration
 export const corsConfig = cors({

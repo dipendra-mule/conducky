@@ -5,13 +5,14 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
+import logger from '../config/logger';
 
 /**
  * Global request logger middleware
  * Logs all incoming requests with method and URL
  */
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
-  console.log('[GLOBAL] Incoming request:', req.method, req.url);
+  logger.info('[GLOBAL] Incoming request:', req.method, req.url);
   next();
 }
 
@@ -25,7 +26,7 @@ export function enhancedRequestLogger(req: Request, res: Response, next: NextFun
   // Override res.send to capture response details
   res.send = function(body: any) {
     const duration = Date.now() - start;
-    console.log(`[REQUEST] ${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
+    logger.info(`[REQUEST] ${req.method} ${req.url} - ${res.statusCode} - ${duration}ms`);
     return originalSend.call(this, body);
   };
   
@@ -36,7 +37,7 @@ export function enhancedRequestLogger(req: Request, res: Response, next: NextFun
  * Error logging middleware
  */
 export function errorLogger(err: any, req: Request, res: Response, next: NextFunction) {
-  console.error('[ERROR]', {
+  logger.error('[ERROR]', {
     method: req.method,
     url: req.url,
     error: err.message,
@@ -51,7 +52,7 @@ export function errorLogger(err: any, req: Request, res: Response, next: NextFun
  */
 export function devRequestLogger(req: Request, res: Response, next: NextFunction) {
   if (process.env.NODE_ENV === 'development') {
-    console.log('[DEV] Request Details:', {
+    logger.info('[DEV] Request Details:', {
       method: req.method,
       url: req.url,
       headers: req.headers,

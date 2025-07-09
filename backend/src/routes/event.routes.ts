@@ -15,6 +15,7 @@ import { createUploadMiddleware, validateUploadedFiles } from '../utils/upload';
 // Import security middleware
 import { reportCreationRateLimit, commentCreationRateLimit, fileUploadRateLimit } from '../middleware/rate-limit';
 import { validateReport, validateComment, validateEvent, handleValidationErrors } from '../middleware/validation';
+import logger from '../config/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -70,7 +71,7 @@ router.get('/slug/:slug/users', requireRole(['reporter', 'responder', 'event_adm
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get event users error:', error);
+    logger.error('Get event users error:', error);
     res.status(500).json({ error: 'Failed to fetch event users.' });
   }
 });
@@ -95,7 +96,7 @@ router.get('/slug/:slug/users/:userId', requireRole(['responder', 'event_admin',
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get user profile error:', error);
+    logger.error('Get user profile error:', error);
     res.status(500).json({ error: 'Failed to fetch user profile.' });
   }
 });
@@ -122,7 +123,7 @@ router.get('/slug/:slug/users/:userId/activity', requireRole(['responder', 'even
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get user activity error:', error);
+    logger.error('Get user activity error:', error);
     res.status(500).json({ error: 'Failed to fetch user activity.' });
   }
 });
@@ -150,7 +151,7 @@ router.get('/slug/:slug/users/:userId/incidents', requireRole(['responder', 'eve
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get user incidents error:', error);
+    logger.error('Get user incidents error:', error);
     res.status(500).json({ error: 'Failed to fetch user incidents.' });
   }
 });
@@ -197,7 +198,7 @@ router.patch('/slug/:slug/users/:userId', requireRole(['event_admin', 'system_ad
 
     res.json({ message: 'User updated.' });
   } catch (error: any) {
-    console.error('Update event user error:', error);
+    logger.error('Update event user error:', error);
     res.status(500).json({ error: 'Failed to update event user.' });
   }
 });
@@ -222,7 +223,7 @@ router.delete('/slug/:slug/users/:userId', requireRole(['event_admin', 'system_a
 
     res.json({ message: 'User removed from event.' });
   } catch (error: any) {
-    console.error('Remove user from event error:', error);
+    logger.error('Remove user from event error:', error);
     res.status(500).json({ error: 'Failed to remove user from event.' });
   }
 });
@@ -246,7 +247,7 @@ router.get('/slug/:slug/stats', requireRole(['responder', 'event_admin', 'system
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get event stats error:', error);
+    logger.error('Get event stats error:', error);
     res.status(500).json({ error: 'Failed to fetch event statistics.' });
   }
 });
@@ -270,7 +271,7 @@ router.get('/slug/:slug/cardstats', requireRole(['reporter', 'responder', 'event
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get event card stats error:', error);
+    logger.error('Get event card stats error:', error);
     res.status(500).json({ error: 'Failed to fetch event card statistics.' });
   }
 });
@@ -311,7 +312,7 @@ router.get('/slug/:slug/user-role', requireRole(['reporter', 'responder', 'event
     
     res.json({ role: highestRole });
   } catch (error: any) {
-    console.error('Get user role error:', error);
+    logger.error('Get user role error:', error);
     res.status(500).json({ error: 'Failed to fetch user role.' });
   }
 });
@@ -344,7 +345,7 @@ router.post('/', validateEvent, handleValidationErrors, async (req: Request, res
 
     res.status(201).json(result.data);
   } catch (error: any) {
-    console.error('Event creation error:', error);
+    logger.error('Event creation error:', error);
     res.status(500).json({ error: 'Failed to create event.' });
   }
 });
@@ -361,7 +362,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get events error:', error);
+    logger.error('Get events error:', error);
     res.status(500).json({ error: 'Failed to fetch events.' });
   }
 });
@@ -380,7 +381,7 @@ router.get('/:eventId', async (req: Request, res: Response): Promise<void> => {
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get event by ID error:', error);
+    logger.error('Get event by ID error:', error);
     res.status(500).json({ error: 'Failed to fetch event.' });
   }
 });
@@ -399,7 +400,7 @@ router.get('/:eventId/users', async (req: Request, res: Response): Promise<void>
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get event users error:', error);
+    logger.error('Get event users error:', error);
     res.status(500).json({ error: 'Failed to fetch event users.' });
   }
 });
@@ -424,7 +425,7 @@ router.post('/:eventId/roles', requireRole(['event_admin', 'system_admin']), asy
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Assign role error:', error);
+    logger.error('Assign role error:', error);
     res.status(500).json({ error: 'Failed to assign role.' });
   }
 });
@@ -449,7 +450,7 @@ router.delete('/:eventId/roles', requireRole(['event_admin', 'system_admin']), a
 
     res.json({ message: 'Role removed.' });
   } catch (error: any) {
-    console.error('Remove role error:', error);
+    logger.error('Remove role error:', error);
     res.status(500).json({ error: 'Failed to remove role.' });
   }
 });
@@ -523,13 +524,13 @@ router.post('/:eventId/incidents', reportCreationRateLimit, requireRole(['report
         await notifyIncidentEvent(result.data.incident.id, 'incident_submitted', user.id);
       }
     } catch (notificationError) {
-      console.error('Failed to send notifications for new incident:', notificationError);
+      logger.error('Failed to send notifications for new incident:', notificationError);
       // Don't fail the main operation if notifications fail
     }
 
     res.status(201).json(result.data);
   } catch (error: any) {
-    console.error('Create report error:', error);
+    logger.error('Create report error:', error);
     res.status(500).json({ error: 'Failed to create incident.' });
   }
 });
@@ -562,7 +563,7 @@ router.get('/:eventId/incidents', async (req: Request, res: Response): Promise<v
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get incidents error:', error);
+    logger.error('Get incidents error:', error);
     res.status(500).json({ error: 'Failed to fetch incidents.' });
   }
 });
@@ -581,7 +582,7 @@ router.get('/:eventId/incidents/:incidentId', async (req: Request, res: Response
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get incident error:', error);
+    logger.error('Get incident error:', error);
     res.status(500).json({ error: 'Failed to fetch incident.' });
   }
 });
@@ -613,7 +614,7 @@ router.get('/:eventId/incidents/:incidentId/state-history', requireRole(['event_
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get report state history error:', error);
+    logger.error('Get report state history error:', error);
     res.status(500).json({ error: 'Failed to fetch state history.' });
   }
 });
@@ -674,13 +675,13 @@ router.patch('/:eventId/incidents/:incidentId/state', requireRole(['event_admin'
         await notifyIncidentEvent(incidentId, 'incident_assigned', null);
       }
     } catch (notificationError) {
-      console.error('Failed to send notifications:', notificationError);
+      logger.error('Failed to send notifications:', notificationError);
       // Don't fail the main operation if notifications fail
     }
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Update report state error:', error);
+    logger.error('Update report state error:', error);
     res.status(500).json({ error: 'Failed to update report state.' });
   }
 });
@@ -721,7 +722,7 @@ router.patch('/:eventId/incidents/:incidentId/title', requireRole(['event_admin'
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Update report title error:', error);
+    logger.error('Update report title error:', error);
     res.status(500).json({ error: 'Failed to update report title.' });
   }
 });
@@ -746,7 +747,7 @@ router.patch('/:eventId/incidents/:incidentId/location', requireRole(['event_adm
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report location:', error);
+    logger.error('Error updating report location:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -776,7 +777,7 @@ router.patch('/:eventId/incidents/:incidentId/contact-preference', requireRole([
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report contact preference:', error);
+    logger.error('Error updating report contact preference:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -806,7 +807,7 @@ router.patch('/:eventId/incidents/:incidentId/type', requireRole(['event_admin',
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report type:', error);
+    logger.error('Error updating report type:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -836,7 +837,7 @@ router.patch('/:eventId/incidents/:incidentId/description', requireRole(['event_
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report description:', error);
+    logger.error('Error updating report description:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -861,7 +862,7 @@ router.patch('/:eventId/incidents/:incidentId/incident-date', requireRole(['even
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report incident date:', error);
+    logger.error('Error updating report incident date:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -886,7 +887,7 @@ router.patch('/:eventId/incidents/:incidentId/parties', requireRole(['event_admi
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report parties:', error);
+    logger.error('Error updating report parties:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -927,7 +928,7 @@ router.post('/:eventId/incidents/:incidentId/evidence', fileUploadRateLimit, req
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Upload evidence error:', error);
+    logger.error('Upload evidence error:', error);
     res.status(500).json({ error: 'Failed to upload evidence.' });
   }
 });
@@ -946,7 +947,7 @@ router.get('/:eventId/incidents/:incidentId/evidence', async (req: Request, res:
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get evidence error:', error);
+    logger.error('Get evidence error:', error);
     res.status(500).json({ error: 'Failed to fetch evidence.' });
   }
 });
@@ -974,7 +975,7 @@ router.get('/:eventId/incidents/:incidentId/evidence/:evidenceId/download', asyn
     res.setHeader('Content-Disposition', `attachment; filename="${evidence.filename}"`);
     res.send(evidence.data);
   } catch (error: any) {
-    console.error('Download evidence error:', error);
+    logger.error('Download evidence error:', error);
     res.status(500).json({ error: 'Failed to download evidence.' });
   }
 });
@@ -993,7 +994,7 @@ router.delete('/:eventId/incidents/:incidentId/evidence/:evidenceId', requireRol
 
     res.json({ message: 'Evidence deleted successfully.' });
   } catch (error: any) {
-    console.error('Delete evidence error:', error);
+    logger.error('Delete evidence error:', error);
     res.status(500).json({ error: 'Failed to delete evidence.' });
   }
 });
@@ -1026,7 +1027,7 @@ router.post('/:eventId/logo', fileUploadRateLimit, requireRole(['event_admin', '
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Upload logo error:', error);
+    logger.error('Upload logo error:', error);
     res.status(500).json({ error: 'Failed to upload logo.' });
   }
 });
@@ -1054,7 +1055,7 @@ router.get('/:eventId/logo', async (req: Request, res: Response): Promise<void> 
     res.setHeader('Content-Disposition', `inline; filename="${logo.filename}"`);
     res.send(logo.data);
   } catch (error: any) {
-    console.error('Get logo error:', error);
+    logger.error('Get logo error:', error);
     res.status(500).json({ error: 'Failed to get logo.' });
   }
 });
@@ -1081,7 +1082,7 @@ router.get('/slug/:slug', async (req: Request, res: Response): Promise<void> => 
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get event by slug error:', error);
+    logger.error('Get event by slug error:', error);
     res.status(500).json({ error: 'Failed to fetch event.' });
   }
 });
@@ -1112,7 +1113,7 @@ router.patch('/slug/:slug', requireRole(['event_admin', 'system_admin']), async 
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Event update error:', error);
+    logger.error('Event update error:', error);
     res.status(500).json({ error: 'Failed to update event.' });
   }
 });
@@ -1187,14 +1188,14 @@ router.get('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get event reports error:', error);
+    logger.error('Get event reports error:', error);
     res.status(500).json({ error: 'Failed to fetch event incidents.' });
   }
 });
 
 // Test route to verify routing is working
 router.get('/slug/:slug/test-export', (req: Request, res: Response) => {
-  console.log('[TEST] Test export route reached');
+  logger.debug('[TEST] Test export route reached');
   res.json({ message: 'Test route works', slug: req.params.slug });
 });
 
@@ -1303,7 +1304,7 @@ router.get('/slug/:slug/incidents/export', requireRole(['reporter', 'responder',
       res.send(textContent);
     }
   } catch (error: any) {
-    console.error('Export event reports error:', error);
+    logger.error('Export event reports error:', error);
     res.status(500).json({ error: 'Failed to export event incidents.' });
   }
 });
@@ -1340,7 +1341,7 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
 
     // Process bulk action
     if (process.env.NODE_ENV !== 'test') {
-      console.log('[BULK DEBUG] Calling bulkUpdateReports with:', { eventId, incidentIds, action, options: { assignedTo, status, notes, userId: user.id } });
+      logger.debug('[BULK DEBUG] Calling bulkUpdateReports with:', { eventId, incidentIds, action, options: { assignedTo, status, notes, userId: user.id } });
     }
     
     const result = await incidentService.bulkUpdateIncidents(eventId, incidentIds, action, {
@@ -1351,7 +1352,7 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
     });
     
     if (process.env.NODE_ENV !== 'test') {
-      console.log('[BULK DEBUG] Service result:', result);
+      logger.debug('[BULK DEBUG] Service result:', result);
     }
       if (!result.success) {
       res.status(500).json({ error: result.error });
@@ -1360,7 +1361,7 @@ router.post('/slug/:slug/incidents/bulk', requireRole(['responder', 'event_admin
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Bulk action error:', error);
+    logger.error('Bulk action error:', error);
     res.status(500).json({ error: 'Failed to perform bulk action.' });
   }
 });
@@ -1400,7 +1401,7 @@ router.get('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get incidents by slug error:', error);
+    logger.error('Get incidents by slug error:', error);
     res.status(500).json({ error: 'Failed to fetch incidents.' });
   }
 });
@@ -1481,13 +1482,13 @@ router.post('/slug/:slug/incidents', reportCreationRateLimit, requireRole(['repo
         await notifyIncidentEvent(result.data.incident.id, 'incident_submitted', user.id);
       }
     } catch (notificationError) {
-      console.error('Failed to send notifications for new incident:', notificationError);
+      logger.error('Failed to send notifications for new incident:', notificationError);
       // Don't fail the main operation if notifications fail
     }
 
     res.status(201).json(result.data);
   } catch (error: any) {
-    console.error('Create report by slug error:', error);
+    logger.error('Create report by slug error:', error);
     res.status(500).json({ error: 'Failed to create incident.' });
   }
 });
@@ -1517,7 +1518,7 @@ router.get('/slug/:slug/my-roles', async (req: Request, res: Response): Promise<
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get user roles by slug error:', error);
+    logger.error('Get user roles by slug error:', error);
     res.status(500).json({ error: 'Failed to fetch user roles.' });
   }
 });
@@ -1562,7 +1563,7 @@ router.get('/slug/:slug/incidents/:incidentId', async (req: Request, res: Respon
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get report by slug error:', error);
+    logger.error('Get report by slug error:', error);
     res.status(500).json({ error: 'Failed to fetch incident.' });
   }
 });
@@ -1584,7 +1585,7 @@ router.get('/slug/:slug/logo', async (req: Request, res: Response): Promise<void
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.send(data);
   } catch (error: any) {
-    console.error('Get event logo error:', error);
+    logger.error('Get event logo error:', error);
     res.status(500).json({ error: 'Failed to get event logo.' });
   }
 });
@@ -1621,7 +1622,7 @@ router.post('/slug/:slug/logo', fileUploadRateLimit, requireRole(['event_admin',
     
     res.json(result.data);
   } catch (error: any) {
-    console.error('Upload logo by slug error:', error);
+    logger.error('Upload logo by slug error:', error);
     res.status(500).json({ error: 'Failed to upload logo.' });
   }
 });
@@ -1647,7 +1648,7 @@ router.get('/slug/:slug/invites', requireRole(['event_admin', 'system_admin']), 
     
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get invites by slug error:', error);
+    logger.error('Get invites by slug error:', error);
     res.status(500).json({ error: 'Failed to fetch invites.' });
   }
 });
@@ -1707,7 +1708,7 @@ router.post('/slug/:slug/invites', requireRole(['event_admin', 'system_admin']),
     
     res.status(201).json(result.data);
   } catch (error: any) {
-    console.error('Create invite by slug error:', error);
+    logger.error('Create invite by slug error:', error);
     res.status(500).json({ error: 'Failed to create invite.' });
   }
 });
@@ -1738,7 +1739,7 @@ router.patch('/slug/:slug/invites/:inviteId', requireRole(['event_admin', 'syste
     
     res.json(result.data);
   } catch (error: any) {
-    console.error('Update invite error:', error);
+    logger.error('Update invite error:', error);
     res.status(500).json({ error: 'Failed to update invite.' });
   }
 });
@@ -1770,7 +1771,7 @@ router.patch('/slug/:slug/incidents/:incidentId/incident-date', requireRole(['ev
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report incident date by slug:', error);
+    logger.error('Error updating report incident date by slug:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -1802,7 +1803,7 @@ router.patch('/slug/:slug/incidents/:incidentId/parties', requireRole(['event_ad
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report parties by slug:', error);
+    logger.error('Error updating report parties by slug:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -1834,7 +1835,7 @@ router.patch('/slug/:slug/incidents/:incidentId/description', requireRole(['even
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report description by slug:', error);
+    logger.error('Error updating report description by slug:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -1866,7 +1867,7 @@ router.patch('/slug/:slug/incidents/:incidentId/type', requireRole(['event_admin
     
     res.json(result.data);
   } catch (error) {
-    console.error('Error updating report type by slug:', error);
+    logger.error('Error updating report type by slug:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -1956,13 +1957,13 @@ router.post('/slug/:slug/incidents/:incidentId/comments', commentCreationRateLim
     try {
       await notifyIncidentEvent(incidentId, 'comment_added', user.id);
     } catch (error) {
-      console.error('Failed to create comment notification:', error);
+      logger.error('Failed to create comment notification:', error);
       // Don't fail the request if notification creation fails
     }
 
     res.status(201).json(result.data);
   } catch (error: any) {
-    console.error('Create comment error:', error);
+    logger.error('Create comment error:', error);
     res.status(500).json({ error: 'Failed to create comment.' });
   }
 });
@@ -2064,7 +2065,7 @@ router.get('/slug/:slug/incidents/:incidentId/comments', requireRole(['reporter'
       comments: filteredComments
     });
   } catch (error: any) {
-    console.error('Get comments error:', error);
+    logger.error('Get comments error:', error);
     res.status(500).json({ error: 'Failed to fetch comments.' });
   }
 });
@@ -2130,7 +2131,7 @@ router.patch('/slug/:slug/incidents/:incidentId', requireRole(['responder', 'eve
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Update report error:', error);
+    logger.error('Update report error:', error);
     res.status(500).json({ error: 'Failed to update incident.' });
   }
 });
@@ -2185,7 +2186,7 @@ router.patch('/slug/:slug/incidents/:incidentId/title', requireRole(['reporter',
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Update report title error:', error);
+    logger.error('Update report title error:', error);
     res.status(500).json({ error: 'Failed to update report title.' });
   }
 });
@@ -2267,7 +2268,7 @@ router.post('/slug/:slug/incidents/:incidentId/evidence', fileUploadRateLimit, r
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Upload evidence error:', error);
+    logger.error('Upload evidence error:', error);
     res.status(500).json({ error: 'Failed to upload evidence.' });
   }
 });
@@ -2325,7 +2326,7 @@ router.get('/slug/:slug/incidents/:incidentId/evidence', requireRole(['reporter'
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get evidence files error:', error);
+    logger.error('Get evidence files error:', error);
     res.status(500).json({ error: 'Failed to fetch evidence files.' });
   }
 });
@@ -2383,7 +2384,7 @@ router.delete('/slug/:slug/incidents/:incidentId/evidence/:evidenceId', requireR
 
     res.json({ message: 'Evidence deleted successfully.' });
   } catch (error: any) {
-    console.error('Delete evidence error:', error);
+    logger.error('Delete evidence error:', error);
     res.status(500).json({ error: 'Failed to delete evidence.' });
   }
 });

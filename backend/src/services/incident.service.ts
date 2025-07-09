@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
+import logger from '../config/logger';
 
 export interface IncidentCreateData {
   eventId: string;
@@ -239,7 +240,7 @@ export class IncidentService {
           targetId: incident.id,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for incident creation:', auditError);
+        logger.error('Failed to log audit for incident creation:', auditError);
         // Don't fail the incident creation if audit logging fails
       }
 
@@ -267,7 +268,7 @@ export class IncidentService {
               targetId: evidenceFile.id,
             });
           } catch (auditError) {
-            console.error('Failed to log audit for evidence upload:', auditError);
+            logger.error('Failed to log audit for evidence upload:', auditError);
             // Don't fail the process if audit logging fails
           }
         }
@@ -278,7 +279,7 @@ export class IncidentService {
         data: { incident }
       };
     } catch (error: any) {
-      console.error('Error creating incident:', error);
+      logger.error('Error creating incident:', error);
       return {
         success: false,
         error: 'Failed to submit incident.'
@@ -343,7 +344,7 @@ export class IncidentService {
         data: { incidents }
       };
     } catch (error: any) {
-      console.error('Error fetching incidents:', error);
+      logger.error('Error fetching incidents:', error);
       return {
         success: false,
         error: 'Failed to fetch incidents.'
@@ -367,7 +368,7 @@ export class IncidentService {
 
       return this.getIncidentsByEventId(event.id, query);
     } catch (error: any) {
-      console.error('Error fetching reports by slug:', error);
+      logger.error('Error fetching reports by slug:', error);
       return {
         success: false,
         error: 'Failed to fetch incidents.'
@@ -412,7 +413,7 @@ export class IncidentService {
         data: { incident }
       };
     } catch (error: any) {
-      console.error('Error fetching incident:', error);
+      logger.error('Error fetching incident:', error);
       return {
         success: false,
         error: 'Failed to fetch incident.'
@@ -436,7 +437,7 @@ export class IncidentService {
 
       return this.getIncidentById(incidentId, event.id);
     } catch (error: any) {
-      console.error('Error fetching report by slug:', error);
+      logger.error('Error fetching report by slug:', error);
       return {
         success: false,
         error: 'Failed to fetch incident.'
@@ -602,7 +603,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report state:', error);
+      logger.error('Error updating report state:', error);
       return {
         success: false,
         error: 'Failed to update report state.'
@@ -658,7 +659,7 @@ export class IncidentService {
         data: { history }
       };
     } catch (error: any) {
-      console.error('Error fetching report state history:', error);
+      logger.error('Error fetching report state history:', error);
       return {
         success: false,
         error: 'Failed to fetch state history.'
@@ -729,7 +730,7 @@ export class IncidentService {
           targetId: incidentId,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for title update:', auditError);
+        logger.error('Failed to log audit for title update:', auditError);
         // Don't fail the update if audit logging fails
       }
 
@@ -738,7 +739,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report title:', error);
+      logger.error('Error updating report title:', error);
       return {
         success: false,
         error: 'Failed to update report title.'
@@ -807,7 +808,7 @@ export class IncidentService {
         }
       };
     } catch (error: any) {
-      console.error('Error updating incident:', error);
+      logger.error('Error updating incident:', error);
       return {
         success: false,
         error: 'Failed to update incident.'
@@ -882,7 +883,7 @@ export class IncidentService {
         data: { files: created }
       };
     } catch (error: any) {
-      console.error('Error uploading evidence files:', error);
+      logger.error('Error uploading evidence files:', error);
       return {
         success: false,
         error: 'Failed to upload evidence files.'
@@ -925,7 +926,7 @@ export class IncidentService {
         data: { files }
       };
     } catch (error: any) {
-      console.error('Error listing evidence files:', error);
+      logger.error('Error listing evidence files:', error);
       return {
         success: false,
         error: 'Failed to list evidence files.'
@@ -959,7 +960,7 @@ export class IncidentService {
         }
       };
     } catch (error: any) {
-      console.error('Error downloading evidence file:', error);
+      logger.error('Error downloading evidence file:', error);
       return {
         success: false,
         error: 'Failed to download evidence file.'
@@ -1006,7 +1007,7 @@ export class IncidentService {
         data: { message: 'Evidence file deleted.' }
       };
     } catch (error: any) {
-      console.error('Error deleting evidence file:', error);
+      logger.error('Error deleting evidence file:', error);
       return {
         success: false,
         error: 'Failed to delete evidence file.'
@@ -1284,7 +1285,7 @@ export class IncidentService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching user incidents:', error);
+      logger.error('Error fetching user incidents:', error);
       return {
         success: false,
         error: 'Failed to fetch user incidents.'
@@ -1346,7 +1347,7 @@ export class IncidentService {
         data: { hasAccess, isReporter, roles }
       };
     } catch (error: any) {
-      console.error('Error checking report access:', error);
+      logger.error('Error checking report access:', error);
       return {
         success: false,
         error: 'Failed to check report access.'
@@ -1386,7 +1387,7 @@ export class IncidentService {
         }
       };
     } catch (error: any) {
-      console.error('Error checking report edit access:', error);
+      logger.error('Error checking report edit access:', error);
       return {
         success: false,
         error: 'Failed to check report edit access.'
@@ -1448,7 +1449,7 @@ export class IncidentService {
           targetId: incidentId,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for location update:', auditError);
+        logger.error('Failed to log audit for location update:', auditError);
         // Don't fail the update if audit logging fails
       }
 
@@ -1457,7 +1458,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report location:', error);
+      logger.error('Error updating report location:', error);
       return {
         success: false,
         error: 'Failed to update report location.'
@@ -1524,7 +1525,7 @@ export class IncidentService {
           targetId: incidentId,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for contact preference update:', auditError);
+        logger.error('Failed to log audit for contact preference update:', auditError);
         // Don't fail the update if audit logging fails
       }
 
@@ -1533,7 +1534,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report contact preference:', error);
+      logger.error('Error updating report contact preference:', error);
       return {
         success: false,
         error: 'Failed to update report contact preference.'
@@ -1605,7 +1606,7 @@ export class IncidentService {
           targetId: incidentId,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for type update:', auditError);
+        logger.error('Failed to log audit for type update:', auditError);
         // Don't fail the update if audit logging fails
       }
 
@@ -1614,7 +1615,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report type:', error);
+      logger.error('Error updating report type:', error);
       return {
         success: false,
         error: 'Failed to update report type.'
@@ -1692,7 +1693,7 @@ export class IncidentService {
           targetId: incidentId,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for description update:', auditError);
+        logger.error('Failed to log audit for description update:', auditError);
         // Don't fail the update if audit logging fails
       }
 
@@ -1701,7 +1702,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report description:', error);
+      logger.error('Error updating report description:', error);
       return {
         success: false,
         error: 'Failed to update report description.'
@@ -1787,7 +1788,7 @@ export class IncidentService {
           targetId: incidentId,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for incident date update:', auditError);
+        logger.error('Failed to log audit for incident date update:', auditError);
         // Don't fail the update if audit logging fails
       }
 
@@ -1796,7 +1797,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report incident date:', error);
+      logger.error('Error updating report incident date:', error);
       return {
         success: false,
         error: 'Failed to update report incident date.'
@@ -1867,7 +1868,7 @@ export class IncidentService {
           targetId: incidentId,
         });
       } catch (auditError) {
-        console.error('Failed to log audit for parties update:', auditError);
+        logger.error('Failed to log audit for parties update:', auditError);
         // Don't fail the update if audit logging fails
       }
 
@@ -1876,7 +1877,7 @@ export class IncidentService {
         data: { incident: updated }
       };
     } catch (error: any) {
-      console.error('Error updating report parties:', error);
+      logger.error('Error updating report parties:', error);
       return {
         success: false,
         error: 'Failed to update report parties involved.'
@@ -2126,7 +2127,7 @@ export class IncidentService {
             stats!.total += count;
           });
         } catch (statsError) {
-          console.error('Error fetching stats:', statsError);
+          logger.error('Error fetching stats:', statsError);
           // Don't fail the entire request if stats fail
           stats = {
             submitted: 0,
@@ -2154,7 +2155,7 @@ export class IncidentService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching event incidents:', error);
+      logger.error('Error fetching event incidents:', error);
       return {
         success: false,
         error: 'Failed to fetch event reports'
@@ -2220,7 +2221,7 @@ export class IncidentService {
                     targetId: incidentId,
                   });
                 } catch (auditError) {
-                  console.error('Failed to log audit for bulk assign:', auditError);
+                  logger.error('Failed to log audit for bulk assign:', auditError);
                 }
               } else {
                 errors.push(`Report ${incidentId}: assignedTo is required for assign action`);
@@ -2252,7 +2253,7 @@ export class IncidentService {
                     targetId: incidentId,
                   });
                 } catch (auditError) {
-                  console.error('Failed to log audit for bulk status change:', auditError);
+                  logger.error('Failed to log audit for bulk status change:', auditError);
                 }
               } else {
                 errors.push(`Report ${incidentId}: status is required for status action`);
@@ -2286,7 +2287,7 @@ export class IncidentService {
                   targetId: incidentId,
                 });
               } catch (auditError) {
-                console.error('Failed to log audit for bulk delete:', auditError);
+                logger.error('Failed to log audit for bulk delete:', auditError);
               }
               break;
 
@@ -2306,7 +2307,7 @@ export class IncidentService {
         }
       };
     } catch (error: any) {
-      console.error('Error in bulk update incidents:', error);
+      logger.error('Error in bulk update incidents:', error);
       return {
         success: false,
         error: 'Failed to perform bulk update'

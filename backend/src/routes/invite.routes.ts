@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { InviteService } from '../services/invite.service';
 import { PrismaClient } from '@prisma/client';
+import { requireAuth } from '../middleware/auth';
+import logger from '../config/logger';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -20,13 +22,13 @@ router.get('/:code', async (req: Request, res: Response): Promise<void> => {
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Get invite details error:', error);
+    logger.error('Get invite details error:', error);
     res.status(500).json({ error: 'Failed to get invite details.' });
   }
 });
 
 // Redeem invite code
-router.post('/:code/redeem', async (req: any, res: Response): Promise<void> => {
+router.post('/:code/redeem', requireAuth, async (req: any, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
       res.status(401).json({ error: 'Not authenticated' });
@@ -52,7 +54,7 @@ router.post('/:code/redeem', async (req: any, res: Response): Promise<void> => {
 
     res.json(result.data);
   } catch (error: any) {
-    console.error('Invite redeem error:', error);
+    logger.error('Invite redeem error:', error);
     res.status(500).json({ error: 'Failed to redeem invite.' });
   }
 });

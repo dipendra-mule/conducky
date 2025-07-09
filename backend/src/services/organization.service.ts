@@ -2,6 +2,7 @@ import { PrismaClient, Organization, OrganizationRole, OrganizationLogo, Organiz
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
+import logger from '../config/logger';
 
 // Type for user role data from unified RBAC system
 interface UserRoleWithDetails {
@@ -799,7 +800,7 @@ export class OrganizationService {
         data: { organization }
       };
     } catch (error: any) {
-      console.error('Error uploading organization logo:', error);
+      logger.error('Error uploading organization logo:', error);
       return {
         success: false,
         error: 'Failed to upload logo.'
@@ -840,7 +841,7 @@ export class OrganizationService {
         }
       };
     } catch (error: any) {
-      console.error('Error fetching organization logo:', error);
+      logger.error('Error fetching organization logo:', error);
       return {
         success: false,
         error: 'Failed to fetch logo.'

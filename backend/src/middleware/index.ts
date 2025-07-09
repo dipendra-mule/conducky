@@ -1,3 +1,4 @@
+import logger from '../config/logger';
 /**
  * Middleware Module Exports
  * 

@@ -2,6 +2,7 @@ import { PrismaClient, CommentVisibility } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { Prisma } from '@prisma/client';
 import { logAudit } from '../utils/audit';
+import logger from '../config/logger';
 
 export interface CommentCreateData {
   incidentId: string;
@@ -110,7 +111,7 @@ export class CommentService {
         data: { comment }
       };
     } catch (error: unknown) {
-      console.error('Error creating comment:', error);
+      logger.error('Error creating comment:', error);
       return {
         success: false,
         error: 'Failed to create comment.'
@@ -224,7 +225,7 @@ export class CommentService {
         }
       };
     } catch (error: unknown) {
-      console.error('Error fetching report comments:', error);
+      logger.error('Error fetching report comments:', error);
       return {
         success: false,
         error: 'Failed to fetch comments.'
@@ -262,7 +263,7 @@ export class CommentService {
         data: { comment }
       };
     } catch (error: unknown) {
-      console.error('Error fetching comment:', error);
+      logger.error('Error fetching comment:', error);
       return {
         success: false,
         error: 'Failed to fetch comment.'
@@ -330,7 +331,7 @@ export class CommentService {
         data: { comment }
       };
     } catch (error: unknown) {
-      console.error('Error updating comment:', error);
+      logger.error('Error updating comment:', error);
       return {
         success: false,
         error: 'Failed to update comment.'
@@ -388,7 +389,7 @@ export class CommentService {
         data: { message: 'Comment deleted successfully' }
       };
     } catch (error: unknown) {
-      console.error('Error deleting comment:', error);
+      logger.error('Error deleting comment:', error);
       return {
         success: false,
         error: 'Failed to delete comment.'
@@ -414,7 +415,7 @@ export class CommentService {
         data: { count }
       };
     } catch (error: unknown) {
-      console.error('Error getting comment count:', error);
+      logger.error('Error getting comment count:', error);
       return {
         success: false,
         error: 'Failed to get comment count.'
@@ -536,7 +537,7 @@ export class CommentService {
         }
       };
     } catch (error: unknown) {
-      console.error('Error fetching comments by author:', error);
+      logger.error('Error fetching comments by author:', error);
       return {
         success: false,
         error: 'Failed to fetch comments by author.'
@@ -589,7 +590,7 @@ export class CommentService {
         }
       };
     } catch (error: unknown) {
-      console.error('Error checking comment visibility permissions:', error);
+      logger.error('Error checking comment visibility permissions:', error);
       return {
         success: false,
         error: 'Failed to check comment permissions.'
