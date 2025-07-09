@@ -68,6 +68,11 @@ if (isNaN(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error(`Invalid PORT value: ${process.env.PORT}`);
 }
 
+// Trust proxy in production (required for Railway and other cloud platforms)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Graceful shutdown handling
 process.on('SIGINT', async () => {
   console.log('🛑 SIGINT received, shutting down gracefully...');
