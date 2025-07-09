@@ -927,7 +927,6 @@ class PrismaClient {
             // Helper function to check if a log matches a condition
             const matchesCondition = (condition, log) => {
               if (condition.userId && log.userId !== condition.userId) return false;
-              if (condition.eventId && log.eventId !== condition.eventId) return false;
               if (condition.organizationId !== undefined && log.organizationId !== condition.organizationId) return false;
               if (condition.targetType && log.targetType !== condition.targetType) return false;
               if (condition.targetId && log.targetId !== condition.targetId) return false;
@@ -936,7 +935,13 @@ class PrismaClient {
                 if (condition.timestamp.gte && new Date(log.timestamp) < new Date(condition.timestamp.gte)) return false;
                 if (condition.timestamp.lte && new Date(log.timestamp) > new Date(condition.timestamp.lte)) return false;
               }
-              if (condition.eventId && condition.eventId.in && !condition.eventId.in.includes(log.eventId)) return false;
+              if (condition.eventId) {
+                if (condition.eventId.in) {
+                  if (!condition.eventId.in.includes(log.eventId)) return false;
+                } else if (log.eventId !== condition.eventId) {
+                  return false;
+                }
+              }
               return true;
             };
             
