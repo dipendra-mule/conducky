@@ -164,5 +164,5 @@ If events aren't working properly:
 For additional support:
 
 - Review the [System Settings](./system-settings.md) documentation
-- Check the [Security Management](./security-management.md) guide
+- Check the [Security Overview](./security-overview.md) guide
 - Consult the [Database Monitoring](./database-monitoring.md) tools

@@ -13,6 +13,7 @@ jobs:
       SESSION_SECRET: ${{ secrets.SESSION_SECRET_TEST }}
       FRONTEND_BASE_URL: "http://localhost:3001"
       JEST_JUNIT_CLASSNAME: "{filepath}"
+      ENCRYPTION_KEY: "test-encryption-key-for-testing-only-32-chars-long"
     permissions:
       pull-requests: write
     defaults:
@@ -26,9 +27,11 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - name: Install dependencies
         run: npm ci
+      - name: Build TypeScript
+        run: npm run build
       - name: Run tests and generate JUnit and coverage reports
         run: npm run test:ci
       - name: Run tests and generate CTRF report
@@ -71,7 +74,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - name: Install dependencies
         run: npm ci
       - name: Run tests and generate JUnit and coverage reports

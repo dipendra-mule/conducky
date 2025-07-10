@@ -4,6 +4,7 @@ import { UnifiedRBACService } from './unified-rbac.service';
 import { randomUUID } from 'crypto';
 import { logAudit } from '../utils/audit';
 import logger from '../config/logger';
+import { encryptField, decryptField, isEncrypted } from '../utils/encryption';
 
 export interface EventCreateData {
   name: string;
@@ -58,6 +59,39 @@ export class EventService {
 
   constructor(private prisma: PrismaClient) {
     this.unifiedRBAC = new UnifiedRBACService(prisma);
+  }
+
+  /**
+   * Encrypt event data fields that contain sensitive information
+   */
+  private encryptEventData(eventData: any): any {
+    const encrypted = { ...eventData };
+    
+    if (encrypted.contactEmail && typeof encrypted.contactEmail === 'string') {
+      encrypted.contactEmail = encryptField(encrypted.contactEmail);
+    }
+    
+    return encrypted;
+  }
+
+  /**
+   * Decrypt event data fields that contain sensitive information
+   */
+  private decryptEventData(eventData: any): any {
+    if (!eventData) return eventData;
+    
+    const decrypted = { ...eventData };
+    
+    if (decrypted.contactEmail && typeof decrypted.contactEmail === 'string' && isEncrypted(decrypted.contactEmail)) {
+      try {
+        decrypted.contactEmail = decryptField(decrypted.contactEmail);
+      } catch (error) {
+        logger.error('Error decrypting event contactEmail:', error);
+        // Keep encrypted value if decryption fails
+      }
+    }
+    
+    return decrypted;
   }
 
   /**
@@ -144,9 +178,12 @@ export class EventService {
         eventId: event.id
       });
       
+      // Decrypt event data before returning (though new events shouldn't have encrypted fields yet)
+      const decryptedEvent = this.decryptEventData(event);
+      
       return {
         success: true,
-        data: { event }
+        data: { event: decryptedEvent }
       };
     } catch (error: any) {
       logger.error('Error creating event:', error);
@@ -166,9 +203,12 @@ export class EventService {
         orderBy: { createdAt: 'desc' },
       });
 
+      // Decrypt sensitive fields for all events
+      const decryptedEvents = events.map(event => this.decryptEventData(event));
+
       return {
         success: true,
-        data: { events }
+        data: { events: decryptedEvents }
       };
     } catch (error: any) {
       logger.error('Error listing events:', error);
@@ -193,9 +233,12 @@ export class EventService {
         };
       }
 
+      // Decrypt sensitive fields before returning
+      const decryptedEvent = this.decryptEventData(event);
+
       return {
         success: true,
-        data: { event }
+        data: { event: decryptedEvent }
       };
     } catch (error: any) {
       logger.error('Error getting event details:', error);
@@ -753,7 +796,7 @@ export class EventService {
       } = updateData;
       
       // Check if there's anything to update
-      if (!name && !description && !contactEmail && !newSlug && !logo && !startDate && !endDate && !website && !codeOfConduct) {
+      if (name === undefined && description === undefined && contactEmail === undefined && newSlug === undefined && logo === undefined && startDate === undefined && endDate === undefined && website === undefined && codeOfConduct === undefined) {
         return {
           success: false,
           error: 'Nothing to update.'
@@ -790,9 +833,12 @@ export class EventService {
       if (codeOfConduct !== undefined) updateEventData.codeOfConduct = codeOfConduct;
       if (contactEmail !== undefined) updateEventData.contactEmail = contactEmail;
       
+      // Encrypt sensitive fields before storing
+      const encryptedUpdateData = this.encryptEventData(updateEventData);
+      
       const event = await this.prisma.event.update({
         where: { id: eventId },
-        data: updateEventData,
+        data: encryptedUpdateData,
       });
       
       // Log event update
@@ -803,9 +849,12 @@ export class EventService {
         eventId: eventId
       });
       
+      // Decrypt the event data before returning
+      const decryptedEvent = this.decryptEventData(event);
+      
       return {
         success: true,
-        data: { event }
+        data: { event: decryptedEvent }
       };
     } catch (error: any) {
       logger.error('Error updating event:', error);
@@ -845,9 +894,12 @@ export class EventService {
         },
       });
 
+      // Decrypt event data before returning
+      const decryptedEvent = this.decryptEventData(event);
+
       return {
         success: true,
-        data: { event }
+        data: { event: decryptedEvent }
       };
     } catch (error: any) {
       logger.error('Error uploading logo:', error);

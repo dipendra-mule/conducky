@@ -3,6 +3,7 @@ import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
 import logger from '../config/logger';
+import { encryptField, decryptField, isEncrypted } from '../utils/encryption';
 
 export interface IncidentCreateData {
   eventId: string;
@@ -113,6 +114,66 @@ export class IncidentService {
   }
 
   /**
+   * Encrypt sensitive incident fields
+   */
+  private encryptIncidentData(data: IncidentCreateData | any): any {
+    const encrypted = { ...data };
+    
+    try {
+      // Encrypt sensitive fields
+      if (encrypted.description) {
+        encrypted.description = encryptField(encrypted.description);
+      }
+      if (encrypted.parties) {
+        encrypted.parties = encryptField(encrypted.parties);
+      }
+      if (encrypted.location) {
+        encrypted.location = encryptField(encrypted.location);
+      }
+    } catch (error) {
+      logger.error('Error encrypting incident data:', error);
+      throw new Error('Failed to encrypt incident data');
+    }
+    
+    return encrypted;
+  }
+
+  /**
+   * Decrypt sensitive incident fields
+   */
+  private decryptIncidentData(incident: any): any {
+    if (!incident) return incident;
+    
+    const decrypted = { ...incident };
+    
+    try {
+      // Decrypt sensitive fields if they are encrypted
+      if (decrypted.description && isEncrypted(decrypted.description)) {
+        decrypted.description = decryptField(decrypted.description);
+      }
+      if (decrypted.parties && isEncrypted(decrypted.parties)) {
+        decrypted.parties = decryptField(decrypted.parties);
+      }
+      if (decrypted.location && isEncrypted(decrypted.location)) {
+        decrypted.location = decryptField(decrypted.location);
+      }
+    } catch (error) {
+      logger.error('Error decrypting incident data:', error);
+      // Don't throw error - return original data to prevent breaking the app
+      logger.warn('Returning original encrypted data due to decryption failure');
+    }
+    
+    return decrypted;
+  }
+
+  /**
+   * Decrypt an array of incidents
+   */
+  private decryptIncidentArray(incidents: any[]): any[] {
+    return incidents.map(incident => this.decryptIncidentData(incident));
+  }
+
+  /**
    * Helper method to check if user can edit a report
    */
   private async canUserEditIncident(userId: string, eventId: string, isReporter: boolean, requiredRoles: string[] = ['responder', 'event_admin', 'system_admin']): Promise<boolean> {
@@ -206,7 +267,7 @@ export class IncidentService {
         };
       }
 
-      // Create incident first
+      // Create incident data and encrypt sensitive fields
       const incidentData: any = {
         eventId,
         reporterId,
@@ -220,14 +281,17 @@ export class IncidentService {
       if (incidentAt !== undefined) incidentData.incidentAt = incidentAt;
       if (parties !== undefined) incidentData.parties = parties;
       if (location !== undefined) incidentData.location = location;
+
+      // Encrypt sensitive fields before storing
+      const encryptedIncidentData = this.encryptIncidentData(incidentData);
       
       // Map urgency to severity (frontend uses urgency, backend uses severity)
       if (urgency) {
-        incidentData.severity = urgency;
+        encryptedIncidentData.severity = urgency;
       }
 
       const incident = await this.prisma.incident.create({
-        data: incidentData,
+        data: encryptedIncidentData,
       });
 
       // Audit log: incident created
@@ -274,9 +338,12 @@ export class IncidentService {
         }
       }
 
+      // Decrypt the incident data before returning
+      const decryptedIncident = this.decryptIncidentData(incident);
+      
       return {
         success: true,
-        data: { incident }
+        data: { incident: decryptedIncident }
       };
     } catch (error: any) {
       logger.error('Error creating incident:', error);
@@ -339,9 +406,12 @@ export class IncidentService {
         skip,
       });
 
+      // Decrypt sensitive data before returning
+      const decryptedIncidents = this.decryptIncidentArray(incidents);
+
       return {
         success: true,
-        data: { incidents }
+        data: { incidents: decryptedIncidents }
       };
     } catch (error: any) {
       logger.error('Error fetching incidents:', error);
@@ -408,9 +478,12 @@ export class IncidentService {
         };
       }
 
+      // Decrypt sensitive data before returning
+      const decryptedIncident = this.decryptIncidentData(incident);
+
       return {
         success: true,
-        data: { incident }
+        data: { incident: decryptedIncident }
       };
     } catch (error: any) {
       logger.error('Error fetching incident:', error);
@@ -799,10 +872,13 @@ export class IncidentService {
         },
       });
 
+      // Decrypt the incident data before returning
+      const decryptedIncident = this.decryptIncidentData(updated);
+      
       return {
         success: true,
         data: { 
-          incident: updated, 
+          incident: decryptedIncident, 
           originalAssignedResponderId, 
           originalState 
         }
@@ -1272,8 +1348,12 @@ export class IncidentService {
 
         // Remove the comments array and add the count
         const { comments, ...incidentWithoutComments } = incident;
+        
+        // Decrypt sensitive data for this incident
+        const decryptedIncident = this.decryptIncidentData(incidentWithoutComments);
+        
         return {
-          ...incidentWithoutComments,
+          ...decryptedIncident,
           _count: {
             comments: visibleCommentCount
           },
@@ -1858,10 +1938,12 @@ export class IncidentService {
       // Store original parties for audit log
       const originalParties = incident.parties;
 
-      // Update parties
+      // Update parties (encrypt before storing)
+      const encryptedParties = parties ? encryptField(parties.trim()) : null;
+      
       const updated = await this.prisma.incident.update({
         where: { id: incidentId },
-        data: { parties: parties ? parties.trim() : null },
+        data: { parties: encryptedParties },
         include: { reporter: true },
       });
 
@@ -1879,9 +1961,12 @@ export class IncidentService {
         // Don't fail the update if audit logging fails
       }
 
+      // Decrypt before returning
+      const decryptedIncident = this.decryptIncidentData(updated);
+
       return {
         success: true,
-        data: { incident: updated }
+        data: { incident: decryptedIncident }
       };
     } catch (error: any) {
       logger.error('Error updating report parties:', error);
@@ -2041,8 +2126,12 @@ export class IncidentService {
 
         // Remove the comments array and add the count
         const { comments, ...incidentWithoutComments } = incident;
+        
+        // Decrypt sensitive data for this incident
+        const decryptedIncident = this.decryptIncidentData(incidentWithoutComments);
+        
         return {
-          ...incidentWithoutComments,
+          ...decryptedIncident,
           _count: {
             comments: visibleCommentCount
           },
