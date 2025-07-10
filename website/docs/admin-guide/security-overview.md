@@ -58,7 +58,7 @@ ENCRYPTION_KEY=your-secret-encryption-key-here
 
 **Example Key Generation:**
 ```bash
-# Generate a secure encryption key
+# Generate a secure encryption key (produces ~64 character base64 string)
 openssl rand -base64 48
 ```
 
