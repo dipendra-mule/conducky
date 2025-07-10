@@ -3,6 +3,7 @@ import { ServiceResult } from '../types';
 import { Prisma } from '@prisma/client';
 import { logAudit } from '../utils/audit';
 import logger from '../config/logger';
+import { encryptField, decryptField, isEncrypted } from '../utils/encryption';
 
 export interface CommentCreateData {
   incidentId: string;
@@ -58,6 +59,35 @@ export class CommentService {
   constructor(private prisma: PrismaClient) {}
 
   /**
+   * Decrypt comment body if encrypted
+   */
+  private decryptCommentData(comment: any): any {
+    if (!comment) return comment;
+    
+    const decrypted = { ...comment };
+    
+    try {
+      // Decrypt body if it's encrypted
+      if (decrypted.body && isEncrypted(decrypted.body)) {
+        decrypted.body = decryptField(decrypted.body);
+      }
+    } catch (error) {
+      logger.error('Error decrypting comment data:', error);
+      // Don't throw error - return original data to prevent breaking the app
+      logger.warn('Returning original encrypted comment data due to decryption failure');
+    }
+    
+    return decrypted;
+  }
+
+  /**
+   * Decrypt an array of comments
+   */
+  private decryptCommentArray(comments: any[]): any[] {
+    return comments.map(comment => this.decryptCommentData(comment));
+  }
+
+  /**
    * Create a new comment on a report
    */
   async createComment(data: CommentCreateData): Promise<ServiceResult<{ comment: CommentWithDetails }>> {
@@ -77,12 +107,15 @@ export class CommentService {
         };
       }
 
+      // Encrypt the comment body before storing
+      const encryptedBody = encryptField(body);
+
       // Create the comment
       const comment = await this.prisma.incidentComment.create({
         data: {
           incidentId,
           authorId: authorId || null,
-          body,
+          body: encryptedBody,
           visibility,
           isMarkdown
         },
@@ -106,9 +139,12 @@ export class CommentService {
         eventId: incident.eventId
       });
 
+      // Decrypt the comment body for response
+      const decryptedComment = this.decryptCommentData(comment);
+
       return {
         success: true,
-        data: { comment }
+        data: { comment: decryptedComment }
       };
     } catch (error: unknown) {
       logger.error('Error creating comment:', error);
@@ -212,10 +248,13 @@ export class CommentService {
         take: limitNum
       });
 
+      // Decrypt comment bodies before returning
+      const decryptedComments = this.decryptCommentArray(comments);
+
       return {
         success: true,
         data: {
-          comments,
+          comments: decryptedComments,
           pagination: {
             page: pageNum,
             limit: limitNum,
@@ -258,9 +297,12 @@ export class CommentService {
         };
       }
 
+      // Decrypt the comment body before returning
+      const decryptedComment = this.decryptCommentData(comment);
+
       return {
         success: true,
-        data: { comment }
+        data: { comment: decryptedComment }
       };
     } catch (error: unknown) {
       logger.error('Error fetching comment:', error);
@@ -302,10 +344,20 @@ export class CommentService {
         };
       }
 
+      // Encrypt the updated body if provided
+      const updateData: any = {
+        visibility: data.visibility,
+        isMarkdown: data.isMarkdown
+      };
+      
+      if (data.body !== undefined) {
+        updateData.body = encryptField(data.body);
+      }
+
       // Update the comment
       const comment = await this.prisma.incidentComment.update({
         where: { id: commentId },
-        data,
+        data: updateData,
         include: {
           author: {
             select: {
@@ -326,9 +378,12 @@ export class CommentService {
         eventId: existingComment.incident.eventId
       });
 
+      // Decrypt the comment body for response
+      const decryptedComment = this.decryptCommentData(comment);
+
       return {
         success: true,
-        data: { comment }
+        data: { comment: decryptedComment }
       };
     } catch (error: unknown) {
       logger.error('Error updating comment:', error);
@@ -524,10 +579,13 @@ export class CommentService {
         take: limitNum
       });
 
+      // Decrypt comment bodies before returning
+      const decryptedComments = this.decryptCommentArray(comments);
+
       return {
         success: true,
         data: {
-          comments,
+          comments: decryptedComments,
           pagination: {
             page: pageNum,
             limit: limitNum,
