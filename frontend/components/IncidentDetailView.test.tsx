@@ -6,21 +6,20 @@ import IncidentDetailView from './IncidentDetailView';
 // Mock Card, Table, Button, Avatar for isolation
 jest.mock("./ui/card", () => ({
   __esModule: true,
-  Card: ({ children, ...props }) => <div data-testid="card" {...props}>{children}</div>,
+  Card: ({ children, ...props }: { children: any; [key: string]: any }) => <div data-testid="card" {...props}>{children}</div>,
 }));
 jest.mock("./Table", () => ({
   __esModule: true,
-  Table: ({ children, ...props }) => <table data-testid="table" {...props}>{children}</table>,
+  Table: ({ children, ...props }: { children: any; [key: string]: any }) => <table data-testid="table" {...props}>{children}</table>,
 }));
 jest.mock("@/components/ui/button", () => ({
   __esModule: true,
-  Button: ({ children, ...props }) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: { children: any; [key: string]: any }) => <button {...props}>{children}</button>,
 }));
 
 describe("IncidentDetailView", () => {
   const baseReport = {
     id: "r1",
-    type: "incident",
     description: "Test report",
     state: "submitted",
     reporter: { id: "u1", name: "Alice", email: "alice@example.com" },
@@ -48,7 +47,6 @@ describe("IncidentDetailView", () => {
     );
     expect(screen.getByText("Test Title")).toBeInTheDocument();
     expect(screen.getByText("Test report")).toBeInTheDocument();
-    expect(screen.getByText("Incident")).toBeInTheDocument();
     expect(screen.getByText("Alice")).toBeInTheDocument();
   });
 

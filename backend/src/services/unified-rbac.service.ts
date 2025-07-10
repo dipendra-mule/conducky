@@ -166,6 +166,8 @@ export class UnifiedRBACService {
     roleNames: string[] = ['event_admin', 'responder', 'reporter']
   ): Promise<boolean> {
     try {
+  
+      
       // Optimized: Use cached user roles and fetch event data in parallel
       const [userRoles, event] = await Promise.all([
         // Get cached user roles for performance
@@ -177,10 +179,14 @@ export class UnifiedRBACService {
         })
       ]);
 
+      
+
       // Check if user is system admin (from cached roles)
       const isSystemAdmin = userRoles.some((ur: UserRoleWithDetails) => 
         ur.role.name === 'system_admin' && ur.scopeType === 'system'
       );
+      
+      
       
       if (isSystemAdmin) {
         return true;
@@ -192,6 +198,8 @@ export class UnifiedRBACService {
         ur.scopeId === eventId && 
         roleNames.includes(ur.role.name)
       );
+      
+      
       
       if (hasDirectRole) {
         return true;
@@ -205,13 +213,17 @@ export class UnifiedRBACService {
           ur.role.name === 'org_admin'
         );
         
+
+        
         if (hasOrgAdminRole) {
           return true;
         }
       }
       
+      
       return false;
     } catch (error) {
+      // Remove this line entirely
       if (process.env.NODE_ENV === 'development') {
         logger.error('[UnifiedRBAC] Error checking event role:', error);
       }

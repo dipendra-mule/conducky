@@ -157,24 +157,6 @@ async function main() {
     });
     console.log(`🏢 Organization created: ${org.name}`);
 
-    // Create organization memberships (legacy table for compatibility)
-    // Admin
-    await prisma.organizationMembership.upsert({
-      where: { 
-        organizationId_userId: { 
-          organizationId: orgRecords[org.slug].id, 
-          userId: userRecords[org.adminUser].id 
-        }
-      },
-      update: {},
-      create: {
-        organizationId: orgRecords[org.slug].id,
-        userId: userRecords[org.adminUser].id,
-        role: 'org_admin',
-        createdById: userRecords[org.adminUser].id,
-      },
-    });
-
     // Unified RBAC role for organization admin
     await prisma.userRole.upsert({
       where: {
@@ -197,22 +179,6 @@ async function main() {
 
     // Viewers
     for (const viewerName of org.viewerUsers) {
-      await prisma.organizationMembership.upsert({
-        where: { 
-          organizationId_userId: { 
-            organizationId: orgRecords[org.slug].id, 
-            userId: userRecords[viewerName].id 
-          }
-        },
-        update: {},
-        create: {
-          organizationId: orgRecords[org.slug].id,
-          userId: userRecords[viewerName].id,
-          role: 'org_viewer',
-          createdById: userRecords[org.adminUser].id,
-        },
-      });
-
       // Unified RBAC role for organization viewer
       await prisma.userRole.upsert({
         where: {
@@ -233,7 +199,7 @@ async function main() {
         },
       });
     }
-    console.log(`👥 Organization memberships created for ${org.name}`);
+    console.log(`👥 Organization roles assigned for ${org.name}`);
   }
 
   // Create Events under Organizations
@@ -310,6 +276,8 @@ async function main() {
   ];
 
   const eventRecords = {};
+  const tagRecords = {};
+  
   for (const event of events) {
     eventRecords[event.slug] = await prisma.event.upsert({
       where: { slug: event.slug },
@@ -327,6 +295,41 @@ async function main() {
       },
     });
     console.log(`🎪 Event created: ${event.name}`);
+
+    // Create sample tags for each event
+    console.log(`🏷️  Creating sample tags for ${event.name}...`);
+    const eventTags = [
+      { name: 'Harassment', color: '#EF4444' }, // Red
+      { name: 'Safety Concern', color: '#F59E0B' }, // Orange  
+      { name: 'Discrimination', color: '#DC2626' }, // Dark red
+      { name: 'Accessibility', color: '#3B82F6' }, // Blue
+      { name: 'Code of Conduct', color: '#8B5CF6' }, // Purple
+      { name: 'Venue Issue', color: '#10B981' }, // Green
+      { name: 'Speaker Issue', color: '#F59E0B' }, // Orange
+      { name: 'Attendee Behavior', color: '#6B7280' }, // Gray
+      { name: 'Social Media', color: '#EC4899' }, // Pink
+      { name: 'Privacy Concern', color: '#0EA5E9' }, // Sky blue
+    ];
+
+    tagRecords[event.slug] = {};
+    for (const tagData of eventTags) {
+      const tag = await prisma.tag.upsert({
+        where: {
+          eventId_name: {
+            eventId: eventRecords[event.slug].id,
+            name: tagData.name
+          }
+        },
+        update: {},
+        create: {
+          name: tagData.name,
+          color: tagData.color,
+          eventId: eventRecords[event.slug].id,
+        },
+      });
+      tagRecords[event.slug][tagData.name] = tag;
+      console.log(`🏷️  Tag created: ${tagData.name} (${tagData.color})`);
+    }
 
     // Assign roles for this event
     // Event Admins
@@ -397,213 +400,151 @@ async function main() {
     console.log(`👥 Event roles assigned for ${event.name}`);
   }
 
-  // Create realistic incidents with comments
-  console.log('📋 Creating sample incidents...');
+  // Create sample incidents with tags
+  console.log('📝 Creating sample incidents...');
   const sampleIncidents = [
     {
       eventSlug: 'devopsdays-chicago-2024',
+      title: 'Inappropriate comments during networking session',
+      description: 'A speaker made inappropriate comments about gender during the networking session that made several attendees uncomfortable.',
       reporterName: 'Nancy Nixon',
-      type: 'harassment',
-      title: 'Inappropriate comments during workshop',
-      description: 'During the Kubernetes workshop, another attendee made several inappropriate comments about women in tech. This made me and others uncomfortable.',
+      responderName: 'Henry Harris',
       state: 'investigating',
       severity: 'medium',
-      incidentAt: new Date('2024-09-15T14:30:00Z'),
-      parties: 'Workshop attendee in red DevOps t-shirt',
-      location: 'Main conference room, Workshop #3',
-      assignedResponder: 'Henry Harris',
+      location: 'Main networking area',
+      parties: 'John Speaker (speaker), Multiple attendees',
+      tags: ['Harassment', 'Code of Conduct'],
+      incidentAt: new Date('2024-09-15T15:30:00Z'),
     },
     {
       eventSlug: 'devopsdays-chicago-2024',
+      title: 'Accessibility issue with main auditorium',
+      description: 'The wheelchair ramp to the main auditorium is too steep and unsafe for attendees with mobility devices.',
       reporterName: 'Oliver Olsen',
-      type: 'other',
-      title: 'Speaker made exclusionary remarks',
-      description: 'The keynote speaker made several jokes that were exclusionary to the LGBTQ+ community. Multiple attendees noticed and seemed uncomfortable.',
+      responderName: 'Iris Ivanova',
       state: 'resolved',
       severity: 'high',
-      incidentAt: new Date('2024-09-15T09:15:00Z'),
-      parties: 'Keynote speaker',
-      location: 'Main auditorium',
-      assignedResponder: 'Iris Ivanova',
-      resolution: 'Spoke with speaker privately. They apologized and will be more mindful in future presentations.',
+      location: 'Main auditorium entrance',
+      parties: 'Venue staff, Attendees with mobility devices',
+      tags: ['Accessibility', 'Venue Issue', 'Safety Concern'],
+      incidentAt: new Date('2024-09-15T09:00:00Z'),
     },
     {
       eventSlug: 'devopsdays-london-2024',
+      title: 'Offensive social media posts by attendee',
+      description: 'An attendee has been posting offensive content on social media using the event hashtag, reflecting poorly on the conference.',
       reporterName: 'Rachel Roberts',
-      type: 'safety',
-      title: 'Unsafe behavior at after-party',
-      description: 'Someone was heavily intoxicated and making others uncomfortable at the after-party venue. Security was not handling the situation well.',
-      state: 'closed',
-      severity: 'medium',
-      incidentAt: new Date('2024-10-20T20:45:00Z'),
-      parties: 'Intoxicated attendee, venue security',
-      location: 'After-party venue - The Tech Pub',
-      assignedResponder: 'Jack Johnson',
-      resolution: 'Worked with venue management to address the situation. Attendee was asked to leave and given safe transportation.',
+      responderName: 'Jack Johnson',
+      state: 'acknowledged',
+      severity: 'low',
+      location: 'Online/Social Media',
+      parties: 'Twitter user @offensiveuser',
+      tags: ['Social Media', 'Code of Conduct'],
+      incidentAt: new Date('2024-10-20T18:45:00Z'),
     },
     {
       eventSlug: 'diversitytech-summit-2024',
+      title: 'Discriminatory behavior in workshop',
+      description: 'A workshop attendee made discriminatory comments about participants\' backgrounds and refused to work with certain team members.',
       reporterName: 'Uma Patel',
-      type: 'harassment',
-      title: 'Unwanted physical contact',
-      description: 'During networking break, another attendee touched my shoulder repeatedly despite me stepping away multiple times. This made me very uncomfortable.',
-      state: 'acknowledged',
+      responderName: 'Luis Lopez',
+      state: 'submitted',
       severity: 'high',
-      incidentAt: new Date('2024-11-08T15:20:00Z'),
-      parties: 'Male attendee, approximately 40s, wearing company logo shirt',
-      location: 'Networking area near registration',
-      assignedResponder: 'Luis Lopez',
+      location: 'Workshop Room B',
+      parties: 'Workshop participant, Team members',
+      tags: ['Discrimination', 'Code of Conduct', 'Attendee Behavior'],
+      incidentAt: new Date('2024-11-08T14:20:00Z'),
     },
     {
       eventSlug: 'cloudnative-con-2024',
+      title: 'Privacy concern with photo sharing',
+      description: 'Photos containing personal information were shared without consent in the event photo stream.',
       reporterName: 'Xavier Xu',
-      type: 'other',
-      title: 'Accessibility issue with presentation',
-      description: 'The speaker in Track 2 was not using the microphone properly and speaking very quietly. Those with hearing difficulties could not follow along.',
-      state: 'resolved',
-      severity: 'low',
-      incidentAt: new Date('2024-12-05T11:30:00Z'),
-      parties: 'Track 2 speaker',
-      location: 'Conference Room B',
-      assignedResponder: 'Henry Harris',
-      resolution: 'Reminded speaker about microphone usage. AV team provided additional support.',
-    },
-    {
-      eventSlug: 'local-meetup-network-conf',
-      reporterName: 'Patricia Park',
-      type: 'other',
-      title: 'Disruptive behavior during panel',
-      description: 'Attendee kept interrupting panelists and other audience members during Q&A. When asked to wait their turn, they became argumentative.',
-      state: 'investigating',
+      responderName: 'Henry Harris',
+      state: 'closed',
       severity: 'medium',
-      incidentAt: new Date('2025-01-15T16:00:00Z'),
-      parties: 'Disruptive attendee',
-      location: 'Panel Room A',
-      assignedResponder: 'Karen Kim',
+      location: 'Conference hall',
+      parties: 'Photographer, Attendees in photos',
+      tags: ['Privacy Concern', 'Social Media'],
+      incidentAt: new Date('2024-12-05T16:15:00Z'),
     },
   ];
 
-  let incidentCount = 0;
-  for (const incident of sampleIncidents) {
-    const createdIncident = await prisma.incident.create({
+  for (const incidentData of sampleIncidents) {
+    const incident = await prisma.incident.create({
       data: {
-        eventId: eventRecords[incident.eventSlug].id,
-        reporterId: userRecords[incident.reporterName].id,
-        type: incident.type,
-        title: incident.title,
-        description: incident.description,
-        state: incident.state,
-        severity: incident.severity,
-        incidentAt: incident.incidentAt,
-        parties: incident.parties,
-        location: incident.location,
-        assignedResponderId: incident.assignedResponder ? userRecords[incident.assignedResponder].id : null,
-        resolution: incident.resolution || null,
-        contactPreference: 'email',
+        title: incidentData.title,
+        description: incidentData.description,
+        state: incidentData.state,
+        severity: incidentData.severity,
+        location: incidentData.location,
+        parties: incidentData.parties,
+        incidentAt: incidentData.incidentAt,
+        eventId: eventRecords[incidentData.eventSlug].id,
+        reporterId: userRecords[incidentData.reporterName].id,
+        assignedResponderId: userRecords[incidentData.responderName].id,
       },
     });
-    incidentCount++;
 
-    // Add comments to incidents based on their state
-    if (incident.state !== 'submitted') {
-      await prisma.incidentComment.create({
+    // Add tags to the incident
+    for (const tagName of incidentData.tags) {
+      await prisma.incidentTag.create({
         data: {
-          incidentId: createdIncident.id,
-          authorId: userRecords[incident.assignedResponder || 'Henry Harris'].id,
-          body: 'Thank you for reporting this incident. We take all reports seriously and will investigate promptly.',
-          isMarkdown: false,
-          visibility: 'public',
-        },
-      });
-
-      if (incident.state === 'investigating' || incident.state === 'resolved' || incident.state === 'closed') {
-        await prisma.incidentComment.create({
-          data: {
-            incidentId: createdIncident.id,
-            authorId: userRecords[incident.assignedResponder || 'Henry Harris'].id,
-            body: 'We have begun our investigation and are gathering more information. We will keep you updated on our progress.',
-            isMarkdown: false,
-            visibility: 'public',
-          },
-        });
-      }
-
-      if (incident.state === 'resolved' || incident.state === 'closed') {
-        await prisma.incidentComment.create({
-          data: {
-            incidentId: createdIncident.id,
-            authorId: userRecords[incident.assignedResponder || 'Henry Harris'].id,
-            body: incident.resolution ? `**Resolution:** ${incident.resolution}` : 'This matter has been resolved. Thank you for bringing it to our attention.',
-            isMarkdown: true,
-            visibility: 'public',
-          },
-        });
-      }
-    }
-
-    console.log(`📋 Incident created: ${incident.title} (${incident.eventSlug})`);
-  }
-
-  // Create additional sample incidents for variety
-  console.log('📋 Creating additional sample incidents...');
-  const incidentTypes = ['harassment', 'safety', 'other'];
-  const incidentStates = ['submitted', 'acknowledged', 'investigating', 'resolved', 'closed'];
-  const severities = ['low', 'medium', 'high', 'critical'];
-  
-  for (const [index, eventSlug] of Object.keys(eventRecords).entries()) {
-    const event = events.find(e => e.slug === eventSlug);
-    for (let i = 0; i < 3; i++) {
-      const reporterName = event.reporterUsers[i % event.reporterUsers.length];
-      const responderName = event.responderUsers[i % event.responderUsers.length];
-      
-      const createdIncident = await prisma.incident.create({
-        data: {
-          eventId: eventRecords[eventSlug].id,
-          reporterId: userRecords[reporterName].id,
-          type: incidentTypes[i % incidentTypes.length],
-          title: `Sample Incident #${index * 3 + i + 1}`,
-          description: `This is a sample incident created for testing purposes. It demonstrates various types of incidents that might occur at events.`,
-          state: incidentStates[i % incidentStates.length],
-          severity: severities[i % severities.length],
-          assignedResponderId: userRecords[responderName].id,
-          contactPreference: 'email',
-        },
-      });
-      incidentCount++;
-      
-      // Add a comment to each additional incident
-      await prisma.incidentComment.create({
-        data: {
-          incidentId: createdIncident.id,
-          authorId: userRecords[responderName].id,
-          body: 'This is a sample comment for testing the incident system.',
-          isMarkdown: false,
-          visibility: 'public',
+          incidentId: incident.id,
+          tagId: tagRecords[incidentData.eventSlug][tagName].id,
         },
       });
     }
+
+    console.log(`📝 Incident created: ${incidentData.title} with tags: ${incidentData.tags.join(', ')}`);
+
+    // Add some comments to incidents
+    const comments = [
+      {
+        body: 'Initial report received and acknowledged. Starting investigation.',
+        authorName: incidentData.responderName,
+        visibility: 'public',
+      },
+      {
+        body: 'Contacted venue security and event organizers about this issue.',
+        authorName: incidentData.responderName,
+        visibility: 'internal',
+      },
+    ];
+
+    for (const commentData of comments) {
+      await prisma.incidentComment.create({
+        data: {
+          body: commentData.body,
+          visibility: commentData.visibility,
+          incidentId: incident.id,
+          authorId: userRecords[commentData.authorName].id,
+        },
+      });
+    }
+    console.log(`💬 Comments added to incident: ${incidentData.title}`);
   }
 
-  console.log('🎉 Sample data seeding completed successfully!');
+  console.log('✅ Sample data seeding completed successfully!');
   console.log('');
-  console.log('📊 Summary:');
-  console.log(`👥 Users: ${users.length} created`);
-  console.log(`🏢 Organizations: ${organizations.length} created`);
-  console.log(`🎪 Events: ${events.length} created`);
-  console.log(`📋 Incidents: ${incidentCount} created with comments`);
+  console.log('🔑 Test Credentials:');
+  console.log('System Admin: matt@mattstratton.com / password');
+  console.log('Org Admin: alice.anderson@mattstratton.com / password');
+  console.log('Event Admin: david.davis@mattstratton.com / password');
+  console.log('Responder: henry.harris@mattstratton.com / password');
+  console.log('Reporter: nancy.nixon@mattstratton.com / password');
   console.log('');
-  console.log('🔐 Test Login Credentials:');
-  console.log('Email: matt@mattstratton.com (System Admin)');
-  console.log('Email: alice.anderson@mattstratton.com (Org Admin)');
-  console.log('Email: david.davis@mattstratton.com (Event Admin)');
-  console.log('Email: henry.harris@mattstratton.com (Responder)');
-  console.log('Email: nancy.nixon@mattstratton.com (Reporter)');
-  console.log('Password: password (for all accounts)');
+  console.log('📊 Created:');
+  console.log(`👥 ${users.length} users`);
+  console.log(`🏢 ${organizations.length} organizations`);
+  console.log(`🎪 ${events.length} events`);
+  console.log(`🏷️  ${events.length * 10} tags`);
+  console.log(`📝 ${sampleIncidents.length} incidents with tags`);
 }
 
 main()
-  .catch(e => {
-    console.error('❌ Error seeding sample data:', e);
+  .catch((e) => {
+    console.error('Error during seeding:', e);
     process.exit(1);
   })
   .finally(async () => {

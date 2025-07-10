@@ -1,22 +1,17 @@
-import React from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import React, { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Card } from "./ui/card";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "./ui/form";
+import { Badge } from "./ui/badge";
 import { CoCTeamList } from "./CoCTeamList";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-import { Upload, X, FileText, AlertTriangle, Clock, Zap } from "lucide-react";
+import { TagSelector, Tag } from "./tags/TagSelector";
+import { UserContext } from "../pages/_app";
+import { Clock, AlertTriangle, Zap, Upload, FileText, X } from "lucide-react";
 
 export interface IncidentFormProps {
   eventSlug: string;
@@ -26,28 +21,14 @@ export interface IncidentFormProps {
 
 interface IncidentFormValues {
   title: string;
-  type: string;
   description: string;
   incidentAt?: string;
   parties?: string;
   location?: string;
-  contactPreference: string;
-  urgency: string;
+  urgency?: string; // Made optional since reporters won't see it
+  tags?: Tag[];
   evidence?: File[];
 }
-
-const incidentTypes = [
-  { value: "harassment", label: "Harassment" },
-  { value: "safety", label: "Safety" },
-  { value: "other", label: "Other" },
-];
-
-const contactPreferences = [
-  { value: "email", label: "Email" },
-  { value: "phone", label: "Phone" },
-  { value: "in-person", label: "In-person meeting" },
-  { value: "no-contact", label: "No contact needed" },
-];
 
 const urgencyLevels = [
   { 
@@ -82,16 +63,19 @@ const urgencyLevels = [
 
 const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventName, onSuccess }) => {
   const router = useRouter();
+  const { user } = useContext(UserContext);
+  const [userEventRoles, setUserEventRoles] = useState<string[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+  
   const form = useForm<IncidentFormValues>({
     defaultValues: {
       title: "",
-      type: "",
       description: "",
       incidentAt: "",
       parties: "",
       location: "",
-      contactPreference: "email",
-      urgency: "medium",
+      urgency: "medium", // Default value for when urgency is shown
+      tags: [],
       evidence: [],
     },
   });
@@ -99,10 +83,46 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
   const [submitting, setSubmitting] = React.useState(false);
   const [dragActive, setDragActive] = React.useState(false);
 
+  // Fetch user's event-specific roles
+  useEffect(() => {
+    if (!eventSlug || !user) {
+      setRolesLoading(false);
+      return;
+    }
+
+    const fetchUserEventRoles = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        const response = await fetch(`${apiUrl}/api/events/slug/${eventSlug}/my-roles`, {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const rolesData = await response.json();
+          setUserEventRoles(rolesData?.roles || []);
+        } else {
+          setUserEventRoles([]);
+        }
+      } catch (error) {
+        console.error('Error fetching user event roles:', error);
+        setUserEventRoles([]);
+      } finally {
+        setRolesLoading(false);
+      }
+    };
+
+    fetchUserEventRoles();
+  }, [eventSlug, user]);
+
+  // Check if user has responder or higher privileges (can see urgency field)
+  const canSetUrgency = userEventRoles.some(role => 
+    ['responder', 'event_admin', 'system_admin'].includes(role)
+  ) || (user?.roles && user.roles.includes('system_admin'));
+
   const handleSubmit: SubmitHandler<IncidentFormValues> = async (data) => {
     setSubmitting(true);
     setMessage("");
-    const { title, type, description, incidentAt, parties, location, contactPreference, urgency, evidence } = data;
+    const { title, description, incidentAt, parties, location, urgency, tags, evidence } = data;
     
     if (!title || title.length < 10 || title.length > 70) {
       form.setError("title", { message: "Title must be between 10 and 70 characters." });
@@ -131,14 +151,22 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
     
     const formData = new FormData();
     formData.append("title", title);
-    formData.append("type", type);
     formData.append("description", description);
-    formData.append("contactPreference", contactPreference);
-    formData.append("urgency", urgency);
+    
+    // Only include urgency if user can set it, otherwise backend will use default
+    if (canSetUrgency && urgency) {
+      formData.append("urgency", urgency);
+    }
     
     if (incidentAt) formData.append("incidentAt", new Date(incidentAt).toISOString());
     if (parties) formData.append("parties", parties);
     if (location) formData.append("location", location);
+    
+    // Add tags as JSON array
+    if (tags && tags.length > 0) {
+      formData.append("tags", JSON.stringify(tags.map(tag => tag.id)));
+    }
+    
     if (evidence && evidence.length > 0) {
       for (let i = 0; i < evidence.length; i++) {
         formData.append("evidence", evidence[i]);
@@ -212,6 +240,24 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Show loading state while checking roles
+  if (rolesLoading) {
+    return (
+      <div className="w-full max-w-2xl mx-auto">
+        {eventName && (
+          <div className="text-sm mb-4 text-muted-foreground">
+            For event: <span className="font-medium">{eventName}</span>
+          </div>
+        )}
+        <Card className="p-6">
+          <div className="text-center py-8">
+            <div className="text-muted-foreground">Loading form...</div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       {eventName && (
@@ -252,41 +298,16 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
               )}
             />
 
-            {/* Type and Urgency Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                name="type"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="incident-type">Type *</FormLabel>
-                    <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {incidentTypes.map((rt) => (
-                            <SelectItem key={rt.value} value={rt.value}>
-                              {rt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+            {/* Urgency - Only show to responders and above */}
+            {canSetUrgency && (
               <FormField
                 name="urgency"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="urgency">Urgency Level *</FormLabel>
+                    <FormLabel htmlFor="urgency">Urgency Level</FormLabel>
                     <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange} required>
+                      <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select urgency" />
                         </SelectTrigger>
@@ -316,7 +337,7 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
                   </FormItem>
                 )}
               />
-            </div>
+            )}
 
             {/* Description */}
             <FormField
@@ -338,6 +359,24 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
                 </FormItem>
               )}
             />
+
+            {/* Tags - Only show to responders and above */}
+            {canSetUrgency && (
+              <FormField
+                name="tags"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <TagSelector
+                      eventSlug={eventSlug}
+                      selectedTags={field.value || []}
+                      onTagsChange={field.onChange}
+                      disabled={submitting}
+                    />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Date/Time and Location Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -403,35 +442,6 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
                   <FormMessage />
                   <span className="text-xs text-muted-foreground">
                     List anyone involved, if known. You can use names, email addresses, or descriptions.
-                  </span>
-                </FormItem>
-              )}
-            />
-
-            {/* Contact Preference */}
-            <FormField
-              name="contactPreference"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel htmlFor="contact-preference">Preferred Contact Method *</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="How should we contact you?" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {contactPreferences.map((pref) => (
-                          <SelectItem key={pref.value} value={pref.value}>
-                            {pref.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                  <span className="text-xs text-muted-foreground">
-                    How would you prefer to be contacted about this incident?
                   </span>
                 </FormItem>
               )}

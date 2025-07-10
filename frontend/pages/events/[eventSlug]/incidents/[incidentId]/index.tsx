@@ -25,6 +25,16 @@ interface Incident {
   severity?: string;
   resolution?: string;
   evidenceFiles?: EvidenceFile[];
+  event?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  tags?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
 }
 
 interface Comment {
@@ -138,7 +148,7 @@ export default function ReportDetail() {
     setLoading(true);
     fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
-      `/events/slug/${eventSlug}/incidents/${incidentId}`,
+      `/api/events/slug/${eventSlug}/incidents/${incidentId}`,
       { credentials: "include" }
     )
       .then((res) => {
@@ -156,6 +166,8 @@ export default function ReportDetail() {
         return res.json();
       })
       .then((data) => {
+        console.log('[DEBUG] API Response data:', JSON.stringify(data, null, 2));
+        console.log('[DEBUG] Incident tags:', data.incident?.tags);
         setIncident(data.incident);
         if (data.incident.evidenceFiles) {
           setEvidenceFiles(data.incident.evidenceFiles);
@@ -501,7 +513,7 @@ export default function ReportDetail() {
     }
     const res = await fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence`,
+        `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence`,
       {
         method: "POST",
         body: formData,
@@ -514,7 +526,7 @@ export default function ReportDetail() {
       // Refetch evidence files
       const filesRes = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence`,
+          `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence`,
         { credentials: "include" },
       );
       if (filesRes.ok) {
@@ -555,7 +567,7 @@ export default function ReportDetail() {
       // Refetch evidence files
       const filesRes = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${report!.id}/evidence`,
+          `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence`,
         { credentials: "include" },
       );
       if (filesRes.ok) {
@@ -595,7 +607,7 @@ export default function ReportDetail() {
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + 
-        `/events/slug/${eventSlug}/incidents/${incidentId}`,
+        `/api/events/slug/${eventSlug}/incidents/${incidentId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -628,7 +640,7 @@ export default function ReportDetail() {
     }
     const res = await fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/events/slug/${eventSlug}/incidents/${incidentId}/title`,
+        `/api/events/slug/${eventSlug}/incidents/${incidentId}/title`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -662,7 +674,7 @@ export default function ReportDetail() {
     return <div>Loading...</div>;
   }
 
-      return (
+  return (
     <IncidentDetailView
       incident={incident}
       user={user}
@@ -690,9 +702,37 @@ export default function ReportDetail() {
       assignmentLoading={assignmentLoading}
       assignmentError={assignmentError}
       assignmentSuccess={assignmentSuccess}
+      canEditSeverity={isResponderOrAbove}
       stateHistory={stateHistory}
       apiBaseUrl={process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}
       onTitleEdit={handleTitleEdit}
+      onTagsEdit={async (tags) => {
+        try {
+          const response = await fetch(
+            (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
+              `/api/incidents/${incidentId}/tags`,
+            {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({ tags: tags.map(tag => tag.id) }),
+            }
+          );
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to update tags');
+          }
+          
+          const responseData = await response.json();
+          setIncident(responseData.incident);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to update tags. Please try again.';
+          alert(errorMessage);
+        }
+      }}
       onIncidentUpdate={(updatedIncident) => {
         // Update the incident state with the new data from field edits
         setIncident(updatedIncident);

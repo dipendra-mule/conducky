@@ -12,31 +12,19 @@ jest.mock('./LocationEditForm', () => ({
   )
 }));
 
-jest.mock('./ContactPreferenceEditForm', () => ({
-  ContactPreferenceEditForm: ({ onSave, onCancel }: { onSave: (value: string) => void; onCancel: () => void }) => (
-    <div data-testid="contact-preference-edit-form">
-      <button onClick={() => onSave('phone')}>Save Contact</button>
-      <button onClick={onCancel}>Cancel</button>
-    </div>
-  )
-}));
-
 describe('IncidentMetaTable', () => {
   const defaultProps = {
     id: 'report-123',
-    type: 'harassment',
     description: 'Test report description',
     reporter: { name: 'John Doe', email: 'john@example.com' },
     location: 'Main conference room',
-    contactPreference: 'email',
     incidentAt: '2024-01-15T10:00:00Z',
     parties: 'John Doe, Jane Smith',
+    userRoles: ['responder'], // Add default role for testing
     canEditLocation: false,
-    canEditContactPreference: false,
     canEditIncidentAt: false,
     canEditParties: false,
-    canEditDescription: false,
-    canEditType: false
+    canEditDescription: false
   };
 
   it('renders all report metadata fields', () => {
@@ -45,17 +33,14 @@ describe('IncidentMetaTable', () => {
     expect(screen.getByText('Incident ID')).toBeInTheDocument();
     expect(screen.getByText('report-123')).toBeInTheDocument();
     
-    expect(screen.getByText('Type')).toBeInTheDocument();
-    expect(screen.getByText('Harassment')).toBeInTheDocument();
+    expect(screen.getByText('Description')).toBeInTheDocument();
+    expect(screen.getByText('Test report description')).toBeInTheDocument();
     
     expect(screen.getByText('Reporter')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
     
     expect(screen.getByText('Location')).toBeInTheDocument();
     expect(screen.getByText('Main conference room')).toBeInTheDocument();
-    
-    expect(screen.getByText('Contact Preference')).toBeInTheDocument();
-    expect(screen.getByText('Email')).toBeInTheDocument();
     
     expect(screen.getByText('Incident Date')).toBeInTheDocument();
     // Date format will be locale-specific, just check it exists
@@ -64,15 +49,49 @@ describe('IncidentMetaTable', () => {
     expect(screen.getByText('John Doe, Jane Smith')).toBeInTheDocument();
   });
 
-  it('shows "Not specified" for missing optional fields when editing is enabled', () => {
+  it('renders event name when provided', () => {
+    const propsWithEvent = {
+      ...defaultProps,
+      eventName: 'Test Event 2024'
+    };
+
+    render(<IncidentMetaTable {...propsWithEvent} />);
+
+    expect(screen.getByText('Event')).toBeInTheDocument();
+    expect(screen.getByText('Test Event 2024')).toBeInTheDocument();
+  });
+
+  it('renders tags when provided', () => {
+    const propsWithTags = {
+      ...defaultProps,
+      tags: [
+        { id: '1', name: 'Harassment', color: '#ef4444' },
+        { id: '2', name: 'Safety', color: '#f97316' }
+      ]
+    };
+
+    render(<IncidentMetaTable {...propsWithTags} />);
+
+    expect(screen.getByText('Tags')).toBeInTheDocument();
+    expect(screen.getByText('Harassment')).toBeInTheDocument();
+    expect(screen.getByText('Safety')).toBeInTheDocument();
+  });
+
+  it('does not render event section when not provided', () => {
+    render(<IncidentMetaTable {...defaultProps} />);
+
+    expect(screen.queryByText('Event')).not.toBeInTheDocument();
+    // Tags section is always rendered now for editing capability
+    expect(screen.getByText('Tags')).toBeInTheDocument();
+  });
+
+  it('shows "Not specified" for missing optional fields', () => {
     const propsWithMissingFields = {
       ...defaultProps,
       location: null,
       incidentAt: null,
       parties: null,
-      canEditLocation: true,
-      canEditIncidentAt: true,
-      canEditParties: true
+      userRoles: ['responder'] // Add responder role for visibility
     };
 
     render(<IncidentMetaTable {...propsWithMissingFields} />);
@@ -81,35 +100,13 @@ describe('IncidentMetaTable', () => {
     expect(notSpecifiedElements).toHaveLength(3); // location, incidentAt, parties
   });
 
-  it('formats contact preferences correctly', () => {
-    const testCases = [
-      { preference: 'email', expected: 'Email' },
-      { preference: 'phone', expected: 'Phone' },
-      { preference: 'in_person', expected: 'In Person' },
-      { preference: 'no_contact', expected: 'No Contact Preferred' }
-    ];
-
-    testCases.forEach(({ preference, expected }) => {
-      const { rerender } = render(
-        <IncidentMetaTable {...defaultProps} contactPreference={preference} />
-      );
-      
-      expect(screen.getByText(expected)).toBeInTheDocument();
-      
-      // Clean up for next iteration
-      rerender(<div />);
-    });
-  });
-
   it('shows edit buttons when user has edit permissions', () => {
     const propsWithEditPermissions = {
       ...defaultProps,
       canEditLocation: true,
-      canEditContactPreference: true,
       canEditIncidentAt: true,
       canEditParties: true,
-      canEditDescription: true,
-      canEditType: true
+      canEditDescription: true
     };
 
     render(<IncidentMetaTable {...propsWithEditPermissions} />);

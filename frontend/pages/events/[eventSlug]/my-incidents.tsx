@@ -18,10 +18,26 @@ export default function MyEventIncidentsPage() {
   const { eventSlug } = router.query;
   const { user } = useContext(UserContext) as UserContextType;
   const [loading, setLoading] = useState<boolean>(true);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
 
   useEffect(() => {
     if (eventSlug && user) {
-      setLoading(false);
+      // Fetch user's roles for this event
+      fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + `/api/events/slug/${eventSlug}/my-roles`, {
+        credentials: 'include'
+      })
+        .then(async response => {
+          if (response.ok) {
+            const data = await response.json();
+            if (data.roles) {
+              setUserRoles(data.roles);
+            }
+          }
+          setLoading(false);
+        })
+        .catch(() => {
+          setLoading(false);
+        });
     }
   }, [eventSlug, user]);
 
@@ -53,6 +69,7 @@ export default function MyEventIncidentsPage() {
         showPinning={true}
         showExport={true}
         className="w-full"
+        userRoles={userRoles}
       />
     </div>
   );

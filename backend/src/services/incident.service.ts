@@ -8,14 +8,13 @@ import { encryptField, decryptField, isEncrypted } from '../utils/encryption';
 export interface IncidentCreateData {
   eventId: string;
   reporterId?: string | null;
-  type: string;
   title: string;
   description: string;
   incidentAt?: Date | null;
   parties?: string | null;
   location?: string | null;
-  contactPreference?: string;
   urgency?: string;
+  tagIds?: string[]; // Add support for tag IDs
 }
 
 export interface IncidentUpdateData {
@@ -38,6 +37,7 @@ export interface IncidentQuery {
   sort?: string;
   order?: string;
   incidentIds?: string[];
+  tagIds?: string[]; // Add support for filtering by tags
 }
 
 export interface EvidenceFile {
@@ -52,14 +52,12 @@ export interface IncidentWithDetails {
   id: string;
   title: string;
   description: string;
-  type: string;
   state: string;
   severity?: string | null;
   resolution?: string | null;
   incidentAt?: Date | null;
   parties?: string | null;
   location?: string | null;
-  contactPreference?: string;
   createdAt: Date;
   updatedAt: Date;
   eventId: string;
@@ -92,6 +90,11 @@ export interface IncidentWithDetails {
     name: string;
     slug: string;
   };
+  tags?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
   userRoles?: string[];
   _count?: {
     comments: number;
@@ -163,6 +166,13 @@ export class IncidentService {
       logger.warn('Returning original encrypted data due to decryption failure');
     }
     
+    // Transform IncidentTag junction table data to simple tags array
+    if (decrypted.tags && Array.isArray(decrypted.tags)) {
+      decrypted.tags = decrypted.tags
+        .map((incidentTag: any) => incidentTag?.tag)
+        .filter((tag: any) => tag && tag.id && tag.name && tag.color);
+    }
+    
     return decrypted;
   }
 
@@ -190,31 +200,11 @@ export class IncidentService {
   async createIncident(data: IncidentCreateData, evidenceFiles?: EvidenceFile[]): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Validate required fields
-      if (!data.eventId || !data.type || !data.description || !data.title) {
+      if (!data.eventId || !data.title || !data.description) {
         return {
           success: false,
-          error: 'Missing required fields: eventId, type, description, title'
+          error: 'Missing required fields: eventId, title, description'
         };
-      }
-
-      // Validate report type
-      const validTypes = ['harassment', 'safety', 'other'];
-      if (!validTypes.includes(data.type)) {
-        return {
-          success: false,
-          error: 'Invalid report type. Must be: harassment, safety, or other.'
-        };
-      }
-
-      // Validate contact preference if provided
-      if (data.contactPreference) {
-        const validPreferences = ['email', 'phone', 'in_person', 'no_contact'];
-        if (!validPreferences.includes(data.contactPreference)) {
-          return {
-            success: false,
-            error: 'Invalid contact preference. Must be: email, phone, in_person, or no_contact.'
-          };
-        }
       }
 
       // Validate urgency/severity if provided
@@ -249,12 +239,28 @@ export class IncidentService {
         }
       }
 
-      const { eventId, reporterId, type, title, description, incidentAt, parties, location, contactPreference, urgency } = data;
+      const { eventId, reporterId, title, description, incidentAt, parties, location, urgency, tagIds } = data;
 
       if (typeof title !== 'string' || title.length < 10 || title.length > 70) {
         return {
           success: false,
           error: 'title must be 10-70 characters.'
+        };
+      }
+
+      // Validate parties character limit
+      if (parties && parties.length > 500) {
+        return {
+          success: false,
+          error: 'Parties involved must be less than 500 characters.'
+        };
+      }
+
+      // Validate location character limit
+      if (location && location.length > 200) {
+        return {
+          success: false,
+          error: 'Location must be less than 200 characters.'
         };
       }
 
@@ -271,11 +277,10 @@ export class IncidentService {
       const incidentData: any = {
         eventId,
         reporterId,
-        type,
         title,
         description,
         state: 'submitted',
-        contactPreference: contactPreference || 'email', // default to email
+        severity: urgency || 'low', // Use severity directly instead of mapping from urgency
       };
 
       if (incidentAt !== undefined) incidentData.incidentAt = incidentAt;
@@ -284,15 +289,23 @@ export class IncidentService {
 
       // Encrypt sensitive fields before storing
       const encryptedIncidentData = this.encryptIncidentData(incidentData);
-      
-      // Map urgency to severity (frontend uses urgency, backend uses severity)
-      if (urgency) {
-        encryptedIncidentData.severity = urgency;
-      }
 
       const incident = await this.prisma.incident.create({
         data: encryptedIncidentData,
       });
+
+      // If tags are provided, create the associations
+      if (tagIds && tagIds.length > 0) {
+        const incidentTagData = tagIds.map(tagId => ({
+          incidentId: incident.id,
+          tagId,
+        }));
+
+        await this.prisma.incidentTag.createMany({
+          data: incidentTagData,
+          skipDuplicates: true,
+        });
+      }
 
       // Audit log: incident created
       try {
@@ -400,14 +413,30 @@ export class IncidentService {
               uploader: { select: { id: true, name: true, email: true } },
             },
           },
+          event: {
+            select: { id: true, name: true, slug: true }
+          },
+          tags: {
+            include: {
+              tag: {
+                select: { id: true, name: true, color: true }
+              }
+            }
+          }
         },
         orderBy,
         take,
         skip,
       });
 
+      // Transform tags from IncidentTag[] to Tag[] format
+      const incidentsWithTransformedTags = incidents.map(incident => ({
+        ...incident,
+        tags: incident.tags ? incident.tags.map((it: any) => it.tag) : []
+      }));
+
       // Decrypt sensitive data before returning
-      const decryptedIncidents = this.decryptIncidentArray(incidents);
+      const decryptedIncidents = this.decryptIncidentArray(incidentsWithTransformedTags);
 
       return {
         success: true,
@@ -461,6 +490,16 @@ export class IncidentService {
               uploader: { select: { id: true, name: true, email: true } },
             },
           },
+          event: {
+            select: { id: true, name: true, slug: true }
+          },
+          tags: {
+            include: {
+              tag: {
+                select: { id: true, name: true, color: true }
+              }
+            }
+          }
         },
       });
 
@@ -478,7 +517,7 @@ export class IncidentService {
         };
       }
 
-      // Decrypt sensitive data before returning
+      // Decrypt sensitive data before returning (this will handle tag transformation)
       const decryptedIncident = this.decryptIncidentData(incident);
 
       return {
@@ -869,6 +908,16 @@ export class IncidentService {
               uploader: { select: { id: true, name: true, email: true } },
             },
           },
+          event: {
+            select: { id: true, name: true, slug: true }
+          },
+          tags: {
+            include: {
+              tag: {
+                select: { id: true, name: true, color: true }
+              }
+            }
+          }
         },
       });
 
@@ -1553,162 +1602,7 @@ export class IncidentService {
     }
   }
 
-  /**
-   * Update report contact preference (with authorization check)
-   */
-  async updateIncidentContactPreference(eventId: string, incidentId: string, contactPreference: string, userId?: string): Promise<ServiceResult<{ incident: any }>> {
-    try {
-      // Validate contact preference
-      const validPreferences = ['email', 'phone', 'in_person', 'no_contact'];
-      if (!validPreferences.includes(contactPreference)) {
-        return {
-          success: false,
-          error: 'Invalid contact preference. Must be: email, phone, in_person, or no_contact.'
-        };
-      }
 
-      // Check report exists and belongs to event
-      const incident = await this.prisma.incident.findUnique({
-        where: { id: incidentId },
-        include: { reporter: true },
-      });
-
-      if (!incident || incident.eventId !== eventId) {
-        return {
-          success: false,
-          error: 'Report not found for this event.'
-        };
-      }
-
-      // Check edit permissions - only reporter can edit contact preference
-      if (userId) {
-        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
-
-        if (!isReporter) {
-          return {
-            success: false,
-            error: 'Only the reporter can edit contact preference.'
-          };
-        }
-      }
-
-      // Store original contact preference for audit log
-      const originalContactPreference = incident.contactPreference;
-
-      // Update contact preference
-      const updated = await this.prisma.incident.update({
-        where: { id: incidentId },
-        data: { contactPreference } as any,
-        include: { reporter: true },
-      });
-
-      // Audit log: contact preference updated
-      try {
-        await logAudit({
-          eventId: eventId,
-          userId: userId,
-          action: 'update_incident_contact_preference',
-          targetType: 'incident',
-          targetId: incidentId,
-        });
-      } catch (auditError) {
-        logger.error('Failed to log audit for contact preference update:', auditError);
-        // Don't fail the update if audit logging fails
-      }
-
-      return {
-        success: true,
-        data: { incident: updated }
-      };
-    } catch (error: any) {
-      logger.error('Error updating report contact preference:', error);
-      return {
-        success: false,
-        error: 'Failed to update report contact preference.'
-      };
-    }
-  }
-
-  /**
-   * Update report type (with authorization check)
-   */
-  async updateIncidentType(eventId: string, incidentId: string, type: string, userId?: string): Promise<ServiceResult<{ incident: any }>> {
-    try {
-      // Validate report type
-      const validTypes = ['harassment', 'safety', 'other'];
-      if (!validTypes.includes(type)) {
-        return {
-          success: false,
-          error: 'Invalid report type. Must be: harassment, safety, or other.'
-        };
-      }
-
-      // Check report exists and belongs to event
-      const incident = await this.prisma.incident.findUnique({
-        where: { id: incidentId },
-        include: { reporter: true },
-      });
-
-      if (!incident || incident.eventId !== eventId) {
-        return {
-          success: false,
-          error: 'Report not found for this event.'
-        };
-      }
-
-      // Check edit permissions if userId provided
-      if (userId) {
-        const isReporter = !!(incident.reporterId && userId === incident.reporterId);
-
-        // Use unified RBAC to check event permissions
-        const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
-
-        const canEdit = isReporter || hasEventRole;
-
-        if (!canEdit) {
-          return {
-            success: false,
-            error: 'Insufficient permissions to edit this report type.'
-          };
-        }
-      }
-
-      // Store original type for audit log
-      const originalType = incident.type;
-
-      // Update type
-      const updated = await this.prisma.incident.update({
-        where: { id: incidentId },
-        data: { type: type as any },
-        include: { reporter: true },
-      });
-
-      // Audit log: type updated
-      try {
-        await logAudit({
-          eventId: eventId,
-          userId: userId,
-          action: 'update_incident_type',
-          targetType: 'incident',
-          targetId: incidentId,
-        });
-      } catch (auditError) {
-        logger.error('Failed to log audit for type update:', auditError);
-        // Don't fail the update if audit logging fails
-      }
-
-      return {
-        success: true,
-        data: { incident: updated }
-      };
-    } catch (error: any) {
-      logger.error('Error updating report type:', error);
-      return {
-        success: false,
-        error: 'Failed to update report type.'
-      };
-    }
-  }
 
   /**
    * Update report description (with authorization check)
@@ -1978,6 +1872,99 @@ export class IncidentService {
   }
 
   /**
+   * Update incident severity
+   */
+  async updateIncidentSeverity(eventId: string, incidentId: string, severity: string | null, userId?: string): Promise<ServiceResult<{ incident: any }>> {
+    try {
+      // Validate severity if provided
+      if (severity && !['low', 'medium', 'high', 'critical'].includes(severity)) {
+        return {
+          success: false,
+          error: 'Invalid severity value. Must be one of: low, medium, high, critical.'
+        };
+      }
+
+      // Check report exists and belongs to event
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
+        include: { reporter: true },
+      });
+
+      if (!incident || incident.eventId !== eventId) {
+        return {
+          success: false,
+          error: 'Report not found for this event.'
+        };
+      }
+
+      // Check edit permissions if userId provided - only responders and above can edit severity
+      if (userId) {
+        // Use unified RBAC to check event permissions (severity editing is responders+ only)
+        const hasEventRole = await this.unifiedRBAC.hasEventRole(userId, eventId, ['responder', 'event_admin', 'system_admin']);
+
+        if (!hasEventRole) {
+          return {
+            success: false,
+            error: 'Insufficient permissions to edit incident severity. Only responders and above can update severity.'
+          };
+        }
+      }
+
+      // Store original severity for audit log
+      const originalSeverity = incident.severity;
+
+      // Update severity
+      const updated = await this.prisma.incident.update({
+        where: { id: incidentId },
+        data: { severity: severity as any }, // Cast to handle enum typing
+        include: { 
+          reporter: true,
+          tags: {
+            include: {
+              tag: true
+            }
+          },
+          event: {
+            select: {
+              id: true,
+              name: true,
+              slug: true
+            }
+          }
+        },
+      });
+
+      // Audit log: severity updated
+      try {
+        await logAudit({
+          eventId: eventId,
+          userId: userId,
+          action: 'update_incident_severity',
+          targetType: 'incident',
+          targetId: incidentId,
+        });
+      } catch (auditError) {
+        logger.error('Failed to log audit for severity update:', auditError);
+        // Don't fail the update if audit logging fails
+      }
+
+      // Decrypt before returning
+      const decryptedIncident = this.decryptIncidentData(updated);
+
+      return {
+        success: true,
+        data: { incident: decryptedIncident }
+      };
+    } catch (error: any) {
+      logger.error('Error updating report severity:', error);
+      return {
+        success: false,
+        error: 'Failed to update report severity.'
+      };
+    }
+  }
+
+  /**
    * Get reports for a specific event with enhanced filtering, search, and optional stats
    */
   async getEventIncidents(eventId: string, userId: string, query: IncidentQuery & { includeStats?: boolean }): Promise<ServiceResult<{
@@ -2093,6 +2080,17 @@ export class IncidentService {
               id: true,
               name: true,
               slug: true
+            }
+          },
+          tags: {
+            include: {
+              tag: {
+                select: {
+                  id: true,
+                  name: true,
+                  color: true
+                }
+              }
             }
           },
           comments: {
@@ -2498,6 +2496,125 @@ export class IncidentService {
       return {
         success: false,
         error: 'Failed to perform bulk update'
+      };
+    }
+  }
+
+  /**
+   * Update tags for an incident
+   */
+  async updateIncidentTags(incidentId: string, tagIds: string[], userId: string): Promise<ServiceResult<{ incident: any }>> {
+    try {
+      // Get the incident to check permissions
+      const incident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
+        select: { id: true, eventId: true }
+      });
+
+      if (!incident) {
+        return {
+          success: false,
+          error: 'Incident not found.'
+        };
+      }
+
+      // Check permissions - only responders and above can manage tags
+      const hasPermission = await this.unifiedRBAC.hasEventRole(userId, incident.eventId, ['responder', 'event_admin', 'system_admin']);
+      if (!hasPermission) {
+        return {
+          success: false,
+          error: 'Insufficient permissions. Only responders and above can manage incident tags.'
+        };
+      }
+
+      // Verify all tags belong to the same event (if any tags provided)
+      if (tagIds.length > 0) {
+        const tags = await this.prisma.tag.findMany({
+          where: {
+            id: { in: tagIds },
+            eventId: incident.eventId
+          }
+        });
+
+        if (tags.length !== tagIds.length) {
+          return {
+            success: false,
+            error: 'Some tags do not exist or do not belong to this event.'
+          };
+        }
+      }
+
+      // Use a transaction to replace all tags
+      await this.prisma.$transaction(async (tx) => {
+        // Remove all existing tags for this incident
+        await (tx as any).incidentTag.deleteMany({
+          where: { incidentId }
+        });
+
+        // Add new tags if provided
+        if (tagIds.length > 0) {
+          const incidentTagData = tagIds.map(tagId => ({
+            incidentId,
+            tagId
+          }));
+
+          await (tx as any).incidentTag.createMany({
+            data: incidentTagData
+          });
+        }
+      });
+
+      // Fetch updated incident with tags (using any type for tags since TypeScript types may not be updated)
+      const updatedIncident = await this.prisma.incident.findUnique({
+        where: { id: incidentId },
+        include: {
+          reporter: {
+            select: { id: true, name: true, email: true }
+          },
+          assignedResponder: {
+            select: { id: true, name: true, email: true }
+          },
+          event: {
+            select: { id: true, name: true, slug: true }
+          },
+          tags: {
+            include: {
+              tag: {
+                select: { id: true, name: true, color: true }
+              }
+            }
+          }
+        } as any
+      });
+
+      if (!updatedIncident) {
+        return {
+          success: false,
+          error: 'Failed to fetch updated incident.'
+        };
+      }
+
+      // Decrypt the incident data before returning
+      const decryptedIncident = this.decryptIncidentData(updatedIncident);
+
+      // Log audit trail for tag update
+      await logAudit({
+        userId: userId,
+        action: 'incident_tags_updated',
+        targetType: 'incident',
+        targetId: incidentId,
+        eventId: incident.eventId
+      });
+
+      return {
+        success: true,
+        data: { incident: decryptedIncident }
+      };
+    } catch (error: any) {
+      logger.error('Error updating incident tags:', error);
+      return {
+        success: false,
+        error: 'Failed to update incident tags.'
       };
     }
   }

@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button as AlertDialogAction } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, AlertTriangle, CheckCircle, Clock, XCircle, Eye, FileText, User } from "lucide-react";
+import { ArrowRight, AlertTriangle, CheckCircle, Clock, XCircle, Eye, FileText, User, Pencil } from "lucide-react";
 
 interface StateManagementSectionProps {
   currentState: string;
@@ -29,6 +29,10 @@ interface StateManagementSectionProps {
     changedAt: string;
     notes?: string;
   }>;
+  // Severity editing props
+  severity?: string;
+  canEditSeverity?: boolean;
+  onSeverityChange?: (severity: string) => void;
 }
 
 const STATE_CONFIGS = {
@@ -102,12 +106,20 @@ export function StateManagementSection({
   canChangeState = false,
   eventUsers = [],
   assignedResponderId = "",
-  stateHistory = []
+  stateHistory = [],
+  // Severity editing props
+  severity = "",
+  canEditSeverity = false,
+  onSeverityChange
 }: StateManagementSectionProps) {
   const [selectedTransition, setSelectedTransition] = useState<string>("");
   const [transitionNotes, setTransitionNotes] = useState<string>("");
   const [selectedAssignee, setSelectedAssignee] = useState<string>(assignedResponderId);
   const [showDialog, setShowDialog] = useState<boolean>(false);
+  
+  // Severity editing state
+  const [editingSeverity, setEditingSeverity] = useState<boolean>(false);
+  const [localSeverity, setLocalSeverity] = useState<string>(severity);
 
   const handleTransitionClick = (newState: string) => {
     setSelectedTransition(newState);
@@ -142,6 +154,24 @@ export function StateManagementSection({
 
   const requirements = selectedTransition ? TRANSITION_REQUIREMENTS[selectedTransition as keyof typeof TRANSITION_REQUIREMENTS] : null;
 
+  // Severity editing functions
+  const handleSeverityEdit = () => {
+    setEditingSeverity(true);
+    setLocalSeverity(severity);
+  };
+
+  const handleSeveritySave = () => {
+    if (onSeverityChange) {
+      onSeverityChange(localSeverity);
+    }
+    setEditingSeverity(false);
+  };
+
+  const handleSeverityCancel = () => {
+    setLocalSeverity(severity);
+    setEditingSeverity(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Current State Display */}
@@ -157,6 +187,66 @@ export function StateManagementSection({
           </p>
         </div>
       </div>
+
+      {/* Severity Section - Only show to responders and above */}
+      {canEditSeverity && (
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5" />
+          <div className="flex-1">
+            <h3 className="font-semibold">Severity</h3>
+            {editingSeverity ? (
+              <div className="flex items-center gap-2 mt-1">
+                <select
+                  value={localSeverity}
+                  onChange={(e) => setLocalSeverity(e.target.value)}
+                  className="border px-2 py-1 rounded bg-background text-foreground"
+                  disabled={loading}
+                >
+                  <option value="">(none)</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+                <Button size="sm" onClick={handleSeveritySave} disabled={loading}>
+                  Save
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleSeverityCancel}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mt-1">
+                {severity ? (
+                  <Badge 
+                    variant="secondary"
+                    className={
+                      severity === 'critical' ? 'bg-red-100 text-red-800 border-red-200' :
+                      severity === 'high' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                      severity === 'medium' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                      severity === 'low' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                      'bg-gray-100 text-gray-800 border-gray-200'
+                    }
+                  >
+                    {severity.charAt(0).toUpperCase() + severity.slice(1)}
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground">(none)</span>
+                )}
+                <button 
+                  type="button" 
+                  onClick={handleSeverityEdit}
+                  className="p-1 rounded hover:bg-muted" 
+                  aria-label="Edit severity"
+                  disabled={loading}
+                >
+                  <Pencil size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Visual Workflow Progress */}
       <Card className="p-4">

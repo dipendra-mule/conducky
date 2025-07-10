@@ -438,6 +438,10 @@ export function AppSidebar({ user, events, organizations, globalRoles, ...props 
                 url: `/events/${targetEventSlug}/settings/code-of-conduct`,
               },
               {
+                title: "Tags",
+                url: `/events/${targetEventSlug}/settings/tags`,
+              },
+              {
                 title: "Notifications",
                 url: `/events/${targetEventSlug}/settings/notifications`,
               },

@@ -62,22 +62,20 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
   describe('IncidentService Encryption', () => {
     describe('createIncident', () => {
       it('should encrypt sensitive incident fields during creation', async () => {
-        const testIncidentData = {
-          eventId: 'test-event-id',
-          reporterId: 'test-reporter-id',
-          type: 'harassment',
-          title: 'Test incident title',
-          description: 'Sensitive incident description that should be encrypted',
-          parties: 'Person A and Person B were involved',
-          location: 'Conference room 123',
-          contactPreference: 'email',
-          urgency: 'high'
+        const incidentData = {
+          eventId: 1,
+          reporterId: 1,
+          title: "Test Incident",
+          description: "This is a test description",
+          parties: "John Doe",
+          location: "Conference Room A",
+          urgency: "medium",
         };
 
         const mockEvent = { id: 'test-event-id', name: 'Test Event' };
         const mockCreatedIncident = {
           id: 'test-incident-id',
-          ...testIncidentData,
+          ...incidentData,
           description: 'encrypted-description-data',
           parties: 'encrypted-parties-data',
           location: 'encrypted-location-data',
@@ -88,7 +86,12 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
         mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
         mockPrisma.incident.create.mockResolvedValue(mockCreatedIncident);
 
-        const result = await incidentService.createIncident(testIncidentData);
+        const result = await incidentService.createIncident(incidentData);
+
+        // Debug output
+        if (!result.success) {
+          console.log('Test debug - createIncident failed:', result.error);
+        }
 
         expect(result.success).toBe(true);
         
@@ -102,33 +105,31 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
         expect(isEncrypted(createData.location)).toBe(true);
         
         // Other fields should not be encrypted
-        expect(createData.title).toBe(testIncidentData.title);
-        expect(createData.eventId).toBe(testIncidentData.eventId);
-        expect(createData.severity).toBe(testIncidentData.urgency);
+        expect(createData.title).toBe(incidentData.title);
+        expect(createData.eventId).toBe(incidentData.eventId);
+        expect(createData.severity).toBe(incidentData.urgency);
       });
 
       it('should handle incidents with null/undefined sensitive fields', async () => {
-        const testIncidentData = {
-          eventId: 'test-event-id',
-          reporterId: 'test-reporter-id',
-          type: 'harassment',
-          title: 'Test incident title',
-          description: 'Required description',
-          // parties and location are undefined
-          contactPreference: 'email'
+        const incidentData = {
+          eventId: 1,
+          reporterId: 1,
+          title: "Test Incident",
+          description: "This is a test description",
+          urgency: "low",
         };
 
         const mockEvent = { id: 'test-event-id', name: 'Test Event' };
         const mockCreatedIncident = {
           id: 'test-incident-id',
-          ...testIncidentData,
+          ...incidentData,
           state: 'submitted'
         };
 
         mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
         mockPrisma.incident.create.mockResolvedValue(mockCreatedIncident);
 
-        const result = await incidentService.createIncident(testIncidentData);
+        const result = await incidentService.createIncident(incidentData);
 
         expect(result.success).toBe(true);
         
@@ -145,6 +146,17 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
 
     describe('getIncidentById', () => {
       it('should decrypt incident data when retrieving by ID', async () => {
+        // First create an incident with encrypted data
+        const createData = {
+          eventId: 1,
+          reporterId: 1,
+          title: "Test Incident",
+          description: "This is sensitive information",
+          parties: "Jane Smith",
+          location: "Main Hall",
+          severity: "high",
+        };
+
         const mockEncryptedIncident = {
           id: 'test-incident-id',
           title: 'Test incident',
@@ -153,14 +165,15 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
           location: encryptField('Room 123'),
           eventId: 'test-event-id',
           state: 'submitted',
-          type: 'harassment',
           severity: 'medium',
           reporterId: 'reporter-id',
           createdAt: new Date(),
           updatedAt: new Date(),
           reporter: { id: 'reporter-id', name: 'Reporter Name', email: 'reporter@test.com' },
           assignedResponder: null,
-          evidenceFiles: []
+          evidenceFiles: [],
+          event: { id: 'test-event-id', name: 'Test Event', slug: 'test-event' },
+          tags: []
         };
 
         mockPrisma.incident.findUnique.mockResolvedValue(mockEncryptedIncident);
@@ -188,6 +201,16 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
       });
 
       it('should handle incidents with mixed encrypted and non-encrypted fields', async () => {
+        // Create incident with some encrypted, some plain fields
+        const createData = {
+          eventId: 1,
+          reporterId: 1,
+          title: "Test Incident",
+          description: "Encrypted description",
+          location: "Plain location", // This will be encrypted
+          severity: "medium", // This won't be encrypted
+        };
+
         const mockIncident = {
           id: 'test-incident-id',
           title: 'Test incident',
@@ -196,14 +219,15 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
           location: encryptField('Encrypted location'),
           eventId: 'test-event-id',
           state: 'submitted',
-          type: 'harassment',
           severity: 'medium',
           reporterId: 'reporter-id',
           createdAt: new Date(),
           updatedAt: new Date(),
           reporter: { id: 'reporter-id', name: 'Reporter Name', email: 'reporter@test.com' },
           assignedResponder: null,
-          evidenceFiles: []
+          evidenceFiles: [],
+          event: { id: 'test-event-id', name: 'Test Event', slug: 'test-event' },
+          tags: []
         };
 
         mockPrisma.incident.findUnique.mockResolvedValue(mockIncident);
@@ -226,6 +250,7 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
 
     describe('updateIncidentParties', () => {
       it('should encrypt parties data when updating', async () => {
+        // First create incident
         const mockIncident = {
           id: 'test-incident-id',
           eventId: 'test-event-id',
@@ -233,7 +258,6 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
           title: 'Test incident',
           description: 'Test description',
           state: 'submitted',
-          type: 'harassment',
           severity: 'medium',
           reporterId: 'reporter-id',
           createdAt: new Date(),
@@ -275,6 +299,8 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
   describe('CommentService Encryption', () => {
     describe('createComment', () => {
       it('should encrypt comment body during creation', async () => {
+        // Mock incident for the test (no need to actually create one)
+
         const testCommentData = {
           incidentId: 'test-incident-id',
           authorId: 'test-author-id',
@@ -320,6 +346,8 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
 
     describe('getIncidentComments', () => {
       it('should decrypt comment bodies when retrieving comments', async () => {
+        // Mock incident for the test (no need to actually create one)
+
         const mockEncryptedComments = [
           {
             id: 'comment-1',
@@ -360,6 +388,8 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
 
     describe('updateComment', () => {
       it('should encrypt updated comment body', async () => {
+        // Mock incident and comment for the test (no need to actually create them)
+
         const mockExistingComment = {
           id: 'test-comment-id',
           incidentId: 'test-incident-id',
@@ -405,13 +435,41 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
 
   describe('Encryption Integration', () => {
     it('should maintain encryption consistency across incident operations', async () => {
-      const originalText = 'Very sensitive incident information';
-      const encrypted = encryptField(originalText);
+      // Create incident with encrypted fields
+      const createData = {
+        eventId: 1,
+        reporterId: 1,
+        title: "Integration Test",
+        description: "This should be encrypted",
+        parties: "Test User",
+        location: "Test Location",
+        urgency: "medium",
+      };
+
+      const mockEvent = { id: 'test-event-id', name: 'Test Event' };
+      const mockCreatedIncident = {
+        id: 'test-incident-id',
+        ...createData,
+        description: 'encrypted-description-data',
+        parties: 'encrypted-parties-data',
+        location: 'encrypted-location-data',
+        severity: 'high',
+        state: 'submitted'
+      };
+
+      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
+      mockPrisma.incident.create.mockResolvedValue(mockCreatedIncident);
+
+      const result = await incidentService.createIncident(createData);
+
+      expect(result.success).toBe(true);
+      
+      const encrypted = encryptField(createData.description);
       const decrypted = decryptField(encrypted);
       
       expect(isEncrypted(encrypted)).toBe(true);
-      expect(decrypted).toBe(originalText);
-      expect(encrypted).not.toBe(originalText);
+      expect(decrypted).toBe(createData.description);
+      expect(encrypted).not.toBe(createData.description);
     });
 
     it('should handle encryption errors gracefully in services', () => {

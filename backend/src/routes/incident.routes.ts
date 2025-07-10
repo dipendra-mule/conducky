@@ -6,6 +6,7 @@ import multer from 'multer';
 // Import security middleware
 import { reportCreationRateLimit, fileUploadRateLimit } from '../middleware/rate-limit';
 import { validateReport, handleValidationErrors } from '../middleware/validation';
+import { requireRole } from '../middleware/rbac';
 import logger from '../config/logger';
 
 const router = Router();
@@ -112,6 +113,45 @@ router.delete('/:incidentId/evidence/:evidenceId', async (req: Request, res: Res
   } catch (error: any) {
     logger.error('Delete evidence file error:', error);
     res.status(500).json({ error: 'Failed to delete evidence file.' });
+  }
+});
+
+// Update tags for an incident
+router.patch('/:incidentId/tags', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { incidentId } = req.params;
+    const { tags } = req.body;
+    const user = req.user as any;
+
+    if (!user || !user.id) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    if (!Array.isArray(tags)) {
+      res.status(400).json({ error: 'tags must be an array' });
+      return;
+    }
+
+    const result = await incidentService.updateIncidentTags(incidentId, tags, user.id);
+
+    if (!result.success) {
+      if (result.error?.includes('Insufficient permissions')) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      if (result.error?.includes('not found')) {
+        res.status(404).json({ error: result.error });
+        return;
+      }
+      res.status(400).json({ error: result.error });
+      return;
+    }
+
+    res.json(result.data);
+  } catch (error: any) {
+    logger.error('Error updating incident tags:', error);
+    res.status(500).json({ error: 'Failed to update incident tags.' });
   }
 });
 
