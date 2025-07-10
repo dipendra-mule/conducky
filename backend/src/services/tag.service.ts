@@ -86,11 +86,14 @@ export class TagService {
         };
       }
 
-             // Check if tag name already exists for this event
-       const existingTag = await this.prisma.tag.findFirst({
-        where: {
-          name: name.trim(),
-          eventId
+             // Check if tag name already exists for this event (case-insensitive)
+             const existingTag = await this.prisma.tag.findFirst({
+               where: {
+                 name: {
+                   equals: name.trim(),
+                   mode: 'insensitive'
+                 },
+                 eventId
         }
       });
 
