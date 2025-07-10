@@ -459,10 +459,10 @@ router.delete('/:eventId/roles', requireRole(['event_admin', 'system_admin']), a
 router.post('/:eventId/incidents', reportCreationRateLimit, requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), validateUploadedFiles, async (req: Request, res: Response): Promise<void> => {
   try {
     const { eventId } = req.params;
-    const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;
+    const { description, title, incidentAt, parties, location, urgency } = req.body;
     
-    if (!type || !description || !title) {
-      res.status(400).json({ error: 'Type, description, and title are required.' });
+    if (!description || !title) {
+      res.status(400).json({ error: 'Description and title are required.' });
       return;
     }
     
@@ -486,14 +486,12 @@ router.post('/:eventId/incidents', reportCreationRateLimit, requireRole(['report
     
     const incidentData = {
       eventId,
-      type,
       description,
       title,
       reporterId: user.id,
       incidentAt: incidentAt ? new Date(incidentAt) : null,
       parties,
       location,
-      contactPreference,
       urgency
     };
     
@@ -752,65 +750,7 @@ router.patch('/:eventId/incidents/:incidentId/location', requireRole(['event_adm
   }
 });
 
-// Update report contact preference
-router.patch('/:eventId/incidents/:incidentId/contact-preference', requireRole(['event_admin', 'system_admin', 'reporter']), async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { eventId, incidentId } = req.params;
-    const { contactPreference } = req.body;
-    
-    if (!contactPreference) {
-      res.status(400).json({ error: 'Contact preference is required.' });
-      return;
-    }
-    
-    const user = req.user as any;
-    const result = await incidentService.updateIncidentContactPreference(eventId, incidentId, contactPreference, user?.id);
-    
-    if (!result.success) {
-      if (result.error?.includes('Insufficient permissions') || result.error?.includes('Only the reporter')) {
-        res.status(403).json({ error: result.error });
-        return;
-      }
-      res.status(400).json({ error: result.error });
-      return;
-    }
-    
-    res.json(result.data);
-  } catch (error) {
-    logger.error('Error updating report contact preference:', error);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
 
-// Update report type
-router.patch('/:eventId/incidents/:incidentId/type', requireRole(['event_admin', 'system_admin', 'reporter', 'responder']), async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { eventId, incidentId } = req.params;
-    const { type } = req.body;
-    
-    if (!type) {
-      res.status(400).json({ error: 'Type is required.' });
-      return;
-    }
-    
-    const user = req.user as any;
-    const result = await incidentService.updateIncidentType(eventId, incidentId, type, user?.id);
-    
-    if (!result.success) {
-      if (result.error?.includes('Insufficient permissions')) {
-        res.status(403).json({ error: result.error });
-        return;
-      }
-      res.status(400).json({ error: result.error });
-      return;
-    }
-    
-    res.json(result.data);
-  } catch (error) {
-    logger.error('Error updating report type:', error);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
 
 // Update report description
 router.patch('/:eventId/incidents/:incidentId/description', requireRole(['event_admin', 'system_admin', 'reporter']), async (req: Request, res: Response): Promise<void> => {
@@ -888,6 +828,31 @@ router.patch('/:eventId/incidents/:incidentId/parties', requireRole(['event_admi
     res.json(result.data);
   } catch (error) {
     logger.error('Error updating report parties:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Update report severity
+router.patch('/:eventId/incidents/:incidentId/severity', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { eventId, incidentId } = req.params;
+    const { severity } = req.body;
+    
+    const user = req.user as any;
+    const result = await incidentService.updateIncidentSeverity(eventId, incidentId, severity, user?.id);
+    
+    if (!result.success) {
+      if (result.error?.includes('Insufficient permissions')) {
+        res.status(403).json({ error: result.error });
+        return;
+      }
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    
+    res.json(result.data);
+  } catch (error) {
+    logger.error('Error updating report severity:', error);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -1254,7 +1219,7 @@ router.get('/slug/:slug/incidents/export', requireRole(['reporter', 'responder',
     if (format === 'csv') {
       // Generate CSV
       const csvRows = [
-        'ID,Title,Type,Status,Severity,Reporter,Assigned,Created,Description,URL'
+        'ID,Title,Status,Severity,Reporter,Assigned,Created,Description,URL'
       ];
       
       incidents.forEach(incident => {
@@ -1264,7 +1229,6 @@ router.get('/slug/:slug/incidents/export', requireRole(['reporter', 'responder',
         const row = [
           incident.id,
           `"${incident.title.replace(/"/g, '""')}"`, // Escape quotes
-          incident.type,
           incident.state,
           incident.severity || '',
           incident.reporter?.name || '',
@@ -1289,7 +1253,6 @@ router.get('/slug/:slug/incidents/export', requireRole(['reporter', 'responder',
       incidents.forEach(incident => {
         textContent += `ID: ${incident.id}\n`;
         textContent += `Title: ${incident.title}\n`;
-        textContent += `Type: ${incident.type}\n`;
         textContent += `Status: ${incident.state}\n`;
         textContent += `Severity: ${incident.severity || 'Not specified'}\n`;
         textContent += `Reporter: ${incident.reporter?.name || 'Unknown'}\n`;
@@ -1410,10 +1373,10 @@ router.get('/slug/:slug/incidents', requireRole(['reporter', 'responder', 'event
 router.post('/slug/:slug/incidents', reportCreationRateLimit, requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), uploadEvidence.array('evidence'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { slug } = req.params;
-    const { type, description, title, incidentAt, parties, location, contactPreference, urgency } = req.body;
+    const { description, title, incidentAt, parties, location, urgency } = req.body;
     
-    if (!type || !description || !title) {
-      res.status(400).json({ error: 'Type, description, and title are required.' });
+    if (!description || !title) {
+      res.status(400).json({ error: 'Description and title are required.' });
       return;
     }
     
@@ -1444,14 +1407,12 @@ router.post('/slug/:slug/incidents', reportCreationRateLimit, requireRole(['repo
     
     const incidentData = {
       eventId,
-      type,
       description,
       title,
       reporterId: user.id,
       incidentAt: incidentAt ? new Date(incidentAt) : null,
       parties,
       location,
-      contactPreference,
       urgency
     };
     
@@ -1840,37 +1801,7 @@ router.patch('/slug/:slug/incidents/:incidentId/description', requireRole(['even
   }
 });
 
-// Update report type by slug
-router.patch('/slug/:slug/incidents/:incidentId/type', requireRole(['event_admin', 'system_admin', 'reporter', 'responder']), async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { slug, incidentId } = req.params;
-    const { type } = req.body;
-    
-    // Check if event exists by slug
-    const eventId = await eventService.getEventIdBySlug(slug);
-    if (!eventId) {
-      res.status(404).json({ error: 'Event not found.' });
-      return;
-    }
-    
-    const user = req.user as any;
-    const result = await incidentService.updateIncidentType(eventId, incidentId, type, user?.id);
-    
-    if (!result.success) {
-      if (result.error?.includes('Insufficient permissions')) {
-        res.status(403).json({ error: result.error });
-        return;
-      }
-      res.status(400).json({ error: result.error });
-      return;
-    }
-    
-    res.json(result.data);
-  } catch (error) {
-    logger.error('Error updating report type by slug:', error);
-    res.status(500).json({ error: 'Internal server error.' });
-  }
-});
+
 
 // Create comment on report by slug
 router.post('/slug/:slug/incidents/:incidentId/comments', commentCreationRateLimit, requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {

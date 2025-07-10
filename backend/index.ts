@@ -58,6 +58,7 @@ import {
   auditRoutes,
   logsRoutes
 } from './src/routes';
+import tagRoutes from './src/routes/tag.routes';
 
 // Import middleware
 import { testAuthMiddleware } from './src/middleware/auth';
@@ -187,6 +188,7 @@ app.use('/api/user/notification-settings', userNotificationSettingsRoutes); // F
 app.use('/api/config', configRoutes); // Mount configRoutes at /api/config
 app.use('/api/organizations', organizationRoutes); // Organization management routes
 app.use('/api/audit', auditRoutes); // Audit log routes
+app.use('/api/tags', tagRoutes); // Tag management routes
 app.use('/api', logsRoutes); // Frontend logging endpoint
 
 // Missing API routes that frontend expects

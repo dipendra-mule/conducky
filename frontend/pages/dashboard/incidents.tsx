@@ -10,6 +10,7 @@ export default function CrossEventIncidents() {
         showPinning={true}
         showExport={true}
         className="w-full"
+        userRoles={[]}
       />
     </div>
   );

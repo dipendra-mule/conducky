@@ -15,6 +15,7 @@ interface AssignmentSectionProps {
   error?: string;
   success?: string;
   onSave: (updatedFields?: any) => void;
+  canEditSeverity?: boolean;
 }
 
 export function AssignmentSection({
@@ -25,6 +26,7 @@ export function AssignmentSection({
   error = "",
   success = "",
   onSave,
+  canEditSeverity = true,
 }: AssignmentSectionProps) {
   const [editingField, setEditingField] = useState<null | "assignedResponderId" | "severity" | "resolution">(
     null
@@ -94,39 +96,41 @@ export function AssignmentSection({
           )}
         </div>
       </div>
-      {/* Severity */}
-      <div className="mb-2">
-        <label htmlFor="severity" className="block text-sm font-medium text-foreground mb-1">Severity</label>
-        <div>
-          {editingField === "severity" ? (
-            <div className="flex items-center gap-2">
-              <select
-                id="severity"
-                value={localFields.severity || ''}
-                onChange={e => handleFieldChange("severity", e.target.value)}
-                className="border px-2 py-1 rounded w-full bg-background text-foreground"
-                disabled={loading}
-              >
-                <option value="">(none)</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-              <Button type="button" onClick={handleSave} disabled={loading} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
-              <Button type="button" onClick={handleCancel} className="bg-muted text-foreground px-2 py-1 text-xs">Cancel</Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span>{assignmentFields.severity || '(none)'}</span>
-              <button type="button" onClick={() => startEdit("severity")}
-                className="p-1 rounded hover:bg-muted" aria-label="Edit severity">
-                <Pencil size={16} />
-              </button>
-            </div>
-          )}
+      {/* Severity - Only show to responders and above */}
+      {canEditSeverity && (
+        <div className="mb-2">
+          <label htmlFor="severity" className="block text-sm font-medium text-foreground mb-1">Severity</label>
+          <div>
+            {editingField === "severity" ? (
+              <div className="flex items-center gap-2">
+                <select
+                  id="severity"
+                  value={localFields.severity || ''}
+                  onChange={e => handleFieldChange("severity", e.target.value)}
+                  className="border px-2 py-1 rounded w-full bg-background text-foreground"
+                  disabled={loading}
+                >
+                  <option value="">(none)</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+                <Button type="button" onClick={handleSave} disabled={loading} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
+                <Button type="button" onClick={handleCancel} className="bg-muted text-foreground px-2 py-1 text-xs">Cancel</Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span>{assignmentFields.severity || '(none)'}</span>
+                <button type="button" onClick={() => startEdit("severity")}
+                  className="p-1 rounded hover:bg-muted" aria-label="Edit severity">
+                  <Pencil size={16} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       {/* Resolution */}
       <div className="mb-2">
         <label htmlFor="resolution" className="block text-sm font-medium text-foreground mb-1">Resolution</label>

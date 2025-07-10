@@ -22,11 +22,7 @@ enum IncidentState {
   closed
 }
 
-enum IncidentType {
-  harassment
-  safety
-  other
-}
+// IncidentType enum removed - replaced with tagging system
 
 enum CommentVisibility {
   public      // visible to all involved (reporter, responders, admins)
@@ -40,12 +36,7 @@ enum IncidentSeverity {
   critical
 }
 
-enum ContactPreference {
-  email
-  phone
-  in_person
-  no_contact
-}
+// ContactPreference enum removed - contact preference field removed entirely
 
 enum NotificationType {
   incident_submitted      // New incident submitted
@@ -118,6 +109,7 @@ model Event {
   inviteLinks    EventInviteLink[]
   eventLogo      EventLogo?
   notifications  Notification[]
+  tags           Tag[] // Tagging system
 }
 
 // Legacy Role and UserEventRole models removed - using unified RBAC system
@@ -128,14 +120,14 @@ model Incident {
   eventId     String
   reporter    User?    @relation("ReporterIncidents", fields: [reporterId], references: [id])
   reporterId  String?
-  type        IncidentType
+  // type field removed - replaced with tagging system
   title       String   @db.VarChar(70) // required, max 70 chars
   description String
   state       IncidentState   // submitted, acknowledged, investigating, resolved, closed
   incidentAt  DateTime? // date and time of the incident (optional)
   parties     String?   // comma-separated or freeform list of parties involved (optional)
   location    String?   // location where the incident occurred (optional)
-  contactPreference ContactPreference @default(email) // preferred contact method
+  // contactPreference field removed entirely
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   comments    IncidentComment[]
@@ -145,6 +137,7 @@ model Incident {
   severity            IncidentSeverity?
   resolution          String?
   notifications Notification[]
+  tags        IncidentTag[] // New tagging system
 
   // Database indexes for query performance
   @@index([eventId])                           // Event-based queries
@@ -158,6 +151,33 @@ model Incident {
   @@index([eventId, reporterId])               // User's incidents in event
   @@index([eventId, createdAt])                // Event incidents by time
   @@index([reporterId, state])                 // User's incidents by status
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  color     String   @default("#3B82F6")
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  incidents IncidentTag[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([eventId, name])
+  @@index([eventId])
+}
+
+model IncidentTag {
+  id         String   @id @default(uuid())
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id])
+  tagId      String
+  tag        Tag      @relation(fields: [tagId], references: [id])
+  createdAt  DateTime @default(now())
+  
+  @@unique([incidentId, tagId])
+  @@index([incidentId])
+  @@index([tagId])
 }
 
 model AuditLog {

@@ -40,7 +40,7 @@ describe('Cross-Event Reports API Integration Tests', () => {
         description: 'Inappropriate behavior during keynote',
         state: 'submitted',
         severity: 'high',
-        type: 'harassment',
+
         incidentAt: '2024-01-15T10:00:00Z',
         createdAt: '2024-01-15T10:30:00Z',
         updatedAt: '2024-01-15T10:30:00Z',

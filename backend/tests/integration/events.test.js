@@ -335,10 +335,9 @@ describe("Event endpoints", () => {
     it("should create an incident (success)", async () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
-        .send({ type: "harassment", description: "Test report", title: "A valid report title" });
+        .send({ description: "Test report", title: "A valid report title" });
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty("incident");
-      expect(res.body.incident).toHaveProperty("type", "harassment");
       expect(res.body.incident).toHaveProperty("description", "Test report");
       expect(res.body.incident).toHaveProperty("title", "A valid report title");
     });
@@ -346,7 +345,7 @@ describe("Event endpoints", () => {
     it("should fail if missing required fields", async () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
-        .send({ type: "harassment" }); // missing description and title
+        .send({}); // missing description and title
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error");
     });
@@ -354,7 +353,7 @@ describe("Event endpoints", () => {
     it("should fail if title is too short", async () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
-        .send({ type: "harassment", description: "desc", title: "short" });
+        .send({ description: "desc", title: "short" });
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error");
     });
@@ -363,7 +362,7 @@ describe("Event endpoints", () => {
       const longTitle = "a".repeat(71);
       const res = await request(app)
         .post("/api/events/1/incidents")
-        .send({ type: "harassment", description: "desc", title: longTitle });
+        .send({ description: "desc", title: longTitle });
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error");
     });
@@ -371,7 +370,7 @@ describe("Event endpoints", () => {
     it("should return 404 if event not found", async () => {
       const res = await request(app)
         .post("/api/events/999/incidents")
-        .send({ type: "harassment", description: "Test report", title: "A valid report title" });
+        .send({ description: "Test report", title: "A valid report title" });
       expect(res.statusCode).toBe(404);
     });
 
@@ -382,7 +381,6 @@ describe("Event endpoints", () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
         .attach("evidence", Buffer.from(textContent), "evidence.txt")
-        .field("type", "harassment")
         .field("description", "Test with file")
         .field("title", "A valid report title");
       
@@ -395,35 +393,15 @@ describe("Event endpoints", () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
           description: "Test report with new fields", 
           title: "A valid report title",
           location: "Main conference room",
-          contactPreference: "email",
           urgency: "high"
         });
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty("incident");
       expect(res.body.incident).toHaveProperty("location", "Main conference room");
-      expect(res.body.incident).toHaveProperty("contactPreference", "email");
       expect(res.body.incident).toHaveProperty("severity", "high"); // urgency maps to severity
-    });
-
-    it("should accept valid contactPreference values", async () => {
-      const validPreferences = ["email", "phone", "in_person", "no_contact"];
-      
-      for (const preference of validPreferences) {
-        const res = await request(app)
-          .post("/api/events/1/incidents")
-          .send({ 
-            type: "harassment", 
-            description: "Test report", 
-            title: "A valid report title",
-            contactPreference: preference
-          });
-        expect(res.statusCode).toBe(201);
-        expect(res.body.incident).toHaveProperty("contactPreference", preference);
-      }
     });
 
     it("should accept valid urgency/severity values", async () => {
@@ -433,7 +411,6 @@ describe("Event endpoints", () => {
         const res = await request(app)
           .post("/api/events/1/incidents")
           .send({ 
-            type: "harassment", 
             description: "Test report", 
             title: "A valid report title",
             urgency: severity
@@ -447,7 +424,6 @@ describe("Event endpoints", () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
           description: "Test report", 
           title: "A valid report title",
           location: ""
@@ -456,24 +432,11 @@ describe("Event endpoints", () => {
       expect(res.body.incident).toHaveProperty("location", "");
     });
 
-    it("should default contactPreference to email when not provided", async () => {
-      const res = await request(app)
-        .post("/api/events/1/incidents")
-        .send({ 
-          type: "harassment", 
-          description: "Test report", 
-          title: "A valid report title"
-        });
-      expect(res.statusCode).toBe(201);
-      expect(res.body.incident).toHaveProperty("contactPreference", "email");
-    });
-
     it("should handle incidentAt and parties fields", async () => {
       const incidentDate = "2024-01-15T10:00:00Z";
       const res = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
           description: "Test report with incident details", 
           title: "A valid report title",
           incidentAt: incidentDate,
@@ -488,7 +451,6 @@ describe("Event endpoints", () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
           description: "Test report", 
           title: "A valid report title",
           location: null,
@@ -508,7 +470,6 @@ describe("Event endpoints", () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
           description: "Test report with future date", 
           title: "A valid report title",
           incidentAt: futureDate
@@ -525,7 +486,6 @@ describe("Event endpoints", () => {
       const res = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
           description: "Test report with near future date", 
           title: "A valid report title",
           incidentAt: nearFutureDate
@@ -534,18 +494,44 @@ describe("Event endpoints", () => {
       expect(res.body.incident).toHaveProperty("incidentAt");
     });
 
-    it("should reject invalid incident date format", async () => {
+    it("should validate that incident parties is under the character limit", async () => {
+      const longParties = "a".repeat(501); // 501 characters, exceeds 500 limit
+      
       const res = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
-          description: "Test report with invalid date", 
+          description: "Test report with long parties", 
           title: "A valid report title",
-          incidentAt: "not-a-date"
+          parties: longParties
         });
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("error");
-      expect(res.body.error).toBe("Invalid incident date format.");
+    });
+
+    it("should validate that location is under the character limit", async () => {
+      const longLocation = "a".repeat(201); // 201 characters, exceeds 200 limit
+      
+      const res = await request(app)
+        .post("/api/events/1/incidents")
+        .send({ 
+          description: "Test report with long location", 
+          title: "A valid report title",
+          location: longLocation
+        });
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("error");
+    });
+
+    it("should accept urgency value for incident creation", async () => {
+      const res = await request(app)
+        .post("/api/events/1/incidents")
+        .send({ 
+          description: "Test report", 
+          title: "A valid report title",
+          urgency: "medium"
+        });
+      expect(res.statusCode).toBe(201);
+      expect(res.body.incident).toHaveProperty("severity", "medium");
     });
 
     // Test edit endpoints
@@ -554,7 +540,6 @@ describe("Event endpoints", () => {
       const createRes = await request(app)
         .post("/api/events/1/incidents")
         .send({ 
-          type: "harassment", 
           description: "Test report", 
           title: "A valid report title"
         });
@@ -569,85 +554,7 @@ describe("Event endpoints", () => {
       expect(updateRes.body.incident).toHaveProperty("location", "Conference Room A");
     });
 
-    it("should update incident contact preference", async () => {
-      // First create a report
-      const createRes = await request(app)
-        .post("/api/events/1/incidents")
-        .send({ 
-          type: "harassment", 
-          description: "Test report", 
-          title: "A valid report title"
-        });
-      expect(createRes.statusCode).toBe(201);
-      const incidentId = createRes.body.incident.id;
 
-      // Update contact preference
-      const updateRes = await request(app)
-        .patch(`/api/events/1/incidents/${incidentId}/contact-preference`)
-        .send({ contactPreference: "phone" });
-      expect(updateRes.statusCode).toBe(200);
-      expect(updateRes.body.incident).toHaveProperty("contactPreference", "phone");
-    });
-
-    it("should update incident type", async () => {
-      // First create a report
-      const createRes = await request(app)
-        .post("/api/events/1/incidents")
-        .send({ 
-          type: "harassment", 
-          description: "Test report", 
-          title: "A valid report title"
-        });
-      expect(createRes.statusCode).toBe(201);
-      const incidentId = createRes.body.incident.id;
-
-      // Update type
-      const updateRes = await request(app)
-        .patch(`/api/events/1/incidents/${incidentId}/type`)
-        .send({ type: "safety" });
-      expect(updateRes.statusCode).toBe(200);
-      expect(updateRes.body.incident).toHaveProperty("type", "safety");
-    });
-
-    it("should reject invalid contact preference", async () => {
-      // First create a report
-      const createRes = await request(app)
-        .post("/api/events/1/incidents")
-        .send({ 
-          type: "harassment", 
-          description: "Test report", 
-          title: "A valid report title"
-        });
-      expect(createRes.statusCode).toBe(201);
-      const incidentId = createRes.body.incident.id;
-
-      // Try to update with invalid contact preference
-      const updateRes = await request(app)
-        .patch(`/api/events/1/incidents/${incidentId}/contact-preference`)
-        .send({ contactPreference: "invalid" });
-      expect(updateRes.statusCode).toBe(400);
-      expect(updateRes.body).toHaveProperty("error");
-    });
-
-    it("should reject invalid type update", async () => {
-      // First create a report
-      const createRes = await request(app)
-        .post("/api/events/1/incidents")
-        .send({ 
-          type: "harassment", 
-          description: "Test report", 
-          title: "A valid report title"
-        });
-      expect(createRes.statusCode).toBe(201);
-      const incidentId = createRes.body.incident.id;
-
-      // Try to update with invalid type
-      const updateRes = await request(app)
-        .patch(`/api/events/1/incidents/${incidentId}/type`)
-        .send({ type: "invalid_type" });
-      expect(updateRes.statusCode).toBe(400);
-      expect(updateRes.body).toHaveProperty("error");
-    });
   });
 
   describe("GET /events/:eventId/reports", () => {
@@ -656,7 +563,6 @@ describe("Event endpoints", () => {
       inMemoryStore.incidents.push({
         id: "r2",
         eventId: "1",
-        type: "harassment",
         description: "Report 2",
         state: "submitted",
       });
@@ -679,7 +585,6 @@ describe("Event endpoints", () => {
       inMemoryStore.incidents.push({
         id: "r3",
         eventId: "1",
-        type: "harassment",
         description: "Report 3",
         state: "submitted",
       });
@@ -707,7 +612,6 @@ describe("Event endpoints", () => {
         id: "r10",
         eventId: "1",
         reporterId: "1",
-        type: "harassment",
         title: "Original Title",
         description: "desc",
         state: "submitted",
@@ -738,7 +642,6 @@ describe("Event endpoints", () => {
         id: "r11",
         eventId: "1",
         reporterId: "1",
-        type: "harassment",
         title: "Original Title",
         description: "desc",
         state: "submitted",
@@ -760,7 +663,6 @@ describe("Event endpoints", () => {
         id: "r12",
         eventId: "1",
         reporterId: "1",
-        type: "harassment",
         title: "Original Title",
         description: "desc",
         state: "submitted",
@@ -776,7 +678,6 @@ describe("Event endpoints", () => {
         id: "r13",
         eventId: "1",
         reporterId: "1",
-        type: "harassment",
         title: "Original Title",
         description: "desc",
         state: "submitted",
@@ -1429,7 +1330,7 @@ describe("Evidence endpoints", () => {
     // Create a report to attach evidence to
     const res = await request(app)
       .post("/api/events/1/incidents")
-      .send({ type: "harassment", description: "Report for evidence", title: "Evidence Report Title" });
+              .send({ description: "Report for evidence", title: "Evidence Report Title" });
     incidentId = res.body.incident.id;
   });
 
@@ -1516,7 +1417,7 @@ describe("Report detail access control (slug-based)", () => {
     ];
     
     inMemoryStore.incidents = [
-      { id: "r1", eventId: "1", reporterId: "u1", type: "harassment", description: "Test report", state: "submitted" },
+              { id: "r1", eventId: "1", reporterId: "u1", description: "Test report", state: "submitted" },
     ];
   });
 

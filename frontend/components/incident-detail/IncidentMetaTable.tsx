@@ -1,72 +1,72 @@
 import React, { useState } from "react";
 import { Pencil } from "lucide-react";
+import { Badge } from "../ui/badge";
 import { LocationEditForm } from "./LocationEditForm";
-import { ContactPreferenceEditForm } from "./ContactPreferenceEditForm";
 import { IncidentDateEditForm } from "./IncidentDateEditForm";
 import { PartiesEditForm } from "./PartiesEditForm";
 import { DescriptionEditForm } from "./DescriptionEditForm";
-import { TypeEditForm } from "./TypeEditForm";
+import { TagsEditForm } from "./TagsEditForm";
+import { SeverityEditForm } from './SeverityEditForm';
 import { useLogger } from '@/hooks/useLogger';
+
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
 
 interface IncidentMetaTableProps {
   id: string;
-  type: string;
   description: string;
   reporter?: { name?: string; email?: string } | null;
   location?: string | null;
-  contactPreference?: string;
   incidentAt?: string | null;
   parties?: string | null;
+  eventName?: string; // New: event name display
+  eventSlug?: string; // Required for tag editing
+  tags?: Tag[]; // New: tags display
+  userRoles?: string[]; // Add userRoles for visibility control
   // Edit permissions and handlers
+  canEditTags?: boolean;
+  onTagsEdit?: (tags: Tag[]) => Promise<void>;
   canEditLocation?: boolean;
-  canEditContactPreference?: boolean;
   canEditIncidentAt?: boolean;
   canEditParties?: boolean;
   canEditDescription?: boolean;
-  canEditType?: boolean;
-  onLocationEdit?: (location: string) => Promise<void>;
-  onContactPreferenceEdit?: (contactPreference: string) => Promise<void>;
+  onLocationEdit?: (location: string | null) => Promise<void>;
   onIncidentAtEdit?: (incidentAt: string | null) => Promise<void>;
   onPartiesEdit?: (parties: string | null) => Promise<void>;
   onDescriptionEdit?: (description: string) => Promise<void>;
-  onTypeEdit?: (type: string) => Promise<void>;
 }
 
 export function IncidentMetaTable({ 
   id, 
-  type, 
   description, 
   reporter, 
   location, 
-  contactPreference, 
   incidentAt, 
   parties,
+  eventName,
+  eventSlug,
+  tags = [],
+  userRoles = [],
+  canEditTags = false,
+  onTagsEdit,
   canEditLocation = false,
-  canEditContactPreference = false,
   canEditIncidentAt = false,
   canEditParties = false,
   canEditDescription = false,
-  canEditType = false,
   onLocationEdit,
-  onContactPreferenceEdit,
   onIncidentAtEdit,
   onPartiesEdit,
-  onDescriptionEdit,
-  onTypeEdit
+  onDescriptionEdit
 }: IncidentMetaTableProps) {
   const { error: logError } = useLogger();
   const [editingField, setEditingField] = useState<string | null>(null);
 
-  // Format contact preference for display
-  const formatContactPreference = (pref?: string) => {
-    switch (pref) {
-      case 'email': return 'Email';
-      case 'phone': return 'Phone';
-      case 'in_person': return 'In Person';
-      case 'no_contact': return 'No Contact Preferred';
-      default: return 'Email'; // default
-    }
-  };
+  // Role-based visibility
+  const isReporter = userRoles.includes('reporter') && !userRoles.some(r => ['responder', 'event_admin', 'system_admin'].includes(r));
+  const canViewResponderFields = !isReporter; // Responders and above can see tags, severity
 
   // Format incident date for display
   const formatIncidentDate = (dateString?: string | null) => {
@@ -79,32 +79,28 @@ export function IncidentMetaTable({
     }
   };
 
-  // Format type for display
-  const formatType = (type: string) => {
-    return type.charAt(0).toUpperCase() + type.slice(1);
-  };
-
-  const handleEdit = async (field: string, value: string | null) => {
+  const handleEdit = async (field: string, value: string | null | Tag[]) => {
     try {
       switch (field) {
         case 'location':
-          await onLocationEdit?.(value || "");
-          break;
-        case 'contactPreference':
-          await onContactPreferenceEdit?.(value || "email");
+          await onLocationEdit?.(value as string || null);
           break;
         case 'incidentAt':
-          await onIncidentAtEdit?.(value);
+          await onIncidentAtEdit?.(value as string | null);
           break;
         case 'parties':
-          await onPartiesEdit?.(value);
+          await onPartiesEdit?.(value as string | null);
           break;
         case 'description':
-          await onDescriptionEdit?.(value || "");
+          await onDescriptionEdit?.(value as string || "");
           break;
-        case 'type':
-          await onTypeEdit?.(value || "other");
-          break;      }
+        case 'tags':
+          await onTagsEdit?.(value as Tag[]);
+          break;
+        case 'severity':
+          // This case is removed as per the edit hint
+          break;
+      }
       setEditingField(null);
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
@@ -170,18 +166,50 @@ export function IncidentMetaTable({
         </span>
       </MetaField>
 
-      <MetaField label="Type">
-        {renderEditableField(
-          'type',
-          <span className="font-medium">{formatType(type)}</span>,
-          canEditType,
-          <TypeEditForm
-            initialType={type}
-            onSave={(value) => handleEdit('type', value)}
-            onCancel={() => setEditingField(null)}
-          />
-        )}
-      </MetaField>
+      {/* New: Event Name Display */}
+      {eventName && (
+        <MetaField label="Event">
+          <span className="font-medium">{eventName}</span>
+        </MetaField>
+      )}
+
+      {/* Tags - Only visible to responders and above */}
+      {canViewResponderFields && (
+        <MetaField label="Tags">
+          {renderEditableField(
+            'tags',
+            <div className="flex flex-wrap gap-2">
+              {tags && tags.length > 0 ? (
+                tags.map((tag) => (
+                  <Badge 
+                    key={tag.id} 
+                    variant="secondary"
+                    style={{ 
+                      backgroundColor: `${tag.color}20`, 
+                      borderColor: tag.color,
+                      color: tag.color 
+                    }}
+                    className="border"
+                  >
+                    {tag.name}
+                  </Badge>
+                ))
+              ) : (
+                <span className="italic text-muted-foreground">No tags</span>
+              )}
+            </div>,
+            canEditTags && !!eventSlug,
+            eventSlug ? (
+              <TagsEditForm
+                initialTags={tags || []}
+                eventSlug={eventSlug}
+                onSave={(newTags) => handleEdit('tags', newTags)}
+                onCancel={() => setEditingField(null)}
+              />
+            ) : null
+          )}
+        </MetaField>
+      )}
 
       <MetaField label="Description">
         {renderEditableField(
@@ -200,77 +228,50 @@ export function IncidentMetaTable({
 
       <MetaField label="Reporter">
         <span className="font-medium">
-          {reporter ? (reporter.name || reporter.email || 'Anonymous') : 'Anonymous'}
+          {reporter?.name || reporter?.email || 'Anonymous'}
         </span>
       </MetaField>
 
-      {(incidentAt || canEditIncidentAt) && (
-        <MetaField label="Incident Date">
-          {renderEditableField(
-            'incidentAt',
-            formatIncidentDate(incidentAt) ? (
-              <span className="font-medium">{formatIncidentDate(incidentAt)}</span>
-            ) : (
-              <span className="italic text-muted-foreground">Not specified</span>
-            ),
-            canEditIncidentAt,
-            <IncidentDateEditForm
-              initialIncidentAt={incidentAt || null}
-              onSave={(value) => handleEdit('incidentAt', value)}
-              onCancel={() => setEditingField(null)}
-            />
-          )}
-        </MetaField>
-      )}
-
-      {(location || canEditLocation) && (
-        <MetaField label="Location">
-          {renderEditableField(
-            'location',
-            location ? (
-              <span className="font-medium">{location}</span>
-            ) : (
-              <span className="italic text-muted-foreground">Not specified</span>
-            ),
-            canEditLocation,
-            <LocationEditForm
-              initialLocation={location || ""}
-              onSave={(value) => handleEdit('location', value)}
-              onCancel={() => setEditingField(null)}
-            />
-          )}
-        </MetaField>
-      )}
-
-      {(parties || canEditParties) && (
-        <MetaField label="Parties Involved">
-          {renderEditableField(
-            'parties',
-            parties ? (
-              <div className="whitespace-pre-wrap break-words font-medium">
-                {parties}
-              </div>
-            ) : (
-              <span className="italic text-muted-foreground">Not specified</span>
-            ),
-            canEditParties,
-            <PartiesEditForm
-              initialParties={parties || null}
-              onSave={(value) => handleEdit('parties', value)}
-              onCancel={() => setEditingField(null)}
-            />
-          )}
-        </MetaField>
-      )}
-
-      <MetaField label="Contact Preference">
+      <MetaField label="Location">
         {renderEditableField(
-          'contactPreference',
-          <span className="font-medium">{formatContactPreference(contactPreference)}</span>,
-          canEditContactPreference,
-          <ContactPreferenceEditForm
-            initialContactPreference={contactPreference || "email"}
-            onSave={(value) => handleEdit('contactPreference', value)}
+          'location',
+          <span className="text-foreground">
+            {location || <span className="italic text-muted-foreground">Not specified</span>}
+          </span>,
+          canEditLocation,
+          <LocationEditForm
+            initialLocation={location || ""}
+            onSave={(value) => handleEdit('location', value)}
+            onCancel={() => setEditingField(null)}
+          />
+        )}
+      </MetaField>
+
+      <MetaField label="Incident Date">
+        {renderEditableField(
+          'incidentAt',
+          <span className="text-foreground">
+            {formatIncidentDate(incidentAt) || <span className="italic text-muted-foreground">Not specified</span>}
+          </span>,
+          canEditIncidentAt,
+                     <IncidentDateEditForm
+             initialIncidentAt={incidentAt || null}
+             onSave={(value) => handleEdit('incidentAt', value)}
+             onCancel={() => setEditingField(null)}
+           />
+        )}
+      </MetaField>
+
+      <MetaField label="Parties Involved">
+        {renderEditableField(
+          'parties',
+          <div className="whitespace-pre-wrap break-words text-foreground">
+            {parties || <span className="italic text-muted-foreground">Not specified</span>}
+          </div>,
+          canEditParties,
+          <PartiesEditForm
+            initialParties={parties || ""}
+            onSave={(value) => handleEdit('parties', value)}
             onCancel={() => setEditingField(null)}
           />
         )}

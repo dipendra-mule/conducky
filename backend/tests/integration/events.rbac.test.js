@@ -53,7 +53,7 @@ describe("Event endpoints RBAC/forbidden tests", () => {
     inMemoryStore.incidents.push({
       id: "r6",
       eventId: "1",
-      type: "harassment",
+      
       description: "Report 6",
       state: "submitted",
     });

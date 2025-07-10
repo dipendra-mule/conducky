@@ -1073,7 +1073,6 @@ export class EventService {
           select: {
             id: true,
             title: true,
-            type: true,
             state: true,
             createdAt: true
           },
@@ -1117,7 +1116,7 @@ export class EventService {
           type: 'report',
           action: 'submitted',
           title: r.title,
-          details: { type: r.type, state: r.state },
+          details: { state: r.state },
           timestamp: r.createdAt
         })),
         ...comments.map(c => ({
@@ -1193,7 +1192,6 @@ export class EventService {
           select: {
             id: true,
             title: true,
-            type: true,
             state: true,
             severity: true,
             createdAt: true,

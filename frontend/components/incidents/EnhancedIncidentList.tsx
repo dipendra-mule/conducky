@@ -24,17 +24,25 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Tag as TagIcon,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface Incident {
   id: string;
   title: string;
   description: string;
-  type: string;
+  tags?: Tag[];
   state: string;
   severity?: string;
   createdAt: string;
@@ -84,6 +92,7 @@ interface EnhancedIncidentListProps {
   showPinning?: boolean;
   showExport?: boolean;
   className?: string;
+  userRoles?: string[]; // Add userRoles prop for role-based visibility
 }
 
 export function EnhancedIncidentList({
@@ -92,7 +101,8 @@ export function EnhancedIncidentList({
   showBulkActions = true,
   showPinning = true,
   showExport = true,
-  className
+  className,
+  userRoles = []
 }: EnhancedIncidentListProps) {
   
   // State management
@@ -109,6 +119,8 @@ export function EnhancedIncidentList({
   const [statusFilter, setStatusFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [assignedFilter, setAssignedFilter] = useState('all');
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
@@ -117,6 +129,16 @@ export function EnhancedIncidentList({
   const [totalPages, setTotalPages] = useState(1);
   const [totalIncidents, setTotalIncidents] = useState(0);
   const pageSize = 20; // Fixed page size for now
+
+  // Determine user permissions
+  const isReporter = userRoles.includes('reporter') && !userRoles.some(r => ['responder', 'event_admin', 'system_admin'].includes(r));
+  
+  // Determine if this is the global dashboard (no specific event)
+  const isGlobalDashboard = !eventSlug;
+  
+  // Column visibility logic
+  const showTagsColumn = !isGlobalDashboard && !isReporter; // Only show on event pages for responders+
+  const showSeverityColumn = !isGlobalDashboard && !isReporter; // Only show on event pages for responders+
 
   // Build API URL based on context
   const apiUrl = useMemo(() => {
@@ -139,6 +161,7 @@ export function EnhancedIncidentList({
     if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
     if (severityFilter && severityFilter !== 'all') params.set('severity', severityFilter);
     if (assignedFilter && assignedFilter !== 'all') params.set('assigned', assignedFilter);
+    if (tagFilter && tagFilter.length > 0) params.set('tags', tagFilter.join(','));
     if (userId) params.set('userId', userId);
     if (sortField) {
       params.set('sort', sortField);
@@ -146,7 +169,27 @@ export function EnhancedIncidentList({
     }
     
     return params.toString();
-  }, [currentPage, pageSize, search, statusFilter, severityFilter, assignedFilter, userId, sortField, sortOrder]);
+  }, [currentPage, pageSize, search, statusFilter, severityFilter, assignedFilter, tagFilter, userId, sortField, sortOrder]);
+
+  // Fetch available tags for filtering (only for event-specific lists and responders+)
+  const fetchAvailableTags = async () => {
+    if (!eventSlug || isReporter) return;
+    
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/tags/event/slug/${eventSlug}`,
+        { credentials: 'include' }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableTags(data.tags || []);
+      }
+    } catch (err) {
+      // Silently fail for tags, don't block incident loading
+      console.warn('Failed to fetch available tags:', err);
+    }
+  };
 
   // Fetch reports
   const fetchIncidents = async () => {
@@ -195,6 +238,11 @@ export function EnhancedIncidentList({
     localStorage.setItem(key, JSON.stringify(Array.from(pinnedIncidents)));
   }, [pinnedIncidents, eventSlug]);
 
+  // Fetch available tags when component mounts
+  useEffect(() => {
+    fetchAvailableTags();
+  }, [eventSlug]);
+
   // Fetch reports when dependencies change
   useEffect(() => {
     fetchIncidents();
@@ -203,7 +251,7 @@ export function EnhancedIncidentList({
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter, severityFilter, assignedFilter, sortField, sortOrder]);
+  }, [search, statusFilter, severityFilter, assignedFilter, tagFilter, sortField, sortOrder]);
 
   // Clear assignment filter if user doesn't have permission to view assignments
   useEffect(() => {
@@ -333,8 +381,11 @@ export function EnhancedIncidentList({
           doc.text(`ID: ${report.id}`, margin + 5, yPosition);
           yPosition += lineHeight * 0.8;
           
-          doc.text(`Type: ${report.type}`, margin + 5, yPosition);
-          yPosition += lineHeight * 0.8;
+          // Tags
+          if (report.tags && report.tags.length > 0) {
+            doc.text(`Tags: ${report.tags.map(tag => tag.name).join(', ')}`, margin + 5, yPosition);
+            yPosition += lineHeight * 0.8;
+          }
           
           doc.text(`Status: ${report.state}`, margin + 5, yPosition);
           yPosition += lineHeight * 0.8;
@@ -539,6 +590,77 @@ export function EnhancedIncidentList({
               </Select>
             )}
 
+            {/* Tag Filter */}
+            {showTagsColumn && availableTags.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-[120px]">
+                    <TagIcon className="h-4 w-4 mr-2" />
+                    Tags
+                    {tagFilter.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-5 w-5 rounded-full p-0 text-xs">
+                        {tagFilter.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[200px]">
+                  {availableTags.map((tag) => (
+                    <DropdownMenuItem
+                      key={tag.id}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const isSelected = tagFilter.includes(tag.id);
+                        if (isSelected) {
+                          setTagFilter(tagFilter.filter(id => id !== tag.id));
+                        } else {
+                          setTagFilter([...tagFilter, tag.id]);
+                        }
+                      }}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: tag.color }}
+                        />
+                        <span>{tag.name}</span>
+                      </div>
+                      {tagFilter.includes(tag.id) && (
+                        <CheckCircle className="h-4 w-4 text-primary" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Active tag filters display */}
+            {showTagsColumn && tagFilter.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {tagFilter.map((tagId) => {
+                  const tag = availableTags.find(t => t.id === tagId);
+                  if (!tag) return null;
+                  return (
+                    <Badge
+                      key={tagId}
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                      style={{ backgroundColor: tag.color + '20', color: tag.color }}
+                    >
+                      {tag.name}
+                      <button
+                        onClick={() => setTagFilter(tagFilter.filter(id => id !== tagId))}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+
             <Button 
               variant="outline" 
               onClick={() => {
@@ -546,6 +668,7 @@ export function EnhancedIncidentList({
                 setStatusFilter('all');
                 setSeverityFilter('all');
                 setAssignedFilter('all');
+                setTagFilter([]);
                 setSortField('createdAt');
                 setSortOrder('desc');
               }}
@@ -636,7 +759,7 @@ export function EnhancedIncidentList({
                             )}
                           </div>
                         </TableHead>
-                        <TableHead>Type</TableHead>
+                        {showTagsColumn && <TableHead>Tags</TableHead>}
                         <TableHead className="cursor-pointer" onClick={() => handleSort('state')}>
                           <div className="flex items-center">
                             Status
@@ -645,7 +768,7 @@ export function EnhancedIncidentList({
                             )}
                           </div>
                         </TableHead>
-                        <TableHead>Severity</TableHead>
+                        {showSeverityColumn && <TableHead>Severity</TableHead>}
                         <TableHead>Reporter</TableHead>
                         {canViewAssignments && <TableHead>Assigned</TableHead>}
                         <TableHead>Incident Date</TableHead>
@@ -693,21 +816,38 @@ export function EnhancedIncidentList({
                               {report.description}
                             </p>
                           </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{report.type}</Badge>
-                          </TableCell>
+                          {showTagsColumn && (
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {report.tags?.map((tag) => (
+                                  <Badge
+                                    key={tag.id}
+                                    variant="secondary"
+                                    className="text-xs"
+                                    style={{ backgroundColor: tag.color + '20', color: tag.color }}
+                                  >
+                                    {tag.name}
+                                  </Badge>
+                                )) || (
+                                  <span className="text-xs text-muted-foreground">No tags</span>
+                                )}
+                              </div>
+                            </TableCell>
+                          )}
                           <TableCell>
                             <Badge className={getStateBadgeColor(report.state)}>
                               {report.state}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            {report.severity && (
-                              <Badge className={getSeverityBadgeColor(report.severity)}>
-                                {report.severity}
-                              </Badge>
-                            )}
-                          </TableCell>
+                          {showSeverityColumn && (
+                            <TableCell>
+                              {report.severity && (
+                                <Badge className={getSeverityBadgeColor(report.severity)}>
+                                  {report.severity}
+                                </Badge>
+                              )}
+                            </TableCell>
+                          )}
                           <TableCell>
                             {report.reporter?.name}
                           </TableCell>
@@ -774,7 +914,7 @@ export function EnhancedIncidentList({
                           )}
                         </div>
                       </TableHead>
-                      <TableHead>Type</TableHead>
+                      {showTagsColumn && <TableHead>Tags</TableHead>}
                       <TableHead className="cursor-pointer" onClick={() => handleSort('state')}>
                         <div className="flex items-center">
                           Status
@@ -783,7 +923,7 @@ export function EnhancedIncidentList({
                           )}
                         </div>
                       </TableHead>
-                      <TableHead>Severity</TableHead>
+                      {showSeverityColumn && <TableHead>Severity</TableHead>}
                       <TableHead>Reporter</TableHead>
                       {canViewAssignments && <TableHead>Assigned</TableHead>}
                       <TableHead>Incident Date</TableHead>
@@ -813,7 +953,9 @@ export function EnhancedIncidentList({
                       <TableCell colSpan={
                         (showBulkActions ? 1 : 0) + 
                         (showPinning ? 1 : 0) + 
-                        8 + // Title, Type, Status, Severity, Reporter, Incident Date, Created, Updated
+                        6 + // Title, Status, Reporter, Incident Date, Created, Updated
+                        (showTagsColumn ? 1 : 0) + // Tags (only for responders+)
+                        (showSeverityColumn ? 1 : 0) + // Severity (only for responders+)
                         (canViewAssignments ? 1 : 0) + 
                         1 // Actions column
                       } className="text-center py-8">
@@ -859,21 +1001,38 @@ export function EnhancedIncidentList({
                             {report.description}
                           </p>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{report.type}</Badge>
-                        </TableCell>
+                        {showTagsColumn && (
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {report.tags?.map((tag) => (
+                                <Badge
+                                  key={tag.id}
+                                  variant="secondary"
+                                  className="text-xs"
+                                  style={{ backgroundColor: tag.color + '20', color: tag.color }}
+                                >
+                                  {tag.name}
+                                </Badge>
+                              )) || (
+                                <span className="text-xs text-muted-foreground">No tags</span>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
                         <TableCell>
                           <Badge className={getStateBadgeColor(report.state)}>
                             {report.state}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {report.severity && (
-                            <Badge className={getSeverityBadgeColor(report.severity)}>
-                              {report.severity}
-                            </Badge>
-                          )}
-                        </TableCell>
+                        {showSeverityColumn && (
+                          <TableCell>
+                            {report.severity && (
+                              <Badge className={getSeverityBadgeColor(report.severity)}>
+                                {report.severity}
+                              </Badge>
+                            )}
+                          </TableCell>
+                        )}
                         <TableCell>
                           {report.reporter?.name}
                         </TableCell>

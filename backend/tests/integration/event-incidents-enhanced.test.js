@@ -36,7 +36,6 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         description: 'Inappropriate behavior during keynote',
         state: 'submitted',
         severity: 'high',
-        type: 'harassment',
         incidentAt: '2024-01-15T10:00:00Z',
         createdAt: '2024-01-15T10:30:00Z',
         updatedAt: '2024-01-15T10:30:00Z',
@@ -55,7 +54,6 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         description: 'Disruptive behavior in workshop',
         state: 'investigating',
         severity: 'medium',
-        type: 'conduct',
         incidentAt: '2024-01-16T14:00:00Z',
         createdAt: '2024-01-16T14:15:00Z',
         updatedAt: '2024-01-16T15:00:00Z',
@@ -74,7 +72,6 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         description: 'Offensive language during Q&A session',
         state: 'submitted',
         severity: 'low',
-        type: 'harassment',
         incidentAt: '2024-01-17T16:00:00Z',
         createdAt: '2024-01-17T16:15:00Z',
         updatedAt: '2024-01-17T16:15:00Z',
@@ -318,7 +315,6 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         expect(incident).toHaveProperty('title');
         expect(incident).toHaveProperty('description');
         expect(incident).toHaveProperty('state');
-        expect(incident).toHaveProperty('type');
         expect(incident).toHaveProperty('createdAt');
         expect(incident).toHaveProperty('updatedAt');
         expect(incident).toHaveProperty('event');
@@ -497,7 +493,6 @@ describe('Event Reports Export and Bulk Actions', () => {
         data: {
           eventId,
           reporterId,
-          type: 'harassment',
           title: 'Test Report 1 for Export',
           description: 'First test report',
           state: 'submitted',
@@ -508,7 +503,6 @@ describe('Event Reports Export and Bulk Actions', () => {
         data: {
           eventId,
           reporterId,
-          type: 'safety',
           title: 'Test Report 2 for Export',
           description: 'Second test report',
           state: 'acknowledged',
@@ -520,7 +514,6 @@ describe('Event Reports Export and Bulk Actions', () => {
         data: {
           eventId,
           reporterId,
-          type: 'other',
           title: 'Test Report 3 for Export',
           description: 'Third test report',
           state: 'investigating',
@@ -544,7 +537,7 @@ describe('Event Reports Export and Bulk Actions', () => {
       expect(response.headers['content-disposition']).toMatch(new RegExp(`attachment; filename="reports_${testSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}_\\d{4}-\\d{2}-\\d{2}\\.csv"`));
       
       // Verify CSV header includes URL field
-      expect(response.text).toContain('ID,Title,Type,Status,Severity,Reporter,Assigned,Created,Description,URL');
+      expect(response.text).toContain('ID,Title,Status,Severity,Reporter,Assigned,Created,Description,URL');
       
       // Verify report content
       expect(response.text).toContain('Test Report 1 for Export');

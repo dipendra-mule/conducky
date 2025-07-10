@@ -55,6 +55,8 @@ export interface IncidentDetailViewProps {
   apiBaseUrl?: string;
   onTitleEdit?: (title: string) => Promise<void>;
   onIncidentUpdate?: (updatedIncident: any) => void; // New callback for incident updates
+  onTagsEdit?: (tags: any[]) => Promise<void>; // New callback for tag updates
+  canEditSeverity?: boolean; // New prop to control severity editing
   [key: string]: any;
 }
 
@@ -89,6 +91,8 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
   apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
   onTitleEdit,
   onIncidentUpdate,
+  onTagsEdit,
+  canEditSeverity,
   ...rest
 }) => {
   const isSystemAdmin = user && user.roles && user.roles.includes("system_admin");
@@ -200,19 +204,21 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
             <IncidentMetaTable
               id={incident.id}
-              type={incident.type}
               description={incident.description}
               reporter={incident.reporter}
               location={incident.location}
-              contactPreference={incident.contactPreference}
               incidentAt={incident.incidentAt}
               parties={incident.parties}
+              eventName={incident.event?.name}
+              eventSlug={eventSlug}
+              tags={incident.tags}
+              userRoles={userRoles}
+              canEditTags={isResponderOrAbove}
+              onTagsEdit={onTagsEdit}
               canEditLocation={isResponderOrAbove || (user && user.id === incident.reporterId)}
-              canEditContactPreference={user && user.id === incident.reporterId}
               canEditIncidentAt={isResponderOrAbove || (user && user.id === incident.reporterId)}
               canEditParties={isResponderOrAbove || (user && user.id === incident.reporterId)}
               canEditDescription={isAdminOrSystemAdmin || (user && user.id === incident.reporterId)}
-              canEditType={isResponderOrAbove || (user && user.id === incident.reporterId)}
               onLocationEdit={async (location) => {
                 try {
                   const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/location`, {
@@ -245,38 +251,7 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                   alert(errorMessage);
                 }
               }}
-              onContactPreferenceEdit={async (contactPreference) => {
-                try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/contact-preference`, {
-                    method: 'PATCH',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ contactPreference }),
-                  });
 
-                  if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error((errorData as { error?: string }).error || 'Failed to update contact preference');
-                  }
-
-                  // Update local state with the response data
-                  const responseData = await response.json();
-                  if (onIncidentUpdate && responseData.incident) {
-                    onIncidentUpdate(responseData.incident);
-                  }
-                } catch (error) {
-                  logger.error('Failed to update contact preference', { 
-                    error: error instanceof Error ? error.message : String(error),
-                    incidentId: incident.id,
-                    eventId: incident.eventId,
-                    context: 'incident_detail_contact_preference_update'
-                  });
-                  const errorMessage = error instanceof Error ? error.message : 'Failed to update contact preference. Please try again.';
-                  alert(errorMessage);
-                }
-              }}
               onIncidentAtEdit={async (incidentAt) => {
                 try {
                   const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/incident-date`, {
@@ -373,38 +348,7 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                   alert(errorMessage);
                 }
               }}
-              onTypeEdit={async (type) => {
-                try {
-                  const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/type`, {
-                    method: 'PATCH',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ type }),
-                  });
 
-                  if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error((errorData as { error?: string }).error || 'Failed to update type');
-                  }
-
-                  // Update local state with the response data
-                  const responseData = await response.json();
-                  if (onIncidentUpdate && responseData.incident) {
-                    onIncidentUpdate(responseData.incident);
-                  }
-                } catch (error) {
-                  logger.error('Failed to update type', { 
-                    error: error instanceof Error ? error.message : String(error),
-                    incidentId: incident.id,
-                    eventId: incident.eventId,
-                    context: 'incident_detail_type_update'
-                  });
-                  const errorMessage = error instanceof Error ? error.message : 'Failed to update type. Please try again.';
-                  alert(errorMessage);
-                }
-              }}
             />
           </div>
         </div>
@@ -437,6 +381,31 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                 eventUsers={eventUsers}
                 assignedResponderId={assignmentFields.assignedResponderId}
                 stateHistory={stateHistory}
+                severity={incident.severity}
+                canEditSeverity={canEditSeverity}
+                onSeverityChange={async (severity) => {
+                  try {
+                    const response = await fetch(`${apiBaseUrl}/api/events/${incident.eventId}/incidents/${incident.id}/severity`, {
+                      method: 'PATCH',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({ severity }),
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Failed to update severity');
+                    }
+
+                    const result = await response.json();
+                    if (onIncidentUpdate) {
+                      onIncidentUpdate(result.incident);
+                    }
+                  } catch (err) {
+                    console.error('Error updating severity:', err);
+                  }
+                }}
               />
             ) : (
               /* Legacy State Management */
@@ -482,6 +451,7 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
                           error={assignmentError}
                           success={assignmentSuccess}
                           onSave={onAssignmentChange}
+                          canEditSeverity={canEditSeverity}
                         />
                       </TableCell>
                     </TableRow>

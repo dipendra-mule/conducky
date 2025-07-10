@@ -21,6 +21,7 @@ export default function EventIncidentsPage() {
   const { error: logError } = useLogger();
   const [loading, setLoading] = useState<boolean>(true);
   const [accessDenied, setAccessDenied] = useState<boolean>(false);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
 
   // Fetch user roles for this event after user is set
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function EventIncidentsPage() {
             return;
           }
           if (data.roles) {
+            setUserRoles(data.roles);
             // Check if user has responder, event admin, or system admin role (unified names)
             const hasAccess = data.roles.some((role: string) => 
               ['responder', 'event_admin', 'system_admin'].includes(role)
@@ -106,6 +108,7 @@ export default function EventIncidentsPage() {
         showPinning={true}
         showExport={true}
         className="w-full"
+        userRoles={userRoles}
       />
     </div>
   );
