@@ -28,7 +28,7 @@ Conducky requires specific environment variables to function properly. See the [
 - `CORS_ORIGIN` - Public URL of frontend for CORS
 - `PORT` - Backend port (optional, defaults to 4000)
 - `NODE_ENV` - Set this to "production" when running in a production environment
-- `ENCRYPTION_KEY` - Encryption key for database-stored configuration. Must be at least 32 characters long. Generate with `openssl rand -base64 32`
+- `ENCRYPTION_KEY` - **REQUIRED** Encryption key for database field-level encryption. Must be at least 32 characters long. Generate with `openssl rand -base64 48`. Used to encrypt incident data, comments, contact emails, and system configuration.
 
 **Frontend** (`.env` in `/frontend`):
 
@@ -93,16 +93,47 @@ Also consider the Pulumi program at [mattstratton/conducky-pulumi](https://githu
 ## Database Setup
 
 1. Create a PostgreSQL database
-2. Set the `DATABASE_URL` environment variable
-3. Run database migrations:
+2. Set the `DATABASE_URL` environment variable  
+3. **Generate and set encryption key**:
+   ```bash
+   # Generate a secure encryption key
+   openssl rand -base64 48
+   # Set ENCRYPTION_KEY environment variable with the generated key
+   ```
+4. Run database migrations:
    ```bash
    cd backend
    npx prisma migrate deploy
    ```
-4. (Optional) Seed with sample data:
+5. (Optional) Seed with sample data:
    ```bash
    npm run seed
    ```
+
+## Security Considerations
+
+### Encryption Key Management
+
+**Critical Security Requirements:**
+
+- **Generate unique keys** for each environment (dev/staging/production)
+- **Store securely** in your deployment platform's environment variable system  
+- **Never commit** encryption keys to version control
+- **Backup safely** - loss of encryption key means permanent data loss
+- **Rotate periodically** for enhanced security (requires maintenance window)
+
+### Production Security Checklist
+
+- [ ] Generated strong encryption key (64+ characters)
+- [ ] Set `NODE_ENV=production` in both frontend and backend
+- [ ] Enabled HTTPS/TLS for all communications
+- [ ] Configured secure session secret
+- [ ] Set up proper CORS origins
+- [ ] Enabled database SSL connections
+- [ ] Configured secure headers and CSP
+- [ ] Set up monitoring and audit log review
+
+For detailed security configuration, see the [Security Overview Guide](security-overview.md).
 
 ## Initial Setup
 

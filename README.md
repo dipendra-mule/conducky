@@ -14,7 +14,7 @@ Conducky is a comprehensive **Code of Conduct incident management platform** des
 - **🔐 Unified Role System**: Comprehensive role-based access control with inheritance
 - **📱 Mobile-First Design**: Optimized for mobile reporting and response workflows
 - **🚨 Real-Time Notifications**: In-app and email notifications for incident updates
-- **🔒 Security-Focused**: Field-level encryption, rate limiting, and comprehensive audit logs
+- **🔒 Enterprise Security**: AES-256-GCM encryption for sensitive data, comprehensive audit logging, and multi-layer security
 - **🌐 Anonymous Reporting**: Support for both authenticated and anonymous incident submission
 - **📊 Comprehensive Analytics**: Detailed reporting and analytics for organizational oversight
 - **🎯 OAuth Integration**: Support for Google and GitHub social login
@@ -26,7 +26,7 @@ Conducky is a comprehensive **Code of Conduct incident management platform** des
 - **Backend**: Node.js, Express, TypeScript, Prisma ORM
 - **Database**: PostgreSQL with comprehensive indexing and performance optimization
 - **Authentication**: Passport.js with social login support
-- **Security**: Field-level encryption, rate limiting, CORS protection
+- **Security**: AES-256-GCM field-level encryption, rate limiting, comprehensive audit logging, RBAC
 
 ## Local Development (Docker)
 
@@ -74,9 +74,10 @@ Both the frontend and backend use `.env` files to manage environment variables a
     BACKEND_BASE_URL=http://localhost:4000
     CORS_ORIGIN=http://localhost:3001
     
-    # Encryption key for database-stored configuration (email settings, OAuth credentials)
+    # Encryption key for database field-level encryption
     # REQUIRED: Must be at least 32 characters long
-    # Generate with: openssl rand -base64 32
+    # Used to encrypt: incident data, comments, contact emails, OAuth credentials, SMTP passwords
+    # Generate with: openssl rand -base64 48
     # WARNING: Use a unique, secure key for each environment
     ENCRYPTION_KEY=conducky-dev-encryption-key-change-in-production
     ```
@@ -100,6 +101,48 @@ Both the frontend and backend use `.env` files to manage environment variables a
 - For local development, edit the `.env` files directly.
 - For production, set environment variables in your hosting provider or CI/CD pipeline as needed.
 - **Do not commit secrets to version control.**
+
+---
+
+## 🔒 Security & Data Protection
+
+Conducky implements enterprise-grade security to protect sensitive incident data:
+
+### Database Encryption
+
+**All sensitive data is automatically encrypted** using AES-256-GCM encryption:
+- **Incident descriptions, parties, and locations**
+- **All incident comments**
+- **Event contact emails**
+- **OAuth credentials and SMTP passwords**
+
+### Security Features
+
+- **🔐 Multi-layer encryption** with unique salts per operation
+- **🛡️ Role-based access control (RBAC)** with permission inheritance
+- **📋 Comprehensive audit logging** for all administrative actions
+- **🚫 Rate limiting** on authentication and sensitive endpoints
+- **🔒 Secure sessions** with HTTP-only cookies
+- **🌐 HTTPS/TLS** encryption for all communications
+
+### Configuration Requirements
+
+**ENCRYPTION_KEY Environment Variable:**
+```bash
+# Generate a secure encryption key (REQUIRED)
+openssl rand -base64 48
+
+# Set in production environment
+ENCRYPTION_KEY=your-generated-encryption-key-here
+```
+
+**Key Management:**
+- **Minimum 32 characters** (recommended 64+)
+- **Unique per environment** (dev/staging/production)
+- **Rotate periodically** for enhanced security
+- **Backup securely** - loss prevents data decryption
+
+For detailed security configuration, see the [Admin Security Guide](website/docs/admin-guide/security-overview.md).
 
 ---
 
