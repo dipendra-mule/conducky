@@ -223,7 +223,7 @@ export class UnifiedRBACService {
       
       return false;
     } catch (error) {
-      console.log(`[RBAC] Error in hasEventRole:`, error);
+      // Remove this line entirely
       if (process.env.NODE_ENV === 'development') {
         logger.error('[UnifiedRBAC] Error checking event role:', error);
       }
