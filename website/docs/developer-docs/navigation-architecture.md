@@ -58,7 +58,7 @@ User menu component providing:
 
 - **Profile access**: User profile and settings
 - **Theme switching**: Dark/light mode toggle
-- **System admin access**: For SuperAdmins
+- **System admin access**: For System Admins
 - **Logout functionality**: Secure session termination
 
 #### `NavEvents` (`frontend/components/nav-projects.tsx`)
@@ -113,7 +113,7 @@ const currentEvent = events.find(e => e.url.includes(currentEventSlug));
 const userEventRole = currentEvent?.role;
 
 // Check role permissions
-const isEventAdmin = userEventRole === 'Admin' || isSuperAdmin;
+const isEventAdmin = userEventRole === 'Admin' || isSystemAdmin;
 const isEventResponder = userEventRole === 'Responder' || isEventAdmin;
 
 // Build navigation based on permissions
@@ -133,13 +133,13 @@ if (isEventResponder) {
 #### 3. System Admin Context
 
 **URL Pattern**: `/admin/*`
-**Purpose**: Installation management (SuperAdmins only)
+**Purpose**: Installation management (System Admins only)
 
 **Access Control**:
 
 ```typescript
-// Only show system admin navigation to SuperAdmins
-if (isSuperAdmin && isSystemAdmin) {
+// Only show system admin navigation to System Admins
+if (isSystemAdmin && isSystemAdmin) {
   navMain = [
     {
       title: "System Dashboard",

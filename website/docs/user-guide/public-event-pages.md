@@ -91,7 +91,7 @@ Event administrators can configure these details through:
 
 ## Integration with Home Page
 
-When the SuperAdmin enables "Show Public Event List" in system settings:
+When the System Admin enables "Show Public Event List" in system settings:
 
 - All active events appear on the home page for unauthenticated users
 - Each event links to its public event page
@@ -166,4 +166,4 @@ When implemented, anonymous reporting will allow:
 - [Event Management](./event-management.md) - Configuring event details
 - [Navigation Guide](./navigation.md) - Understanding public vs authenticated navigation
 - [Getting Started](./getting-started.md) - Account creation and authentication
-- [System Management](../admin-guide/system-management.md) - SuperAdmin control of public event listing
+- [System Management](../admin-guide/system-management.md) - System Admin control of public event listing

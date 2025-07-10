@@ -32,7 +32,7 @@ Your password must meet the following security requirements:
 - **At least one special character** (!@#$%^&*()_+-=[]{}|;:,.&lt;&gt;?)
 
 #### Special Registration Rules
-- **First User**: The first person to register becomes a SuperAdmin automatically
+- **First User**: The first person to register becomes a System Admin automatically
 - **Subsequent Users**: Need to be invited to events to access functionality
 - **Email Uniqueness**: Each email address can only be used for one account
 
@@ -68,7 +68,7 @@ Most users join Conducky through event invitations:
    - **First-time users**: Global dashboard
    - **Single event users**: That event's dashboard
    - **Multi-event users**: Global dashboard with all events
-   - **SuperAdmins**: System admin dashboard
+   - **System Admins**: System admin dashboard
 
 #### Login Features
 - **Remember Me**: Your session persists across browser sessions

@@ -57,7 +57,7 @@ Use a reputable online password generator to create a 32+ character random strin
 
 ### Accessing Email Settings
 
-1. Log in as a SuperAdmin
+1. Log in as a System Admin
 2. Navigate to **Admin → System Settings**
 3. Find the **Email Configuration** card
 
@@ -200,7 +200,7 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
    - Never commit keys to version control
 
 2. **Access Control**:
-   - Only SuperAdmins can modify system configuration
+   - Only System Admins can modify system configuration
    - Regular users cannot view sensitive settings
 
 3. **Audit Trail**:
@@ -222,4 +222,4 @@ System configuration can also be managed via API:
 - `PUT /api/admin/settings/github-oauth` - Update GitHub OAuth
 - `POST /api/admin/settings/email/test` - Test email configuration
 
-All API endpoints require SuperAdmin authentication. 
+All API endpoints require System Admin authentication. 

@@ -6,7 +6,27 @@
 
 ![conducky logo](/images/conducky-logo-smaller.png)
 
-This project is a web application for managing Code of Conduct reports for conferences and events. It is designed for easy deployment and multi-tenancy, supporting both anonymous and authenticated report submissions.
+Conducky is a comprehensive **Code of Conduct incident management platform** designed specifically for conferences and events. Built with security, scalability, and ease of use in mind, it provides a complete solution for handling incident reports, managing teams, and maintaining safe environments at events.
+
+## ✨ Key Features
+
+- **🏢 Multi-Tenant Architecture**: Organizations can manage multiple events with centralized oversight
+- **🔐 Unified Role System**: Comprehensive role-based access control with inheritance
+- **📱 Mobile-First Design**: Optimized for mobile reporting and response workflows
+- **🚨 Real-Time Notifications**: In-app and email notifications for incident updates
+- **🔒 Security-Focused**: Field-level encryption, rate limiting, and comprehensive audit logs
+- **🌐 Anonymous Reporting**: Support for both authenticated and anonymous incident submission
+- **📊 Comprehensive Analytics**: Detailed reporting and analytics for organizational oversight
+- **🎯 OAuth Integration**: Support for Google and GitHub social login
+- **📧 Flexible Email**: SMTP, SendGrid, or console-based email delivery
+
+## 🏗️ Architecture
+
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS, Shadcn/ui
+- **Backend**: Node.js, Express, TypeScript, Prisma ORM
+- **Database**: PostgreSQL with comprehensive indexing and performance optimization
+- **Authentication**: Passport.js with social login support
+- **Security**: Field-level encryption, rate limiting, CORS protection
 
 ## Local Development (Docker)
 

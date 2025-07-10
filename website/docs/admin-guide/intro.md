@@ -6,13 +6,13 @@ sidebar_position: 1
 
 Welcome to the Conducky Admin Guide!
 
-This section is for **system administrators** and **SuperAdmins** who are responsible for installing, deploying, and managing the overall Conducky system. If you're setting up Conducky for your organization or managing the technical infrastructure at the system level, this guide is for you.
+This section is for **system administrators** and **System Admins** who are responsible for installing, deploying, and managing the overall Conducky system. If you're setting up Conducky for your organization or managing the technical infrastructure at the system level, this guide is for you.
 
 ## What's Covered
 
 - **Installation & Deployment** - How to set up Conducky in various environments
 - **System Configuration** - Environment variables, database setup, and system settings
-- **SuperAdmin Functions** - Creating events and managing global system settings
+- **System Admin Functions** - Creating events and managing global system settings
 - **System Maintenance** - Updates, backups, and ongoing system maintenance
 - **Troubleshooting** - System-level issues and solutions
 
@@ -21,7 +21,7 @@ This section is for **system administrators** and **SuperAdmins** who are respon
 - System administrators setting up Conducky
 - DevOps engineers deploying Conducky
 - IT staff managing Conducky instances
-- SuperAdmins who create and manage events at the system level
+- System Admins who create and manage events at the system level
 - Anyone responsible for the technical operation of the overall Conducky system
 
 ## Not What You're Looking For?

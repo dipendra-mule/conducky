@@ -3,29 +3,30 @@ sidebar_position: 7
 ---
 # Event Management
 
-This document explains how events are created and managed in Conducky, including the new streamlined workflow for SuperAdmins and event administrators.
+This document explains how events are created and managed in Conducky, including the workflow for System Admins and Organization Admins.
 
 ---
 
 ## Event Creation Workflow
 
-Conducky uses a two-phase event creation workflow designed to separate system administration from event configuration:
+Conducky supports flexible event creation through multiple pathways depending on organizational structure:
 
-### Phase 1: SuperAdmin Creates Basic Event
+### Organization-Based Events
 
-1. **SuperAdmin creates minimal event** with basic information (name, slug, description)
+1. **Organization Admin creates event** within their organization
+2. **Event inherits organization context** and admin automatically gets event admin role
+3. **Event Admin configures detailed settings** (contact info, dates, CoC, etc.)
+4. **Event becomes active** once fully configured
+5. **Event Admin manages** ongoing operations (users, reports, settings)
+
+### Direct System Admin Creation
+
+1. **System Admin creates minimal event** with basic information (name, slug, description)
 2. **Event is created as inactive** (`isActive: false`) until fully configured
-3. **SuperAdmin generates admin invite link** for the designated event organizer
-4. **Invite link is shared** with the event organizer via email or other secure method
+3. **System Admin assigns Event Admin** role to designated event organizer
+4. **Event Admin completes setup** and activates the event
 
-### Phase 2: Event Admin Completes Setup
-
-1. **Event organizer accepts invite** and becomes event admin
-2. **Event admin configures detailed settings** (contact info, dates, CoC, etc.)
-3. **Event becomes active** once fully configured by the admin
-4. **Event admin manages** ongoing operations (users, reports, settings)
-
-This workflow ensures proper separation of concerns and allows SuperAdmins to delegate event management without compromising system security.
+This workflow ensures proper separation of concerns and supports both organizational hierarchies and direct system administration.
 
 ---
 
@@ -54,25 +55,45 @@ model Event {
 
 ---
 
-## Creating Events (SuperAdmin)
+## Creating Events
 
-Only SuperAdmins can create new events in the system using the simplified creation workflow.
+Events can be created by System Admins globally or by Organization Admins within their organizations.
 
-### Via the UI
+### Creating Events (Organization Admin)
 
-1. **Navigate to System Admin**: Use the sidebar to access **System Admin → Events Management**
-2. **Access creation form**: Click **"Create Event"** or go to `/admin/events/new`
-3. **Fill basic information**:
+Organization Admins can create events within their organization:
+
+1. **Navigate to Organization Dashboard**: Access your organization's event management section
+2. **Create New Event**: Click **"Create Event"**
+3. **Fill event information**:
    - **Name**: Display name for the event (e.g., "DevConf 2024")
    - **Slug**: URL-safe identifier (e.g., "devconf-2024")
    - **Description**: Brief description of the event
+   - **Organization**: Automatically set to your organization
 4. **Create event**: Click **"Create Event"**
+5. **Configure settings**: Complete event setup in the Event Admin interface
 
-The event will be created in an inactive state, ready for admin assignment.
+### Creating Events (System Admin)
+
+### Creating Events (System Admin)
+
+System Admins can create events globally for any organization:
+
+1. **Navigate to System Admin**: Use the sidebar to access **System Admin → Events Management**
+2. **Access creation form**: Click **"Create Event"** or go to `/admin/events/new`
+3. **Fill event information**:
+   - **Name**: Display name for the event (e.g., "DevConf 2024")
+   - **Slug**: URL-safe identifier (e.g., "devconf-2024")
+   - **Description**: Brief description of the event
+   - **Organization**: Select target organization (if applicable)
+4. **Create event**: Click **"Create Event"**
+5. **Assign Event Admin**: Assign appropriate Event Admin role to the designated organizer
+
+The event will be created and ready for configuration by the assigned Event Admin.
 
 ### Generating Admin Invites
 
-After creating an event, SuperAdmins can generate invite links for event organizers:
+After creating an event, System Admins can generate invite links for event organizers:
 
 1. **Navigate to event management**: Go to **System Admin → Events Management** (`/admin/events`)
 2. **Select event**: Click on the event you want to manage
@@ -86,7 +107,7 @@ After creating an event, SuperAdmins can generate invite links for event organiz
 
 ### Via the API
 
-SuperAdmins can use the API for programmatic event creation:
+System Admins can use the API for programmatic event creation:
 
 ```bash
 # Create basic event
@@ -108,7 +129,7 @@ POST /api/admin/events/{eventId}/invites
 
 Requirements:
 
-- Must be authenticated as a SuperAdmin
+- Must be authenticated as a System Admin
 - Slug must be unique across the system
 - Slug must be URL-safe (lowercase, alphanumeric, hyphens only)
 
@@ -136,9 +157,9 @@ Once an event organizer accepts the admin invite, they become the event admin an
 
 ## Listing Events
 
-### For SuperAdmins
+### For System Admins
 
-SuperAdmins can view all events in the system with administrative information:
+System Admins can view all events in the system with administrative information:
 
 - **UI**: Navigate to **System Admin → Events Management** (`/admin/events`)
 - **API**: `GET /api/admin/events` returns all events with statistics
@@ -166,7 +187,7 @@ Each event can have users with different roles:
 
 ### Permission Matrix
 
-| Action | Reporter | Responder | Admin | SuperAdmin* |
+| Action | Reporter | Responder | Admin | System Admin* |
 |--------|----------|-----------|-------|-------------|
 | View own reports | ✅ | ✅ | ✅ | ❌** |
 | View all reports | ❌ | ✅ | ✅ | ❌** |
@@ -177,8 +198,8 @@ Each event can have users with different roles:
 | Create events | ❌ | ❌ | ❌ | ✅ |
 | System admin | ❌ | ❌ | ❌ | ✅ |
 
-*SuperAdmins need explicit event roles to access event data
-**SuperAdmins can access event data only when assigned an event role
+*System Admins need explicit event roles to access event data
+**System Admins can access event data only when assigned an event role
 
 ---
 
@@ -200,7 +221,7 @@ Event admins can edit event metadata directly from the main event page using an 
 ### Who Can Edit
 
 - Only users with the `Admin` role for the event will see edit icons
-- SuperAdmins can edit if they have been assigned an Admin role for the event
+- System Admins can edit if they have been assigned an Admin role for the event
 - Non-admin users cannot edit event metadata
 
 ### How It Works
@@ -273,13 +294,13 @@ Events integrate with the report management system:
 
 ## Admin API Endpoints
 
-### SuperAdmin Event Management
+### System Admin Event Management
 
 - `POST /api/admin/events` - Create new event
 - `GET /api/admin/events` - List all events with statistics
 - `GET /api/admin/events/:eventId` - Get specific event details
 
-### SuperAdmin Invite Management
+### System Admin Invite Management
 
 - `GET /api/admin/events/:eventId/invites` - List event invites
 - `POST /api/admin/events/:eventId/invites` - Create admin invite
@@ -301,7 +322,7 @@ See [API Endpoints](../developer-docs/api-endpoints.md) for complete documentati
 
 ### Access Control
 
-- **SuperAdmin isolation**: Cannot access event data without explicit roles
+- **System Admin isolation**: Cannot access event data without explicit roles
 - **Event isolation**: Users cannot access other events' data
 - **Role validation**: All actions validated against user permissions
 - **Invite security**: Secure token generation for invite links
@@ -310,7 +331,7 @@ See [API Endpoints](../developer-docs/api-endpoints.md) for complete documentati
 
 All event management actions are logged:
 
-- **Event creation**: SuperAdmin actions logged
+- **Event creation**: System Admin actions logged
 - **Role assignments**: User role changes tracked
 - **Settings updates**: Event configuration changes recorded
 - **Access attempts**: Unauthorized access attempts logged
@@ -321,14 +342,14 @@ All event management actions are logged:
 
 ### Common Issues
 
-**SuperAdmin cannot access event data**
+**System Admin cannot access event data**
 
 - Solution: Have an event admin assign you an event role
 
 **Event creation fails**
 
 - Check: Slug uniqueness and format
-- Verify: SuperAdmin permissions
+- Verify: System Admin permissions
 - Review: Required fields completion
 
 **Invite links not working**

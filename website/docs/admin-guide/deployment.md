@@ -28,6 +28,7 @@ Conducky requires specific environment variables to function properly. See the [
 - `CORS_ORIGIN` - Public URL of frontend for CORS
 - `PORT` - Backend port (optional, defaults to 4000)
 - `NODE_ENV` - Set this to "production" when running in a production environment
+- `ENCRYPTION_KEY` - Encryption key for database-stored configuration. Must be at least 32 characters long. Generate with `openssl rand -base64 32`
 
 **Frontend** (`.env` in `/frontend`):
 
@@ -86,6 +87,8 @@ For AWS deployment, you can use:
 - **Application Load Balancer** to route traffic
 
 Detailed AWS deployment instructions coming soon.
+
+Also consider the Pulumi program at [mattstratton/conducky-pulumi](https://github.com/mattstratton/conducky-pulumi) for AWS deployment.
 
 ## Database Setup
 
