@@ -20,6 +20,8 @@
     "migrate:phase1-encryption": "node scripts/migrate-phase1-encryption.js",
     "migrate:phase1-encryption:dry-run": "node scripts/migrate-phase1-encryption.js --dry-run",
     "migrate:phase1-encryption:validate": "node scripts/migrate-phase1-encryption.js validate",
+    "migrate:phase2-encryption": "node scripts/migrate-phase2-encryption.js",
+    "migrate:phase2-encryption:dry-run": "node scripts/migrate-phase2-encryption.js --dry-run",
     "test": "jest",
     "test:ci": "jest --coverage --reporters=jest-junit",
     "test:coverage": "jest --coverage",

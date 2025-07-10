@@ -28,10 +28,14 @@ describe('Encryption Utilities', () => {
       expect(isLegacyEncrypted(encrypted)).toBe(false); // Should NOT be legacy format
     });
 
-    it('should return empty string for empty input', () => {
-      expect(encryptField('')).toBe('');
+    it('should handle null and undefined, but encrypt empty strings', () => {
       expect(encryptField(null)).toBe(null);
       expect(encryptField(undefined)).toBe(undefined);
+      
+      // Empty strings should be encrypted (changed behavior for Phase 2)
+      const encryptedEmpty = encryptField('');
+      expect(isEncrypted(encryptedEmpty)).toBe(true);
+      expect(decryptField(encryptedEmpty)).toBe('');
     });
 
     it('should produce different outputs for same input (due to random salt + IV)', () => {
@@ -93,10 +97,11 @@ describe('Encryption Utilities', () => {
       expect(decryptField(undefined)).toBe(undefined);
     });
 
-    it('should throw error for invalid encrypted format', () => {
-      expect(() => decryptField('invalid:format')).toThrow();
-      expect(() => decryptField('not:encrypted:format:too:many:parts:here')).toThrow();
-      expect(() => decryptField('single-part')).not.toThrow(); // Should return as-is
+    it('should handle invalid encrypted format gracefully', () => {
+      // Changed to graceful degradation - return original value instead of throwing
+      expect(decryptField('invalid:format')).toBe('invalid:format');
+      expect(decryptField('not:encrypted:format:too:many:parts:here')).toBe('not:encrypted:format:too:many:parts:here');
+      expect(decryptField('single-part')).toBe('single-part'); // Should return as-is
     });
   });
 

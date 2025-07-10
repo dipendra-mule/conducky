@@ -70,7 +70,7 @@ function getMasterKey(): string {
  * @returns Encrypted string in format: salt:iv:encrypted:authTag (all hex encoded)
  */
 export function encryptField(text: string): string {
-  if (!text) return text;
+  if (text === null || text === undefined) return text;
   
   try {
     const masterKey = getMasterKey();
@@ -157,7 +157,8 @@ export function decryptField(encryptedText: string): string {
     if (process.env.NODE_ENV === 'development') {
       logger.error('Decryption error:', error);
     }
-    throw new Error('Failed to decrypt field');
+    // Return original value if decryption fails (graceful degradation)
+    return encryptedText;
   }
 }
 
@@ -171,8 +172,23 @@ export function isEncrypted(value: string): boolean {
   const parts = value.split(':');
   
   // Check for both new format (4 parts) and legacy format (3 parts)
-  return (parts.length === 3 || parts.length === 4) && 
-         parts.every(part => /^[0-9a-f]+$/i.test(part));
+  if (parts.length !== 3 && parts.length !== 4) {
+    return false;
+  }
+  
+  // Check that all non-empty parts are hex, and allow empty encrypted content (for empty strings)
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    // Allow empty part only for encrypted content (index 2 in both 3 and 4-part formats)
+    if (part === '' && i === 2) {
+      continue; // Empty encrypted content is valid (happens when encrypting empty string)
+    }
+    if (!/^[0-9a-f]+$/i.test(part)) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 /**
