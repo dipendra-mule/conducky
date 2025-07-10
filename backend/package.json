@@ -23,7 +23,7 @@
     "migrate:phase2-encryption": "node scripts/migrate-phase2-encryption.js",
     "migrate:phase2-encryption:dry-run": "node scripts/migrate-phase2-encryption.js --dry-run",
     "test": "jest",
-    "test:ci": "jest --coverage --reporters=jest-junit",
+    "test:ci": "jest --coverage --reporters=default --reporters=jest-junit",
     "test:coverage": "jest --coverage",
     "test:ctrf": "jest --ci",
     "type-check": "tsc --noEmit",
