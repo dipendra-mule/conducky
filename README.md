@@ -140,7 +140,7 @@ ENCRYPTION_KEY=your-generated-encryption-key-here
 - **Minimum 32 characters** (recommended 64+)
 - **Unique per environment** (dev/staging/production)
 - **Rotate periodically** for enhanced security
-- **Backup securely** - loss prevents data decryption
+- **Store securely** - use encrypted key management systems or secure vaults
 
 For detailed security configuration, see the [Admin Security Guide](website/docs/admin-guide/security-overview.md).
 
