@@ -14,7 +14,7 @@ This document describes the main data models used in the system, based on the Pr
 - **name**: Optional display name
 - **passwordHash**: Hashed password (nullable for social login users)
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: userEventRoles, incidents, auditLogs, reportComments, evidenceFilesUploaded, assignedIncidents, avatar, passwordResetTokens, notifications, socialAccounts, notificationSettings, organizationMemberships, createdOrganizations, createdMemberships, createdOrgInvites
+- **Relations**: userRoles, grantedRoles, incidents, auditLogs, reportComments, evidenceFilesUploaded, assignedIncidents, avatar, passwordResetTokens, notifications, socialAccounts, notificationSettings, createdOrganizations, createdOrgInvites
 
 ## Event
 
@@ -28,23 +28,45 @@ This document describes the main data models used in the system, based on the Pr
 - **codeOfConduct**: Optional code of conduct text
 - **contactEmail**: Optional contact email
 - **isActive**: Boolean (default: true)
-- **organizationId**: Optional organization reference (nullable for migration compatibility)
+- **organizationId**: Organization reference (required for organization-scoped events)
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: organization, userEventRoles, incidents, auditLogs, inviteLinks, eventLogo, notifications
+- **Relations**: organization, incidents, auditLogs, inviteLinks, eventLogo, notifications
 
-## Role
+## UnifiedRole
 
 - **id**: UUID, primary key
-- **name**: Unique role name (Reporter, Responder, Admin, SuperAdmin)
-- **Relations**: userEventRoles, eventInviteLinks
+- **name**: Unique role name (system_admin, org_admin, org_viewer, event_admin, responder, reporter)
+- **scope**: Role scope (system, organization, event)
+- **level**: Hierarchy level (higher number = more permissions)
+- **description**: Optional role description
+- **createdAt, updatedAt**: Timestamps
+- **Relations**: userRoles, eventInviteLinks
 
-## UserEventRole
+## UserRole
 
 - **id**: UUID, primary key
 - **userId**: User reference
-- **eventId**: Event reference (nullable for global roles)
-- **roleId**: Role reference
-- **Unique:** Combination of userId, eventId, roleId
+- **roleId**: UnifiedRole reference
+- **scopeType**: Role scope (system, organization, event)
+- **scopeId**: Scope identifier ('SYSTEM' for system, org_id for organization, event_id for event)
+- **grantedById**: Optional reference to user who granted the role
+- **grantedAt**: When the role was granted
+- **expiresAt**: Optional role expiration date
+- **createdAt, updatedAt**: Timestamps
+- **Unique**: Combination of userId, roleId, scopeType, scopeId
+
+## Organization
+
+- **id**: UUID, primary key
+- **name**: Organization name
+- **slug**: Unique, URL-safe identifier
+- **description**: Optional organization description
+- **website**: Optional organization website URL
+- **logoUrl**: Optional logo URL
+- **settings**: JSON string for flexible settings
+- **createdById**: Reference to creating user
+- **createdAt, updatedAt**: Timestamps
+- **Relations**: events, createdBy, auditLogs, logo, inviteLinks
 
 ## Incident
 

@@ -34,9 +34,12 @@ The API documentation is organized into several sections:
 The OpenAPI specification includes:
 
 ### Security
+
 - Session-based authentication using cookies
-- Role-based access control for different endpoints
+- Unified Role-Based Access Control (RBAC) across system, organization, and event scopes
+- Role inheritance: System Admins → Organization Admins → Event Admins
 - Proper error responses for unauthorized access
+- Data isolation between organizations and events
 
 ### Endpoints
 Each endpoint includes:

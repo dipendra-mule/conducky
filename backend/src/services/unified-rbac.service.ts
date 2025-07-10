@@ -48,6 +48,8 @@ export class UnifiedRBACService {
 
   /**
    * Get user roles with caching for performance optimization
+   * @param userId - The user ID to get roles for
+   * @returns Promise<UserRoleWithDetails[]> - Array of user roles with role details
    */
   private async getCachedUserRoles(userId: string): Promise<UserRoleWithDetails[]> {
     const now = Date.now();
@@ -77,6 +79,7 @@ export class UnifiedRBACService {
 
   /**
    * Clear cache for a specific user (call this when user roles change)
+   * @param userId - The user ID to clear cache for
    */
   clearUserCache(userId: string): void {
     this.userRoleCache.delete(userId);
@@ -91,6 +94,11 @@ export class UnifiedRBACService {
 
   /**
    * Check if user has any of the specified roles in the given scope
+   * @param userId - The user ID to check roles for
+   * @param roleNames - Array of role names to check for
+   * @param scopeType - Optional scope type to filter by (system, organization, event)
+   * @param scopeId - Optional scope ID to filter by
+   * @returns Promise<boolean> - True if user has any of the specified roles
    */
   async hasRole(
     userId: string,
@@ -112,6 +120,8 @@ export class UnifiedRBACService {
 
   /**
    * Check if user is system admin
+   * @param userId - The user ID to check
+   * @returns Promise<boolean> - True if user is a system admin
    */
   async isSystemAdmin(userId: string): Promise<boolean> {
     return this.hasRole(userId, ['system_admin'], 'system', 'SYSTEM');
@@ -119,6 +129,10 @@ export class UnifiedRBACService {
 
   /**
    * Check if user has organization role (with system admin override)
+   * @param userId - The user ID to check
+   * @param organizationId - The organization ID to check permissions for
+   * @param roleNames - Array of role names to check for (defaults to org_admin and org_viewer)
+   * @returns Promise<boolean> - True if user has required organization role or is system admin
    */
   async hasOrgRole(
     userId: string,
@@ -136,6 +150,15 @@ export class UnifiedRBACService {
 
   /**
    * Check if user has event role (with role inheritance) - Optimized version
+   * This method implements the core role inheritance logic:
+   * - System admins have access to all events (but need explicit event roles for data access)
+   * - Organization admins inherit event admin permissions for their organization's events
+   * - Direct event roles are checked for specific event access
+   * 
+   * @param userId - The user ID to check permissions for
+   * @param eventId - The event ID to check permissions against
+   * @param roleNames - Array of roles that satisfy the permission check (defaults to event_admin, responder, reporter)
+   * @returns Promise<boolean> - True if user has required event permissions through any inheritance path
    */
   async hasEventRole(
     userId: string,

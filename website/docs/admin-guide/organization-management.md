@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # Organization Management
 
-Organizations provide a powerful way to group related events under a single administrative umbrella. As a SuperAdmin, you have the ability to create, manage, and oversee all organizations in the system.
+Organizations provide a powerful way to group related events under a single administrative umbrella. As a System Admin, you have the ability to create, manage, and oversee all organizations in the system.
 
 ## Overview
 
@@ -19,7 +19,7 @@ Organizations in Conducky allow for:
 
 ### Creating Organizations
 
-Only SuperAdmins can create new organizations:
+Only System Admins can create new organizations:
 
 1. Navigate to **Admin** → **Organizations**
 2. Click **Create New Organization**
@@ -39,9 +39,9 @@ When creating an organization:
 
 ## Organization Administration
 
-### SuperAdmin Capabilities
+### System Admin Capabilities
 
-As a SuperAdmin, you can:
+As a System Admin, you can:
 
 - **View All Organizations**: See complete list of organizations and their details
 - **Create Organizations**: Set up new organizations as needed
@@ -62,9 +62,10 @@ Use the organization dashboard to:
 #### Accessing Organization Data
 
 To access an organization's data:
+
 1. Navigate to **Admin** → **Organizations**
 2. Find the target organization
-3. Click **Access Organization** 
+3. Click **Access Organization**
 4. You'll be temporarily added as an Organization Admin
 5. Access organization events, reports, and settings as needed
 6. Remove yourself when oversight is complete
@@ -80,7 +81,7 @@ Understanding organization roles:
 
 ### Managing Organization Members
 
-While organization admins typically manage their own members, SuperAdmins can:
+While organization admins typically manage their own members, System Admins can:
 
 - View all organization memberships
 - Add/remove members in emergency situations

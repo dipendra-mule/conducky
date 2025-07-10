@@ -80,10 +80,12 @@ All these controls can be combined for advanced filtering and navigation.
 
 ### Role Types
 
-- **SuperAdmin**: Global system administrator (can create events, manage all users)
-- **Admin**: Event administrator (can manage users and settings for their event)
-- **Responder**: Can respond to and manage reports for their event
-- **Reporter**: Can submit reports for their event
+- **System Admin**: Global system administrator (can create organizations, manage system settings)
+- **Organization Admin**: Organization administrator (can manage events and users within their organization)
+- **Organization Viewer**: Read-only access to organization information and events
+- **Event Admin**: Event administrator (can manage users and settings for their event)
+- **Responder**: Can respond to and manage incident reports for their event
+- **Reporter**: Can submit incident reports for their event
 
 ### Assigning Roles
 
@@ -97,7 +99,8 @@ Event Admins can assign roles to users through:
 ### Role Management Actions (Admin Only)
 
 From the team list, administrators can:
-- **View Profile:** Access detailed user profile and activity
+
+- **View Profile**: Access detailed user profile and activity
 - **Change Role:** Update a user's role using a simple prompt
 - **Remove User:** Remove a user from the event entirely
 
@@ -142,18 +145,21 @@ Users can personalize their accounts by uploading avatars (profile pictures). As
 
 ### What Different Roles Can See
 
-#### SuperAdmin/Admin
+#### System Admin/Organization Admin/Event Admin
+
 - View all team members and their profiles
 - Access complete activity timelines for all users
 - See all reports (submitted and assigned)
 - Manage roles and remove users
 
 #### Responder
+
 - View team member profiles (limited access)
 - See activity related to reports they're involved with
 - Access reports they're assigned to or involved with
 
 #### Reporter
+
 - Cannot access team management features
 - Can only see their own profile information
 - Limited to reports they've submitted
