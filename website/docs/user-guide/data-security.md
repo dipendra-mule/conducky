@@ -80,7 +80,6 @@ All data transmitted between your browser and Conducky is protected:
 
 ### As a User:
 - **Use strong passwords** - Choose unique, complex passwords for your account
-- **Enable two-factor authentication** (if available) - Add an extra layer of security
 - **Log out when done** - Especially on shared or public computers
 - **Report security concerns** - Contact administrators if you notice anything suspicious
 
