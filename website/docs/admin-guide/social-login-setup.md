@@ -325,5 +325,5 @@ After setting up social login:
 
 For additional system administration tasks, see:
 - [System Settings](./system-settings.md) - Global configuration options
-- [Security Management](./security-management.md) - System security practices
+- [Security Overview](./security-overview.md) - System security practices and encryption management
 - [Event Management](./event-management.md) - Creating and managing events

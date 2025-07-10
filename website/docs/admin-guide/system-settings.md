@@ -183,7 +183,7 @@ Manage global system roles:
 - **Registration**: Prevent spam account creation
 - **Password Reset**: Limit reset request frequency
 
-For comprehensive security practices, see [Security Management](./security-management.md).
+For comprehensive security practices, see [Security Overview](./security-overview.md).
 
 ## Backup and Maintenance
 
@@ -234,7 +234,7 @@ For comprehensive security practices, see [Security Management](./security-manag
 For additional system administration support:
 
 - **Database Issues**: See [Database Monitoring](./database-monitoring.md)
-- **Security Concerns**: Review [Security Management](./security-management.md)
+- **Security Concerns**: Review [Security Overview](./security-overview.md)
 - **OAuth Problems**: Check [Social Login Setup](./social-login-setup.md)
 - **Event Issues**: Consult [Event Management](./event-management.md)
 

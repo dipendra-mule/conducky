@@ -336,7 +336,7 @@ ORDER BY seq_tup_read DESC;
 
 For comprehensive system administration:
 
-- **Security Monitoring**: See [Security Management](./security-management.md)
+- **Security Monitoring**: See [Security Overview](./security-overview.md)
 - **System Configuration**: Review [System Settings](./system-settings.md)
 - **Event Management**: Check [Event Management](./event-management.md)
 - **Overall System Health**: Monitor using [System Configuration](./system-configuration.md)
