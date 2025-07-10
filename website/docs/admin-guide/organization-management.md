@@ -88,46 +88,6 @@ While organization admins typically manage their own members, System Admins can:
 - Change member roles when needed
 - Resolve access disputes
 
-### User Migration
-
-When migrating users between organizations:
-1. Ensure proper permissions in both organizations
-2. Consider event access implications
-3. Update role assignments as needed
-4. Communicate changes to affected users
-
-## Event Migration
-
-### Moving Events to Organizations
-
-Existing standalone events can be migrated to organizations:
-
-#### Migration Process
-
-1. **Preparation**:
-   - Create target organization (if needed)
-   - Identify events to migrate
-   - Plan role assignments for existing event admins
-
-2. **Migration**:
-   - Use the migration tools in **Admin** → **Organizations**
-   - Select events for migration
-   - Choose target organization
-   - Assign organization roles to existing event admins
-
-3. **Post-Migration**:
-   - Verify event functionality
-   - Confirm user access
-   - Update documentation and procedures
-   - Communicate changes to users
-
-#### Migration Considerations
-
-- **Event URLs**: May change to include organization slug
-- **User Access**: Event admins should be granted appropriate organization roles
-- **Branding**: Events will inherit organization branding
-- **Reports**: Historical reports remain intact
-
 ## System Configuration
 
 ### Organization Settings

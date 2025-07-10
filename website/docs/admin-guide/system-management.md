@@ -186,65 +186,53 @@ For production use:
 
 ### Environment Configuration
 
-#### Required Environment Variables
+#### OAuth Settings Location
 
-Add these variables to your backend `.env` file:
+OAuth configuration for Google and GitHub is managed directly in the Conducky database and through the System Settings UI.
 
-```bash
-# OAuth Configuration
-GOOGLE_CLIENT_ID=your_google_client_id_here
-GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-GITHUB_CLIENT_ID=your_github_client_id_here
-GITHUB_CLIENT_SECRET=your_github_client_secret_here
+#### Configuring OAuth Providers
 
-# Base URLs for OAuth (important: these must match your OAuth app configuration)
-BACKEND_BASE_URL=http://localhost:4000   # Where OAuth callbacks are handled
-FRONTEND_BASE_URL=http://localhost:3001  # Where users are redirected after login
-```
+1. **Log in as a System Admin.**
+2. Navigate to **System Admin → System Settings** in the sidebar.
+3. Go to the **"OAuth Providers"** section.
+
+Here you can:
+
+- Add or update the **Client ID** and **Client Secret** for Google and GitHub.
+- Set the **Authorized Redirect URIs** (these must match your OAuth app configuration).
+- Enable or disable each provider as needed.
+
+**Note:** Changes take effect immediately after saving.
 
 #### Production Configuration
 
 For production deployments:
 
-```bash
-# OAuth Configuration (Production)
-GOOGLE_CLIENT_ID=your_production_google_client_id
-GOOGLE_CLIENT_SECRET=your_production_google_client_secret
-GITHUB_CLIENT_ID=your_production_github_client_id
-GITHUB_CLIENT_SECRET=your_production_github_client_secret
+- Enter your production OAuth credentials and redirect URIs in the System Settings UI.
+- Ensure your OAuth app configuration in Google and GitHub matches the redirect URIs shown in the settings screen.
+- No changes to `.env` or `docker-compose.yml` are required for OAuth.
 
-# Production URLs
-BACKEND_BASE_URL=https://yourdomain.com   # Same domain, different services
-FRONTEND_BASE_URL=https://yourdomain.com
-```
+#### Security
 
-#### Docker Compose Configuration
+- Only System Admins can view or modify OAuth credentials.
+- Credentials are encrypted at rest in the database.
 
-If using Docker Compose, add these to your `docker-compose.yml` environment section:
+#### Troubleshooting
 
-```yaml
-backend:
-  environment:
-    - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-    - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-    - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-    - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-    - FRONTEND_BASE_URL=${FRONTEND_BASE_URL}
-```
+If users cannot log in via social providers:
+
+- Double-check the OAuth credentials and redirect URIs in the System Settings screen.
+- Ensure your OAuth app configuration matches exactly (including protocol and domain).
+- Review error messages for hints about misconfiguration.
+
+For more details, see the [System Settings](#system-settings) section above.
 
 ### Testing Social Login
 
 #### Local Testing Setup
 
 1. **Configure OAuth apps** with local callback URLs (as shown above)
-2. **Set environment variables** in your `.env` file
-3. **Restart your backend** to load new environment variables:
-
-   ```bash
-   docker-compose restart backend
-   ```
-
-4. **Test the setup** by following the testing scenarios below
+2. **Test the setup** by following the testing scenarios below
 
 #### Testing Scenarios
 
@@ -365,22 +353,6 @@ SELECT * FROM "SocialAccount" WHERE "userId" = 'user-id-here';
 1. Check session configuration in backend
 2. Verify cookie settings allow OAuth domain
 3. Ensure `FRONTEND_BASE_URL` is set correctly
-
-#### Environment Variables Not Loading
-
-**Error**: OAuth buttons redirect to error page
-
-**Causes**:
-
-- Environment variables not set
-- Backend not restarted after setting variables
-- Docker container not seeing environment variables
-
-**Solutions**:
-
-1. Verify environment variables are set: `docker-compose exec backend env | grep GOOGLE`
-2. Restart backend container: `docker-compose restart backend`
-3. Check docker-compose.yml environment configuration
 
 ### Production Deployment Checklist
 
