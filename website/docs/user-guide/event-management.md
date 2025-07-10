@@ -107,7 +107,7 @@ After creating an event, System Admins can generate invite links for event organ
 
 ### Via the API
 
-SuperAdmins can use the API for programmatic event creation:
+System Admins can use the API for programmatic event creation:
 
 ```bash
 # Create basic event
@@ -129,7 +129,7 @@ POST /api/admin/events/{eventId}/invites
 
 Requirements:
 
-- Must be authenticated as a SuperAdmin
+- Must be authenticated as a System Admin
 - Slug must be unique across the system
 - Slug must be URL-safe (lowercase, alphanumeric, hyphens only)
 
@@ -157,9 +157,9 @@ Once an event organizer accepts the admin invite, they become the event admin an
 
 ## Listing Events
 
-### For SuperAdmins
+### For System Admins
 
-SuperAdmins can view all events in the system with administrative information:
+System Admins can view all events in the system with administrative information:
 
 - **UI**: Navigate to **System Admin → Events Management** (`/admin/events`)
 - **API**: `GET /api/admin/events` returns all events with statistics
@@ -187,7 +187,7 @@ Each event can have users with different roles:
 
 ### Permission Matrix
 
-| Action | Reporter | Responder | Admin | SuperAdmin* |
+| Action | Reporter | Responder | Admin | System Admin* |
 |--------|----------|-----------|-------|-------------|
 | View own reports | ✅ | ✅ | ✅ | ❌** |
 | View all reports | ❌ | ✅ | ✅ | ❌** |
@@ -198,8 +198,8 @@ Each event can have users with different roles:
 | Create events | ❌ | ❌ | ❌ | ✅ |
 | System admin | ❌ | ❌ | ❌ | ✅ |
 
-*SuperAdmins need explicit event roles to access event data
-**SuperAdmins can access event data only when assigned an event role
+*System Admins need explicit event roles to access event data
+**System Admins can access event data only when assigned an event role
 
 ---
 
@@ -221,7 +221,7 @@ Event admins can edit event metadata directly from the main event page using an 
 ### Who Can Edit
 
 - Only users with the `Admin` role for the event will see edit icons
-- SuperAdmins can edit if they have been assigned an Admin role for the event
+- System Admins can edit if they have been assigned an Admin role for the event
 - Non-admin users cannot edit event metadata
 
 ### How It Works
@@ -294,13 +294,13 @@ Events integrate with the report management system:
 
 ## Admin API Endpoints
 
-### SuperAdmin Event Management
+### System Admin Event Management
 
 - `POST /api/admin/events` - Create new event
 - `GET /api/admin/events` - List all events with statistics
 - `GET /api/admin/events/:eventId` - Get specific event details
 
-### SuperAdmin Invite Management
+### System Admin Invite Management
 
 - `GET /api/admin/events/:eventId/invites` - List event invites
 - `POST /api/admin/events/:eventId/invites` - Create admin invite
@@ -322,7 +322,7 @@ See [API Endpoints](../developer-docs/api-endpoints.md) for complete documentati
 
 ### Access Control
 
-- **SuperAdmin isolation**: Cannot access event data without explicit roles
+- **System Admin isolation**: Cannot access event data without explicit roles
 - **Event isolation**: Users cannot access other events' data
 - **Role validation**: All actions validated against user permissions
 - **Invite security**: Secure token generation for invite links
@@ -331,7 +331,7 @@ See [API Endpoints](../developer-docs/api-endpoints.md) for complete documentati
 
 All event management actions are logged:
 
-- **Event creation**: SuperAdmin actions logged
+- **Event creation**: System Admin actions logged
 - **Role assignments**: User role changes tracked
 - **Settings updates**: Event configuration changes recorded
 - **Access attempts**: Unauthorized access attempts logged
@@ -342,14 +342,14 @@ All event management actions are logged:
 
 ### Common Issues
 
-**SuperAdmin cannot access event data**
+**System Admin cannot access event data**
 
 - Solution: Have an event admin assign you an event role
 
 **Event creation fails**
 
 - Check: Slug uniqueness and format
-- Verify: SuperAdmin permissions
+- Verify: System Admin permissions
 - Review: Required fields completion
 
 **Invite links not working**

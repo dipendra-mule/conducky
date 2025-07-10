@@ -120,7 +120,7 @@ The system validates invite codes before joining:
 - Leaving an event removes all your access to that event's data
 - You cannot view reports or participate in the event after leaving
 - Event administrators can re-invite you if needed
-- SuperAdmins cannot leave events through this interface
+- System Admins cannot leave events through this interface
 
 ### Event Quick Actions
 

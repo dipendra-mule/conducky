@@ -15,7 +15,7 @@ The main team page (`/events/[eventSlug]/team`) provides a powerful interface fo
 
 ### Search and Filtering
 - **Search:** Filter users by name or email using the search box. The list updates as you type.
-- **Role Filter:** Filter users by event role (SuperAdmin, Admin, Responder, Reporter) using the role dropdown.
+- **Role Filter:** Filter users by event role (System Admin, Admin, Responder, Reporter) using the role dropdown.
 - **Sort Options:** Sort users by name (A-Z, Z-A) or email (A-Z, Z-A) using the sort dropdown.
 
 ### Team Member Information

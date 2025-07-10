@@ -88,9 +88,9 @@ Understanding your role helps you focus on the most relevant documentation:
 | **Reporter** | ✅ | ❌ (own only) | ❌ | ❌ |
 | **Responder** | ✅ | ✅ | ❌ | ❌ |
 | **Event Admin** | ✅ | ✅ | ✅ | ✅ |
-| **SuperAdmin** | ✅* | ✅* | ✅* | ✅ |
+| **System Admin** | ✅* | ✅* | ✅* | ✅ |
 
-*SuperAdmins need explicit event roles to access event data
+*System Admins need explicit event roles to access event data
 
 ## 🔗 Quick Navigation
 

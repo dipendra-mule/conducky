@@ -35,7 +35,7 @@ Conducky takes privacy seriously with several built-in protections:
 
 Access to Conducky typically comes through:
 1. **Event invitations**: Event administrators send invitation links
-2. **Direct registration**: If you're setting up the first account (becomes SuperAdmin)
+2. **Direct registration**: If you're setting up the first account (becomes System Admin)
 3. **Invite codes**: Some events provide codes you can use to join
 
 ### I received an invitation link. What do I do?
@@ -65,19 +65,19 @@ See the [Troubleshooting Guide](./troubleshooting.md) for more details.
 - **Event Admin**: Full management of the event, users, and settings
 
 **System-level roles:**
-- **SuperAdmin**: Can create events and manage the overall system
+- **System Admin**: Can create events and manage the overall system
 - **Regular User**: Has no system-level privileges (most users)
 
 ### Can I have different roles in different events?
 
 Yes! Conducky supports multi-event participation where you can have different roles in different events. For example, you might be an Event Admin for one conference and a Responder for another.
 
-### What's the difference between SuperAdmin and Event Admin?
+### What's the difference between System Admin and Event Admin?
 
-- **SuperAdmin**: System-wide access, can create events, but needs specific event roles to access event data
+- **System Admin**: System-wide access, can create events, but needs specific event roles to access event data
 - **Event Admin**: Full control within a specific event, but no system-wide access
 
-SuperAdmins don't automatically have access to event data - they must be explicitly added to events by Event Admins.
+System Admins don't automatically have access to event data - they must be explicitly added to events by Event Admins.
 
 ## Incidents and Incident Management
 
@@ -148,10 +148,10 @@ Yes, you can leave events through your profile page (accessible from the user me
 
 ### What happens if an event is disabled?
 
-If an event is disabled by a SuperAdmin:
+If an event is disabled by a System Admin:
 - Event data remains intact but becomes inaccessible
 - Users cannot access the event dashboard or incidents
-- Only SuperAdmins can re-enable disabled events
+- Only System Admins can re-enable disabled events
 
 ## Technical Questions
 
@@ -212,7 +212,7 @@ Profile pictures (avatars) can be updated in Profile Settings (accessible from t
 
 ### Can I delete my account?
 
-Account deletion must be handled by system administrators. Contact your organization's SuperAdmin if you need your account deleted.
+Account deletion must be handled by system administrators. Contact your organization's System Admin if you need your account deleted.
 
 ## Troubleshooting
 

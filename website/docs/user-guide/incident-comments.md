@@ -26,7 +26,7 @@ Comments are the primary way to communicate about incident reports. Whether you'
 - **Default**: All comments are public unless specifically marked as internal
 
 ### Internal Comments  
-- **Visible to**: Responders, admins, and SuperAdmins only
+- **Visible to**: Responders, admins, and System Admins only
 - **Use for**: Sensitive coordination, internal discussions, response planning
 - **Permission**: Only responders/admins can create internal comments
 - **Security**: Hidden from reporters unless they're assigned to the incident 

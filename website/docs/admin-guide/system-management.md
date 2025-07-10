@@ -4,27 +4,27 @@ sidebar_position: 3
 
 # System Management
 
-This guide covers SuperAdmin functions for managing the overall Conducky system.
+This guide covers System Admin functions for managing the overall Conducky system.
 
-## SuperAdmin Role
+## System Admin Role
 
-SuperAdmins have system-wide access and can:
+System Admins have system-wide access and can:
 
-- Create new events
-- View all events in the system
+- Create new events and organizations
+- View all events and organizations in the system
 - Generate admin invite links for events
 - Manage global system settings (including public event listing)
 - Monitor system health and usage
 
-**Important**: SuperAdmins have separate permissions from event-level roles. To access event data (reports, users, etc.), SuperAdmins must be explicitly assigned an event role by an event admin.
+**Important**: System Admins have separate permissions from event-level roles. To access event data (reports, users, etc.), System Admins must be explicitly assigned an event role by an event admin.
 
-## SuperAdmin Navigation
+## System Admin Navigation
 
-SuperAdmins have access to a dedicated system administration interface through the sidebar navigation:
+System Admins have access to a dedicated system administration interface through the sidebar navigation:
 
 ### Accessing System Admin Features
 
-1. **Login as SuperAdmin**: The sidebar will automatically show system admin navigation
+1. **Login as System Admin**: The sidebar will automatically show system admin navigation
 2. **System Admin Section**: Look for the "System Admin" section in the sidebar with:
    - 🏠 **System Dashboard** - Overview of all events and system health
    - 🎯 **Events Management** - Create and manage events
@@ -32,7 +32,7 @@ SuperAdmins have access to a dedicated system administration interface through t
 
 ### Context Switching
 
-SuperAdmins can switch between two contexts:
+System Admins can switch between two contexts:
 
 - **System Administration**: Managing the Conducky installation (pages starting with `/admin/`)
 - **Personal Dashboard**: Participating in events as a regular user (`/dashboard` and pages starting with `/events/`)
@@ -43,16 +43,16 @@ The event creation workflow has been streamlined for better user experience:
 
 ### New Simplified Workflow
 
-1. **SuperAdmin creates basic event** (name, slug, description only)
+1. **System Admin creates basic event** (name, slug, description only)
 2. **Event is created as inactive** (`isActive: false`) until fully configured
-3. **SuperAdmin generates admin invite link** for the event organizer
+3. **System Admin generates admin invite link** for the event organizer
 4. **Event organizer accepts invite** and becomes event admin
 5. **Event admin completes detailed setup** (contact info, dates, CoC, etc.)
 6. **Event becomes active** once fully configured
 
 ### Via the UI
 
-1. Log in as a SuperAdmin
+1. Log in as a System Admin
 2. Navigate to **System Admin → Events Management** in the sidebar
 3. Click **"Create Event"** or go to `/admin/events/new`
 4. Fill in the basic event details:
@@ -90,13 +90,13 @@ Use the `POST /api/admin/events` endpoint with:
 
 Requirements:
 
-- Must be authenticated as a SuperAdmin
+- Must be authenticated as a System Admin
 - Slug must be unique across the system
 - Slug must be URL-safe (lowercase, alphanumeric, hyphens only)
 
 ## Social Login Configuration
 
-Conducky supports social login with Google and GitHub OAuth, allowing users to sign in with their existing accounts. This section guides SuperAdmins through setting up and configuring social login.
+Conducky supports social login with Google and GitHub OAuth, allowing users to sign in with their existing accounts. This section guides System Admins through setting up and configuring social login.
 
 ### Overview
 
@@ -416,11 +416,11 @@ Before deploying social login to production:
 
 ## System Settings
 
-SuperAdmins can manage global system settings that affect the entire Conducky installation.
+System Admins can manage global system settings that affect the entire Conducky installation.
 
 ### Accessing System Settings
 
-1. Log in as a SuperAdmin
+1. Log in as a System Admin
 2. Navigate to **System Admin → System Settings** in the sidebar
 3. Go to `/admin/system/settings`
 
@@ -448,7 +448,7 @@ Control whether public event listings are shown on the home page:
 System settings can also be managed via API:
 
 - **GET** `/api/system/settings` - View current settings (public access)
-- **PATCH** `/api/admin/system/settings` - Update settings (SuperAdmin only)
+- **PATCH** `/api/admin/system/settings` - Update settings (System Admin only)
 
 Example API usage:
 
@@ -463,14 +463,14 @@ PATCH /api/admin/system/settings
 
 ### Listing All Events
 
-SuperAdmins can view all events in the system:
+System Admins can view all events in the system:
 
 - **UI**: Navigate to **System Admin → Events Management** (`/admin/events`)
-- **API**: `GET /api/admin/events` returns all events (SuperAdmin only)
+- **API**: `GET /api/admin/events` returns all events (System Admin only)
 
 ### Event Details and Settings
 
-From the events list, SuperAdmins can:
+From the events list, System Admins can:
 
 - **View event details**: Click on any event to see full information
 - **Manage invites**: Create and manage admin invite links
@@ -478,7 +478,7 @@ From the events list, SuperAdmins can:
 
 ### Event Access Restrictions
 
-SuperAdmins can access event management interfaces, but they **cannot** access event data (reports, detailed user information, etc.) unless they are explicitly assigned an event role.
+System Admins can access event management interfaces, but they **cannot** access event data (reports, detailed user information, etc.) unless they are explicitly assigned an event role.
 
 To access event data:
 
@@ -487,9 +487,9 @@ To access event data:
 
 ## Admin API Endpoints
 
-### New SuperAdmin Endpoints
+### New System Admin Endpoints
 
-The following endpoints are available for SuperAdmin system management:
+The following endpoints are available for System Admin system management:
 
 #### Event Management
 
@@ -503,23 +503,23 @@ The following endpoints are available for SuperAdmin system management:
 - `POST /api/admin/events/:eventId/invites` - Create new admin invite
 - `PATCH /api/admin/events/:eventId/invites/:inviteId` - Update invite (disable/enable)
 
-All admin endpoints require SuperAdmin authentication and return appropriate error responses for unauthorized access.
+All admin endpoints require System Admin authentication and return appropriate error responses for unauthorized access.
 
 ## User Management
 
 ### Global User Overview
 
-SuperAdmins can view system-wide user statistics and activity, but individual user management is done at the event level by Event Admins.
+System Admins can view system-wide user statistics and activity, but individual user management is done at the event level by Event Admins.
 
 ### Role Assignment
 
-SuperAdmins can assign global roles (like creating additional SuperAdmins) through direct database access or future admin interfaces.
+System Admins can assign global roles (like creating additional System Admins) through direct database access or future admin interfaces.
 
 ## System Monitoring
 
 ### Audit Logs
 
-SuperAdmins should regularly review audit logs for:
+System Admins should regularly review audit logs for:
 
 - Event creation and deletion
 - Role assignments and changes
@@ -537,12 +537,12 @@ Monitor the PostgreSQL database for:
 
 ## Security Best Practices
 
-### SuperAdmin Account Security
+### System Admin Account Security
 
 - Use strong, unique passwords
 - Enable two-factor authentication when available
-- Regularly review SuperAdmin access
-- Limit the number of SuperAdmin accounts
+- Regularly review System Admin access
+- Limit the number of System Admin accounts
 
 ### System Security
 
@@ -560,7 +560,7 @@ Monitor the PostgreSQL database for:
 
 ## Database Performance Monitoring
 
-SuperAdmins have access to comprehensive database performance monitoring tools to ensure optimal system performance and identify potential issues before they impact users.
+System Admins have access to comprehensive database performance monitoring tools to ensure optimal system performance and identify potential issues before they impact users.
 
 ### Accessing Performance Metrics
 
@@ -573,7 +573,7 @@ Use the dedicated performance endpoints:
 - **GET `/api/admin/database/performance`** - Get current performance metrics
 - **POST `/api/admin/database/performance/reset`** - Reset metrics to start fresh monitoring
 
-Both endpoints require SuperAdmin authentication and return JSON responses.
+Both endpoints require System Admin authentication and return JSON responses.
 
 #### Example Usage
 
@@ -596,7 +596,7 @@ curl -X POST \
 
 - **Total Queries**: All database queries executed since last reset
 - **Slow Queries**: Queries taking 100-500ms (yellow flag)
-- **Very Slow Queries**: Queries taking >500ms (red flag)
+- **Very Slow Queries**: Queries taking \>500ms (red flag)
 - **Average Execution Time**: Overall query performance indicator
 - **N+1 Patterns**: Detected inefficient query patterns
 
@@ -679,22 +679,25 @@ curl -H "Cookie: your-session" \
 #### Performance Thresholds
 
 **Acceptable Performance:**
-- Average execution time: <50ms
-- Slow queries: <5% of total
-- Very slow queries: <1% of total
+
+- Average execution time: \<50ms
+- Slow queries: \<5% of total
+- Very slow queries: \<1% of total
 - N+1 patterns: 0 detected
 
 **Warning Thresholds:**
+
 - Average execution time: 50-100ms
 - Slow queries: 5-10% of total
 - Very slow queries: 1-3% of total
 - N+1 patterns: 1-2 detected
 
 **Critical Thresholds:**
-- Average execution time: >100ms
-- Slow queries: >10% of total
-- Very slow queries: >3% of total
-- N+1 patterns: >2 detected
+
+- Average execution time: \>100ms
+- Slow queries: \>10% of total
+- Very slow queries: \>3% of total
+- N+1 patterns: \>2 detected
 
 #### Automated Recommendations
 
@@ -769,10 +772,10 @@ When performance degrades:
 
 ## Troubleshooting System Issues
 
-### Common SuperAdmin Issues
+### Common System Admin Issues
 
-- **Cannot see system admin navigation**: Verify SuperAdmin role assignment
-- **Cannot create events**: Check SuperAdmin permissions and database connectivity
+- **Cannot see system admin navigation**: Verify System Admin role assignment
+- **Cannot create events**: Check System Admin permissions and database connectivity
 - **Cannot access event data**: Assign yourself an event role first
 - **Invite links not working**: Verify invite generation and expiration settings
 
@@ -814,7 +817,7 @@ For system-level issues:
 
 ## Future Features
 
-Planned SuperAdmin features include:
+Planned System Admin features include:
 
 - Web-based user management interface
 - System analytics and reporting

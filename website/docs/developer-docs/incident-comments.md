@@ -31,7 +31,7 @@ The comment system allows users to collaborate on incident reports through threa
 ## Permissions
 
 ### Add Comment
-- **Responders, Admins, SuperAdmins**: Can add comments to any incident in their events
+- **Responders, Admins, System Admins**: Can add comments to any incident in their events
 - **Reporters**: Can add comments to their own incidents
 - **Assigned Users**: Can comment on incidents assigned to them
 
@@ -42,11 +42,11 @@ The comment system allows users to collaborate on incident reports through threa
 
 ### Delete Comment
 - **Comment Author**: Can delete their own comments
-- **Admins/SuperAdmins**: Can delete any comment in their events
+- **Admins/System Admins**: Can delete any comment in their events
 - **Permanent Action**: Deletions cannot be undone
 
 ### Internal Comments
-- **Creation**: Only Responders, Admins, and SuperAdmins can create internal comments
+- **Creation**: Only Responders, Admins, and System Admins can create internal comments
 - **Visibility**: Internal comments are hidden from Reporters unless they're assigned to the incident 
 - **Use Cases**: Sensitive information, internal coordination, response planning
 

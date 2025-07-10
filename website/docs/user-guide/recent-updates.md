@@ -94,7 +94,7 @@ See the [Cross-Event Incidents Guide](./cross-event-incidents.md) for details.
 
 - **Role-Based Access Control**: Stricter enforcement of permissions
 - **Event Data Isolation**: Enhanced multi-tenancy security
-- **SuperAdmin Restrictions**: SuperAdmins cannot access event data without explicit roles
+- **System Admin Restrictions**: System Admins cannot access event data without explicit roles
 - **Audit Logging**: Improved tracking of user actions
 
 ## Previous Updates

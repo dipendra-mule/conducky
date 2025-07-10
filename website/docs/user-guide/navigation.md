@@ -41,7 +41,7 @@ Event-specific functionality when working within a particular event:
 
 #### 3. **System Admin Context** (`/admin/`)
 
-System-level management for SuperAdmins only:
+System-level management for System Admins only:
 
 - Manage all events in the installation
 - System settings and configuration
@@ -54,16 +54,16 @@ The sidebar navigation automatically adapts based on your current context and ro
 
 - **Global Navigation**: Home, All Reports, Notifications always visible
 - **Event Section**: Shows when you belong to events, with event-specific navigation
-- **System Admin Section**: Only visible to SuperAdmins, provides system management access
+- **System Admin Section**: Only visible to System Admins, provides system management access
 - **User Menu**: Profile, settings, and logout options
 
 ## Navigation by User Role
 
-### SuperAdmin Navigation
+### System Admin Navigation
 
-SuperAdmins have access to both system management and personal event participation:
+System Admins have access to both system management and personal event participation:
 
-**System Admin Section** (always visible to SuperAdmins):
+**System Admin Section** (always visible to System Admins):
 
 - 🏠 **System Dashboard** (`/admin/dashboard`)
 - 🎯 **Events Management** (`/admin/events`)
@@ -229,7 +229,7 @@ The sidebar navigation is fully responsive and mobile-optimized:
 1. **First-time users**: Directed to global dashboard with "No events" message
 2. **Single event users**: Directed to that event's dashboard
 3. **Multi-event users**: Directed to global dashboard showing all events
-4. **SuperAdmins**: Directed to system admin dashboard with full system navigation
+4. **System Admins**: Directed to system admin dashboard with full system navigation
 
 ### Authentication State
 
@@ -267,7 +267,7 @@ The navigation system has been optimized for performance:
 
 ### For Admins
 
-1. **SuperAdmins**: Use the system admin section for installation management
+1. **System Admins**: Use the system admin section for installation management
 2. **Event Admins**: Use event settings for detailed event configuration
 3. **Invite Management**: Generate admin invites through the system admin interface
 4. **Context Switching**: Switch between system admin and personal contexts as needed
@@ -288,10 +288,10 @@ The navigation system has been optimized for performance:
 - **Event switcher empty**: Ensure you belong to at least one event
 - **Performance issues**: Clear browser cache and check network connectivity
 
-### SuperAdmin Issues
+### System Admin Issues
 
-- **System admin section missing**: Verify SuperAdmin role assignment
-- **Cannot access events**: Remember that SuperAdmins need event roles to access event data
+- **System admin section missing**: Verify System Admin role assignment
+- **Cannot access events**: Remember that System Admins need event roles to access event data
 - **Navigation slow**: Check for excessive API calls in browser developer tools
 
 ### Getting Help

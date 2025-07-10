@@ -31,9 +31,9 @@ Organizations in Conducky serve as containers for events, allowing:
 
 ## Getting Started with Organizations
 
-### For SuperAdmins: Creating Organizations
+### For System Admins: Creating Organizations
 
-Only SuperAdmins can create new organizations:
+Only System Admins can create new organizations:
 
 1. Navigate to **Admin** → **Organizations**
 2. Click **Create New Organization**
@@ -169,7 +169,7 @@ Each event maintains its own reporting system while contributing to organization
 
 Existing events can be migrated to organizations:
 
-### For SuperAdmins
+### For System Admins
 
 1. Create the target organization
 2. Use the migration tools in **Admin** → **Organizations**
@@ -210,7 +210,7 @@ If your event is migrated to an organization:
 
 - Organization data is isolated between organizations
 - Members can only access organizations they belong to
-- SuperAdmins can view all organizations but cannot access organization data without explicit membership
+- System Admins can view all organizations but cannot access organization data without explicit membership
 
 ### Invite Security
 
@@ -224,7 +224,7 @@ If your event is migrated to an organization:
 ### Common Issues
 
 **Cannot create organization**
-- Only SuperAdmins can create organizations
+- Only System Admins can create organizations
 - Check your user role in **Profile** → **Settings**
 
 **Invite link not working**
@@ -239,7 +239,7 @@ If your event is migrated to an organization:
 
 **Event not showing in organization**
 - Events must be explicitly created within an organization
-- Existing events may need migration by a SuperAdmin
+- Existing events may need migration by a System Admin
 
 ### Getting Help
 

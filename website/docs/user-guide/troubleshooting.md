@@ -54,8 +54,8 @@ This guide covers common issues you might encounter while using Conducky and how
    - Navigate to an event (e.g., `/events/your-event/dashboard`) to see event-specific navigation
    - Use the event switcher dropdown to select an event
 
-3. **SuperAdmin vs Event roles**: SuperAdmins need explicit event roles to see event navigation
-   - SuperAdmin system access is separate from event access
+3. **System Admin vs Event roles**: System Admins need explicit event roles to see event navigation
+   - System Admin system access is separate from event access
    - Ask an event admin to add you to specific events
 
 ### Event Switcher Not Showing
@@ -80,7 +80,7 @@ This guide covers common issues you might encounter while using Conducky and how
 
 2. **Event doesn't exist**: Verify the event slug is correct
 3. **No access**: Ensure you have a role in the event
-4. **Event disabled**: The event may have been disabled by a SuperAdmin
+4. **Event disabled**: The event may have been disabled by a System Admin
 
 ## Authentication Issues
 
@@ -103,7 +103,7 @@ This guide covers common issues you might encounter while using Conducky and how
 - **First-time users**: Global dashboard (`/dashboard`)
 - **Single event users**: That event's dashboard
 - **Multi-event users**: Global dashboard showing all events
-- **SuperAdmins**: System admin dashboard (`/admin/dashboard`)
+- **System Admins**: System admin dashboard (`/admin/dashboard`)
 
 **Solutions**:
 1. **Manual navigation**: Use the sidebar to navigate to your desired location
@@ -132,7 +132,7 @@ This guide covers common issues you might encounter while using Conducky and how
    - Check if you have a pending invitation
 
 2. **Event disabled**: The event may have been disabled
-   - Contact a SuperAdmin if you believe this is an error
+   - Contact a System Admin if you believe this is an error
 
 3. **Wrong URL**: Ensure you're using the correct event slug
    - Check the URL format: `/events/[correct-slug]/dashboard`

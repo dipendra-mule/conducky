@@ -86,7 +86,7 @@ When someone uses an invite link, they'll be prompted to create an account (if t
 ---
 
 ## Permissions
-- Only event Admins or SuperAdmins can create, view, or disable invite links for their event.
+- Only event Admins or System Admins can create, view, or disable invite links for their event.
 - Anyone can redeem a valid invite link (subject to max uses, expiration, and disabled status).
 
 ---
