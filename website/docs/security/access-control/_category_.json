@@ -1,0 +1,8 @@
+{
+  "label": "Access Control & RBAC",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Role-Based Access Control (RBAC) system documentation covering permissions, roles, and security enforcement."
+  }
+} 

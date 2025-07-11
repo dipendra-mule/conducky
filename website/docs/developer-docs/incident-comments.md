@@ -64,7 +64,7 @@ The comment system allows users to collaborate on incident reports through threa
 - `visibility` - Filter by public/internal/all
 - `sortBy`, `sortOrder` - Sorting options
 
-See the [API Endpoints documentation](./api-endpoints.md#comments) for complete details.
+See the [API documentation](./api/overview) for complete details.
 
 ## Implementation Details
 
@@ -118,7 +118,7 @@ See the [API Endpoints documentation](./api-endpoints.md#comments) for complete 
 - Test direct comment linking
 
 ## Related Documentation
-- [API Endpoints](./api-endpoints.md#comments)
-- [Testing Guide](./testing.md)
-- [User Guide: Getting Started](../user-guide/getting-started.md)
+- [API Documentation](./api/overview)
+- [Testing Guide](./testing/overview)
+- [User Guide: Getting Started](../user-guide/getting-started/overview)
 - [Security Issues: #228](https://github.com/mattstratton/conducky/issues/228), [#229](https://github.com/mattstratton/conducky/issues/229) 

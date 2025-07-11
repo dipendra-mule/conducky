@@ -86,8 +86,9 @@ const config = {
               categoryLinkSource: 'tag',
             },
             downloadUrl: '/api-docs.json',
-            hideSendButton: false,
+            hideSendButton: true,
             showSchemas: true,
+
           },
         },
       },
@@ -115,7 +116,12 @@ const config = {
     ],
   ],
 
-  themes: ["docusaurus-theme-openapi-docs"],
+  themes: ["docusaurus-theme-openapi-docs", "@docusaurus/theme-mermaid"],
+  
+  // Enable Mermaid support globally
+  markdown: {
+    mermaid: true,
+  },
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -199,6 +205,12 @@ const config = {
           },
           {
             type: 'docSidebar',
+            sidebarId: 'securitySidebar',
+            position: 'left',
+            label: 'Security',
+          },
+          {
+            type: 'docSidebar',
             sidebarId: 'apiSidebar',
             position: 'left',
             label: 'API Reference',
@@ -226,7 +238,7 @@ const config = {
             items: [
               {
                 label: 'Get Started',
-                to: '/user-guide/getting-started',
+                to: '/user-guide/getting-started/overview',
               },
               {
                 label: 'User Guide',
@@ -255,7 +267,7 @@ const config = {
               },
               {
                 label: 'FAQ',
-                to: '/user-guide/faq',
+                to: '/user-guide/faq/overview',
               },
               {
                 label: 'Community',
@@ -297,6 +309,23 @@ const config = {
         darkTheme: prismThemes.dracula,
         additionalLanguages: ['bash', 'diff', 'json', 'yaml', 'docker', 'sql'],
       },
+      languageTabs: [
+        {
+          highlight: "javascript",
+          language: "javascript",
+          logoClass: "javascript",
+        },
+        {
+          highlight: "javascript",
+          language: "nodejs",
+          logoClass: "nodejs",
+        },
+        {
+          highlight: "bash",
+          language: "curl",
+          logoClass: "bash",
+        }
+      ],
       
       colorMode: {
         defaultMode: 'light',
@@ -325,6 +354,15 @@ const config = {
         sidebar: {
           hideable: true,
           autoCollapseCategories: true,
+        },
+      },
+
+      // Mermaid configuration
+      mermaid: {
+        theme: {light: 'neutral', dark: 'dark'},
+        options: {
+          maxTextSize: 100000, // Increased from 50 to fix "Maximum text size exceeded" error
+          maxEdges: 1000, // Also increase edge limit if needed
         },
       },
     }),

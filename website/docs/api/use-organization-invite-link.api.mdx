@@ -1,0 +1,72 @@
+---
+id: use-organization-invite-link
+title: "Use organization invite link"
+description: "Accept an organization invite and join the organization with the specified role."
+sidebar_label: "Use organization invite link"
+hide_title: true
+hide_table_of_contents: true
+api: eJztV01v4zYQ/SsCTy3gtZzdbA8+1egHkH4l2Gywh4VR0OLYZiKRWpJy4hX83/uGkr2S5bhdoO0pOTikOPM48zgzHNYiyJUX04/i2q2k0Z9l0NZ4MR8JRT5zuuS5mIpZllEZEmkS2xFMtNnoQPisknurTRLW1Bd41GEdv/qSMr3UpBJncxqLkfCUVU6HLXavMfEe8rMqrDGf72BAKZ0sKJDzUUKzGaXE+kgYLGCWWUWYOfpUaUdKTIOrCMDZmgopprUI25LlfHDarMTu2KmrxvoWhp5kUeYsLxfZxes3ipaXb78TbIojX4IW8gz6ejLhfyehKg8HfQWyvF9Web4d8SeXSKWwEGyPHOyZWRPIBMaTZZnrLC6k955B66EndnFPWYBi6WxJLujGpALbyRUNXe56ddsxK54WLOqZA35687/dVqtTOy6tKyRcElUFgWPOu3GWVEZ/qijRChxwcDi2oTncIe4ZnKgCVZ9Xq69UvXv3WxLVjqPjq1C6SwB6pIVHOJxnx+nzmC0IW8ghj2OTCz5IDnLsof0sC3rT3WRhkVrSDGA/rAkp6IbZqX2CHHRgHyEhGzhAZ45kIDULZx1QkHkVdEHn3YhgPGBRHxCNvEVVqn9vi1z6kDSI3V2wTdAhxv71UZxzDTqZLaYquBqCpT+lKjRzyeONpkdE53wX/0bi8pkaIHOt9kXRujb3czCgwG9SULEAyv+R9n3LfnIO1uzF+YS55P1DtSgbsyNInftTZh3dFUppHso8oYiw1+yeSMQWezYvhmz+YXHd4Drg0pBxrLzwNuTt8tmbyIC+pa0M1/iEnsp4Qb4weMzgxfN3eUsa86e059r7QuCAwLenCyG6NsZA+dugAkaoF+763OEjutu1VdzWWh/d5O52KlJZ6rR7T/u0uVLSmo3apbhWYv/M5DbNceVyKK5DKKdpmttM5mtATt9MUFmP7fyRNpTbssBJtAcEN7sQHhgwYYzjUlX2sMWgGKDcOIvFeP3uQeZfevpbPsrmtBYkHbmmsT9QyNuItlOPnUsUwpdm8PO+Afjlw/vY13VfBwcQ2PgrbaEUnwaZtQ+auo8DY3BMY48mlMnWZmmjcnsSP7TeJbObK2gxlY1nF+PJeDI83Zsr1FOXHNReYahwyy/bTwH3fhY72aSQBgHXELz1gYo29tFhsQWtgQek26osreMA6J/BEf/IDc3LvhH/vrcMB5FPhDdKZ4ffr94PQJFIxtvKZTRGiKWtkk9ZlmniUIT9HZQ7f9w1NvUx1+bhmKb6S47/F0/G9uADPYW0zKWOvVz0r26T5yNHheg/ZHwMEd4Vg2n72uMcQsBymrBWXS+kpzuX73b8Ga8Sxw9TDDfS6abxRp4dLoLpUuaeznj/zbv2Vfpt0n9mnvRhH9GGwxldZMUzDB8Q3+07dzeH3BqdJPKETWmWGpI7SoPCyml5KDQ317ccEnKQSA8xkdoBw5+0qJtTe+P4l+vHSYW6bpIUrO7lm6VnNVoP99JMD3fdfwGM7814
+sidebar_class_name: "post api-method"
+info_path: api/conducky-api
+custom_edit_url: null
+hide_send_button: true
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Use organization invite link"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/organizations/invite/{code}/use"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Accept an organization invite and join the organization with the specified role.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"in":"path","name":"code","required":true,"schema":{"type":"string"},"description":"Invite code","example":"abc123def456"}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Invite used successfully, user added to organization","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","example":"Successfully joined organization"},"organization":{"type":"object","properties":{"id":{"type":"string","format":"uuid","description":"Organization unique identifier"},"name":{"type":"string","description":"Organization name"},"slug":{"type":"string","description":"Organization URL slug"},"description":{"type":"string","description":"Organization description"},"website":{"type":"string","format":"uri","description":"Organization website URL","nullable":true},"isActive":{"type":"boolean","description":"Whether the organization is currently active"},"createdAt":{"type":"string","format":"date-time","description":"Organization creation timestamp"},"updatedAt":{"type":"string","format":"date-time","description":"Organization last update timestamp"}},"title":"Organization"},"role":{"type":"string","enum":["org_admin","org_viewer"]}}}}}},"400":{"description":"Invalid invite or user already a member","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Error message"},"code":{"type":"string","description":"Error code"},"details":{"type":"object","description":"Additional error details"}},"title":"Error"}}}},"401":{"description":"Not authenticated","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Error message"},"code":{"type":"string","description":"Error code"},"details":{"type":"object","description":"Additional error details"}},"title":"Error"}}}},"404":{"description":"Invite not found or expired","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Error message"},"code":{"type":"string","description":"Error code"},"details":{"type":"object","description":"Additional error details"}},"title":"Error"}}}},"410":{"description":"Invite expired or disabled","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Error message"},"code":{"type":"string","description":"Error code"},"details":{"type":"object","description":"Additional error details"}},"title":"Error"}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Error message"},"code":{"type":"string","description":"Error code"},"details":{"type":"object","description":"Additional error details"}},"title":"Error"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

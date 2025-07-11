@@ -4,20 +4,52 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Easy to Use',
+    title: 'Secure & Confidential',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Conducky was designed from the ground up to be easily installed and easy to use
+        End-to-end security with role-based access control ensures incident data remains confidential. 
+        Only authorized response team members can access sensitive information.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Mobile-First Design',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Conducky lets you focus on your event and making sure it's a safe and welcoming environment for all attendees.
+        Optimized for mobile devices where most incident reporting happens. 
+        Clean, accessible interface works seamlessly on phones, tablets, and desktops.
+      </>
+    ),
+  },
+  {
+    title: 'Multi-Event Platform',
+    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    description: (
+      <>
+        Manage multiple events, organizations, and teams from a single installation. 
+        Complete data isolation ensures privacy between different events and organizations.
+      </>
+    ),
+  },
+  {
+    title: 'Secure Reporting',
+    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    description: (
+      <>
+        Secure incident reporting with role-based access control and encrypted data storage. 
+        Protect sensitive information throughout the incident response process.
+      </>
+    ),
+  },
+  {
+    title: 'Audit Trail',
+    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    description: (
+      <>
+        Comprehensive logging of all actions for accountability and compliance. 
+        Track incident progress and team responses with detailed audit records.
       </>
     ),
   },
@@ -26,7 +58,8 @@ const FeatureList = [
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Conducky is fully open source and free to use. Easy to install on a variety of platforms.
+        Fully open source and self-hostable. No vendor lock-in, complete control over your data, 
+        and the ability to customize for your organization's specific needs.
       </>
     ),
   },
@@ -50,6 +83,12 @@ export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
       <div className="container">
+        <div className="text--center margin-bottom--xl">
+          <Heading as="h2">Key Features</Heading>
+          <p className="hero__subtitle">
+            Built specifically for incident management with privacy, security, and usability in mind
+          </p>
+        </div>
         <div className="row">
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />

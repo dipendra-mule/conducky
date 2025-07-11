@@ -236,4 +236,4 @@ The backend provides several endpoints for team management:
 - **Permission Limits:** You may only see activities you're authorized to view
 - **Data Sync:** Activity tracking may have a slight delay
 
-See [API Endpoints](../developer-docs/api-endpoints.md) for complete technical details on user management endpoints. 
+See [API Documentation](../developer-docs/api/overview) for complete technical details on user management endpoints. 

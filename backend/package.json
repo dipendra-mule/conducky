@@ -28,8 +28,9 @@
     "test:ctrf": "jest --ci",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
-    "swagger:generate": "swagger-jsdoc -d src/config/swagger.ts -o swagger.json src/routes/*.ts",
-    "docs:serve": "swagger-ui-serve swagger.json"
+    "swagger:generate": "swagger-jsdoc -d swagger.config.js -o swagger.json src/routes/*.ts",
+    "docs:serve": "echo 'Swagger docs are available at http://localhost:3001/api-docs when the server is running' && echo 'Run: npm run dev' && echo 'Then visit: http://localhost:3001/api-docs'",
+    "docs:open": "open http://localhost:3001/api-docs"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",

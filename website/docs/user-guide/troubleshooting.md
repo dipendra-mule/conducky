@@ -221,9 +221,9 @@ This guide covers common issues you might encounter while using Conducky and how
 ### Self-Service Options
 
 1. **Check this guide**: Review the relevant sections above
-2. **Navigation guide**: See the [Navigation Guide](./navigation.md) for detailed navigation help
+2. **Navigation guide**: See the [Navigation Guide](./navigation/overview) for detailed navigation help
 3. **User roles**: Review [User Management](./user-management.md) to understand roles
-4. **Event management**: See [Event Management](./event-management.md) for event-specific help
+4. **Event management**: See [Event Management](./event-management/overview) for event-specific help
 
 ### Contact Support
 
