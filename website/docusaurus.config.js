@@ -308,6 +308,23 @@ const config = {
         darkTheme: prismThemes.dracula,
         additionalLanguages: ['bash', 'diff', 'json', 'yaml', 'docker', 'sql'],
       },
+      languageTabs: [
+        {
+          highlight: "bash",
+          language: "curl",
+          logoClass: "bash",
+        },
+        {
+          highlight: "javascript",
+          language: "nodejs",
+          logoClass: "nodejs",
+        },
+        {
+          highlight: "javascript",
+          language: "javascript",
+          logoClass: "javascript",
+        }
+      ],
       
       colorMode: {
         defaultMode: 'light',

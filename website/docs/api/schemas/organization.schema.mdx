@@ -1,0 +1,33 @@
+---
+id: organization
+title: "Organization"
+description: ""
+sidebar_label: "Organization"
+hide_title: true
+hide_table_of_contents: true
+schema: true
+sample: {"id":"3fa85f64-5717-4562-b3fc-2c963f66afa6","name":"string","slug":"string","description":"string","website":"string","isActive":true,"createdAt":"2024-07-29T15:51:28.071Z","updatedAt":"2024-07-29T15:51:28.071Z"}
+custom_edit_url: null
+---
+
+import Schema from "@theme/Schema";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Organization"}
+>
+</Heading>
+
+
+
+
+
+<Schema
+  schema={{"type":"object","properties":{"id":{"type":"string","format":"uuid","description":"Organization unique identifier"},"name":{"type":"string","description":"Organization name"},"slug":{"type":"string","description":"Organization URL slug"},"description":{"type":"string","description":"Organization description"},"website":{"type":"string","format":"uri","description":"Organization website URL","nullable":true},"isActive":{"type":"boolean","description":"Whether the organization is currently active"},"createdAt":{"type":"string","format":"date-time","description":"Organization creation timestamp"},"updatedAt":{"type":"string","format":"date-time","description":"Organization last update timestamp"}},"title":"Organization"}}
+  schemaType={"response"}
+>
+  
+</Schema>
+            

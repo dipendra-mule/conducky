@@ -1,0 +1,71 @@
+---
+id: get-all-tags-for-an-event-by-slug
+title: "Get all tags for an event by slug"
+description: "Get all tags for an event by slug"
+sidebar_label: "Get all tags for an event by slug"
+hide_title: true
+hide_table_of_contents: true
+api: eJyNVE1v2zAM/SuCThvgxu7aXXxasXVFNmwolhQ7FDkoMpMIVSRXH8EMw/99pOW5Tt3DTpYp8umR70ktD2LvefnI1/TdZLwWThwhgKNoy5XhJcbCgWfc4Ab+wQlMWOm4x5CD56gcVLwMLkLGvTzAUfCy5aGpKdkHp8yedxmvwEun6qAsQd4SCPOE0m0Ix9fWePBU+qEo6HNesIpSgve7qHXDHCAs8qhYTx/Rr4urec1X67aqqsCwC/bTMtEjsGBZ30Iqu56XJW7GBraz0VSU9/EtSkuDYzJCMw/uBI6Bc9bxbtbrHQQmtO65IqRjwiQGbNukEWQcR36wOEa+h8CzNPGS56JWOZXlfX5OyXk7CtBhZjo7iRWdxqJDCHWZ59pKoQ/Wh/KqKC75a1JfEEXb+tjL0GNgn1MIjxh4/EJaU0X51ODiOEO5dxY36WcE2RAnGZ0KTU8KRfW4fxOpo8fNdH9Fbkmab0E4cClpNA/R4IOp6D8lYSQtUN6jCBj/9ntNIp2dNIJgD9+hwaLeytLaJwUvZsbuDMiw8KrqlVNmZ/tiFTTtfx66Zzf3S6yiUafOLxfFopjNA7N6hceyC1xWwOxuCAWmjFQVTf0ojNhDEqDxAWi6SCcIGYjBQHBEWsW6to7Mca7RK33w+ina9in909k2NqiVBLxokxN+LNczUFtjko1OwsK6fT4U+ZxyaUw1+gr5T1D+x+RnsxoFCvAn5LUWqE838GiHC/BI6mFhf8uz9PKQIRJc+fISoanI6lTRtlvh4cHprqPwcwRHRsTlSTgltiQr2rJSntZ45XZCe5iRIyXotJK/+zU8cu/Z5NXK3qb/z3SGHHcSOtIfLp/QgtOns9t0k0t/d0tj/Qu3zOVz
+sidebar_class_name: "get api-method"
+info_path: api/conducky-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get all tags for an event by slug"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/tags/event/slug/{eventSlug}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Get all tags for an event by slug
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"in":"path","name":"eventSlug","required":true,"schema":{"type":"string"},"description":"Event slug"}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Successfully retrieved tags"},"403":{"description":"Forbidden - No access to event"},"404":{"description":"Event not found"},"500":{"description":"Internal server error"}}}
+>
+  
+</StatusCodes>
+
+
+      

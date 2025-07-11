@@ -1,0 +1,71 @@
+---
+id: receive-frontend-logs
+title: "Receive frontend logs"
+description: "Endpoint for frontend applications to send structured logs for centralized logging"
+sidebar_label: "Receive frontend logs"
+hide_title: true
+hide_table_of_contents: true
+api: eJy1VdtuEzEQ/RXLTyDlsklbFVaqRKEBhVurtKgSVR8c7yQx3V0b2xsIUf6dGXuT3ZBIiAfy0HrtmeO5nDNe8wyctMp4pUue8lGZGa1Kz2baspnVpYcyY8KYXElBNo55zRxtOm8r6SsLGcv13AUPCaW3Ile/4uZclXPe4V7MHU8f+Ec0448dbuF7Bc6/1tmKp+vwqRCGp4gIHS7DrZ6OWhf3vzmKcM2dXEAhaOVXBjBmPf0G0vNOC+iB57CEHPcKcE7MgaJQuPaiMLh2urISKBZjtQHrFThCjF4NdFkVU7DosF8lTIQFU/Ysubgavf7yrsMGF+PPb687bHhxfzn53GEnF6PJ5HrynG+aIBpgLF6szSHw1nhTV+KnP5brvt9llilaipzVPiwTXhAGWKvt3xFGZMbiIVOzbcuneQgkgP1LFOTAjFjlWmQE0BT/SA2QOYXALOka6JLpAfT9AkrmF0CsYj+EY9ICGgfsuplHgAH7R2TYEpkavo97G3yZnm3B+Sb8iEzOIN0jL4ZJQv8Om2VBgloi210lJTZuVuX5ioI6PeYxLpcojiCNXX/Ojht6sFRHB3YJlsUmbgKV/EIjw7nRjjpghF/gV18Y1ScZErmDDyluzSuLdOYL703ax3Mp8gX6pSdJMjio8RUxWpsCtVffi/G1IRxi4D09pFhWyacVLooDlBur8ZA+diCPFJOsrPKrEBQW1eH5ZUWhPzy2z29J3LHmUxAWbDTatZbCoBSDGX5HI9yJi7dbJr2/vwvUaN+0A8EcPsAKnRQFLLV+UsS4UgRIzK5EdvecykLFae5Mmok1+okszqE1LZKWwBvuNdptibCR0r4mkGDD025y3h2+vBucpWeDdPiil5wPvjazKm1YvKHIZzpkpDzFwt/ULWGXN2P0of7Hdgx6SS85VOrNOMzrnVsXl1nQQdzCGVBKlREVClFiapEVK+ehqJMTMgymumo7pNvKGG2JmvvE+YM0OMIVHbto/mrvGBPE4QOovtYNn8Z3B6A4u8tYn562837t5PpkS70jkWD8LZRJFGzzttWi2avPunmD/tOLGIlIBOmbXCAPN3Vq61rRD8RStMzrN5NkS7vr9VQ4+GLzzYa2kZaWRIXLpbAqzGuSFDqAyFAZpLcnJHvoEKXUvaO7yTyvohj+eGJJjrspc3N9S1Wf1k91gSTBXSt+0HOLf1OOCx3KFkQb9lAZopxXURARk36/AbcE5H0=
+sidebar_class_name: "post api-method"
+info_path: api/conducky-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Receive frontend logs"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/logs"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Endpoint for frontend applications to send structured logs for centralized logging
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["level","message","timestamp","source"],"properties":{"level":{"type":"number","description":"Log level (0=DEBUG, 1=INFO, 2=WARN, 3=ERROR)"},"message":{"type":"string","description":"Log message"},"context":{"type":"object","description":"Additional context data"},"error":{"type":"object","description":"Error object if applicable"},"data":{"type":"object","description":"Additional data payload"},"timestamp":{"type":"string","format":"date-time","description":"When the log was created"},"source":{"type":"string","enum":["frontend"],"description":"Source of the log"}}}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Log received successfully"},"400":{"description":"Invalid log data"},"500":{"description":"Internal server error"}}}
+>
+  
+</StatusCodes>
+
+
+      

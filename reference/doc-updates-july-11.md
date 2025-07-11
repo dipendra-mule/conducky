@@ -134,3 +134,85 @@ The FAQ breakdown includes 16 new screenshot placeholders:
 This session successfully completed the FAQ breakdown and addressed critical accuracy issues in the documentation. The API documentation is now properly generated and available. The main remaining task is fixing the broken links to ensure the documentation builds successfully.
 
 The documentation is now more navigable and accurate, with focused sub-pages that make information easier to find and digest. 
+
+## Swagger Documentation Generation Fix
+
+**Issue:** The `npm run swagger:generate` script in the backend directory was failing because it was trying to use a TypeScript configuration file directly with the `swagger-jsdoc` CLI tool.
+
+**Root Cause:** The CLI tool only accepts `.cjs`, `.json`, `.yml`, or `.yaml` files for configuration, but our configuration was in `src/config/swagger.ts` (TypeScript).
+
+**Solution Implemented:**
+1. **Created `swagger.config.js`** - A new JavaScript configuration file that exports the OpenAPI specification directly (not wrapped in an options object)
+2. **Updated `package.json` script** - Changed from `-d src/config/swagger.ts` to `-d swagger.config.js`
+3. **Improved `docs:serve` script** - Replaced the broken `swagger-ui-serve` command with helpful instructions
+4. **Added `docs:open` script** - Quick command to open the swagger docs in browser
+
+**Files Modified:**
+- `backend/swagger.config.js` (new file)
+- `backend/package.json` (updated scripts)
+
+**Current Status:** ✅ **WORKING**
+- `npm run swagger:generate` - Generates swagger.json successfully
+- `npm run docs:serve` - Shows helpful instructions
+- `npm run docs:open` - Opens swagger docs (when server is running)
+
+**How to Use:**
+1. Run `npm run swagger:generate` to generate/update the swagger.json
+2. Start the backend server with `npm run dev`
+3. Visit http://localhost:3001/api-docs to view the interactive documentation
+4. Or use `npm run docs:open` to open it directly in your browser
+
+**Note:** The swagger documentation is automatically available when running the backend server in development mode at `/api-docs` endpoint. 
+
+## API Documentation Generation Fix
+
+**Issue:** The `npm run gen-api-docs` script in the website directory was failing with the error "missing required argument 'id'".
+
+**Root Cause Analysis:**
+1. **Missing API ID:** The OpenAPI docs plugin was configured with ID `conducky-api` but the script wasn't specifying which API to generate docs for
+2. **Missing Organization Schema:** The swagger.json file was missing the `Organization` schema that was referenced by many API endpoints
+3. **Broken Links:** The API index page contained links to non-existent endpoints
+
+**Solution Implemented:**
+
+### 1. Fixed Missing Organization Schema
+- **Problem:** API routes referenced `#/components/schemas/Organization` but this schema wasn't defined
+- **Solution:** Added Organization schema to `backend/swagger.config.js` with all required properties:
+  - id, name, slug, description, website, isActive, createdAt, updatedAt
+- **Result:** `npm run swagger:generate` now produces complete swagger.json
+
+### 2. Updated Package.json Scripts
+- **Before:** `"gen-api-docs": "docusaurus gen-api-docs"`
+- **After:** `"gen-api-docs": "docusaurus gen-api-docs conducky"`
+- **Also Updated:** `"clean-api-docs": "docusaurus clean-api-docs conducky"`
+
+### 3. Fixed Broken Links in API Index
+- **File:** `website/docs/api/index.md`
+- **Removed:** Broken links to `/api/user-login`, `/api/get-all-events`, `/api/get-reports`, `/api/get-users`
+- **Added:** Working links to actual generated API documentation organized by category
+
+**Files Modified:**
+- `backend/swagger.config.js` (added Organization schema)
+- `website/package.json` (updated scripts with API ID)
+- `website/docs/api/index.md` (fixed broken links)
+
+**Current Status:** ✅ **API GENERATION WORKING**
+- `npm run gen-api-docs` successfully generates 28 API endpoint docs + 5 schema docs
+- All broken links in API documentation fixed
+- **Theme Conflict Issue:** Build still fails due to missing `@theme/Debug*` components (known issue with OpenAPI + Mermaid theme compatibility)
+
+**Generated API Documentation Includes:**
+- **Organizations:** 11 endpoints (create, list, get, update, delete, members, invites)
+- **Events:** 2 endpoints (create in org, list org events)  
+- **Tags:** 6 endpoints (create, update, delete, get, add to incident, remove from incident)
+- **Logging:** 1 endpoint (frontend logs)
+- **Schemas:** 5 data models (User, Event, Report, Organization, Error)
+
+**How to Use:**
+1. **Generate/update API docs:** `cd website && npm run gen-api-docs`
+2. **Clean API docs:** `cd website && npm run clean-api-docs`
+3. **View locally:** Start dev server and visit `/api` (when theme conflict is resolved)
+
+**Next Steps:**
+- Resolve theme compatibility issue between `docusaurus-theme-openapi-docs` and `@docusaurus/theme-mermaid`
+- Consider alternative approaches for Mermaid diagram rendering that don't conflict with OpenAPI theme 
