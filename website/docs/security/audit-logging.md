@@ -166,8 +166,6 @@ graph LR
 
 ### Audit Log Storage
 - **Database Table**: `AuditLog` table in PostgreSQL
-- **Retention**: Configurable retention periods (default: 7 years)
-- **Archival**: Automatic archival of old logs to long-term storage
 - **Encryption**: Audit logs are encrypted at rest
 
 ### Performance Considerations
@@ -183,27 +181,6 @@ graph LR
 - **Integrity Verification**: Checksums ensure audit log integrity
 - **Access Monitoring**: Access to audit logs is itself audited
 - **Encryption**: All audit data is encrypted at rest and in transit
-
-### Compliance Support
-
-#### Regulatory Requirements
-The audit system supports various compliance requirements:
-- **SOX**: Sarbanes-Oxley financial controls
-- **HIPAA**: Healthcare information protection
-- **GDPR**: European data protection regulation
-- **SOC 2**: Service organization controls
-
-#### Audit Reports
-- **Compliance Reports**: Pre-built reports for common compliance requirements
-- **Custom Reports**: Flexible reporting for specific audit needs
-- **Export Capabilities**: Export audit data in various formats (CSV, JSON, PDF)
-- **Automated Reporting**: Scheduled reports for regular compliance reviews
-
-### Data Privacy
-- **PII Protection**: Personal information in audit logs is encrypted
-- **Data Minimization**: Only necessary information is logged
-- **Right to Erasure**: Support for GDPR data deletion requests
-- **Anonymization**: Old audit logs can be anonymized while preserving patterns
 
 ## Monitoring and Alerting
 
