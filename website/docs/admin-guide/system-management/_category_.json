@@ -1,0 +1,8 @@
+{
+  "label": "System Management",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Comprehensive system administration documentation covering event management, user administration, monitoring, security, and troubleshooting for SystemAdmins."
+  }
+} 

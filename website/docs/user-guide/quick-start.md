@@ -175,7 +175,7 @@ Incidents flow through these states:
 
 - **Detailed guides**: [User Guide](./intro) for comprehensive documentation
 - **Technical issues**: [Troubleshooting Guide](./troubleshooting.md)
-- **Common questions**: [FAQ](./faq.md)
+- **Common questions**: [FAQ](./faq/overview)
 - **Community support**: [GitHub Discussions](https://github.com/mattstratton/conducky/discussions)
 
 ---

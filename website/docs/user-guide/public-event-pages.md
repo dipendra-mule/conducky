@@ -163,7 +163,7 @@ When implemented, anonymous reporting will allow:
 
 ## Related Documentation
 
-- [Event Management](./event-management.md) - Configuring event details
-- [Navigation Guide](./navigation.md) - Understanding public vs authenticated navigation
-- [Getting Started](./getting-started.md) - Account creation and authentication
-- [System Management](../admin-guide/system-management.md) - System Admin control of public event listing
+- [Event Management](./event-management/overview) - Configuring event details
+- [Navigation Guide](./navigation/overview) - Understanding public vs authenticated navigation
+- [Getting Started](./getting-started/overview) - Account creation and authentication
+- [System Management](../admin-guide/system-management/overview) - System Admin control of public event listing

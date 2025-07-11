@@ -94,4 +94,4 @@ When someone uses an invite link, they'll be prompted to create an account (if t
 ## Notes
 - Invite links are a secure way to onboard users without manual admin intervention.
 - All invite actions are subject to event and role permissions.
-- For more, see [API Endpoints](../developer-docs/api-endpoints.md) and [User Management](./user-management.md). 
+- For more, see [API Documentation](../developer-docs/api/overview) and [User Management](./user-management.md). 
