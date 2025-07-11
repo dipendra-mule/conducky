@@ -203,7 +203,7 @@ export default function OrganizationTeam() {
 
   const handleViewProfile = (member: OrganizationMember) => {
     // For now, just show an alert since user profile pages don't exist yet
-    alert(`User Profile: ${member.user.name}\nEmail: ${member.user.email}\nRole: ${getRoleLabel(member.role)}\nMember since: ${new Date(member.grantedAt).toLocaleDateString()}`);
+    alert(`User Profile: ${member.user.name}\nEmail: ${member.user.email}\nRole: ${getRoleLabel(member.role)}\nMember since: ${formatDate(member.grantedAt)}`);
   };
 
   // Utility to format dates safely (copied from events team page)
