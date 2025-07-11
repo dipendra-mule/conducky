@@ -86,8 +86,9 @@ const config = {
               categoryLinkSource: 'tag',
             },
             downloadUrl: '/api-docs.json',
-            hideSendButton: false,
+            hideSendButton: true,
             showSchemas: true,
+
           },
         },
       },
@@ -310,9 +311,9 @@ const config = {
       },
       languageTabs: [
         {
-          highlight: "bash",
-          language: "curl",
-          logoClass: "bash",
+          highlight: "javascript",
+          language: "javascript",
+          logoClass: "javascript",
         },
         {
           highlight: "javascript",
@@ -320,9 +321,9 @@ const config = {
           logoClass: "nodejs",
         },
         {
-          highlight: "javascript",
-          language: "javascript",
-          logoClass: "javascript",
+          highlight: "bash",
+          language: "curl",
+          logoClass: "bash",
         }
       ],
       
