@@ -57,7 +57,7 @@ interface Organization {
 interface OrganizationMember {
   id: string;
   role: 'org_admin' | 'org_viewer';
-  createdAt: string;
+  grantedAt: string;
   user: {
     id: string;
     name: string;
@@ -112,7 +112,7 @@ export default function OrganizationTeam() {
         const organizationMembers: OrganizationMember[] = orgData.organization.memberships?.map((membership: {
           id: string;
           role: string;
-          createdAt: string;
+          grantedAt: string;
           user: {
             id: string;
             name?: string;
@@ -121,7 +121,7 @@ export default function OrganizationTeam() {
         }) => ({
           id: membership.id,
           role: membership.role,
-          createdAt: membership.createdAt,
+          grantedAt: membership.grantedAt,
           user: {
             id: membership.user.id,
             name: membership.user.name || membership.user.email,
@@ -203,7 +203,19 @@ export default function OrganizationTeam() {
 
   const handleViewProfile = (member: OrganizationMember) => {
     // For now, just show an alert since user profile pages don't exist yet
-    alert(`User Profile: ${member.user.name}\nEmail: ${member.user.email}\nRole: ${getRoleLabel(member.role)}\nMember since: ${new Date(member.createdAt).toLocaleDateString()}`);
+    alert(`User Profile: ${member.user.name}\nEmail: ${member.user.email}\nRole: ${getRoleLabel(member.role)}\nMember since: ${formatDate(member.grantedAt)}`);
+  };
+
+  // Utility to format dates safely (copied from events team page)
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Unknown';
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   if (loading) {
@@ -367,7 +379,7 @@ export default function OrganizationTeam() {
                         <h3 className="font-medium">{member.user.name}</h3>
                         <p className="text-sm text-muted-foreground">{member.user.email}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Member since {new Date(member.createdAt).toLocaleDateString()}
+                          Member since {formatDate(member.grantedAt)}
                         </p>
                       </div>
                     </div>
