@@ -63,26 +63,17 @@ There are several ways to submit an incident report:
 - You can use names, descriptions, or whatever level of detail you're comfortable with
 - This helps responders understand the scope and identify relevant people
 
-### Step 3: Evidence and Attachments
+### Step 3: Related Files and Attachments
 
-You can optionally upload supporting evidence:
+You can optionally upload supporting files:
 
-**Supported File Types:**
-- Screenshots and photos
-- Documents (PDF, Word, etc.)
-- Audio/video files
-- Chat logs or email screenshots
+- **Screenshots**: Capture error messages or relevant visuals.
+- **Documents**: Attach relevant policies, logs, or reports.
+- **Photos**: Provide visual context of the incident location.
 
-**How to Upload:**
-- Drag and drop files onto the upload area
-- Click "Choose Files" to browse your device
-- Multiple files can be uploaded
-- Files are stored securely and only accessible to authorized response team members
+*All attachments are stored securely and are only accessible to authorized responders.*
 
-<!-- Screenshot Placeholder -->
-> **Screenshot needed**: Incident submission confirmation screen showing the next steps
-
-### Step 4: Urgency Setting (Response Team Only)
+### Step 4: Review and Submit
 
 If you're a responder or event admin, you'll see an additional "Urgency Level" field:
 - **Low**: Non-urgent issues that can be addressed during normal hours
@@ -92,25 +83,15 @@ If you're a responder or event admin, you'll see an additional "Urgency Level" f
 
 Regular reporters don't see this field - the response team will assess urgency when they review your report.
 
-## 🔒 Privacy and Security
+## Data Privacy and Security
 
-### Authenticated Reporting
-- All reports require you to be logged in with a verified account
-- Your identity is only visible to authorized response team members
-- Reports are never made public with identifying information
-- Data is encrypted at rest for additional security
+Your privacy and security are our top priorities:
 
-### Who Can See Your Report?
-1. **You** - The person who submitted it
-2. **Event Response Team** - Responders and event administrators
-3. **Assigned Responder** - If your report gets assigned to someone specific
-4. **System Administrators** - For technical support only
+- **Confidentiality**: Your identity as a reporter is protected and only shared with the response team on a need-to-know basis.
+- **Secure Storage**: All incident data and attachments are encrypted at rest.
+- **Access Control**: Only authorized response team members can access incident details.
 
-### Data Protection
-- All sensitive report data is encrypted in the database
-- Evidence files are stored securely with access controls
-- Reports are never shared between different events
-- You have the right to request deletion of your data
+For more information, see our [Security Overview](../security/overview.md).
 
 ## 📱 Mobile-First Design
 
@@ -126,7 +107,7 @@ Conducky is designed with mobile users in mind, since most incident reporting ha
 ### Mobile Tips:
 - Use the device's back button to navigate safely without losing your draft
 - Tap and hold text fields to access copy/paste options
-- Use the device's camera to capture evidence directly
+- Use the device's camera to capture related files directly
 - Reports can be submitted on any screen size
 
 ## 🔄 After You Submit
@@ -160,7 +141,7 @@ graph LR
 3. **Investigation** (Timeline varies)
    - A responder may be assigned to your case
    - You might be contacted for additional information
-   - Evidence is reviewed and appropriate actions are planned
+   - Related files are reviewed and appropriate actions are planned
 
 4. **Resolution**
    - You'll be informed of the outcome (when appropriate)
@@ -197,7 +178,7 @@ The response team may add comments to your report during the investigation:
 You can add comments to your reports to:
 - Provide additional information
 - Answer questions from responders
-- Share new evidence or updates
+- Share new related files or updates
 - Ask about the status or timeline
 
 <!-- Screenshot Placeholder -->

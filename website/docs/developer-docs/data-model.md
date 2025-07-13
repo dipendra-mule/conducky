@@ -14,7 +14,7 @@ This document describes the main data models used in the system, based on the Pr
 - **name**: Optional display name
 - **passwordHash**: Hashed password (nullable for social login users)
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: userRoles, grantedRoles, incidents, auditLogs, reportComments, evidenceFilesUploaded, assignedIncidents, avatar, passwordResetTokens, notifications, socialAccounts, notificationSettings, createdOrganizations, createdOrgInvites
+- **Relations**: userRoles, grantedRoles, incidents, auditLogs, reportComments, relatedFilesUploaded, assignedIncidents, avatar, passwordResetTokens, notifications, socialAccounts, notificationSettings, createdOrganizations, createdOrgInvites
 
 ## Event
 
@@ -86,7 +86,7 @@ This document describes the main data models used in the system, based on the Pr
 - **severity**: enum (`low`, `medium`, `high`, `critical`, nullable) — severity/priority of the incident 
 - **resolution**: string (optional) — freeform text describing the resolution of the incident 
 - **createdAt, updatedAt**: Timestamps
-- **Relations**: comments, evidenceFiles, notifications
+- **Relations**: comments, relatedFiles, notifications
 
 ## IncidentComment
 
@@ -98,7 +98,9 @@ This document describes the main data models used in the system, based on the Pr
 - **createdAt, updatedAt**: Timestamps
 - **Relations**: incident, author
 
-## EvidenceFile
+## RelatedFile
+
+Represents a file uploaded as a related file for an incident.
 
 - **id**: UUID, primary key
 - **incidentId**: Incident reference

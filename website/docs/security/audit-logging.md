@@ -37,8 +37,8 @@ Each audit log entry contains:
 | `update_incident_title` | Incident title changed | `incident` | User ID, old/new values |
 | `update_incident_description` | Description modified | `incident` | User ID, modification timestamp |
 | `update_incident_severity` | Severity level changed | `incident` | User ID, old/new severity |
-| `update_incident_state` | Status transition | `incident` | User ID, state change details |
-| `assign_incident` | Incident assigned to responder | `incident` | Assigner ID, assignee ID |
+| `update_incident_state` | Report state changed | `incident` | New state, notes |
+| `assign_incident` | Report assigned to responder | `incident` | Responder ID |
 | `resolve_incident` | Incident marked as resolved | `incident` | Resolver ID, resolution details |
 | `close_incident` | Incident closed | `incident` | User ID, closure reason |
 
@@ -49,12 +49,13 @@ Each audit log entry contains:
 | `update_comment` | Comment content modified | `comment` | Editor ID, modification timestamp |
 | `delete_comment` | Comment removed | `comment` | Deleter ID, deletion reason |
 
-#### Evidence Management
-| Action | Description | Target Type | Logged Information |
-|--------|-------------|-------------|-------------------|
-| `upload_evidence` | File uploaded to incident | `evidence` | Uploader ID, file metadata |
-| `download_evidence` | Evidence file accessed | `evidence` | Accessor ID, access timestamp |
-| `delete_evidence` | Evidence file removed | `evidence` | Deleter ID, deletion reason |
+#### Related File Management
+
+| Action | Description | Target | Details |
+| :--- | :--- | :--- | :--- |
+| `upload_related_file` | File uploaded to incident | `RelatedFile` | Uploader ID, file metadata |
+| `download_related_file` | Related file accessed | `RelatedFile` | Accessor ID, access timestamp |
+| `delete_related_file` | Related file removed | `RelatedFile` | Deleter ID, deletion reason |
 
 ### User and Access Management
 

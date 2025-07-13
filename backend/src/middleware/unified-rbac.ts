@@ -93,21 +93,27 @@ export function requireEventRole(roleNames: string[] = ['event_admin', 'responde
       // Extract event ID from params or slug
       let eventId = req.params.eventId;
       
-      // If we have a slug instead of ID, look it up
-      if (!eventId && req.params.eventSlug) {
+      // Check if eventId is actually a slug (not a UUID format)
+      const isUUID = eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+      
+      // If we have a slug instead of ID, or if eventId looks like a slug, look it up
+      if (!eventId || !isUUID || req.params.eventSlug || req.params.slug) {
         const { PrismaClient } = require('@prisma/client');
         const prisma = new PrismaClient();
         
-        const event = await prisma.event.findUnique({
-          where: { slug: req.params.eventSlug },
-          select: { id: true }
-        });
-        
-        if (!event) {
-          return res.status(404).json({ error: 'Event not found' });
+        const slug = req.params.eventSlug || req.params.slug || (!isUUID ? eventId : null);
+        if (slug) {
+          const event = await prisma.event.findUnique({
+            where: { slug: slug },
+            select: { id: true }
+          });
+          
+          if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+          }
+          
+          eventId = event.id;
         }
-        
-        eventId = event.id;
       }
       
       if (!eventId) {

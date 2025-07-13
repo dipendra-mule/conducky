@@ -119,6 +119,22 @@ export interface UserEventRole extends BaseEntity {
 }
 
 /**
+ * RelatedFile entity for incident attachments
+ */
+export interface RelatedFile extends BaseEntity {
+  incidentId: string;
+  fileName: string;
+  originalName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedByUserId?: string | null;
+  description?: string | null;
+  incident?: Incident;
+  uploadedBy?: User;
+}
+
+/**
  * Incident entity - the core incident report
  */
 export interface Incident extends BaseEntity {
@@ -146,7 +162,7 @@ export interface Incident extends BaseEntity {
   event?: Event;
   assignedTo?: User;
   comments?: Comment[];
-  evidence?: Evidence[];
+  relatedFiles?: RelatedFile[];
   statusHistory?: StatusHistory[];
 }
 
@@ -185,22 +201,6 @@ export interface Comment extends BaseEntity {
   isAnonymous: boolean;
   incident?: Incident;
   user?: User;
-}
-
-/**
- * Evidence entity for incident attachments
- */
-export interface Evidence extends BaseEntity {
-  incidentId: string;
-  fileName: string;
-  originalName: string;
-  filePath: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedByUserId?: string | null;
-  description?: string | null;
-  incident?: Incident;
-  uploadedBy?: User;
 }
 
 /**

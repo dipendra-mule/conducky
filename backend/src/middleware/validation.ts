@@ -17,7 +17,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
-      error: 'Validation failed',
+      error: errors.array()[0].msg,
       details: errors.array()
     });
   }
@@ -171,10 +171,6 @@ export const validateReport = [
     .withMessage('Description must be 10-5000 characters long')
     .customSanitizer(sanitizeMarkdown),
     
-  body('type')
-    .isIn(['harassment', 'discrimination', 'safety', 'other'])
-    .withMessage('Report type must be one of: harassment, discrimination, safety, other'),
-    
   body('incidentAt')
     .optional()
     .isISO8601()
@@ -193,11 +189,6 @@ export const validateReport = [
     .isLength({ max: 200 })
     .withMessage('Location must be less than 200 characters')
     .customSanitizer(sanitizeString),
-    
-  body('contactPreference')
-    .optional()
-    .isIn(['email', 'phone', 'in_person', 'none'])
-    .withMessage('Contact preference must be one of: email, phone, in_person, none'),
 ];
 
 /**

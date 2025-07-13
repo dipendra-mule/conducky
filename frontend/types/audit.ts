@@ -9,11 +9,9 @@ export type AuditTargetType =
   | 'Organization'
   | 'OrganizationMembership'
   | 'OrganizationInviteLink'
-  | 'incident'
-  | 'Report'
+  | 'Incident'
   | 'IncidentComment'
-  | 'evidence'
-  | 'EvidenceFile'
+  | 'RelatedFile'
   | 'EventInviteLink'
   | 'UserRole';
 
@@ -24,11 +22,9 @@ export const TARGET_TYPE_LABELS: Record<AuditTargetType, string> = {
   'Organization': 'Organization',
   'OrganizationMembership': 'Organization Membership',
   'OrganizationInviteLink': 'Organization Invite',
-  'incident': 'Incident',
-  'Report': 'Report',
+  'Incident': 'Incident',
   'IncidentComment': 'Comment',
-  'evidence': 'Evidence',
-  'EvidenceFile': 'Evidence File',
+  'RelatedFile': 'Related File',
   'EventInviteLink': 'Event Invite',
   'UserRole': 'User Role',
 };

@@ -11,7 +11,7 @@ Incident endpoints handle the core functionality of incident reporting, manageme
 ### Create Report
 
 - **POST** `/api/events/:eventId/incidents`
-- **Body:** `title` (string, required, 10–70 chars), `type`, `description`, `location` (string, optional), `contactPreference` (enum, optional: email|phone|in_person|no_contact, default: email), `evidence[]` (multipart/form-data, zero or more files)
+- **Body:** `title` (string, required, 10–70 chars), `type`, `description`, `location` (string, optional), `contactMethod` (string, optional, one of: email|phone|in_person|no_contact, default: email), `relatedFiles[]` (multipart/form-data, zero or more files)
 - **Response:** `{ incident }`
 
 ### List Incidents
@@ -50,7 +50,7 @@ Incident endpoints handle the core functionality of incident reporting, manageme
 
 - **POST** `/api/events/slug/:slug/incidents` or `/events/slug/:slug/incidents`
 - **Role:** Reporter, Responder, Admin, or SystemAdmin for the event
-- **Body:** `title` (string, required, 10–70 chars), `type`, `description`, `location` (string, optional), `contactPreference` (enum, optional: email|phone|in_person|no_contact, default: email), `evidence[]` (multipart/form-data, zero or more files)
+- **Body:** `title` (string, required, 10–70 chars), `type`, `description`, `location` (string, optional), `contactMethod` (string, optional, one of: email|phone|in_person|no_contact, default: email), `relatedFiles[]` (multipart/form-data, zero or more files)
 - **Response:** `{ incident }`
 
 ### List Incidents
@@ -113,13 +113,13 @@ Incidents follow a defined state workflow:
 - Create incidents in events where they have Reporter role
 - View and edit their own incidents
 - Update title of their own incidents
-- Upload evidence to their own incidents
+- Upload related files to their own incidents
 
 ### Responder Permissions
 - View all incidents in assigned events
 - Update incident state, assignment, and resolution
 - Create internal comments
-- Upload and manage evidence
+- Upload and manage related files
 
 ### Admin/SystemAdmin Permissions
 - Full access to all incident operations

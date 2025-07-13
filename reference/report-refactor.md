@@ -53,7 +53,7 @@ tests/integration/*report*.test.js → *incident*.test.js
 #### 2.2 API Endpoint Changes
 ```
 /api/reports/* → /api/incidents/*
-/api/reports/:reportId/evidence → /api/incidents/:incidentId/evidence
+/api/reports/:reportId/related-files → /api/incidents/:incidentId/related-files
 GET /api/events/:eventId/reports → /api/events/:eventId/incidents
 POST /api/events/:eventId/reports → /api/events/:eventId/incidents
 ```

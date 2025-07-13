@@ -27,7 +27,7 @@ interface IncidentFormValues {
   location?: string;
   urgency?: string; // Made optional since reporters won't see it
   tags?: Tag[];
-  evidence?: File[];
+  relatedFiles?: File[];
 }
 
 const urgencyLevels = [
@@ -76,7 +76,7 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
       location: "",
       urgency: "medium", // Default value for when urgency is shown
       tags: [],
-      evidence: [],
+      relatedFiles: [],
     },
   });
   const [message, setMessage] = React.useState("");
@@ -122,7 +122,7 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
   const handleSubmit: SubmitHandler<IncidentFormValues> = async (data) => {
     setSubmitting(true);
     setMessage("");
-    const { title, description, incidentAt, parties, location, urgency, tags, evidence } = data;
+    const { title, description, incidentAt, parties, location, urgency, tags, relatedFiles } = data;
     
     if (!title || title.length < 10 || title.length > 70) {
       form.setError("title", { message: "Title must be between 10 and 70 characters." });
@@ -167,9 +167,9 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
       formData.append("tags", JSON.stringify(tags.map(tag => tag.id)));
     }
     
-    if (evidence && evidence.length > 0) {
-      for (let i = 0; i < evidence.length; i++) {
-        formData.append("evidence", evidence[i]);
+    if (relatedFiles && relatedFiles.length > 0) {
+      for (let i = 0; i < relatedFiles.length; i++) {
+        formData.append("relatedFiles", relatedFiles[i]);
       }
     }
     
@@ -221,15 +221,15 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const newFiles = Array.from(e.dataTransfer.files);
-      const currentFiles = form.getValues("evidence") || [];
-      form.setValue("evidence", [...currentFiles, ...newFiles]);
+      const currentFiles = form.getValues("relatedFiles") || [];
+      form.setValue("relatedFiles", [...currentFiles, ...newFiles]);
     }
   };
 
   const removeFile = (index: number) => {
-    const currentFiles = form.getValues("evidence") || [];
+    const currentFiles = form.getValues("relatedFiles") || [];
     const newFiles = currentFiles.filter((_, i) => i !== index);
-    form.setValue("evidence", newFiles);
+    form.setValue("relatedFiles", newFiles);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -449,11 +449,11 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
 
             {/* Evidence Upload */}
             <FormField
-              name="evidence"
+              name="relatedFiles"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel htmlFor="incident-evidence">Evidence Files</FormLabel>
+                  <FormLabel htmlFor="incident-related-files">Related Files</FormLabel>
                   <FormControl>
                     <div className="space-y-4">
                       {/* Drag and Drop Area */}
@@ -476,7 +476,7 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
                           Screenshots, documents, audio, video files are supported
                         </p>
                         <input
-                          id="incident-evidence"
+                          id="incident-related-files"
                           type="file"
                           multiple
                           className="hidden"
@@ -492,7 +492,7 @@ const IncidentFormComponent: React.FC<IncidentFormProps> = ({ eventSlug, eventNa
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => document.getElementById("incident-evidence")?.click()}
+                          onClick={() => document.getElementById("incident-related-files")?.click()}
                         >
                           Choose Files
                         </Button>

@@ -18,7 +18,7 @@ Conducky is designed with security as a foundational principle. This section pro
 - **Internal/external comments**: Sensitive discussions can be kept private to response teams
 - **Anonymous reporting**: Option for completely anonymous incident submission
 - **Data minimization**: Only necessary information is collected and stored
-- **Evidence protection**: Uploaded files are access-controlled and securely stored
+- **Related file protection**: Uploaded files are access-controlled and securely stored
 
 ### Audit and Accountability
 - **Comprehensive logging**: All significant actions are logged for audit purposes
@@ -71,7 +71,7 @@ graph TB
 
 ### Incident Security
 - **Report confidentiality** controls
-- **Evidence file protection** with access controls
+- **Related file protection** with access controls
 - **Comment visibility** management (public vs internal)
 - **Authenticated reporting** with data encryption
 
@@ -147,7 +147,7 @@ graph TB
 - **[Authentication & Authorization](./authentication.md)** - Detailed login and permission system
 - **[Access Control](./access-control/overview)** - RBAC system and role management
 - **Data Protection** - Encryption, storage, and privacy controls (coming soon)
-- **Incident Security** - Report and evidence protection (coming soon)
+- **Incident Security** - Report and related file protection (coming soon)
 - **Audit Logging** - Activity tracking and compliance (coming soon)
 - **Deployment Security** - Production security configuration (coming soon)
 
@@ -156,6 +156,13 @@ graph TB
 - **Security Architecture** - Technical implementation (coming soon)
 - **[User Guide: Data Security](../user-guide/data-security.md)** - User perspective on privacy
 
----
+## Key Security Areas
 
-*Last updated: July 11, 2025* 
+- **Authentication**: Secure user login and session management
+- **Access Control**: Role-based permissions for all actions
+- **Data Protection**: Encryption of sensitive data at rest and in transit
+- **Incident Security**: Protection for incident reports and comments
+- **Related File Protection**: Secure storage and access for uploaded files
+- **Audit Logging**: Comprehensive logging of all system activities
+
+This document provides an overview of the security measures in place. For more detailed information, please refer to the specific security pages. 

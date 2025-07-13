@@ -15,7 +15,7 @@ The Conducky API is organized into logical endpoint groups:
 - **[Events](./events)** - Event creation and management within organizations
 - **[Incidents](./incidents)** - Core incident reporting and management
 - **Comments** - Comment system for incident collaboration
-- **Evidence** - File upload and evidence management
+- **Related Files** - File upload and related file management
 - **Users** - User management and profile operations
 - **Invites** - Invitation system for role assignments
 - **Notifications** - User notification preferences

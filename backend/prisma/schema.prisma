@@ -75,7 +75,7 @@ model User {
   incidents      Incident[] @relation("ReporterIncidents")
   auditLogs      AuditLog[]
   incidentComments IncidentComment[]
-  evidenceFilesUploaded EvidenceFile[] @relation("EvidenceFileUploader")
+  relatedFilesUploaded RelatedFile[] @relation("EvidenceFileUploader")
   assignedIncidents Incident[] @relation("AssignedResponder")
   avatar         UserAvatar?
   passwordResetTokens PasswordResetToken[]
@@ -131,7 +131,7 @@ model Incident {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   comments    IncidentComment[]
-  evidenceFiles EvidenceFile[]
+  relatedFiles RelatedFile[]
   assignedResponderId String?
   assignedResponder   User?    @relation("AssignedResponder", fields: [assignedResponderId], references: [id])
   severity            IncidentSeverity?
@@ -223,7 +223,7 @@ model IncidentComment {
   visibility CommentVisibility @default(public)
 }
 
-model EvidenceFile {
+model RelatedFile {
   id        String   @id @default(uuid())
   incident  Incident @relation(fields: [incidentId], references: [id])
   incidentId String

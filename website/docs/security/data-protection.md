@@ -149,10 +149,10 @@ Comments have built-in privacy controls:
 - **Anonymous Reporting**: System supports anonymous incident submission
 - **Data Minimization**: Only necessary information is collected and stored
 
-### Evidence Protection
-Uploaded evidence files receive additional protection:
-- **File Encryption**: Evidence files are encrypted on disk
-- **Access Logging**: All evidence access is audited
+### Related File Protection
+Uploaded files receive additional protection:
+- **File Encryption**: Related files are encrypted on disk
+- **Access Logging**: All file access is audited
 - **Retention Controls**: Automatic cleanup based on retention policies
 
 ## Migration and Maintenance
