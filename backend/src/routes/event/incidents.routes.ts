@@ -117,6 +117,169 @@ router.post(
     }
 );
 
+// Export incidents
+router.get('/export', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { eventId, slug } = req.params;
+        const { format, ids } = req.query;
+        const user = req.user as any;
+
+        // Validate format
+        if (!format || !['csv', 'pdf'].includes(format as string)) {
+            res.status(400).json({ error: 'Invalid format. Must be csv or pdf.' });
+            return;
+        }
+
+        let currentEventId = eventId;
+        if (slug) {
+            const eventIdFromSlug = await eventService.getEventIdBySlug(slug);
+            if (!eventIdFromSlug) {
+                res.status(404).json({ error: 'Event not found.' });
+                return;
+            }
+            currentEventId = eventIdFromSlug;
+        }
+
+        // Check user access
+        const accessResult = await incidentService.checkIncidentAccess(user.id, 'dummy', currentEventId);
+        if (!accessResult.success) {
+            res.status(403).json({ error: 'Access denied' });
+            return;
+        }
+
+        // Get incidents to export
+        let queryOptions: any = { page: 1, limit: 1000 };
+        if (ids) {
+            const incidentIds = (ids as string).split(',');
+            queryOptions.incidentIds = incidentIds;
+        }
+
+        const result = await incidentService.getIncidentsByEventId(currentEventId, queryOptions);
+        if (!result.success || !result.data) {
+            res.status(500).json({ error: 'Failed to fetch incidents' });
+            return;
+        }
+
+        const incidents = result.data.incidents;
+        const eventResult = await eventService.getEventById(currentEventId);
+        const eventName = eventResult.success && eventResult.data ? eventResult.data.event.name : 'Event';
+
+        if (format === 'csv') {
+            // Generate CSV
+            const csvHeader = 'ID,Title,Status,Severity,Reporter,Assigned,Created,Description,URL\n';
+            const csvRows = incidents.map(incident => {
+                const url = `${req.protocol}://${req.get('host')}/events/${slug}/incidents/${incident.id}`;
+                return [
+                    incident.id,
+                    `"${incident.title.replace(/"/g, '""')}"`,
+                    incident.state,
+                    incident.severity || '',
+                    incident.reporter?.name || '',
+                    incident.assignedResponder?.name || '',
+                    incident.createdAt.toISOString().split('T')[0],
+                    `"${incident.description.replace(/"/g, '""')}"`,
+                    url
+                ].join(',');
+            }).join('\n');
+
+            const csv = csvHeader + csvRows;
+            const filename = `reports_${slug}_${new Date().toISOString().split('T')[0]}.csv`;
+
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.send(csv);
+        } else if (format === 'pdf') {
+            // Generate simple text format for PDF
+            let content = `${eventName} - Incident Reports\n`;
+            content += `Generated on: ${new Date().toLocaleDateString()}\n\n`;
+            
+            incidents.forEach(incident => {
+                content += `ID: ${incident.id}\n`;
+                content += `Title: ${incident.title}\n`;
+                content += `Status: ${incident.state}\n`;
+                content += `Severity: ${incident.severity || 'N/A'}\n`;
+                content += `Reporter: ${incident.reporter?.name || 'N/A'}\n`;
+                content += `Created: ${incident.createdAt.toLocaleDateString()}\n`;
+                content += `Description: ${incident.description}\n`;
+                content += `URL: ${req.protocol}://${req.get('host')}/events/${slug}/incidents/${incident.id}\n`;
+                content += '\n---\n\n';
+            });
+
+            const filename = `reports_${slug}_${new Date().toISOString().split('T')[0]}.txt`;
+
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.send(content);
+        }
+    } catch (error: any) {
+        logger.error('Export incidents error:', error);
+        res.status(500).json({ error: 'Failed to export incidents.' });
+    }
+});
+
+// Bulk actions on incidents
+router.post('/bulk', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { eventId, slug } = req.params;
+        const { action, incidentIds, assignedTo, status, notes } = req.body;
+        const user = req.user as any;
+
+        // Validate required fields
+        if (!action || !incidentIds || !Array.isArray(incidentIds) || incidentIds.length === 0) {
+            res.status(400).json({ error: 'Action and incidentIds array are required' });
+            return;
+        }
+
+        // Validate action type
+        if (!['assign', 'status', 'delete'].includes(action)) {
+            res.status(400).json({ error: 'Invalid action. Must be assign, status, or delete.' });
+            return;
+        }
+
+        let currentEventId = eventId;
+        if (slug) {
+            const eventIdFromSlug = await eventService.getEventIdBySlug(slug);
+            if (!eventIdFromSlug) {
+                res.status(404).json({ error: 'Event not found.' });
+                return;
+            }
+            currentEventId = eventIdFromSlug;
+        }
+
+        // Validate action-specific requirements
+        if (action === 'assign' && !assignedTo) {
+            res.status(400).json({ error: 'assignedTo is required for assign action' });
+            return;
+        }
+
+        if (action === 'status' && !status) {
+            res.status(400).json({ error: 'status is required for status action' });
+            return;
+        }
+
+        const result = await incidentService.bulkUpdateIncidents(
+            currentEventId,
+            incidentIds,
+            action,
+            {
+                assignedTo,
+                status,
+                notes,
+                userId: user.id
+            }
+        );
+
+        if (result.success) {
+            res.json(result.data);
+        } else {
+            res.status(400).json({ error: result.error });
+        }
+    } catch (error: any) {
+        logger.error('Bulk update incidents error:', error);
+        res.status(500).json({ error: 'Failed to perform bulk action.' });
+    }
+});
+
 // Get all incidents for an event
 router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
     try {
@@ -410,8 +573,113 @@ router.patch('/:incidentId/state', requireRole(['responder', 'event_admin', 'sys
 });
 
 
+// Update incident description
+router.patch('/:incidentId/description', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { eventId, incidentId, slug } = req.params;
+        const { description } = req.body;
+        const user = req.user as any;
+
+        if (!description || typeof description !== 'string' || description.trim().length === 0) {
+            res.status(400).json({ error: 'Description is required' });
+            return;
+        }
+
+        let currentEventId = eventId;
+        if (slug) {
+            const eventIdFromSlug = await eventService.getEventIdBySlug(slug);
+            if (!eventIdFromSlug) {
+                res.status(404).json({ error: 'Event not found.' });
+                return;
+            }
+            currentEventId = eventIdFromSlug;
+        }
+
+        const result = await incidentService.updateIncidentDescription(currentEventId, incidentId, description.trim(), user.id);
+
+        if (result.success) {
+            res.json(result.data);
+        } else {
+            res.status(400).json({ error: result.error });
+        }
+    } catch (error: any) {
+        logger.error('Update incident description error:', error);
+        res.status(500).json({ error: 'Failed to update incident description.' });
+    }
+});
+
+// Update incident date
+router.patch('/:incidentId/incident-date', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { eventId, incidentId, slug } = req.params;
+        const { incidentAt } = req.body;
+        const user = req.user as any;
+
+        if (!incidentAt) {
+            res.status(400).json({ error: 'Incident date is required' });
+            return;
+        }
+
+        let currentEventId = eventId;
+        if (slug) {
+            const eventIdFromSlug = await eventService.getEventIdBySlug(slug);
+            if (!eventIdFromSlug) {
+                res.status(404).json({ error: 'Event not found.' });
+                return;
+            }
+            currentEventId = eventIdFromSlug;
+        }
+
+        const result = await incidentService.updateIncidentIncidentDate(currentEventId, incidentId, incidentAt, user.id);
+
+        if (result.success) {
+            res.json(result.data);
+        } else {
+            res.status(400).json({ error: result.error });
+        }
+    } catch (error: any) {
+        logger.error('Update incident date error:', error);
+        res.status(500).json({ error: 'Failed to update incident date.' });
+    }
+});
+
+// Update incident parties
+router.patch('/:incidentId/parties', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { eventId, incidentId, slug } = req.params;
+        const { parties } = req.body;
+        const user = req.user as any;
+
+        if (!parties || typeof parties !== 'string') {
+            res.status(400).json({ error: 'Parties is required' });
+            return;
+        }
+
+        let currentEventId = eventId;
+        if (slug) {
+            const eventIdFromSlug = await eventService.getEventIdBySlug(slug);
+            if (!eventIdFromSlug) {
+                res.status(404).json({ error: 'Event not found.' });
+                return;
+            }
+            currentEventId = eventIdFromSlug;
+        }
+
+        const result = await incidentService.updateIncidentParties(currentEventId, incidentId, parties.trim(), user.id);
+
+        if (result.success) {
+            res.json(result.data);
+        } else {
+            res.status(400).json({ error: result.error });
+        }
+    } catch (error: any) {
+        logger.error('Update incident parties error:', error);
+        res.status(500).json({ error: 'Failed to update incident parties.' });
+    }
+});
+
 // Get incident state history
-router.get('/:incidentId/history', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/:incidentId/state-history', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
     try {
         const { eventId, slug, incidentId } = req.params;
         const user = req.user as any;
@@ -435,13 +703,13 @@ router.get('/:incidentId/history', requireRole(['reporter', 'responder', 'event_
         const result = await incidentService.getIncidentStateHistory(incidentId);
 
         if (result.success) {
-            res.json(result.data);
+            res.json({ history: result.data });
         } else {
             res.status(404).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Get incident history error:', error);
-        res.status(500).json({ error: 'Failed to get incident history.' });
+        logger.error('Get incident state history error:', error);
+        res.status(500).json({ error: 'Failed to get incident state history.' });
     }
 });
 

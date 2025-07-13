@@ -292,7 +292,7 @@ export class IncidentService {
            title,
            description,
            state: 'submitted',
-           severity: Object.values(IncidentSeverity).includes(urgency as IncidentSeverity) ? (urgency as IncidentSeverity) : 'low',
+           severity: urgency && ['low', 'medium', 'high', 'critical'].includes(urgency) ? urgency as any : 'low',
            incidentAt,
            parties,
            location,

@@ -177,11 +177,11 @@ export const validateReport = [
     .isISO8601()
     .withMessage('Invalid incident date format.'),
     
-  body('partiesInvolved')
+  body('involvedParties')
     .optional()
     .trim()
     .isLength({ max: 1000 })
-    .withMessage('Parties involved must be less than 1000 characters')
+    .withMessage('Involved parties must be less than 1000 characters')
     .customSanitizer(sanitizeString),
     
   body('location')
@@ -190,6 +190,11 @@ export const validateReport = [
     .isLength({ max: 200 })
     .withMessage('Location must be less than 200 characters')
     .customSanitizer(sanitizeString),
+    
+  body('severity')
+    .optional()
+    .isIn(['low', 'medium', 'high', 'critical'])
+    .withMessage('Severity must be one of: low, medium, high, critical'),
 ];
 
 /**
