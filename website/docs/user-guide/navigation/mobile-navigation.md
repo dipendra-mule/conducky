@@ -36,31 +36,16 @@ The sidebar navigation automatically adapts to mobile devices:
 
 ## Mobile-Specific Features
 
-### Touch Optimization
+- **Camera Integration**:
+  - Use the device's camera to capture and upload related files directly to an incident report.
+- **Offline Support**:
+  - View cached incident details and comments even without an internet connection.
+  - Draft comments and actions offline, which will sync automatically when connectivity is restored.
+- **Push Notifications**:
+  - Receive real-time alerts for important updates, such as new comments, assignments, or status changes.
+  - Customize notification preferences to stay informed without being overwhelmed.
 
-**Touch Targets**
-- All navigation items meet minimum 44px touch target size
-- Adequate spacing between clickable elements
-- Visual feedback on touch (highlighting, ripple effects)
-- Prevents accidental taps with proper spacing
-
-**Gesture Support**
-- **Pull-to-refresh** on dashboard and list pages
-- **Swipe navigation** for sidebar control
-- **Touch scrolling** optimized for mobile devices
-- **Haptic feedback** where supported by the device
-
-### Mobile Event Switching
-
-The event switcher is optimized for mobile use:
-
-- **Larger touch targets** for easier selection
-- **Scrollable event list** for users with many events
-- **Role badges** clearly visible even on small screens
-- **Quick access** to most frequently used events
-
-<!-- Screenshot Placeholder -->
-> **Screenshot needed**: Mobile event switcher interface showing touch-optimized design
+*This guide provides an overview of the mobile navigation system. For detailed instructions on specific features, refer to the relevant sections of the user guide.*
 
 ### Mobile Dashboard Features
 
@@ -192,7 +177,7 @@ Mobile navigation is optimized for performance:
 ### Mobile Workflow Tips
 
 **For Incident Reporting:**
-- Use mobile camera for evidence capture
+- Use mobile camera for related file capture
 - Voice-to-text for description entry
 - Location services for automatic location detection
 - Mobile-optimized forms for quick submission

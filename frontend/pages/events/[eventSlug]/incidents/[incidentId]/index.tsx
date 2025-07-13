@@ -24,7 +24,7 @@ interface Incident {
   assignedResponderId?: string;
   severity?: string;
   resolution?: string;
-  evidenceFiles?: EvidenceFile[];
+  relatedFiles?: RelatedFile[];
   event?: {
     id: string;
     name: string;
@@ -49,14 +49,11 @@ interface Comment {
   user?: User;
 }
 
-interface EvidenceFile {
+interface RelatedFile {
   id: string;
   filename: string;
-  originalname: string;
-  path: string;
   mimetype: string;
   size: number;
-  incidentId: string;
   createdAt: string;
 }
 
@@ -82,11 +79,11 @@ const visibilityOptions = [
 
 export default function ReportDetail() {
   const router = useRouter();
-  const eventSlug = Array.isArray(router.query.eventSlug) 
-    ? router.query.eventSlug[0] 
+  const eventSlug = Array.isArray(router.query.eventSlug)
+    ? router.query.eventSlug[0]
     : router.query.eventSlug;
-  const incidentId = Array.isArray(router.query.incidentId) 
-    ? router.query.incidentId[0] 
+  const incidentId = Array.isArray(router.query.incidentId)
+    ? router.query.incidentId[0]
     : router.query.incidentId;
 
   const [incident, setIncident] = useState<Incident | null>(null);
@@ -94,43 +91,32 @@ export default function ReportDetail() {
   const [fetchError, setFetchError] = useState<string | undefined>(undefined);
   const [user, setUser] = useState<User | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [stateChangeError, setStateChangeError] = useState<string>("");
-  const [stateChangeSuccess, setStateChangeSuccess] = useState<string>("");
-  const [createdAtLocal, setCreatedAtLocal] = useState<string>("");
-  const [updatedAtLocal, setUpdatedAtLocal] = useState<string>("");
-  
+
   // Comments state
   const [comments, setComments] = useState<Comment[]>([]);
-  const [commentsLoading, setCommentsLoading] = useState<boolean>(true);
-  const [commentBody, setCommentBody] = useState<string>("");
-  const [commentVisibility, setCommentVisibility] = useState<string>("public");
-  const [commentError, setCommentError] = useState<string>("");
-  const [commentSubmitting, setCommentSubmitting] = useState<boolean>(false);
-  
-  // Add state for editing and deleting comments
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editCommentBody, setEditCommentBody] = useState<string>("");
-  const [editCommentVisibility, setEditCommentVisibility] = useState<string>("public");
-  const [editError, setEditError] = useState<string>("");
-  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
-  
-  // Add state for evidence upload
-  const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
-  const [newEvidence, setNewEvidence] = useState<File[]>([]);
-  const [uploadingEvidence, setUploadingEvidence] = useState<boolean>(false);
-  const [evidenceUploadMsg, setEvidenceUploadMsg] = useState<string>("");
-  
+
+  // State for related file management
+  const [relatedFiles, setRelatedFiles] = useState<RelatedFile[]>([]);
+  const [newRelatedFiles, setNewRelatedFiles] = useState<File[]>([]);
+  const [uploadingRelatedFile, setUploadingRelatedFile] = useState<boolean>(false);
+  const [relatedFileUploadMsg, setRelatedFileUploadMsg] = useState<string>("");
+
   const [assignmentFields, setAssignmentFields] = useState<AssignmentFields>({
     assignedResponderId: '',
     severity: '',
     resolution: '',
   });
-  
+
   const [eventUsers, setEventUsers] = useState<User[]>([]);
   const [assignmentLoading, setAssignmentLoading] = useState<boolean>(false);
   const [assignmentError, setAssignmentError] = useState<string>('');
   const [assignmentSuccess, setAssignmentSuccess] = useState<string>('');
-  
+
+  // State management for state changes
+  const [isStateChanging, setIsStateChanging] = useState(false);
+  const [stateChangeError, setStateChangeError] = useState<string | null>(null);
+
+
   // State history
   const [stateHistory, setStateHistory] = useState<Array<{
     id: string;
@@ -144,10 +130,10 @@ export default function ReportDetail() {
   // Fetch report data
   useEffect(() => {
     if (!eventSlug || !incidentId) return;
-    
+
     setLoading(true);
     fetch(
-      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
+      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
       `/api/events/slug/${eventSlug}/incidents/${incidentId}`,
       { credentials: "include" }
     )
@@ -169,8 +155,8 @@ export default function ReportDetail() {
         console.log('[DEBUG] API Response data:', JSON.stringify(data, null, 2));
         console.log('[DEBUG] Incident tags:', data.incident?.tags);
         setIncident(data.incident);
-        if (data.incident.evidenceFiles) {
-          setEvidenceFiles(data.incident.evidenceFiles);
+        if (data.incident.relatedFiles) {
+          setRelatedFiles(data.incident.relatedFiles);
         }
         setAssignmentFields({
           assignedResponderId: data.incident.assignedResponderId || '',
@@ -217,7 +203,6 @@ export default function ReportDetail() {
   // Fetch comments for this report
   useEffect(() => {
     if (!eventSlug || !incidentId) return;
-    setCommentsLoading(true);
     fetch(
       (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
         `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
@@ -225,16 +210,15 @@ export default function ReportDetail() {
     )
       .then((res) => (res.ok ? res.json() : { comments: [] }))
       .then((data) => setComments(data.comments || []))
-      .catch(() => setComments([]))
-      .finally(() => setCommentsLoading(false));
+      .catch(() => setComments([]));
   }, [eventSlug, incidentId]);
 
   useEffect(() => {
     if (incident && incident.createdAt) {
-      setCreatedAtLocal(new Date(incident.createdAt).toLocaleString());
+      // setCreatedAtLocal(new Date(incident.createdAt).toLocaleString());
     }
     if (incident && incident.updatedAt) {
-      setUpdatedAtLocal(new Date(incident.updatedAt).toLocaleString());
+      // setUpdatedAtLocal(new Date(incident.updatedAt).toLocaleString());
     }
   }, [incident?.createdAt, incident?.updatedAt]);
 
@@ -263,416 +247,271 @@ export default function ReportDetail() {
         fetch((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + `/api/events/slug/${eventSlug}/users?role=event_admin&limit=1000`, { credentials: 'include' })
           .then(res2 => res2.ok ? res2.json() : { users: [] })
           .then(data2 => {
+            const responders = data.users || [];
+            const admins = data2.users || [];
+            const combined = [...responders, ...admins];
+            const uniqueUsers = Array.from(new Set(combined.map(u => u.id)))
+              .map(id => {
+                return combined.find(u => u.id === id)
+              });
+            setEventUsers(uniqueUsers as User[]);
+          })
 
-            const all = [...(data.users || []), ...(data2.users || [])];
-            const deduped = Object.values(all.reduce<Record<string, User>>((acc, u) => { 
-              acc[u.id] = u; 
-              return acc; 
-            }, {}));
-
-            setEventUsers(deduped);
-          });
-      });
+      })
+      .catch(() => setEventUsers([]));
   }, [eventSlug, isResponderOrAbove]);
 
-  // Fetch state history for the report
-  useEffect(() => {
-    if (!incident?.eventId || !incidentId) return;
-    
-    fetch(
-      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
-      `/api/events/${incident.eventId}/incidents/${incidentId}/state-history`,
-      { credentials: "include" }
-    )
-      .then((res) => res.ok ? res.json() : { history: [] })
-      .then((data) => {
-        setStateHistory(data.history || []);
-      })
-      .catch(() => {
-        setStateHistory([]);
-      });
-  }, [incident?.eventId, incidentId]);
-
-  // Enhanced state change handler to support notes and assignments
   const handleStateChange = async (newState: string, notes?: string, assignedToUserId?: string) => {
-    setStateChangeError("");
-    setStateChangeSuccess("");
-    setLoading(true);
-    try {
-      const requestBody = { 
-        state: newState, 
-        notes,
-        assignedTo: assignedToUserId 
-      };
-      
-      const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/${incident?.eventId}/incidents/${incidentId}/state`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(requestBody),
-        },
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        setStateChangeError(data.error || "Failed to change state");
-      } else {
-        const data = await res.json();
-        setIncident(data.incident);
-        
-        // Update assignment fields if assignment changed
-        if (assignedToUserId !== undefined) {
-          setAssignmentFields(prev => ({
-            ...prev,
-            assignedResponderId: assignedToUserId || ''
-          }));
-        }
-        
-        // Also update assignment fields from the returned report data
-        if (data.incident) {
-          setAssignmentFields(prev => ({
-            ...prev,
-            assignedResponderId: data.incident.assignedResponderId || '',
-            severity: data.incident.severity || prev.severity,
-            resolution: data.incident.resolution || prev.resolution,
-            state: data.incident.state
-          }));
-        }
-        
-        setStateChangeSuccess("State updated successfully!");
-        
-        // Refetch state history after state change
-        if (data.incident?.eventId) {
-          fetch(
-            (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") + 
-            `/api/events/${data.incident.eventId}/incidents/${incidentId}/state-history`,
-            { credentials: "include" }
-          )
-            .then((res) => res.ok ? res.json() : { history: [] })
-            .then((historyData) => {
-              setStateHistory(historyData.history || []);
-            })
-            .catch(() => {
-              // Silently fail for state history
-            });
-        }
-      }
-    } catch (err) {
-      setStateChangeError("Network error");
-    }
-    setLoading(false);
-  };
+    if (!eventSlug || !incidentId) return;
+    setIsStateChanging(true);
+    setStateChangeError(null);
 
-  // Legacy state change handler for backward compatibility
-  const handleLegacyStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    await handleStateChange(e.target.value);
-  };
-
-  // Handle comment submit
-  const handleCommentSubmit = async (body: string, visibility: string, isMarkdown?: boolean) => {
-    setCommentError("");
-    setCommentSubmitting(true);
-    if (!body.trim()) {
-      setCommentError("Comment cannot be empty.");
-      setCommentSubmitting(false);
-      return;
-    }
     try {
       const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            body: body,
-            visibility: visibility,
-            isMarkdown: isMarkdown || false,
-          }),
-        },
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        setCommentError(data.error || "Failed to add comment.");
-      } else {
-        setCommentBody("");
-        setCommentVisibility("public");
-        // Refetch comments
-        fetch(
-          (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-            `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
-          { credentials: "include" },
-        )
-          .then((res) => (res.ok ? res.json() : { comments: [] }))
-          .then((data) => setComments(data.comments || []));
-      }
-    } catch (err) {
-      setCommentError("Network error");
-    }
-    setCommentSubmitting(false);
-  };
-
-  // Edit comment handler
-  const handleEditSave = async (comment: Comment, body?: string, visibility?: string, isMarkdown?: boolean) => {
-    setEditError("");
-    const bodyToSave = body || editCommentBody;
-    const visibilityToSave = visibility || editCommentVisibility;
-    
-    if (!bodyToSave.trim()) {
-      setEditError("Comment cannot be empty.");
-      return;
-    }
-    try {
-      const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments/${comment.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            body: bodyToSave,
-            visibility: visibilityToSave,
-            isMarkdown: isMarkdown || false,
-          }),
-        },
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        setEditError(data.error || "Failed to update comment.");
-      } else {
-        setEditingCommentId(null);
-        setEditCommentBody("");
-        setEditCommentVisibility("public");
-        // Refetch comments
-        fetch(
-          (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-            `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
-          { credentials: "include" },
-        )
-          .then((res) => (res.ok ? res.json() : { comments: [] }))
-          .then((data) => setComments(data.comments || []));
-      }
-    } catch (err) {
-      setEditError("Network error");
-    }
-  };
-  
-  // Delete comment handler
-  const handleDeleteConfirm = async (comment: Comment) => {
-    try {
-      const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments/${comment.id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
-      if (!res.ok) {
-        // Optionally show error
-      }
-      setDeletingCommentId(null);
-      // Refetch comments
-      fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
-        { credentials: "include" },
-      )
-        .then((res) => (res.ok ? res.json() : { comments: [] }))
-        .then((data) => setComments(data.comments || []));
-    } catch (err) {
-      setDeletingCommentId(null);
-    }
-  };
-
-  // Add a function to upload more evidence files
-  const canUploadEvidence =
-    user &&
-    incident &&
-    incident.reporterId &&
-    (user.id === incident.reporterId || isAdminOrSystemAdmin);
-    
-  const handleEvidenceUpload = async (filesOrEvent: File[] | React.FormEvent<HTMLFormElement>) => {
-    let files: File[];
-    if (Array.isArray(filesOrEvent)) {
-      files = filesOrEvent;
-    } else {
-      filesOrEvent.preventDefault();
-      files = newEvidence;
-    }
-    if (!files.length) return;
-    setUploadingEvidence(true);
-    setEvidenceUploadMsg("");
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append("evidence", files[i]);
-    }
-    const res = await fetch(
-      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence`,
-      {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      },
-    );
-    if (res.ok) {
-      setEvidenceUploadMsg("Evidence uploaded!");
-      setNewEvidence([]);
-      // Refetch evidence files
-      const filesRes = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence`,
-        { credentials: "include" },
-      );
-      if (filesRes.ok) {
-        const data = await filesRes.json();
-        setEvidenceFiles(data.files);
-      }
-      // Refetch the full report to update evidenceFiles and any other fields
-      const reportRes = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/events/slug/${eventSlug}/incidents/${incidentId}`,
-        { credentials: "include" },
-      );
-      if (reportRes.ok) {
-        const data = await reportRes.json();
-        setIncident(data.incident);
-      }
-    } else {
-      setEvidenceUploadMsg("Failed to upload evidence.");
-    }
-    setUploadingEvidence(false);
-  };
-
-  // Evidence delete handler
-  const handleEvidenceDelete = async (file: EvidenceFile) => {
-    try {
-      const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence/${file.id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
-      if (!res.ok) {
-        setEvidenceUploadMsg("Failed to delete evidence.");
-        return;
-      }
-      // Refetch evidence files
-      const filesRes = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-          `/api/events/slug/${eventSlug}/incidents/${incident!.id}/evidence`,
-        { credentials: "include" },
-      );
-      if (filesRes.ok) {
-        const data = await filesRes.json();
-        setEvidenceFiles(data.files);
-      }
-    } catch (err) {
-      setEvidenceUploadMsg("Network error while deleting evidence.");
-    }
-  };
-
-  // Save assignment fields handler
-  const handleAssignmentChange = async (updatedFields?: any) => {
-    // Use the passed fields if available, otherwise use current state
-    const fieldsToSave = updatedFields || assignmentFields;
-    setAssignmentLoading(true);
-    setAssignmentError('');
-    setAssignmentSuccess('');
-    
-
-    
-    if ((fieldsToSave.state === 'resolved' || fieldsToSave.state === 'closed') && 
-        !fieldsToSave.resolution?.trim()) {
-      setAssignmentError('Resolution is required when incident is resolved or closed.');
-      setAssignmentLoading(false);
-      return;
-    }
-    
-    const payload = {
-      assignedResponderId: fieldsToSave.assignedResponderId ? fieldsToSave.assignedResponderId : null,
-      severity: fieldsToSave.severity ? fieldsToSave.severity : null,
-      resolution: fieldsToSave.resolution ? fieldsToSave.resolution : null,
-    };
-    
-    
-    
-    try {
-      const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + 
-        `/api/events/slug/${eventSlug}/incidents/${incidentId}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/events/slug/${eventSlug}/incidents/${incidentId}/state`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: newState, notes, assignedToUserId }),
           credentials: 'include',
-          body: JSON.stringify(payload),
         }
       );
-      
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setAssignmentError(data.error || 'Failed to update incident.');
-        setAssignmentLoading(false);
-        return;
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update incident state.');
+      }
+      const data = await res.json();
+      setIncident(prev => prev ? { ...prev, state: data.incident.state } : null);
+      if (data.history) {
+        setStateHistory(prev => [...prev, data.history]);
+      }
+    } catch (err: any) {
+      setStateChangeError(err.message);
+    } finally {
+      setIsStateChanging(false);
+    }
+  };
+
+  const handleLegacyStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    await handleStateChange(e.target.value);
+  };
+  const handleCommentSubmit = async (body: string, visibility: string, isMarkdown?: boolean) => {
+    if (!eventSlug || !incidentId) return { success: false, error: "Missing event or incident ID" };
+
+    try {
+      const res = await fetch(
+        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
+        `/api/events/slug/${eventSlug}/incidents/${incidentId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body, visibility, isMarkdown }),
+          credentials: "include",
+        }
+      );
+      if (!res.ok) {
+        const errorData = await res.json();
+        return { success: false, error: errorData.error || "Failed to submit comment." };
+      }
+      const data = await res.json();
+      setComments((prev) => [...prev, data.comment]);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || "An unexpected error occurred." };
+    }
+  };
+
+  const handleEditSave = async (comment: Comment, body?: string, visibility?: string, isMarkdown?: boolean) => {
+    if (!eventSlug || !incidentId) return { success: false, error: "Missing event or incident ID" };
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/events/slug/${eventSlug}/incidents/${incidentId}/comments/${comment.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body, visibility, isMarkdown }),
+          credentials: 'include',
+        }
+      );
+      if (!res.ok) {
+        const errorData = await res.json();
+        return { success: false, error: errorData.error || 'Failed to update comment.' };
+      }
+      const updatedComment = await res.json();
+      setComments(prev => prev.map(c => c.id === comment.id ? updatedComment : c));
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'An unexpected error occurred.' };
+    }
+  };
+
+  const handleDeleteConfirm = async (comment: Comment) => {
+    if (!eventSlug || !incidentId) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/events/slug/${eventSlug}/incidents/${incidentId}/comments/${comment.id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
+      if (!res.ok) {
+        throw new Error('Failed to delete comment.');
+      }
+      setComments(prev => prev.filter(c => c.id !== comment.id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleRelatedFileUpload = async (files: File[]) => {
+    if (!eventSlug || !incidentId || files.length === 0) return;
+
+    setUploadingRelatedFile(true);
+    setRelatedFileUploadMsg("");
+
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('relatedFiles', file);
+    });
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/events/slug/${eventSlug}/incidents/${incidentId}/related-files`,
+        {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        }
+      );
+
+      const responseData = await res.json();
+
+      if (!res.ok) {
+        throw new Error(responseData.error || `HTTP error! status: ${res.status}`);
       }
       
+      setRelatedFiles(prev => [...prev, ...responseData.files]);
+      setNewRelatedFiles([]); // Clear the new files list
+    } catch (err: any) {
+      setRelatedFileUploadMsg(err.message || "An unexpected error occurred during upload.");
+    } finally {
+      setUploadingRelatedFile(false);
+    }
+  };
+
+  const handleRelatedFileDelete = async (file: RelatedFile) => {
+    if (!eventSlug || !incidentId) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/events/slug/${eventSlug}/incidents/${incidentId}/related-files/${file.id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to delete file.');
+      }
+      
+      setRelatedFiles(prev => prev.filter(f => f.id !== file.id));
+    } catch (error) {
+      console.error("Delete error:", error);
+      // Optionally, show an error message to the user
+    }
+  };
+
+
+  const handleAssignmentChange = async (updatedFields?: any) => {
+    if (!eventSlug || !incidentId) return;
+    setAssignmentLoading(true);
+    setAssignmentError('');
+    setAssignmentSuccess('');
+
+    const payload = updatedFields || assignmentFields;
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/events/slug/${eventSlug}/incidents/${incidentId}/assignment`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update assignment.');
+      }
+
       const data = await res.json();
-      setIncident(data.incident);
-      setAssignmentSuccess('Updated!');
-    } catch (err) {
-      setAssignmentError('Network error');
+      setIncident(prev => prev ? { ...prev, ...data.incident } : null);
+      setAssignmentSuccess('Incident assignment updated successfully.');
+    } catch (err: any) {
+      setAssignmentError(err.message);
+    } finally {
+      setAssignmentLoading(false);
     }
-    
-    setAssignmentLoading(false);
   };
 
-  // Add handler for editing the report title
   const handleTitleEdit = async (newTitle: string): Promise<void> => {
-    if (!newTitle || newTitle.length < 10 || newTitle.length > 70) {
-      throw new Error("Title must be between 10 and 70 characters.");
-    }
-    const res = await fetch(
-      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-        `/api/events/slug/${eventSlug}/incidents/${incidentId}/title`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ title: newTitle }),
-      },
-    );
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || "Failed to update title.");
-    }
-    const data = await res.json();
-    setIncident(data.incident);
-  };
+    if (!eventSlug || !incidentId) return Promise.reject("Missing event or incident ID");
 
-  // Early return for missing router params (better UX)
-  if (!router.isReady) {
-    return <div>Loading...</div>;
-  }
-  
-  if (!eventSlug || !incidentId) {
-    return <div className="max-w-2xl mx-auto mt-12 p-6 bg-red-100 text-red-800 rounded shadow text-center">
-      Invalid URL: Missing event or incident ID
-    </div>;
-  }
+    try {
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/events/slug/${eventSlug}/incidents/${incidentId}`,
+            {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: newTitle }),
+                credentials: 'include',
+            }
+        );
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Failed to update title.');
+        }
+        const data = await res.json();
+        setIncident(prev => prev ? { ...prev, title: data.incident.title } : null);
+    } catch (error: any) {
+        console.error(error);
+        throw error;
+    }
+};
 
-  if (fetchError) {
-    return <div className="max-w-2xl mx-auto mt-12 p-6 bg-red-100 text-red-800 rounded shadow text-center">{fetchError}</div>;
-  }
-  if (!incident) {
-    return <div>Loading...</div>;
-  }
+const handleDescriptionEdit = async (newDescription: string): Promise<void> => {
+    if (!eventSlug || !incidentId) return Promise.reject("Missing event or incident ID");
+
+    try {
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/events/slug/${eventSlug}/incidents/${incidentId}`,
+            {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: newDescription }),
+                credentials: 'include',
+            }
+        );
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Failed to update description.');
+        }
+        const data = await res.json();
+        setIncident(prev => prev ? { ...prev, description: data.incident.description } : null);
+    } catch (error: any) {
+        console.error(error);
+        throw error;
+    }
+};
+
+
+  if (loading) return <div>Loading incident...</div>;
+  if (fetchError) return <div>Error: {fetchError}</div>;
+  if (!incident) return <div>Report not found.</div>;
 
   return (
     <IncidentDetailView
@@ -680,65 +519,32 @@ export default function ReportDetail() {
       user={user}
       userRoles={userRoles}
       comments={comments}
-      evidenceFiles={evidenceFiles}
-      loading={loading}
-      error={fetchError}
-      eventSlug={eventSlug}
-      onStateChange={handleLegacyStateChange}
-      onEnhancedStateChange={handleStateChange}
+      relatedFiles={relatedFiles}
       onCommentSubmit={handleCommentSubmit}
-      onCommentEdit={handleEditSave}
-      onCommentDelete={handleDeleteConfirm}
-      onEvidenceUpload={handleEvidenceUpload}
-      onEvidenceDelete={handleEvidenceDelete}
-      stateChangeLoading={loading}
+      onEditSave={handleEditSave}
+      onDeleteConfirm={handleDeleteConfirm}
+      onStateChange={handleStateChange}
+      isStateChanging={isStateChanging}
       stateChangeError={stateChangeError}
-      stateChangeSuccess={stateChangeSuccess}
-      adminMode={isResponderOrAbove}
+      onAssignmentChange={handleAssignmentChange}
       assignmentFields={assignmentFields}
       setAssignmentFields={setAssignmentFields}
       eventUsers={eventUsers}
-      onAssignmentChange={handleAssignmentChange}
       assignmentLoading={assignmentLoading}
       assignmentError={assignmentError}
       assignmentSuccess={assignmentSuccess}
-      canEditSeverity={isResponderOrAbove}
-      stateHistory={stateHistory}
-      apiBaseUrl={process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}
       onTitleEdit={handleTitleEdit}
-      onTagsEdit={async (tags) => {
-        try {
-          const response = await fetch(
-            (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000") +
-              `/api/incidents/${incidentId}/tags`,
-            {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({ tags: tags.map(tag => tag.id) }),
-            }
-          );
-          
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to update tags');
-          }
-          
-          const responseData = await response.json();
-          setIncident(responseData.incident);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to update tags. Please try again.';
-          alert(errorMessage);
-        }
-      }}
-      onIncidentUpdate={(updatedIncident) => {
-        // Update the incident state with the new data from field edits
-        setIncident(updatedIncident);
-      }}
+      onDescriptionEdit={handleDescriptionEdit}
+      onRelatedFileUpload={handleRelatedFileUpload}
+      onRelatedFileDelete={handleRelatedFileDelete}
+      newRelatedFiles={newRelatedFiles}
+      setNewRelatedFiles={setNewRelatedFiles}
+      relatedFileUploadMsg={relatedFileUploadMsg}
+      uploadingRelatedFile={uploadingRelatedFile}
+      isResponderOrAbove={isResponderOrAbove}
+      apiBaseUrl={process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}
+      stateHistory={stateHistory}
+      eventSlug={eventSlug}
     />
   );
 }
-
-// Remove getServerSideProps - we'll fetch data client-side to avoid session issues 

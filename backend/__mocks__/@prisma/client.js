@@ -145,7 +145,7 @@ const inMemoryStore = {
   systemSettings: [
     { id: "1", key: "showPublicEventList", value: "false" }
   ],
-  evidenceFiles: [
+  relatedFiles: [
     {
       id: "e1",
       filename: "download.txt",
@@ -646,8 +646,8 @@ class PrismaClient {
                 inMemoryStore.users.find(u => u.id === incident.assignedResponderId) : null;
             }
             
-            if (include.evidenceFiles) {
-              enrichedIncident.evidenceFiles = incident.evidenceFiles || [];
+            if (include.relatedFiles) {
+              enrichedIncident.relatedFiles = incident.relatedFiles || [];
             }
             
             if (include._count) {
@@ -1216,22 +1216,25 @@ class PrismaClient {
         return inMemoryStore.eventInvites[idx];
       }),
     };
-    this.evidenceFile = {
+    this.relatedFile = {
       create: jest.fn(({ data, include }) => {
-        if (!inMemoryStore.evidenceFiles) inMemoryStore.evidenceFiles = [];
-        const newEvidence = {
-          id: `e${inMemoryStore.evidenceFiles.length + 1}`,
+        if (!inMemoryStore.relatedFiles) inMemoryStore.relatedFiles = [];
+        // Ensure data is a Buffer
+        const fileData = data.data instanceof Buffer ? data.data : Buffer.from(data.data);
+        const newRelatedFile = {
+          id: `e${inMemoryStore.relatedFiles.length + 1}`,
           createdAt: new Date(),
           ...data,
+          data: fileData,
         };
-        inMemoryStore.evidenceFiles.push(newEvidence);
+        inMemoryStore.relatedFiles.push(newRelatedFile);
         
         // Handle includes
         if (include) {
-          const result = { ...newEvidence };
+          const result = { ...newRelatedFile };
           
-          if (include.uploader && newEvidence.uploaderId) {
-            const uploader = inMemoryStore.users.find(u => u.id === newEvidence.uploaderId);
+          if (include.uploader && newRelatedFile.uploaderId) {
+            const uploader = inMemoryStore.users.find(u => u.id === newRelatedFile.uploaderId);
             if (uploader) {
               result.uploader = {
                 id: uploader.id,
@@ -1244,13 +1247,13 @@ class PrismaClient {
           return result;
         }
         
-        return newEvidence;
+        return newRelatedFile;
       }),
       // findUnique should only be used for id, not reportId (reportId is not unique)
       findUnique: jest.fn(({ where, include }) => {
-        if (!inMemoryStore.evidenceFiles) return null;
+        if (!inMemoryStore.relatedFiles) return null;
         if (where.id) {
-          const found = inMemoryStore.evidenceFiles.find(
+          const found = inMemoryStore.relatedFiles.find(
             (e) => e.id === where.id,
           );
           if (!found) return null;
@@ -1302,8 +1305,8 @@ class PrismaClient {
       }),
       // findMany should be used for incidentId
       findMany: jest.fn(({ where, select }) => {
-        if (!inMemoryStore.evidenceFiles) return [];
-        let results = [...inMemoryStore.evidenceFiles];
+        if (!inMemoryStore.relatedFiles) return [];
+        let results = [...inMemoryStore.relatedFiles];
         
         if (where) {
           if (where.incidentId) {
@@ -1317,13 +1320,13 @@ class PrismaClient {
         
         // Apply select if provided
         if (select) {
-          results = results.map(evidence => {
+          results = results.map(relatedFile => {
             const selected = {};
             Object.keys(select).forEach(key => {
               if (select[key]) {
-                if (key === 'uploader' && evidence.uploaderId) {
+                if (key === 'uploader' && relatedFile.uploaderId) {
                   // Handle uploader relationship
-                  const uploader = inMemoryStore.users.find(u => u.id === evidence.uploaderId);
+                  const uploader = inMemoryStore.users.find(u => u.id === relatedFile.uploaderId);
                   if (uploader) {
                     selected[key] = {
                       id: uploader.id,
@@ -1331,8 +1334,8 @@ class PrismaClient {
                       email: uploader.email
                     };
                   }
-                } else if (evidence[key] !== undefined) {
-                  selected[key] = evidence[key];
+                } else if (relatedFile[key] !== undefined) {
+                  selected[key] = relatedFile[key];
                 }
               }
             });
@@ -1343,19 +1346,19 @@ class PrismaClient {
         return results;
       }),
       deleteMany: jest.fn(({ where }) => {
-        if (!inMemoryStore.evidenceFiles) return { count: 0 };
-        const before = inMemoryStore.evidenceFiles.length;
+        if (!inMemoryStore.relatedFiles) return { count: 0 };
+        const before = inMemoryStore.relatedFiles.length;
         if (where.incidentId) {
-          inMemoryStore.evidenceFiles = inMemoryStore.evidenceFiles.filter(
+          inMemoryStore.relatedFiles = inMemoryStore.relatedFiles.filter(
             (e) => e.incidentId !== where.incidentId
           );
         } else if (where.reportId) {
           // Legacy support for old reportId field
-          inMemoryStore.evidenceFiles = inMemoryStore.evidenceFiles.filter(
+          inMemoryStore.relatedFiles = inMemoryStore.relatedFiles.filter(
             (e) => e.reportId !== where.reportId
           );
         }
-        return { count: before - inMemoryStore.evidenceFiles.length };
+        return { count: before - inMemoryStore.relatedFiles.length };
       }),
     };
     // Note: reportComment methods are defined later in the constructor

@@ -44,7 +44,7 @@ export interface UserIncident {
     name: string | null;
     email: string;
   } | null;
-  evidenceFiles: {
+  relatedFiles: {
     id: string;
     filename: string;
     mimetype: string;
@@ -581,7 +581,7 @@ export class UserService {
           assignedResponder: {
             select: { id: true, name: true, email: true }
           },
-          evidenceFiles: {
+          relatedFiles: {
             select: { id: true, filename: true, mimetype: true, size: true }
           },
           comments: {

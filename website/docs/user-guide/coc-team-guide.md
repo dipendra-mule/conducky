@@ -14,7 +14,7 @@ As a member of the response team, you have access to powerful tools for incident
 - **Track incident status** through the complete lifecycle
 - **Assign incidents** to specific team members
 - **Collaborate with internal comments** invisible to reporters
-- **Manage evidence** and coordinate investigations
+- **Manage related files** and coordinate investigations
 - **Generate reports** and maintain audit trails
 
 Your role is critical in maintaining safe, inclusive event environments.
@@ -150,7 +150,7 @@ graph LR
 **Internal Comments**
 - Only visible to response team members
 - Use for investigation coordination and sensitive discussions
-- Perfect for sharing evidence analysis or planning next steps
+- Perfect for sharing related file analysis or planning next steps
 - Can include markdown formatting for structured information
 
 **Comment Best Practices:**
@@ -215,7 +215,7 @@ graph LR
 **Internal Comments:**
 - Only visible to responders and event administrators
 - Perfect for team coordination and sensitive information
-- Use for investigation planning and evidence discussion
+- Use for investigation planning and related file discussion
 - Include decision-making rationale and next steps
 
 <!-- Screenshot Placeholder -->
@@ -239,142 +239,96 @@ graph LR
 - Configure notification preferences in your profile
 - Email notifications available for important updates
 
-## 📁 Evidence Management
+## 📁 Related File Management
 
-### Viewing and Managing Evidence
+### Viewing and Managing Related Files
 
-**Evidence Types:**
+**File Types**:
 - Screenshots and photos
 - Documents (PDFs, Word files, etc.)  
 - Audio and video recordings
 - Chat logs and email screenshots
 
-**Evidence Security:**
-- All files are encrypted and access-controlled
-- Only authorized team members can view evidence
-- Download tracking for audit purposes
-- Secure deletion when incident is closed
+**File Security**:
+- All files are stored securely.
+- Only authorized team members can view related files.
 
-**Evidence Analysis:**
-- View files directly in the incident interface
-- Download for detailed analysis when needed
-- Add comments about evidence significance
-- Share findings through internal comments
+### Accessing Related Files
 
-### Adding Additional Evidence
+**File Analysis**:
+- View files in the incident detail view.
+- Download files for offline analysis.
+- Add comments about file significance.
 
-Response team members can add evidence during investigation:
+### Adding Additional Files
 
-1. **Upload Process:**
-   - Click "Add Evidence" in the incident detail view
-   - Drag and drop or select files to upload
-   - Add description of evidence source and relevance
-   - Evidence is immediately available to team
+Response team members can add files during investigation:
 
-2. **Evidence Organization:**
-   - Files are organized by upload date
-   - Add descriptive filenames and notes
-   - Link evidence to specific aspects of investigation
-   - Maintain chain of custody documentation
+- Click "Add Related File" in the incident detail view.
+- Select files from your device.
+- Add description of file source and relevance.
+- Files are immediately available to team.
 
-## 📈 Reporting and Analytics
+### Best Practices
 
-### Individual Incident Reports
-
-Generate comprehensive incident reports including:
-- Complete timeline of events and actions
-- All comments and communications
-- Evidence inventory and analysis
-- Resolution details and follow-up actions
-- Involved parties and contact information
-
-### Team Performance Analytics
-
-**Available Metrics:**
-- Average response time by team member
-- Incident resolution times by category
-- Team workload distribution
-- Trending issues and patterns
-
-**Dashboard Analytics:**
-- Active incidents by status and priority
-- Team member assignment overview
-- Recent activity and upcoming deadlines
-- Month-over-month incident trends
-
-## ⚙️ Advanced Features
-
-### Bulk Operations
-
-**Bulk Status Changes:**
-1. Select multiple incidents using checkboxes
-2. Choose "Bulk Actions" → "Change Status"
-3. Select new status and provide notes
-4. Confirm changes for all selected incidents
-
-**Bulk Assignment:**
-1. Select incidents needing assignment
-2. Choose "Bulk Actions" → "Assign To"
-3. Select team member from dropdown
-4. All selected incidents are assigned simultaneously
-
-### Custom Workflows
-
-**Priority Escalation:**
-- Set automatic escalation rules for high-priority incidents
-- Configure notification chains for urgent issues
-- Define response time requirements by incident type
-
-**Status Automation:**
-- Configure automatic acknowledgment for certain incident types
-- Set up notifications for status changes
-- Create reminders for incidents approaching deadlines
-
-## 🚨 Best Practices for Response Teams
-
-### Immediate Response Protocol
-
-**First 24 Hours:**
-1. **Acknowledge** all new incidents within 24 hours
-2. **Assess urgency** and escalate if immediate safety concerns exist
-3. **Assign** high-priority incidents to appropriate responders
-4. **Initial contact** with reporter if clarification needed
-
-### Investigation Guidelines
-
-**Documentation Standards:**
-- Record all actions taken in internal comments
-- Document evidence thoroughly with descriptions
-- Maintain professional tone in all communications
-- Include timestamps for all significant actions
-
-**Communication Protocol:**
-- Keep reporters informed of general progress
-- Be transparent about timelines when possible
-- Respect confidentiality of all parties involved
-- Use professional, empathetic language
-
-### Resolution and Follow-up
-
-**Resolution Documentation:**
-- Clearly describe actions taken to address the incident
-- Document any ongoing monitoring or follow-up required
-- Include lessons learned for future incident prevention
-- Ensure all stakeholders are informed of resolution
-
-**Post-Resolution:**
-- Monitor for any additional related incidents
-- Follow up with reporter on satisfaction with resolution
-- Update event policies or procedures if needed
-- Share insights with broader response team
-
-## 🔗 Related Resources
-
-- **[Incident Reporting Guide](./incident-reporting)** - How reporters submit incidents
-- **Comment Workflows** - Detailed communication guide (coming soon)
-- **[Security Documentation](../security/overview)** - Data protection and access controls
-- **[Admin Guide](../admin-guide/intro)** - Event management and configuration
+1. **Describe Everything**:
+- Add descriptions to all files.
+- Explain why the file is relevant.
+2. **File Organization**:
+- Use a consistent naming scheme for files.
+- Link files to specific aspects of investigation.
 
 ---
 
-*This guide helps ensure consistent, professional incident management across all events. Remember that your role in maintaining safe spaces is crucial to event success and participant well-being.* 
+## 📈 Reporting and Analytics
+
+### Incident Dashboard
+
+- **Overview**: Get a high-level view of all incidents.
+- **Filtering**: Filter incidents by status, priority, etc.
+- **Search**: Search for specific incidents.
+
+### Key Metrics
+
+- **Response Time**: Track how quickly your team responds.
+- **Resolution Time**: See how long it takes to resolve incidents.
+- **Incident Volume**: Monitor the number of incidents over time.
+
+### Use Cases
+
+- **Identify Trends**: Spot patterns in incident types.
+- **Resource Planning**: Allocate resources based on incident volume.
+- **Process Improvement**: Find bottlenecks in your response process.
+
+## 🛠️ Advanced Features
+
+### Bulk Actions
+
+- **Assign Multiple Incidents**: Assign several incidents to a single responder.
+- **Change Status**: Update the status of multiple incidents at once.
+
+### Use Cases
+
+- **Triage**: Quickly assign new incidents.
+- **Closing Out**: Close multiple resolved incidents.
+
+### Custom Tags
+
+- **Categorization**: Create custom tags for your event.
+- **Filtering**: Filter incidents by custom tags.
+
+### Best Practices
+
+- **Standardize Tags**: Use a consistent set of tags.
+- **Color-Coding**: Use colors to visually distinguish tags.
+
+## 🔒 Security Best Practices
+
+- **Use Strong Passwords**: Protect your account with a strong password.
+- **Enable 2FA**: Add an extra layer of security with two-factor authentication.
+- **Be Mindful of PII**: Avoid sharing personally identifiable information in public comments.
+- Document related files thoroughly with descriptions.
+
+---
+
+*This guide provides a starting point. Adapt these practices to your team's specific needs.* 

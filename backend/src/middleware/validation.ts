@@ -16,9 +16,10 @@ import logger from '../config/logger';
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    const errorArray = errors.array();
     return res.status(400).json({
-      error: 'Validation failed',
-      details: errors.array()
+      error: errorArray[0].msg,
+      details: errorArray
     });
   }
   next();
@@ -171,20 +172,16 @@ export const validateReport = [
     .withMessage('Description must be 10-5000 characters long')
     .customSanitizer(sanitizeMarkdown),
     
-  body('type')
-    .isIn(['harassment', 'discrimination', 'safety', 'other'])
-    .withMessage('Report type must be one of: harassment, discrimination, safety, other'),
-    
   body('incidentAt')
     .optional()
     .isISO8601()
-    .withMessage('Incident date must be a valid date'),
+    .withMessage('Invalid incident date format.'),
     
-  body('partiesInvolved')
+  body('involvedParties')
     .optional()
     .trim()
     .isLength({ max: 1000 })
-    .withMessage('Parties involved must be less than 1000 characters')
+    .withMessage('Involved parties must be less than 1000 characters')
     .customSanitizer(sanitizeString),
     
   body('location')
@@ -194,10 +191,10 @@ export const validateReport = [
     .withMessage('Location must be less than 200 characters')
     .customSanitizer(sanitizeString),
     
-  body('contactPreference')
+  body('severity')
     .optional()
-    .isIn(['email', 'phone', 'in_person', 'none'])
-    .withMessage('Contact preference must be one of: email, phone, in_person, none'),
+    .isIn(['low', 'medium', 'high', 'critical'])
+    .withMessage('Severity must be one of: low, medium, high, critical'),
 ];
 
 /**

@@ -96,14 +96,14 @@ System Admins follow the principle of least privilege - they cannot access event
 - View and respond to all incidents in their assigned events
 - Update incident status and assignments
 - Add internal and external comments
-- Upload and manage evidence files
+- Upload and manage related files
 - Assign incidents to themselves or other responders
 - Access reporter contact information when necessary
 
 **Data Access:**
 - Can view all incident reports in their assigned events
 - Can see internal comments and sensitive investigation notes
-- Access to all evidence files and attachments
+- Access to all related files and attachments
 - Can view incident history and status changes
 
 **Workflow Permissions:**
@@ -118,7 +118,7 @@ System Admins follow the principle of least privilege - they cannot access event
 **Capabilities:**
 - Submit new incident reports
 - View and comment on their own reports
-- Upload evidence for their own incidents
+- Upload related files for their own incidents
 - Track status of their submissions
 - Receive notifications about their reports
 
@@ -126,7 +126,7 @@ System Admins follow the principle of least privilege - they cannot access event
 - Can only view their own incident reports
 - Can see external comments on their reports (but not internal team discussions)
 - Cannot view other reporters' incidents or any internal comments
-- Access to their own evidence files and attachments
+- Access to their own related files and attachments
 
 **Important Limitations:**
 - Cannot see internal team discussions or investigation notes

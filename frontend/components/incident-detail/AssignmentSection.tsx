@@ -2,36 +2,37 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 
+interface User {
+  id: string;
+  name?: string;
+  email?: string;
+}
+
+interface AssignmentFields {
+  assignedResponderId?: string;
+  severity?: string;
+  resolution?: string;
+}
+
 interface AssignmentSectionProps {
-  assignmentFields: {
-    assignedResponderId?: string;
-    severity?: string;
-    resolution?: string;
-    [key: string]: any;
-  };
-  setAssignmentFields: (f: any) => void;
-  eventUsers: any[];
-  loading?: boolean;
-  error?: string;
-  success?: string;
-  onSave: (updatedFields?: any) => void;
-  canEditSeverity?: boolean;
+  assignmentFields: AssignmentFields;
+  setAssignmentFields: (fields: AssignmentFields) => void;
+  eventUsers: User[];
+  onSave: (updatedFields?: AssignmentFields) => void;
+  isResponderOrAbove?: boolean;
 }
 
 export function AssignmentSection({
   assignmentFields,
   setAssignmentFields,
   eventUsers,
-  loading = false,
-  error = "",
-  success = "",
   onSave,
-  canEditSeverity = true,
+  isResponderOrAbove = false,
 }: AssignmentSectionProps) {
   const [editingField, setEditingField] = useState<null | "assignedResponderId" | "severity" | "resolution">(
     null
   );
-  const [localFields, setLocalFields] = useState(assignmentFields);
+  const [localFields, setLocalFields] = useState<AssignmentFields>(assignmentFields);
 
   // When entering edit mode, copy current values
   function startEdit(field: "assignedResponderId" | "severity" | "resolution") {
@@ -39,8 +40,8 @@ export function AssignmentSection({
     setLocalFields(assignmentFields);
   }
 
-  function handleFieldChange(field: string, value: string) {
-    setLocalFields((f: any) => ({ ...f, [field]: value }));
+  function handleFieldChange(field: keyof AssignmentFields, value: string) {
+    setLocalFields((f) => ({ ...f, [field]: value }));
   }
 
   function handleSave() {
@@ -69,22 +70,21 @@ export function AssignmentSection({
                 value={localFields.assignedResponderId || ''}
                 onChange={e => handleFieldChange("assignedResponderId", e.target.value)}
                 className="border px-2 py-1 rounded w-full bg-background text-foreground"
-                disabled={loading}
               >
                 <option value="">(unassigned)</option>
-                {eventUsers.map((u: any) => (
+                {eventUsers.map((u: User) => (
                   <option key={u.id} value={u.id}>{u.name || u.email || 'Unknown'}</option>
                 ))}
               </select>
-              <Button type="button" onClick={handleSave} disabled={loading} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
+              <Button type="button" onClick={handleSave} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
               <Button type="button" onClick={handleCancel} className="bg-muted text-foreground px-2 py-1 text-xs">Cancel</Button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <span>
                 {assignmentFields.assignedResponderId
-                  ? eventUsers.find((u: any) => u.id === assignmentFields.assignedResponderId)?.name ||
-                    eventUsers.find((u: any) => u.id === assignmentFields.assignedResponderId)?.email ||
+                  ? eventUsers.find((u: User) => u.id === assignmentFields.assignedResponderId)?.name ||
+                    eventUsers.find((u: User) => u.id === assignmentFields.assignedResponderId)?.email ||
                     'Unknown'
                   : '(unassigned)'}
               </span>
@@ -97,7 +97,7 @@ export function AssignmentSection({
         </div>
       </div>
       {/* Severity - Only show to responders and above */}
-      {canEditSeverity && (
+      {isResponderOrAbove && (
         <div className="mb-2">
           <label htmlFor="severity" className="block text-sm font-medium text-foreground mb-1">Severity</label>
           <div>
@@ -108,7 +108,6 @@ export function AssignmentSection({
                   value={localFields.severity || ''}
                   onChange={e => handleFieldChange("severity", e.target.value)}
                   className="border px-2 py-1 rounded w-full bg-background text-foreground"
-                  disabled={loading}
                 >
                   <option value="">(none)</option>
                   <option value="low">Low</option>
@@ -116,7 +115,7 @@ export function AssignmentSection({
                   <option value="high">High</option>
                   <option value="critical">Critical</option>
                 </select>
-                <Button type="button" onClick={handleSave} disabled={loading} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
+                <Button type="button" onClick={handleSave} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
                 <Button type="button" onClick={handleCancel} className="bg-muted text-foreground px-2 py-1 text-xs">Cancel</Button>
               </div>
             ) : (
@@ -143,9 +142,8 @@ export function AssignmentSection({
                 onChange={e => handleFieldChange("resolution", e.target.value)}
                 className="border px-2 py-1 rounded w-full bg-background text-foreground min-h-[60px]"
                 placeholder="Enter resolution details (required if resolved/closed)"
-                disabled={loading}
               />
-              <Button type="button" onClick={handleSave} disabled={loading} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
+              <Button type="button" onClick={handleSave} className="bg-primary text-foreground px-2 py-1 text-xs">Save</Button>
               <Button type="button" onClick={handleCancel} className="bg-muted text-foreground px-2 py-1 text-xs">Cancel</Button>
             </div>
           ) : (
@@ -160,12 +158,6 @@ export function AssignmentSection({
         </div>
       </div>
       {/* Feedback */}
-      {(error || success) && (
-        <div className="flex gap-4 items-center mt-2">
-          {error && <span className="text-destructive">{error}</span>}
-          {success && <span className="text-green-600">{success}</span>}
-        </div>
-      )}
     </div>
   );
 } 

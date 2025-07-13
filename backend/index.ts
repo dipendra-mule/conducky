@@ -49,7 +49,6 @@ import {
   userRoutes, 
   eventRoutes, 
   inviteRoutes, 
-  incidentRoutes,
   notificationRoutes,
   adminRoutes,
   userNotificationSettingsRoutes,
@@ -181,7 +180,6 @@ app.use('/api/events', eventRoutes);
 app.use('/events', eventRoutes); // Backward compatibility for tests (slug routes)
 app.use('/api/invites', inviteRoutes);
 app.use('/invites', inviteRoutes); // Backward compatibility for tests
-app.use('/api/incidents', incidentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/user/notification-settings', userNotificationSettingsRoutes); // Fix 404 error for /api/user/notification-settings
@@ -190,6 +188,32 @@ app.use('/api/organizations', organizationRoutes); // Organization management ro
 app.use('/api/audit', auditRoutes); // Audit log routes
 app.use('/api/tags', tagRoutes); // Tag management routes
 app.use('/api', logsRoutes); // Frontend logging endpoint
+
+// Download related file (was evidence file)
+// This route is not behind /api/events/:eventId/incidents/:incidentId to avoid deep nesting
+// and because file IDs are unique. Access is checked within the service.
+app.get('/files/:relatedFileId/download', async (req, res) => {
+  const { relatedFileId } = req.params;
+  const { IncidentService } = await import('./src/services/incident.service');
+  const incidentService = new IncidentService(prisma);
+
+  // Use IncidentService.getRelatedFile to fetch the file
+  try {
+    const result = await incidentService.getRelatedFile(relatedFileId);
+
+    if (result.success && result.data) {
+      res.setHeader('Content-Type', result.data.mimetype);
+      res.setHeader('Content-Disposition', `attachment; filename="${result.data.filename}"`);
+      res.send(result.data.data);
+    } else {
+      res.status(404).json({ error: 'File not found' });
+    }
+  } catch (error: any) {
+    logger.error(`Failed to download related file ${relatedFileId}:`, error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 // Missing API routes that frontend expects
 // Session route (frontend expects /api/session)
@@ -275,47 +299,35 @@ app.get('/api/system/settings', async (_req: any, res: any) => {
 app.get('/api/evidence/:evidenceId/download', async (req: any, res: any) => {
   try {
     const { evidenceId } = req.params;
-    
     // Check authentication
     if (!req.isAuthenticated || !req.isAuthenticated() || !req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
-
-    const evidence = await prisma.evidenceFile.findUnique({
-      where: { id: evidenceId },
-      include: {
-        incident: {
-          include: {
-            event: true
-          }
-        }
-      }
-    });
-    
-    if (!evidence) {
-      return res.status(404).json({ error: 'Evidence file not found.' });
+    // Use IncidentService.getRelatedFile to fetch the file
+    const { IncidentService } = await import('./src/services/incident.service');
+    const incidentService = new IncidentService(prisma);
+    const result = await incidentService.getRelatedFile(evidenceId);
+    if (!result.success) {
+      return res.status(404).json({ error: result.error });
     }
-
-    // Check if user has access to this evidence file's incident
-            const { IncidentService } = await import('./src/services/incident.service');
-        const incidentService = new IncidentService(prisma);
-        const accessResult = await incidentService.checkIncidentAccess(req.user.id, evidence.incidentId, evidence.incident.eventId);
-    
-    if (!accessResult.success) {
-      return res.status(500).json({ error: accessResult.error });
-    }
-
-    if (!accessResult.data?.hasAccess) {
-      return res.status(403).json({ error: 'Forbidden: insufficient permissions to access this evidence file' });
+    const relatedFile = result.data;
+    if (!relatedFile) {
+      return res.status(404).json({ error: 'Related file not found.' });
     }
     
-    res.setHeader('Content-Disposition', `attachment; filename="${evidence.filename}"`);
-    res.setHeader('Content-Type', evidence.mimetype || 'application/octet-stream');
-    res.setHeader('Content-Length', evidence.size);
-    res.send(evidence.data);
+    // Check if user has access to this file's incident
+    const accessResult = await incidentService.checkIncidentAccess(req.user.id, relatedFile.incidentId, relatedFile.incident?.eventId);
+    if (!accessResult.success || !accessResult.data?.hasAccess) {
+      return res.status(403).json({ error: 'Forbidden: insufficient permissions to access this file' });
+    }
+    
+    res.setHeader('Content-Disposition', `attachment; filename="${relatedFile.filename}"`);
+    res.setHeader('Content-Type', relatedFile.mimetype || 'application/octet-stream');
+    res.setHeader('Content-Length', relatedFile.size);
+    res.send(relatedFile.data);
   } catch (err: any) {
     res.status(500).json({
-      error: 'Failed to download evidence file.',
+      error: 'Failed to download related file.',
       details: err.message,
     });
   }

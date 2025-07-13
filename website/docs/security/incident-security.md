@@ -1,21 +1,16 @@
 ---
-sidebar_position: 5
+sidebar_position: 2
 ---
 
-# Incident Security
+# Incident & Related File Security
 
-*This page is under development.*
+Information about how incident reports and related files are protected and secured.
 
-Information about how incident reports and evidence are protected and secured.
+## Key Security Features
 
-## Coming Soon
+- **Access Control**: Role-based access ensures only authorized users can view or modify incidents.
+- **Data Encryption**: All sensitive incident data is encrypted at rest and in transit.
+- **Related File Protection**: Uploaded files are stored securely with strict access controls.
+- **Audit Logging**: All actions performed on an incident are logged for auditing and accountability.
 
-- Report confidentiality controls
-- Evidence file protection
-- Comment visibility management
-- Anonymous reporting privacy
-- Access control for sensitive data
-
----
-
-*Content coming soon. This is a placeholder to maintain navigation structure.* 
+This page is under construction. More details coming soon. 

@@ -124,7 +124,7 @@ export function StateManagementSection({
   const handleTransitionClick = (newState: string) => {
     setSelectedTransition(newState);
     setTransitionNotes("");
-    setSelectedAssignee(assignedResponderId);
+    setSelectedAssignee(assignedResponderId || ""); // Preserve current assignee
     setShowDialog(true);
   };
 
@@ -139,7 +139,9 @@ export function StateManagementSection({
       return; // Form validation will show error
     }
 
-    onStateChange(selectedTransition, transitionNotes, selectedAssignee);
+    if (onStateChange) {
+      onStateChange(selectedTransition, transitionNotes, selectedAssignee);
+    }
     setShowDialog(false);
     setSelectedTransition("");
     setTransitionNotes("");
@@ -257,7 +259,7 @@ export function StateManagementSection({
             const StateIcon = config?.icon || FileText;
             const isActive = state === currentState;
             const isCompleted = getStatePosition(state) < currentPosition;
-            const isPossible = allowedTransitions.includes(state);
+            const isPossible = canChangeState && allowedTransitions.includes(state); // Restore proper allowedTransitions logic
             
             // Find when this state was reached from state history
             const stateEntry = stateHistory.find(entry => entry.toState === state);
@@ -327,9 +329,9 @@ export function StateManagementSection({
                     {config?.description}
                   </p>
                   {requirements && (
-                    <div className="flex items-center gap-1 text-xs text-orange-600">
-                      <AlertTriangle className="h-3 w-3" />
-                      <span>Requires {requirements.requiresAssignment ? 'assignment & ' : ''}notes</span>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-auto pt-2">
+                      {requirements.requiresNotes && <FileText size={12} />}
+                      {requirements.requiresAssignment && <User size={12} />}
                     </div>
                   )}
                 </Button>
@@ -389,84 +391,72 @@ export function StateManagementSection({
       )}
 
       {/* Transition Dialog */}
-      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-        <AlertDialogContent className="max-w-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Transition to {getStateConfig(selectedTransition)?.label}
-            </AlertDialogTitle>
-            <div className="text-sm text-muted-foreground">
-              {requirements?.message}
-            </div>
-          </AlertDialogHeader>
-          
-          <div className="space-y-4">
-            {/* Assignment Selection */}
-            {requirements?.requiresAssignment && (
-              <div>
-                <label htmlFor="assignee" className="block text-sm font-medium mb-2">
-                  Assign to Responder *
-                </label>
-                <select
-                  id="assignee"
-                  value={selectedAssignee}
-                  onChange={(e) => setSelectedAssignee(e.target.value)}
-                  className="w-full p-2 border border-input rounded-md bg-background"
-                  required
-                >
-                  <option value="">Select a responder...</option>
-                  {eventUsers
-                    .filter(user => user.roles?.some((role: string) => 
-                      ['responder', 'event admin'].includes(role.toLowerCase())
-                    ))
-                    .map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name || user.email}
-                      </option>
-                    ))}
-                </select>
+      {requirements && (
+        <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+          <AlertDialogContent className="max-w-lg">
+            <AlertDialogHeader>
+              <div className="flex items-center gap-3">
+                <ArrowRight className="h-5 w-5" />
+                <AlertDialogTitle>Change Status to {getStateConfig(selectedTransition)?.label}</AlertDialogTitle>
               </div>
-            )}
-
-            {/* Notes Input */}
-            <div>
-              <label htmlFor="notes" className="block text-sm font-medium mb-2">
-                {requirements?.requiresNotes ? 'Notes *' : 'Notes (optional)'}
-              </label>
-              <textarea
-                id="notes"
-                value={transitionNotes}
-                onChange={(e) => setTransitionNotes(e.target.value)}
-                placeholder={
-                  selectedTransition === 'investigating' 
-                    ? 'Describe the investigation plan and next steps...'
-                    : selectedTransition === 'resolved'
-                      ? 'Describe how the issue was resolved...'
-                      : 'Add any relevant notes...'
-                }
-                className="w-full p-2 border border-input rounded-md bg-background min-h-[100px]"
-                required={requirements?.requiresNotes}
-              />
+            </AlertDialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {requirements?.message}
+              </p>
+              
+              {requirements?.requiresNotes && (
+                <div>
+                  <label htmlFor="transitionNotes" className="block text-sm font-medium text-foreground mb-1">Notes</label>
+                  <textarea
+                    id="transitionNotes"
+                    value={transitionNotes}
+                    onChange={(e) => setTransitionNotes(e.target.value)}
+                    className="w-full border p-2 rounded bg-background text-foreground"
+                    placeholder={requirements.requiresNotes ? 'Required' : 'Optional'}
+                  />
+                </div>
+              )}
+              
+              {requirements?.requiresAssignment && (
+                <div>
+                  <label htmlFor="assignee" className="block text-sm font-medium text-foreground mb-1">Assign Responder</label>
+                  <select
+                    id="assignee"
+                    value={selectedAssignee}
+                    onChange={(e) => setSelectedAssignee(e.target.value)}
+                    className="w-full border p-2 rounded bg-background text-foreground"
+                  >
+                    <option value="">Select a responder...</option>
+                    {eventUsers
+                      .filter(user => user.roles?.some((role: string) => 
+                        ['responder', 'event admin'].includes(role.toLowerCase())
+                      ))
+                      .map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name || user.email}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
             </div>
-          </div>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDialog(false)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmTransition}
-              disabled={
-                loading ||
-                (requirements?.requiresNotes && !transitionNotes.trim()) ||
-                (requirements?.requiresAssignment && !selectedAssignee)
-              }
-            >
-              {loading ? 'Processing...' : `Change to ${getStateConfig(selectedTransition)?.label}`}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowDialog(false)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmTransition}
+                disabled={
+                  loading ||
+                  (requirements?.requiresNotes && !transitionNotes.trim()) ||
+                  (requirements?.requiresAssignment && !selectedAssignee)
+                }
+              >
+                {loading ? 'Processing...' : `Change to ${getStateConfig(selectedTransition)?.label}`}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 } 

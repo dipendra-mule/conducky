@@ -63,8 +63,8 @@ function validateFileContent(file: Express.Multer.File): boolean {
  * Sanitizes filename to prevent directory traversal and other attacks
  */
 function sanitizeFilename(filename: string): string {
-  // Remove directory traversal attempts
-  let sanitized = filename.replace(/[\/\\\.\.]/g, '');
+  // Remove directory traversal attempts (but preserve file extension dots)
+  let sanitized = filename.replace(/[\/\\]|\.\./g, '');
   
   // Remove potentially dangerous characters
   sanitized = sanitized.replace(/[<>:"|?*\x00-\x1f]/g, '');

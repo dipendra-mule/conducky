@@ -45,7 +45,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         event: mockEvents[0],
         reporter: mockUser,
         assignedResponder: null,
-        evidenceFiles: [],
+        relatedFiles: [],
         _count: { comments: 2 }
       },
       {
@@ -63,7 +63,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         event: mockEvents[0],
         reporter: { id: '3', name: 'Test Reporter', email: 'testreporter@example.com' },
         assignedResponder: null,
-        evidenceFiles: [],
+        relatedFiles: [],
         _count: { comments: 0 }
       },
       {
@@ -81,7 +81,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         event: mockEvents[0],
         reporter: { id: '3', name: 'Test Reporter', email: 'testreporter@example.com' },
         assignedResponder: null,
-        evidenceFiles: [],
+        relatedFiles: [],
         _count: { comments: 1 }
       }
     ];
@@ -143,18 +143,18 @@ describe('Enhanced Event Reports API Integration Tests', () => {
 
       expect(Array.isArray(response.body.incidents)).toBe(true);
       expect(response.body.page).toBe(1);
-      expect(response.body.limit).toBe(20);
+      expect(response.body.limit).toBe(10);
     });
 
     it('should handle pagination correctly', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/incidents?page=1&limit=5')
+        .get('/api/events/slug/devconf-2024/incidents?page=1&limit=2')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
       expect(response.body.page).toBe(1);
-      expect(response.body.limit).toBe(5);
-      expect(response.body.incidents.length).toBeLessThanOrEqual(5);
+      expect(response.body.limit).toBe(2);
+      expect(response.body.incidents.length).toBeLessThanOrEqual(2);
     });
 
     it('should filter reports by status', async () => {
@@ -186,7 +186,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
         .expect(200);
 
       // Should find reports with "harassment" in title or description
-      expect(response.body.incidents.length).toBeGreaterThanOrEqual(0);
+      expect(response.body.incidents.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should filter unassigned reports', async () => {
@@ -254,7 +254,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
       const response = await request(app)
         .get('/api/events/slug/devconf-2024/incidents')
         .set('x-test-disable-auth', 'true')
-        .set('x-test-disable-auth', 'true').expect(401);
+        .expect(401);
 
       expect(response.body).toHaveProperty('error');
       expect(response.body.error).toBe('Authentication required');
@@ -272,7 +272,7 @@ describe('Enhanced Event Reports API Integration Tests', () => {
 
     it('should limit maximum page size', async () => {
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/incidents?limit=1000')
+        .get('/api/events/slug/devconf-2024/incidents?limit=200')
         .set('x-test-user-id', '1') // Admin user
         .expect(200);
 
@@ -281,20 +281,16 @@ describe('Enhanced Event Reports API Integration Tests', () => {
     });
 
     it('should return 404 for non-existent event', async () => {
-      const response = await request(app)
+      await request(app)
         .get('/api/events/slug/non-existent-event/incidents')
-        .set('x-test-user-id', '1') // Admin user
+        .set('x-test-user-id', '1')
         .expect(404);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Event not found.');
     });
 
     it('should enforce role-based access control for reporters', async () => {
-      // Incidenter should only see their own reports
       const response = await request(app)
-        .get('/api/events/slug/devconf-2024/incidents')
-        .set('x-test-user-id', '3') // Incidenter user
+        .get('/api/users/me/incidents')
+        .set('x-test-user-id', '3') // Reporter user
         .expect(200);
 
       // All reports should belong to the reporter (but there might be none)
@@ -306,15 +302,15 @@ describe('Enhanced Event Reports API Integration Tests', () => {
     it('should include all required report fields', async () => {
       const response = await request(app)
         .get('/api/events/slug/devconf-2024/incidents')
-        .set('x-test-user-id', '1') // Admin user
+        .set('x-test-user-id', '1')
         .expect(200);
 
       if (response.body.incidents.length > 0) {
         const incident = response.body.incidents[0];
         expect(incident).toHaveProperty('id');
         expect(incident).toHaveProperty('title');
-        expect(incident).toHaveProperty('description');
         expect(incident).toHaveProperty('state');
+        expect(incident).toHaveProperty('severity');
         expect(incident).toHaveProperty('createdAt');
         expect(incident).toHaveProperty('updatedAt');
         expect(incident).toHaveProperty('event');

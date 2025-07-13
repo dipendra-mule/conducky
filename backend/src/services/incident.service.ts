@@ -1,9 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, IncidentSeverity } from '@prisma/client';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
 import logger from '../config/logger';
 import { encryptField, decryptField, isEncrypted } from '../utils/encryption';
+import { Prisma } from '@prisma/client';
 
 export interface IncidentCreateData {
   eventId: string;
@@ -40,12 +41,25 @@ export interface IncidentQuery {
   tagIds?: string[]; // Add support for filtering by tags
 }
 
-export interface EvidenceFile {
+export interface RelatedFileData {
   filename: string;
   mimetype: string;
   size: number;
   data: Buffer;
   uploaderId?: string | null;
+}
+
+export interface RelatedFileWithUploader {
+  id: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  createdAt: Date;
+  uploader?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
 }
 
 export interface IncidentWithDetails {
@@ -73,18 +87,7 @@ export interface IncidentWithDetails {
     name: string | null;
     email: string;
   } | null;
-  evidenceFiles?: Array<{
-    id: string;
-    filename: string;
-    mimetype: string;
-    size: number;
-    createdAt: Date;
-    uploader?: {
-      id: string;
-      name: string | null;
-      email: string;
-    } | null;
-  }>;
+  relatedFiles?: RelatedFileWithUploader[];
   event?: {
     id: string;
     name: string;
@@ -107,6 +110,15 @@ export interface UserIncidentsResponse {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface IncidentStats {
+  submitted: number;
+  acknowledged: number;
+  investigating: number;
+  resolved: number;
+  closed: number;
+  total: number;
 }
 
 export class IncidentService {
@@ -195,9 +207,9 @@ export class IncidentService {
   }
 
   /**
-   * Create a new incident with optional evidence files
+   * Create a new incident with optional related files
    */
-  async createIncident(data: IncidentCreateData, evidenceFiles?: EvidenceFile[]): Promise<ServiceResult<{ incident: any }>> {
+  async createIncident(data: IncidentCreateData, relatedFilesData?: RelatedFileData[]): Promise<ServiceResult<{ incident: any }>> {
     try {
       // Validate required fields
       if (!data.eventId || !data.title || !data.description) {
@@ -274,18 +286,17 @@ export class IncidentService {
       }
 
       // Create incident data and encrypt sensitive fields
-      const incidentData: any = {
-        eventId,
-        reporterId,
-        title,
-        description,
-        state: 'submitted',
-        severity: urgency || 'low', // Use severity directly instead of mapping from urgency
+      const incidentData: Prisma.IncidentCreateInput = {
+           event: { connect: { id: eventId } },
+           reporter: reporterId ? { connect: { id: reporterId } } : undefined,
+           title,
+           description,
+           state: 'submitted',
+           severity: urgency && ['low', 'medium', 'high', 'critical'].includes(urgency) ? urgency as any : 'low',
+           incidentAt,
+           parties,
+           location,
       };
-
-      if (incidentAt !== undefined) incidentData.incidentAt = incidentAt;
-      if (parties !== undefined) incidentData.parties = parties;
-      if (location !== undefined) incidentData.location = location;
 
       // Encrypt sensitive fields before storing
       const encryptedIncidentData = this.encryptIncidentData(incidentData);
@@ -321,10 +332,10 @@ export class IncidentService {
         // Don't fail the incident creation if audit logging fails
       }
 
-      // If evidence files are provided, store in DB
-      if (evidenceFiles && evidenceFiles.length > 0) {
-        for (const file of evidenceFiles) {
-          const evidenceFile = await this.prisma.evidenceFile.create({
+      // If related files are provided, store in DB
+      if (relatedFilesData && relatedFilesData.length > 0) {
+        for (const file of relatedFilesData) {
+          const relatedFile = await this.prisma.relatedFile.create({
             data: {
               incidentId: incident.id,
               filename: file.filename,
@@ -334,26 +345,24 @@ export class IncidentService {
               uploaderId: file.uploaderId || null,
             },
           });
-
-          // Audit log: evidence uploaded
+          // Audit log: related file uploaded
           try {
             await logAudit({
               eventId: eventId,
               userId: file.uploaderId || reporterId,
-              action: 'upload_evidence',
-              targetType: 'evidence',
-              targetId: evidenceFile.id,
+              action: 'upload_related_file',
+              targetType: 'related_file',
+              targetId: relatedFile.id,
             });
           } catch (auditError) {
-            logger.error('Failed to log audit for evidence upload:', auditError);
-            // Don't fail the process if audit logging fails
+            logger.error('Failed to log audit for related file upload:', auditError);
           }
         }
       }
 
       // Decrypt the incident data before returning
       const decryptedIncident = this.decryptIncidentData(incident);
-      
+
       return {
         success: true,
         data: { incident: decryptedIncident }
@@ -370,84 +379,119 @@ export class IncidentService {
   /**
    * List reports for an event
    */
-  async getIncidentsByEventId(eventId: string, query?: IncidentQuery): Promise<ServiceResult<{ incidents: IncidentWithDetails[] }>> {
+  async getIncidentsByEventId(
+    eventId: string,
+    query: IncidentQuery & { includeStats?: boolean }
+  ): Promise<ServiceResult<{
+    incidents: IncidentWithDetails[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    stats?: IncidentStats;
+  }>> {
     try {
-      // Check if event exists first
-      const event = await this.prisma.event.findUnique({ where: { id: eventId } });
-      if (!event) {
-        return {
-          success: false,
-          error: 'Event not found.'
-        };
-      }
+      const {
+        page = 1,
+        limit = 10,
+        sort = 'createdAt',
+        order = 'desc',
+        search = '',
+        status,
+        severity,
+        assigned,
+        userId,
+        tagIds,
+        includeStats = false
+      } = query;
 
-      const { userId, limit, page, sort, order } = query || {};
+      // Basic validation for pagination
+      if (page < 1 || limit < 1 || limit > 100) {
+        return { success: false, error: 'Invalid pagination parameters.' };
+      }
 
       const where: any = { eventId };
-      if (userId) {
-        where.reporterId = userId;
+
+      if (search) {
+        where.OR = [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
+        ];
       }
 
-      // Set up ordering
-      let orderBy: any = { createdAt: 'desc' }; // default ordering
-      if (sort && order) {
-        const validSortFields = ['createdAt', 'updatedAt', 'title', 'state', 'severity'];
-        const validOrders = ['asc', 'desc'];
-        
-        if (validSortFields.includes(sort) && validOrders.includes(order)) {
-          orderBy = { [sort]: order };
-        }
+      if (status) where.state = status;
+      if (severity) where.severity = severity;
+      if (assigned === 'assigned') where.assignedResponderId = { not: null };
+      if (assigned === 'unassigned') where.assignedResponderId = null;
+      if (userId) where.reporterId = userId;
+      if (tagIds && tagIds.length > 0) {
+        where.tags = { some: { tagId: { in: tagIds } } };
       }
-
-      // Set up pagination
-      const take = limit ? Math.min(Math.max(1, limit), 100) : undefined; // limit between 1-100
-      const skip = (page && limit) ? (page - 1) * limit : undefined;
-
+      
+      const total = await this.prisma.incident.count({ where });
       const incidents = await this.prisma.incident.findMany({
         where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { [sort]: order },
         include: {
-          reporter: true,
-          assignedResponder: true,
-          evidenceFiles: {
-            include: {
-              uploader: { select: { id: true, name: true, email: true } },
-            },
-          },
-          event: {
-            select: { id: true, name: true, slug: true }
-          },
-          tags: {
-            include: {
-              tag: {
-                select: { id: true, name: true, color: true }
-              }
-            }
-          }
-        },
-        orderBy,
-        take,
-        skip,
+          reporter: { select: { id: true, name: true, email: true } },
+          assignedResponder: { select: { id: true, name: true, email: true } },
+          event: { select: { id: true, name: true, slug: true } },
+          tags: { include: { tag: true } },
+          _count: { select: { comments: true } }
+        }
       });
 
-      // Transform tags from IncidentTag[] to Tag[] format
-      const incidentsWithTransformedTags = incidents.map(incident => ({
-        ...incident,
-        tags: incident.tags ? incident.tags.map((it: any) => it.tag) : []
-      }));
+      let stats: IncidentStats | undefined;
+      if (includeStats) {
+        const statusCounts = await this.prisma.incident.groupBy({
+          by: ['state'],
+          where: { eventId },
+          _count: { state: true }
+        });
 
-      // Decrypt sensitive data before returning
-      const decryptedIncidents = this.decryptIncidentArray(incidentsWithTransformedTags);
+        stats = {
+          submitted: 0,
+          acknowledged: 0,
+          investigating: 0,
+          resolved: 0,
+          closed: 0,
+          total
+        };
+
+        statusCounts.forEach(item => {
+          const stateKey = item.state as keyof Omit<IncidentStats, 'total'>;
+          if (stateKey in stats!) {
+            (stats as any)[stateKey] = item._count.state;
+          }
+        });
+      }
+
+      const decryptedIncidents = this.decryptIncidentArray(incidents);
+
+      const incidentsWithRoles = await Promise.all(decryptedIncidents.map(async (incident) => {
+        if (!incident.reporterId) {
+            return { ...incident, userRoles: [] };
+        }
+        const userRoles = await this.unifiedRBAC.getUserRoles(incident.reporterId, 'event', eventId);
+        return { ...incident, userRoles: userRoles.map((ur: any) => ur.role.name) };
+      }));
 
       return {
         success: true,
-        data: { incidents: decryptedIncidents }
+        data: {
+          incidents: incidentsWithRoles,
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          stats
+        }
       };
     } catch (error: any) {
-      logger.error('Error fetching incidents:', error);
-      return {
-        success: false,
-        error: 'Failed to fetch incidents.'
-      };
+      logger.error('Error getting incidents by event ID:', error);
+      return { success: false, error: 'Failed to retrieve incidents.' };
     }
   }
 
@@ -465,7 +509,7 @@ export class IncidentService {
         };
       }
 
-      return this.getIncidentsByEventId(event.id, query);
+      return this.getIncidentsByEventId(event.id, query || {});
     } catch (error: any) {
       logger.error('Error fetching reports by slug:', error);
       return {
@@ -485,7 +529,7 @@ export class IncidentService {
         include: {
           reporter: true,
           assignedResponder: true,
-          evidenceFiles: {
+          relatedFiles: {
             include: {
               uploader: { select: { id: true, name: true, email: true } },
             },
@@ -660,7 +704,7 @@ export class IncidentService {
           include: {
             reporter: true,
             assignedResponder: true,
-            evidenceFiles: true
+            relatedFiles: true
           }
         });
 
@@ -903,7 +947,7 @@ export class IncidentService {
         include: {
           reporter: true,
           assignedResponder: true,
-          evidenceFiles: {
+          relatedFiles: {
             include: {
               uploader: { select: { id: true, name: true, email: true } },
             },
@@ -942,9 +986,9 @@ export class IncidentService {
   }
 
   /**
-   * Upload evidence files to a report
+   * Upload related files to an incident
    */
-  async uploadEvidenceFiles(incidentId: string, evidenceFiles: EvidenceFile[]): Promise<ServiceResult<{ files: any[] }>> {
+  async uploadRelatedFiles(incidentId: string, relatedFilesData: RelatedFileData[]): Promise<ServiceResult<{ files: RelatedFileWithUploader[] }>> {
     try {
       const incident = await this.prisma.incident.findUnique({
         where: { id: incidentId },
@@ -956,21 +1000,21 @@ export class IncidentService {
       if (!incident) {
         return {
           success: false,
-          error: 'Report not found.'
+          error: 'Incident not found.'
         };
       }
 
-      if (!evidenceFiles || evidenceFiles.length === 0) {
+      if (!relatedFilesData || relatedFilesData.length === 0) {
         return {
           success: false,
           error: 'No files provided.'
         };
       }
 
-      const created = [];
+      const createdFiles: RelatedFileWithUploader[] = [];
 
-      for (const file of evidenceFiles) {
-        const evidence = await this.prisma.evidenceFile.create({
+      for (const file of relatedFilesData) {
+        const relatedFile = await this.prisma.relatedFile.create({
           data: {
             incidentId: incident.id,
             filename: file.filename,
@@ -984,42 +1028,42 @@ export class IncidentService {
           },
         });
 
-        // Log evidence file upload
+        // Log related file upload
         await logAudit({
-          action: 'evidence_file_uploaded',
-          targetType: 'EvidenceFile',
-          targetId: evidence.id,
+          action: 'related_file_uploaded',
+          targetType: 'RelatedFile',
+          targetId: relatedFile.id,
           userId: file.uploaderId || undefined,
           eventId: incident.eventId
         });
 
-        created.push({
-          id: evidence.id,
-          filename: evidence.filename,
-          mimetype: evidence.mimetype,
-          size: evidence.size,
-          createdAt: evidence.createdAt,
-          uploader: evidence.uploader,
+        createdFiles.push({
+          id: relatedFile.id,
+          filename: relatedFile.filename,
+          mimetype: relatedFile.mimetype,
+          size: relatedFile.size,
+          createdAt: relatedFile.createdAt,
+          uploader: relatedFile.uploader,
         });
       }
 
       return {
         success: true,
-        data: { files: created }
+        data: { files: createdFiles }
       };
     } catch (error: any) {
-      logger.error('Error uploading evidence files:', error);
+      logger.error('Error uploading related files:', error);
       return {
         success: false,
-        error: 'Failed to upload evidence files.'
+        error: 'Failed to upload related files.'
       };
     }
   }
 
   /**
-   * List evidence files for a report
+   * List related files for an incident
    */
-  async getEvidenceFiles(incidentId: string): Promise<ServiceResult<{ files: any[] }>> {
+  async getRelatedFiles(incidentId: string): Promise<ServiceResult<{ files: RelatedFileWithUploader[] }>> {
     try {
       const incident = await this.prisma.incident.findUnique({
         where: { id: incidentId },
@@ -1029,11 +1073,11 @@ export class IncidentService {
       if (!incident) {
         return {
           success: false,
-          error: 'Report not found.'
+          error: 'Incident not found.'
         };
       }
 
-      const files = await this.prisma.evidenceFile.findMany({
+      const files = await this.prisma.relatedFile.findMany({
         where: { incidentId },
         select: {
           id: true,
@@ -1051,91 +1095,94 @@ export class IncidentService {
         data: { files }
       };
     } catch (error: any) {
-      logger.error('Error listing evidence files:', error);
+      logger.error('Error listing related files:', error);
       return {
         success: false,
-        error: 'Failed to list evidence files.'
+        error: 'Failed to list related files.'
       };
     }
   }
 
   /**
-   * Download evidence file by ID
+   * Download related file by ID
    */
-  async getEvidenceFile(evidenceId: string): Promise<ServiceResult<{ filename: string; mimetype: string; size: number; data: Buffer }>> {
+  async getRelatedFile(relatedFileId: string): Promise<ServiceResult<{ filename: string; mimetype: string; size: number; data: Buffer; incidentId: string; incident?: { eventId: string } }>> {
     try {
-      const evidence = await this.prisma.evidenceFile.findUnique({
-        where: { id: evidenceId },
+      const relatedFile = await this.prisma.relatedFile.findUnique({
+        where: { id: relatedFileId },
+        include: {
+          incident: {
+            select: { eventId: true }
+          }
+        }
       });
 
-      if (!evidence) {
+      if (!relatedFile) {
         return {
           success: false,
-          error: 'Evidence file not found.'
+          error: 'Related file not found.'
         };
       }
 
       return {
         success: true,
         data: {
-          filename: evidence.filename,
-          mimetype: evidence.mimetype,
-          size: evidence.size,
-          data: Buffer.from(evidence.data)
+          filename: relatedFile.filename,
+          mimetype: relatedFile.mimetype,
+          size: relatedFile.size,
+          data: Buffer.from(relatedFile.data),
+          incidentId: relatedFile.incidentId,
+          incident: relatedFile.incident
         }
       };
     } catch (error: any) {
-      logger.error('Error downloading evidence file:', error);
+      logger.error('Error downloading related file:', error);
       return {
         success: false,
-        error: 'Failed to download evidence file.'
+        error: 'Failed to download related file.'
       };
     }
   }
 
   /**
-   * Delete evidence file
+   * Delete related file by ID
    */
-  async deleteEvidenceFile(evidenceId: string): Promise<ServiceResult<{ message: string }>> {
+  async deleteRelatedFile(relatedFileId: string): Promise<ServiceResult<{ message: string }>> {
     try {
-      const evidence = await this.prisma.evidenceFile.findUnique({
-        where: { id: evidenceId },
-        include: {
-          incident: {
-            include: {
-              event: true
-            }
-          }
-        }
+      const relatedFile = await this.prisma.relatedFile.findUnique({
+        where: { id: relatedFileId },
+        include: { incident: true }
       });
 
-      if (!evidence) {
+      if (!relatedFile) {
         return {
           success: false,
-          error: 'Evidence file not found.'
+          error: 'Related file not found.'
         };
       }
 
-      await this.prisma.evidenceFile.delete({ where: { id: evidenceId } });
+      await this.prisma.relatedFile.delete({
+        where: { id: relatedFileId },
+      });
 
-      // Log evidence file deletion
+      // Log related file deletion
       await logAudit({
-        action: 'evidence_file_deleted',
-        targetType: 'EvidenceFile',
-        targetId: evidence.id,
-        userId: evidence.uploaderId || undefined,
-        eventId: evidence.incident.eventId
+        action: 'related_file_deleted',
+        targetType: 'RelatedFile',
+        targetId: relatedFile.id,
+        userId: relatedFile.uploaderId || undefined,
+        eventId: relatedFile.incident.eventId
       });
 
       return {
         success: true,
-        data: { message: 'Evidence file deleted.' }
+        data: { message: 'Related file deleted successfully.' }
       };
     } catch (error: any) {
-      logger.error('Error deleting evidence file:', error);
+      logger.error('Error deleting related file:', error);
       return {
         success: false,
-        error: 'Failed to delete evidence file.'
+        error: 'Failed to delete related file.'
       };
     }
   }
@@ -1353,7 +1400,7 @@ export class IncidentService {
           assignedResponder: {
             select: { id: true, name: true, email: true }
           },
-          evidenceFiles: {
+          relatedFiles: {
             select: { 
               id: true, 
               filename: true, 
@@ -1973,14 +2020,7 @@ export class IncidentService {
     page: number;
     limit: number;
     totalPages: number;
-    stats?: {
-      submitted: number;
-      acknowledged: number;
-      investigating: number;
-      resolved: number;
-      closed: number;
-      total: number;
-    };
+    stats?: IncidentStats;
   }>> {
     try {
       const {
@@ -2059,7 +2099,7 @@ export class IncidentService {
               email: true
             }
           },
-          evidenceFiles: {
+          relatedFiles: {
             select: {
               id: true,
               filename: true,
@@ -2158,14 +2198,7 @@ export class IncidentService {
       });
 
       // Get stats if requested
-      let stats: {
-        submitted: number;
-        acknowledged: number;
-        investigating: number;
-        resolved: number;
-        closed: number;
-        total: number;
-      } | undefined;
+      let stats: IncidentStats | undefined;
       
       if (includeStats) {
         try {
@@ -2289,7 +2322,7 @@ export class IncidentService {
           assignedResponder: {
             select: { id: true, name: true, email: true }
           },
-          evidenceFiles: {
+          relatedFiles: {
             select: { 
               id: true, 
               filename: true, 

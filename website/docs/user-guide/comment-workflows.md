@@ -19,7 +19,7 @@ This dual-comment system ensures sensitive team discussions remain private while
 **Visibility**: Response team members and event administrators only
 **Use Cases**:
 - Coordinating response strategies
-- Discussing evidence and witness accounts
+- Discussing related files and witness accounts
 - Planning follow-up actions
 - Recording investigative notes
 - Team member assignments and task coordination
@@ -50,7 +50,7 @@ flowchart TD
     E --> F
     
     F --> G{Add Attachments?}
-    G -->|📎 Yes| H[Upload Files<br/>• Images, documents<br/>• Evidence materials]
+    G -->|📎 Yes| H[Upload Files<br/>• Images, documents<br/>• Related materials]
     G -->|✅ No| I[Review & Submit]
     
     H --> I

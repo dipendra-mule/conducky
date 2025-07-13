@@ -9,6 +9,7 @@ import { databaseMonitor } from '../services/database-monitoring.service';
 // Import security middleware
 import { strictRateLimit } from '../middleware/rate-limit';
 import { validateEvent, handleValidationErrors } from '../middleware/validation';
+import { EventService } from '../services/event.service';
 
 // Extend Request interface to include user
 interface AuthenticatedRequest extends Request {
@@ -17,6 +18,7 @@ interface AuthenticatedRequest extends Request {
 
 const router = Router();
 const prisma = new PrismaClient();
+const eventService = new EventService(prisma);
 
 /**
  * Helper function to count event users using unified RBAC
@@ -138,97 +140,24 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
  */
 router.post('/events', strictRateLimit, validateEvent, handleValidationErrors, requireSystemAdmin(), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { name, slug, description } = req.body;
-    const user = req.user;
-    
-    logger.debug('Event creation request received', { 
-      userId: user.id,
-      requestData: { name, slug, description }
-    });
+    const result = await eventService.createEvent(req.body);
 
-    // Validation
-    if (!name || name.length < 3 || name.length > 100) {
-      res.status(400).json({
-        error: 'Event name is required and must be 3-100 characters',
-      });
-      return;
+    if (result.success) {
+        res.status(201).json(result.data);
+    } else {
+        // Use a 409 status for "slug already exists" conflicts
+        if (result.error?.includes('exists')) {
+            res.status(409).json({ error: result.error });
+        } else {
+            res.status(400).json({ error: result.error });
+        }
     }
-
-    if (!slug || slug.length < 3 || slug.length > 50) {
-      res.status(400).json({
-        error: 'Event slug is required and must be 3-50 characters',
-      });
-      return;
-    }
-
-    if (!description || description.length < 10) {
-      res.status(400).json({
-        error: 'Description is required and must be at least 10 characters',
-      });
-      return;
-    }
-
-    // Validate slug format (lowercase, hyphens only)
-    if (!/^[a-z0-9-]+$/.test(slug)) {
-      res.status(400).json({
-        error: 'Slug must contain only lowercase letters, numbers, and hyphens',
-      });
-      return;
-    }
-
-    // Check if slug already exists
-    const existingEvent = await prisma.event.findUnique({
-      where: { slug },
-    });
-
-    if (existingEvent) {
-      res.status(409).json({
-        error: 'An event with this slug already exists',
-      });
-      return;
-    }
-
-    // Create the event with minimal information
-    // Event will be marked as "setup pending" until an admin completes configuration
-    const event = await prisma.event.create({
-      data: {
-        name,
-        slug,
-        description,
-        // All other fields remain null until event admin configures them
-        website: null,
-        contactEmail: null,
-        startDate: null,
-        endDate: null,
-        codeOfConduct: null,
-        isActive: false, // Event is inactive until setup is complete
-      },
-    });
-
-    res.status(201).json({
-      message: 'Event created successfully',
-      event: {
-        id: event.id,
-        name: event.name,
-        slug: event.slug,
-        description: event.description,
-        setupRequired: true, // Indicates that event admin setup is needed
-      },
-    });
   } catch (error: any) {
-    logger.error('Error creating event', { 
-      error: error.message, 
+    logger.error('Error creating event', {
+      error: error.message,
       userId: req.user?.id,
       requestData: { name: req.body?.name, slug: req.body?.slug }
     });
-    
-    if (error.code === 'P2002') {
-      res.status(409).json({
-        error: 'Event with this slug already exists',
-      });
-      return;
-    }
-    
     res.status(500).json({
       error: 'Failed to create event',
       details: error.message,

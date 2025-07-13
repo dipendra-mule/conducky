@@ -2,7 +2,6 @@ import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import eventRoutes from './event.routes';
 import inviteRoutes from './invite.routes';
-import incidentRoutes from './incident.routes';
 import notificationRoutes from './notification.routes';
 import adminRoutes from './admin.routes';
 import userNotificationSettingsRoutes from './user-notification-settings';
@@ -17,7 +16,6 @@ export {
   userRoutes,
   eventRoutes,
   inviteRoutes,
-  incidentRoutes,
   notificationRoutes,
   adminRoutes,
   userNotificationSettingsRoutes,

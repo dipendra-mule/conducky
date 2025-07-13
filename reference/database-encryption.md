@@ -84,7 +84,7 @@ After comprehensive review of the audit logging system, Phase 3 encryption was d
 
 **Edge cases considered but deemed low-risk:**
 - Failed login emails in `targetId` field (minimal sensitivity in audit context)
-- Evidence filenames (could contain sensitive info but isolated to specific actions)
+- Related file filenames (could contain sensitive info but isolated to specific actions)
 - Potential future action details expansion (can be addressed if/when implemented)
 
 ## Performance Considerations

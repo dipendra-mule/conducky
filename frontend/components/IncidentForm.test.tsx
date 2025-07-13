@@ -155,15 +155,15 @@ describe("IncidentForm", () => {
     expect(screen.getByRole("button", { name: /choose files/i })).toBeInTheDocument();
   });
 
-  it("shows evidence files section", async () => {
+  it("shows related files section", async () => {
     renderWithUserContext(['reporter']);
     
     await waitFor(() => {
-      expect(screen.getByText("Evidence Files")).toBeInTheDocument();
+      expect(screen.getByText("Related Files")).toBeInTheDocument();
     });
     
-    // Check for evidence files label
-    expect(screen.getByText("Evidence Files")).toBeInTheDocument();
+    // Check for related files label
+    expect(screen.getByText("Related Files")).toBeInTheDocument();
     expect(screen.getByText(/screenshots, documents, audio, video files are supported/i)).toBeInTheDocument();
   });
 

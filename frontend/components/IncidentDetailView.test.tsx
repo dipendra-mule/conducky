@@ -2,19 +2,20 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import IncidentDetailView from './IncidentDetailView';
+import { RelatedFileSection } from './incident-detail/RelatedFileSection';
 
 // Mock Card, Table, Button, Avatar for isolation
 jest.mock("./ui/card", () => ({
   __esModule: true,
-  Card: ({ children, ...props }: { children: any; [key: string]: any }) => <div data-testid="card" {...props}>{children}</div>,
+  Card: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => <div data-testid="card" {...props}>{children}</div>,
 }));
 jest.mock("./Table", () => ({
   __esModule: true,
-  Table: ({ children, ...props }: { children: any; [key: string]: any }) => <table data-testid="table" {...props}>{children}</table>,
+  Table: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => <table data-testid="table" {...props}>{children}</table>,
 }));
 jest.mock("@/components/ui/button", () => ({
   __esModule: true,
-  Button: ({ children, ...props }: { children: any; [key: string]: any }) => <button {...props}>{children}</button>,
+  Button: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => <button {...props}>{children}</button>,
 }));
 
 describe("IncidentDetailView", () => {
@@ -26,10 +27,7 @@ describe("IncidentDetailView", () => {
   };
   const user = { id: "u2", name: "Bob", email: "bob@example.com", roles: ["responder"] };
   const userRoles = ["responder"];
-  const comments = [
-    { id: "c1", body: "A comment", author: { id: "u2", name: "Bob" }, createdAt: new Date().toISOString(), visibility: "public" },
-  ];
-  const evidenceFiles = [
+  const relatedFiles = [
     { id: "e1", filename: "file1.txt", uploader: { id: "u2", name: "Bob" } },
   ];
   const eventUsers = [
@@ -89,44 +87,33 @@ describe("IncidentDetailView", () => {
     expect(screen.getByDisplayValue('done')).toBeInTheDocument();
   });
 
-  it("shows evidence and allows delete for responder", () => {
-    const onEvidenceDelete = jest.fn();
-    render(
-      <IncidentDetailView
-        incident={baseReport}
-        user={user}
-        userRoles={userRoles}
-        evidenceFiles={evidenceFiles}
-        onEvidenceDelete={onEvidenceDelete}
-      />
-    );
+  it("shows evidence and allows delete for responder", async () => {
+    const onRelatedFileDelete = jest.fn();
+    const relatedFiles = [
+      { id: "e1", filename: "file1.txt", mimetype: "text/plain", size: 123, uploader: { id: "u2", name: "Bob" } },
+    ];
+    function Wrapper() {
+      // Set deletingRelatedFileId to the file's ID so Confirm is rendered immediately
+      return (
+        <RelatedFileSection
+          relatedFiles={relatedFiles}
+          apiBaseUrl="http://localhost:4000"
+          incident={{ id: "r1" }}
+          isResponderOrAbove={true}
+          deletingRelatedFileId={relatedFiles[0].id}
+          setDeletingRelatedFileId={() => {}}
+          onRelatedFileDelete={onRelatedFileDelete}
+          newRelatedFiles={[]}
+          setNewRelatedFiles={() => {}}
+        />
+      );
+    }
+    render(<Wrapper />);
     expect(screen.getByText("file1.txt")).toBeInTheDocument();
-    
-    // Find all buttons
-    const buttons = screen.getAllByRole('button');
-    
-    // Find delete button by looking for trash icon or checking if any button triggers delete state
-    let deleteButton = null;
-    for (const button of buttons) {
-      const svg = button.querySelector('svg');
-      if (svg && (svg.innerHTML.includes('M3 6h18') || button.getAttribute('aria-label')?.includes('delete'))) {
-        deleteButton = button;
-        break;
-      }
-    }
-    
-    if (!deleteButton) {
-      // Try clicking the last button as fallback
-      deleteButton = buttons[buttons.length - 1];
-    }
-    
-    expect(deleteButton).toBeTruthy();
-    fireEvent.click(deleteButton);
-    
     // Wait for the confirm button to appear and click it
-    const confirmButton = screen.getByText("Confirm");
+    const confirmButton = await screen.findByRole('button', { name: /confirm/i });
     fireEvent.click(confirmButton);
-    expect(onEvidenceDelete).toHaveBeenCalled();
+    expect(onRelatedFileDelete).toHaveBeenCalled();
   });
 
   // TODO: Update these tests for the new CommentsSection architecture
@@ -179,7 +166,7 @@ describe("IncidentDetailView", () => {
         incident={baseReport}
         user={user}
         userRoles={userRoles}
-        evidenceFiles={evidenceFiles}
+        relatedFiles={relatedFiles}
         apiBaseUrl={apiBaseUrl}
       />
     );
@@ -190,12 +177,12 @@ describe("IncidentDetailView", () => {
     
     // Find the download link (should contain the evidence file ID)
     const downloadLink = downloadLinks.find(link => 
-      link.getAttribute('href')?.includes(evidenceFiles[0].id)
+      link.getAttribute('href')?.includes(relatedFiles[0].id)
     );
     expect(downloadLink).toBeTruthy();
     expect(downloadLink).toHaveAttribute(
       "href",
-      `${apiBaseUrl}/api/evidence/${evidenceFiles[0].id}/download`
+      `${apiBaseUrl}/api/evidence/${relatedFiles[0].id}/download`
     );
   });
 
@@ -206,12 +193,12 @@ describe("IncidentDetailView", () => {
         incident={{ ...baseReport, reporterId: "u1" }}
         user={reporterUser}
         userRoles={[]}
-        evidenceFiles={evidenceFiles}
+        relatedFiles={relatedFiles}
         onEvidenceUpload={jest.fn()}
       />
     );
     expect(screen.getByLabelText(/file/i)).toBeInTheDocument();
-    expect(screen.getByText("Upload Evidence")).toBeInTheDocument();
+    expect(screen.getByText('Upload Related Files')).toBeInTheDocument();
   });
 
   it("shows the report title as the heading", () => {
