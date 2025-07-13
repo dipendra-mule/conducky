@@ -36,7 +36,6 @@ export type {
   IncidentCreateData,
   IncidentUpdateData,
   IncidentQuery,
-  EvidenceFile,
   IncidentWithDetails,
   UserIncidentsResponse
 } from './incident.service';
