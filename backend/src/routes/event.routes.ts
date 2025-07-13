@@ -11,11 +11,13 @@ import { EventService } from '../services/event.service';
 
 const router = Router();
 
+// Create single PrismaClient instance to reuse across requests
+const prisma = new PrismaClient();
+const eventService = new EventService(prisma);
+
 // Get all events (System Admin only)
 router.get('/', requireSystemAdmin, async (req: Request, res: Response): Promise<void> => {
     try {
-        const prisma = new PrismaClient();
-        const eventService = new EventService(prisma);
         const result = await eventService.listAllEvents();
 
         if (result.success) {
@@ -29,11 +31,9 @@ router.get('/', requireSystemAdmin, async (req: Request, res: Response): Promise
     }
 });
 
-// Create a new event
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+// Create a new event (System Admin only)
+router.post('/', requireSystemAdmin, async (req: Request, res: Response): Promise<void> => {
     try {
-        const prisma = new PrismaClient();
-        const eventService = new EventService(prisma);
         const result = await eventService.createEvent(req.body);
 
         if (result.success) {
@@ -51,18 +51,16 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     }
 });
 
-// Assign a role to a user in an event
-router.post('/:eventId/roles', async (req: Request, res: Response): Promise<void> => {
+// Assign a role to a user in an event (System Admin only)
+router.post('/:eventId/roles', requireSystemAdmin, async (req: Request, res: Response): Promise<void> => {
     try {
         const { eventId } = req.params;
         const { userId, roleName } = req.body;
-        const prisma = new PrismaClient();
-        const eventService = new EventService(prisma);
 
         const result = await eventService.assignUserRole(eventId, { userId, roleName });
 
         if (result.success) {
-            res.status(200).json(result.data);
+            res.status(201).json(result.data);
         } else {
             res.status(400).json({ error: result.error });
         }

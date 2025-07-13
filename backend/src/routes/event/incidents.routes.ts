@@ -33,7 +33,7 @@ router.post(
         try {
             const { eventId, slug } = req.params;
             const user = req.user as UserResponse;
-            const { title, description, incidentDate, location, involvedParties, severity } = req.body;
+            const { title, description, incidentAt, location, involvedParties, severity } = req.body;
             const multerFiles = req.files as Express.Multer.File[] | undefined;
 
             let currentEventId = eventId;
@@ -56,10 +56,10 @@ router.post(
                 reporterId: user.id,
                 title,
                 description,
-                incidentAt: incidentDate ? new Date(incidentDate) : new Date(),
+                incidentAt: incidentAt ? new Date(incidentAt) : null,
                 location,
-                partiesInvolved: involvedParties,
-                severity,
+                parties: involvedParties,
+                urgency: severity,
             };
 
             const relatedFiles = multerFiles?.map(file => ({
@@ -224,11 +224,16 @@ router.post('/:incidentId/related-files', fileUploadRateLimit, requireRole(['rep
         
         const incidentAccessData = accessResult.data;
 
+        // For reporters, ensure they can only upload files to their own incidents
         if (incidentAccessData.roles.some((roleName: string) => roleName === 'reporter') && incidentAccessData.isReporter) {
             const incidentResult = await incidentService.getIncidentById(incidentId);
-            if(incidentResult.success && incidentResult.data && incidentResult.data.incident.reporterId !== user.id){
-                 res.status(403).json({ error: 'Reporters can only upload files to their own incidents.' });
-                 return;
+            if (!incidentResult.success || !incidentResult.data) {
+                res.status(404).json({ error: 'Incident not found.' });
+                return;
+            }
+            if (incidentResult.data.incident.reporterId !== user.id) {
+                res.status(403).json({ error: 'Reporters can only upload files to their own incidents.' });
+                return;
             }
         }
 

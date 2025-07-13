@@ -17,29 +17,36 @@ const uploadLogo = createUploadMiddleware({
   allowedExtensions: ['png', 'jpg', 'jpeg']
 });
 
-// Get an event by its slug
+// Get an event by its slug or ID
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { slug } = req.params;
-    if (!slug) {
-      res.status(400).json({ error: 'Event slug is required.' });
+    const { slug, eventId } = req.params;
+    
+    let actualEventId: string | null = null;
+    
+    if (slug) {
+      // Route accessed via /slug/:slug
+      actualEventId = await eventService.getEventIdBySlug(slug);
+      if (!actualEventId) {
+        res.status(404).json({ error: 'Event not found.' });
+        return;
+      }
+    } else if (eventId) {
+      // Route accessed via /:eventId
+      actualEventId = eventId;
+    } else {
+      res.status(400).json({ error: 'Event slug or ID is required.' });
       return;
     }
 
-    const eventId = await eventService.getEventIdBySlug(slug);
-    if (!eventId) {
-      res.status(404).json({ error: 'Event not found.' });
-      return;
-    }
-
-    const result = await eventService.getEventById(eventId);
-    if (result.success) {
-      res.json(result.data);
+    const result = await eventService.getEventById(actualEventId);
+    if (result.success && result.data) {
+      res.json(result.data.event);
     } else {
       res.status(404).json({ error: result.error });
     }
   } catch (error: any) {
-    logger.error('Get event by slug error:', error);
+    logger.error('Get event by slug/ID error:', error);
     res.status(500).json({ error: 'Failed to fetch event.' });
   }
 });

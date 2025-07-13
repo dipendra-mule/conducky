@@ -124,7 +124,7 @@ export function StateManagementSection({
   const handleTransitionClick = (newState: string) => {
     setSelectedTransition(newState);
     setTransitionNotes("");
-    setSelectedAssignee("");
+    setSelectedAssignee(assignedResponderId || ""); // Preserve current assignee
     setShowDialog(true);
   };
 
@@ -259,7 +259,7 @@ export function StateManagementSection({
             const StateIcon = config?.icon || FileText;
             const isActive = state === currentState;
             const isCompleted = getStatePosition(state) < currentPosition;
-            const isPossible = false; // Removed allowedTransitions prop
+            const isPossible = canChangeState && allowedTransitions.includes(state); // Restore proper allowedTransitions logic
             
             // Find when this state was reached from state history
             const stateEntry = stateHistory.find(entry => entry.toState === state);

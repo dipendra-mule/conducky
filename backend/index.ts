@@ -314,7 +314,13 @@ app.get('/api/evidence/:evidenceId/download', async (req: any, res: any) => {
     if (!relatedFile) {
       return res.status(404).json({ error: 'Related file not found.' });
     }
-    // Optionally, check access control here if needed
+    
+    // Check if user has access to this file's incident
+    const accessResult = await incidentService.checkIncidentAccess(req.user.id, relatedFile.incidentId, relatedFile.incident?.eventId);
+    if (!accessResult.success || !accessResult.data?.hasAccess) {
+      return res.status(403).json({ error: 'Forbidden: insufficient permissions to access this file' });
+    }
+    
     res.setHeader('Content-Disposition', `attachment; filename="${relatedFile.filename}"`);
     res.setHeader('Content-Type', relatedFile.mimetype || 'application/octet-stream');
     res.setHeader('Content-Length', relatedFile.size);
@@ -429,6 +435,6 @@ if (process.env.NODE_ENV !== 'test') {
     logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
-  
-  export default app;
-  module.exports = app;
+
+export default app;
+module.exports = app;

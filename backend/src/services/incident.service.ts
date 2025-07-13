@@ -4,6 +4,7 @@ import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
 import logger from '../config/logger';
 import { encryptField, decryptField, isEncrypted } from '../utils/encryption';
+import { Prisma } from '@prisma/client';
 
 export interface IncidentCreateData {
   eventId: string;
@@ -285,18 +286,17 @@ export class IncidentService {
       }
 
       // Create incident data and encrypt sensitive fields
-      const incidentData: any = {
-           eventId,
-           reporterId,
+      const incidentData: Prisma.IncidentCreateInput = {
+           event: { connect: { id: eventId } },
+           reporter: reporterId ? { connect: { id: reporterId } } : undefined,
            title,
            description,
            state: 'submitted',
-           severity: (urgency as IncidentSeverity) || 'low', // Use severity directly instead of mapping from urgency
+           severity: Object.values(IncidentSeverity).includes(urgency as IncidentSeverity) ? (urgency as IncidentSeverity) : 'low',
+           incidentAt,
+           parties,
+           location,
       };
-
-      if (incidentAt !== undefined) incidentData.incidentAt = incidentAt;
-      if (parties !== undefined) incidentData.parties = parties;
-      if (location !== undefined) incidentData.location = location;
 
       // Encrypt sensitive fields before storing
       const encryptedIncidentData = this.encryptIncidentData(incidentData);
@@ -1106,10 +1106,15 @@ export class IncidentService {
   /**
    * Download related file by ID
    */
-  async getRelatedFile(relatedFileId: string): Promise<ServiceResult<{ filename: string; mimetype: string; size: number; data: Buffer }>> {
+  async getRelatedFile(relatedFileId: string): Promise<ServiceResult<{ filename: string; mimetype: string; size: number; data: Buffer; incidentId: string; incident?: { eventId: string } }>> {
     try {
       const relatedFile = await this.prisma.relatedFile.findUnique({
         where: { id: relatedFileId },
+        include: {
+          incident: {
+            select: { eventId: true }
+          }
+        }
       });
 
       if (!relatedFile) {
@@ -1125,7 +1130,9 @@ export class IncidentService {
           filename: relatedFile.filename,
           mimetype: relatedFile.mimetype,
           size: relatedFile.size,
-          data: Buffer.from(relatedFile.data)
+          data: Buffer.from(relatedFile.data),
+          incidentId: relatedFile.incidentId,
+          incident: relatedFile.incident
         }
       };
     } catch (error: any) {

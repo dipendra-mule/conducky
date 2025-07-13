@@ -137,7 +137,7 @@ describe("Event endpoints", () => {
         .attach("relatedFiles", Buffer.from("downloadme"), "download.txt");
       const fileId = uploadRes.body.files[0].id;
       
-      const res = await request(app).get(`/files/${fileId}/download`).set("x-test-user-id", "1");
+      const res = await request(app).get(`/api/events/1/incidents/${incidentId}/related-files/${fileId}/download`).set("x-test-user-id", "1");
 
       expect(res.statusCode).toBe(200);
       expect(res.headers["content-disposition"]).toBe(

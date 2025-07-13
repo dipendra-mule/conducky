@@ -268,7 +268,7 @@ export class EventService {
       if (!user) {
         return {
           success: false,
-          error: 'User does not exist.'
+          error: 'User or role not found'
         };
       }
 
@@ -287,7 +287,7 @@ export class EventService {
       if (!success) {
         return {
           success: false,
-          error: 'Failed to assign role.'
+          error: 'User or role not found'
         };
       }
 

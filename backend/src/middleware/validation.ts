@@ -16,9 +16,10 @@ import logger from '../config/logger';
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    const errorArray = errors.array();
     return res.status(400).json({
-      error: errors.array()[0].msg,
-      details: errors.array()
+      error: errorArray[0].msg,
+      details: errorArray
     });
   }
   next();
@@ -174,7 +175,7 @@ export const validateReport = [
   body('incidentAt')
     .optional()
     .isISO8601()
-    .withMessage('Incident date must be a valid date'),
+    .withMessage('Invalid incident date format.'),
     
   body('partiesInvolved')
     .optional()

@@ -40,7 +40,7 @@ router.get('/my-roles', requireRole(['reporter', 'responder', 'event_admin', 'sy
 // Get event users (by slug or id)
 router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { eventId, slug } = req.params;
+    const { slug } = req.params;
     const query = {
       search: req.query.search as string,
       sort: req.query.sort as string,
@@ -53,13 +53,8 @@ router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_adm
     let result;
     if (slug) {
         result = await eventService.getEventUsersBySlug(slug, query);
-    } else if (eventId) {
-        // This method might need to be created if it doesn't exist
-        // result = await eventService.getEventUsersById(eventId, query);
-        res.status(501).json({ error: 'Not implemented for eventId yet.' });
-        return;
     } else {
-        res.status(400).json({ error: 'Event slug or ID is required.' });
+        res.status(400).json({ error: 'Event slug is required.' });
         return;
     }
     
