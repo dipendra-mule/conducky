@@ -25,7 +25,7 @@ const inMemoryStore = {
       userId: "1", 
       roleId: "1", 
       scopeType: "system", 
-      scopeId: "global", 
+      scopeId: "SYSTEM", 
       grantedAt: new Date(), 
       role: { id: "1", name: "system_admin" },
       user: { id: "1", email: "admin@example.com", name: "Admin" }
