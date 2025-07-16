@@ -19,6 +19,7 @@ const uploadLogo = createUploadMiddleware({
 
 // Get an event by its slug or ID
 router.get('/', async (req: Request, res: Response): Promise<void> => {
+  logger.debug('[Event GET /] req.params:', req.params, 'req.path:', req.path);
   try {
     const { slug, eventId } = req.params;
     
@@ -41,7 +42,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     const result = await eventService.getEventById(actualEventId);
     if (result.success && result.data) {
-      res.json(result.data.event);
+      res.json({ event: result.data.event });
     } else {
       res.status(404).json({ error: result.error });
     }
