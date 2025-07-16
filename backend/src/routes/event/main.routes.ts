@@ -19,7 +19,7 @@ const uploadLogo = createUploadMiddleware({
 
 // Get an event by its slug or ID
 router.get('/', async (req: Request, res: Response): Promise<void> => {
-  logger.debug('[Event GET /] req.params:', req.params, 'req.path:', req.path);
+  logger.debug('[Event GET /] slug:', req.params.slug, 'eventId:', req.params.eventId, 'req.path:', req.path);
   try {
     const { slug, eventId } = req.params;
     
