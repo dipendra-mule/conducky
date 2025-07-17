@@ -31,6 +31,11 @@ export interface AuditLogEntry {
     name: string | null;
     email: string;
   } | null;
+  event?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
 }
 
 export interface AuditLogResponse {
@@ -120,6 +125,13 @@ export const getEventAuditLogs = [
               name: true,
               email: true
             }
+          },
+          event: {
+            select: {
+              id: true,
+              name: true,
+              slug: true
+            }
           }
         },
         orderBy,
@@ -137,7 +149,8 @@ export const getEventAuditLogs = [
           timestamp: log.timestamp,
           organizationId: log.organizationId,
           eventId: log.eventId,
-          user: log.user
+          user: log.user,
+          event: log.event
         })),
         pagination: {
           page: pageNum,
@@ -257,6 +270,13 @@ export const getOrganizationAuditLogs = [
               name: true,
               email: true
             }
+          },
+          event: {
+            select: {
+              id: true,
+              name: true,
+              slug: true
+            }
           }
         },
         orderBy,
@@ -272,7 +292,8 @@ export const getOrganizationAuditLogs = [
           timestamp: log.timestamp,
           organizationId: log.organizationId,
           eventId: log.eventId,
-          user: log.user
+          user: log.user,
+          event: log.event
         })),
         pagination: {
           page: pageNum,

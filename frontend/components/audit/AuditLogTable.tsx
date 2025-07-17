@@ -158,6 +158,22 @@ export function AuditLogTable({
             </div>
           )}
           
+          {scope === 'organization' && log.event && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                {log.event.name}
+              </Badge>
+            </div>
+          )}
+          
+          {scope === 'organization' && !log.event && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                Organization
+              </Badge>
+            </div>
+          )}
+          
           {scope === 'system' && log.organization && (
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
@@ -206,6 +222,9 @@ export function AuditLogTable({
               User
             </div>
           </TableHead>
+          {scope === 'organization' && (
+            <TableHead>Event</TableHead>
+          )}
           {scope === 'system' && (
             <TableHead>Organization</TableHead>
           )}
@@ -244,6 +263,20 @@ export function AuditLogTable({
                 <span className="text-muted-foreground">System</span>
               )}
             </TableCell>
+            {scope === 'organization' && (
+              <TableCell>
+                {log.event ? (
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{log.event.name}</span>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {log.event.slug}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground text-sm">Organization</span>
+                )}
+              </TableCell>
+            )}
             {scope === 'system' && (
               <TableCell>
                 {log.organization ? (
