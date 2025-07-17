@@ -108,8 +108,9 @@ describe("Event endpoints", () => {
     it("should return event details (success)", async () => {
       const res = await request(app).get("/api/events/1").set("x-test-user-id", "1");
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty("id", "1");
-      expect(res.body).toHaveProperty("name", "Event1");
+      expect(res.body).toHaveProperty("event");
+      expect(res.body.event).toHaveProperty("id", "1");
+      expect(res.body.event).toHaveProperty("name", "Event1");
     });
     it("should return 404 for a non-existent event", async () => {
       const res = await request(app).get("/api/events/999").set("x-test-user-id", "1");
