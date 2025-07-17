@@ -19,7 +19,9 @@ import {
   MoreHorizontal,
   UserPlus,
   Shield,
-  Eye
+  Eye,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -80,6 +82,8 @@ export default function OrganizationTeam() {
   const [editingMember, setEditingMember] = useState<OrganizationMember | null>(null);
   const [newRole, setNewRole] = useState<'org_admin' | 'org_viewer'>('org_viewer');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(false);
+  const [removingMember, setRemovingMember] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orgSlug || typeof orgSlug !== 'string') return;
@@ -110,7 +114,7 @@ export default function OrganizationTeam() {
         
         // Extract members from organization data
         const organizationMembers: OrganizationMember[] = orgData.organization.memberships?.map((membership: {
-          id: string;
+          userId: string;
           role: string;
           grantedAt: string;
           user: {
@@ -119,7 +123,7 @@ export default function OrganizationTeam() {
             email: string;
           };
         }) => ({
-          id: membership.id,
+          id: membership.userId, // Use userId as the unique identifier since membership.id doesn't exist
           role: membership.role,
           grantedAt: membership.grantedAt,
           user: {
@@ -169,14 +173,37 @@ export default function OrganizationTeam() {
   };
 
   const handleSaveRole = async () => {
-    if (!editingMember) return;
+    if (!editingMember || !organization) return;
+    
+    setUpdatingRole(true);
+    setError(null);
     
     try {
-      // TODO: Implement API call to update member role
-      console.log('Updating role for member:', editingMember.user.id, 'to:', newRole);
-      
-      // Update local state for now
-      setMembers(members.map(member => 
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/organizations/${organization.id}/members/${editingMember.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ role: newRole }),
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Access denied - insufficient permissions');
+        } else if (response.status === 404) {
+          throw new Error('Member not found');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update member role');
+        }
+      }
+
+      // Update local state after successful API call
+      setMembers(prevMembers => prevMembers.map(member => 
         member.id === editingMember.id 
           ? { ...member, role: newRole }
           : member
@@ -184,20 +211,48 @@ export default function OrganizationTeam() {
       
       setIsEditDialogOpen(false);
       setEditingMember(null);
+      setNewRole('org_viewer'); // Reset to default
     } catch (err) {
       console.error('Error updating member role:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update member role');
+    } finally {
+      setUpdatingRole(false);
     }
   };
 
   const handleRemoveMember = async (member: OrganizationMember) => {
+    if (!organization) return;
+    
+    setRemovingMember(member.id);
+    setError(null);
+    
     try {
-      // TODO: Implement API call to remove member
-      console.log('Removing member:', member.user.id);
-      
-      // Update local state for now
-      setMembers(members.filter(m => m.id !== member.id));
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/organizations/${organization.id}/members/${member.id}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Access denied - insufficient permissions');
+        } else if (response.status === 404) {
+          throw new Error('Member not found');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to remove member');
+        }
+      }
+
+      // Update local state after successful API call
+      setMembers(prevMembers => prevMembers.filter(m => m.id !== member.id));
     } catch (err) {
       console.error('Error removing member:', err);
+      setError(err instanceof Error ? err.message : 'Failed to remove member');
+    } finally {
+      setRemovingMember(null);
     }
   };
 
@@ -315,6 +370,27 @@ export default function OrganizationTeam() {
           </Button>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3" />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <p className="mt-1 text-sm text-red-700">{error}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setError(null)}
+                className="text-red-400 hover:text-red-600 h-5 w-5 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters */}
         <div className="flex items-center space-x-4">
           <div className="relative flex-1 max-w-sm">
@@ -429,8 +505,9 @@ export default function OrganizationTeam() {
                                 <Button 
                                   onClick={() => handleRemoveMember(member)}
                                   className="bg-red-600 hover:bg-red-700"
+                                  disabled={removingMember === member.user.id}
                                 >
-                                  Remove Member
+                                  {removingMember === member.user.id ? 'Removing...' : 'Remove Member'}
                                 </Button>
                               </div>
                             </AlertDialogContent>
@@ -549,11 +626,15 @@ export default function OrganizationTeam() {
             </div>
           </div>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsEditDialogOpen(false);
+              setEditingMember(null);
+              setNewRole('org_viewer');
+            }}>
               Cancel
             </Button>
-            <Button onClick={handleSaveRole}>
-              Save Changes
+            <Button onClick={handleSaveRole} disabled={updatingRole}>
+              {updatingRole ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </DialogContent>
