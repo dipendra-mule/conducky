@@ -42,7 +42,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     const result = await eventService.getEventById(actualEventId);
     if (result.success && result.data) {
-      res.json({ event: result.data.event });
+      res.json({ event: result.data.event || null });
     } else {
       res.status(404).json({ error: result.error });
     }
