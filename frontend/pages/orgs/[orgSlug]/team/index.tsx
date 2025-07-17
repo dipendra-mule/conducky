@@ -180,7 +180,7 @@ export default function OrganizationTeam() {
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/organizations/${organization.id}/members/${editingMember.user.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/organizations/${organization.id}/members/${editingMember.id}`,
         {
           method: 'PUT',
           headers: {
@@ -192,8 +192,14 @@ export default function OrganizationTeam() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update member role');
+        if (response.status === 403) {
+          throw new Error('Access denied - insufficient permissions');
+        } else if (response.status === 404) {
+          throw new Error('Member not found');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update member role');
+        }
       }
 
       // Update local state after successful API call
@@ -217,12 +223,12 @@ export default function OrganizationTeam() {
   const handleRemoveMember = async (member: OrganizationMember) => {
     if (!organization) return;
     
-    setRemovingMember(member.user.id);
+    setRemovingMember(member.id);
     setError(null);
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/organizations/${organization.id}/members/${member.user.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/organizations/${organization.id}/members/${member.id}`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -230,8 +236,14 @@ export default function OrganizationTeam() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to remove member');
+        if (response.status === 403) {
+          throw new Error('Access denied - insufficient permissions');
+        } else if (response.status === 404) {
+          throw new Error('Member not found');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to remove member');
+        }
       }
 
       // Update local state after successful API call
