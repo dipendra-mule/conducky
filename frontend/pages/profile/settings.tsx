@@ -9,7 +9,7 @@ import { UserContext } from '../_app';
 import { Eye, EyeOff, Save, User, Lock, Bell, Shield } from 'lucide-react';
 import { isValidEmail } from '@/lib/utils';
 import { AuthGuard } from '@/components/shared/AuthGuard';
-import { useLogger } from '@/hooks/useLogger';
+
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -102,7 +102,7 @@ export default function ProfileSettings() {
           reportCommentAddedEmail: !!data.reportCommentAddedEmail,
           pushNotifications: !!data.pushNotifications // fallback for future
         });
-      } catch (err) {
+      } catch {
         setNotifError('Could not load notification settings.');
       } finally {
         setNotifLoading(false);
@@ -119,7 +119,7 @@ export default function ProfileSettings() {
         if (!res.ok) throw new Error('Failed to check email config');
         const data = await res.json();
         setEmailEnabled(!!data.enabled);
-      } catch (err) {
+      } catch {
         setEmailEnabled(false);
         setEmailConfigError('Could not determine email notification availability.');
       }
@@ -255,7 +255,7 @@ export default function ProfileSettings() {
       });
       if (!res.ok) throw new Error('Failed to update notification settings');
       setNotifSuccess('Notification settings updated.');
-    } catch (err) {
+    } catch {
       setNotifError('Could not update notification settings.');
     } finally {
       setNotifLoading(false);
@@ -484,7 +484,7 @@ export default function ProfileSettings() {
               </p>
             </CardHeader>
             <CardContent>
-              {emailEnabled === false && (
+              {!emailEnabled && (
                 <div className="mb-4 text-yellow-700 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200 rounded p-3">
                   Email notifications are currently unavailable. Please contact your administrator if you believe this is an error.
                 </div>
@@ -506,7 +506,7 @@ export default function ProfileSettings() {
                       <Switch
                         checked={!!notifications.reportSubmittedEmail}
                         onCheckedChange={(checked) => handleNotificationChange('reportSubmittedEmail', !!checked)}
-                        disabled={notifLoading || emailEnabled === false}
+                        disabled={notifLoading || emailEnabled !== true}
                       />
                     </div>
                     <Separator />
@@ -520,7 +520,7 @@ export default function ProfileSettings() {
                       <Switch
                         checked={!!notifications.reportAssignedEmail}
                         onCheckedChange={(checked) => handleNotificationChange('reportAssignedEmail', !!checked)}
-                        disabled={notifLoading || emailEnabled === false}
+                        disabled={notifLoading || !emailEnabled}
                       />
                     </div>
                     <Separator />
@@ -534,7 +534,7 @@ export default function ProfileSettings() {
                       <Switch
                         checked={!!notifications.reportCommentAddedEmail}
                         onCheckedChange={(checked) => handleNotificationChange('reportCommentAddedEmail', !!checked)}
-                        disabled={notifLoading || emailEnabled === false}
+                        disabled={notifLoading || !emailEnabled}
                       />
                     </div>
                     <Separator />

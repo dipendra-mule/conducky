@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, Check, X, ArrowLeft, CheckCircle } from 'lucide-react';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface PasswordStrength {
   score: number;

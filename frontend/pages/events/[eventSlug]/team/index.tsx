@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { UserContext } from '@/pages/_app';
 import { AppBreadcrumbs } from '@/components/AppBreadcrumbs';
-import { logger } from '@/lib/logger';
+
 
 interface TeamMember {
   id: string;

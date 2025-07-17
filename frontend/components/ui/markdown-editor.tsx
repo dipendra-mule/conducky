@@ -222,7 +222,7 @@ export function MarkdownEditor({
               <div className="text-sm text-muted-foreground mb-2 font-medium">Preview:</div>
               {value.trim() ? (
                 <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <SecureMarkdown>{value}</SecureMarkdown>
+                  <SecureMarkdown content={value} />
                 </div>
               ) : (
                 <div className="text-muted-foreground italic">Nothing to preview</div>

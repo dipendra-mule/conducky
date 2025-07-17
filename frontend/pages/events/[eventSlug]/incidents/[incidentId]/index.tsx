@@ -41,6 +41,7 @@ interface Comment {
   id: string;
   body: string;
   userId: string;
+  authorId: string;
   incidentId: string;
   visibility: string;
   isMarkdown: boolean;
@@ -54,28 +55,23 @@ interface RelatedFile {
   filename: string;
   mimetype: string;
   size: number;
-  createdAt: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+  uploader?: {
+    id: string;
+    name?: string | null;
+    email?: string;
+  };
 }
 
 interface AssignmentFields {
-  assignedResponderId: string;
-  severity: string;
-  resolution: string;
+  assignedResponderId?: string;
+  severity?: string;
+  resolution?: string;
   state?: string;
 }
 
-const validStates = [
-  "submitted",
-  "acknowledged",
-  "investigating",
-  "resolved",
-  "closed",
-];
 
-const visibilityOptions = [
-  { value: "public", label: "Public (visible to all involved)" },
-  { value: "internal", label: "Internal (responders/admins only)" },
-];
 
 export default function ReportDetail() {
   const router = useRouter();
@@ -222,18 +218,8 @@ export default function ReportDetail() {
     }
   }, [incident?.createdAt, incident?.updatedAt]);
 
-  const isSystemAdmin =
-    user && user.roles && user.roles.includes("system_admin");
-  const canChangeState =
-    isSystemAdmin ||
-    userRoles.some((r) => ["responder", "event_admin", "system_admin"].includes(r));
   const isResponderOrAbove = userRoles.some((r) =>
     ["responder", "event_admin", "system_admin"].includes(r),
-  );
-
-  // Helper: check if user is admin or system admin
-  const isAdminOrSystemAdmin = userRoles.some((r) =>
-    ["event_admin", "system_admin"].includes(r),
   );
 
   // Fetch event users for assignment dropdown if admin/responder
@@ -285,16 +271,14 @@ export default function ReportDetail() {
       if (data.history) {
         setStateHistory(prev => [...prev, data.history]);
       }
-    } catch (err: any) {
-      setStateChangeError(err.message);
+    } catch (err) {
+      setStateChangeError(err instanceof Error ? err.message : 'State change failed');
     } finally {
       setIsStateChanging(false);
     }
   };
 
-  const handleLegacyStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    await handleStateChange(e.target.value);
-  };
+
   const handleCommentSubmit = async (body: string, visibility: string, isMarkdown?: boolean) => {
     if (!eventSlug || !incidentId) return { success: false, error: "Missing event or incident ID" };
 
@@ -316,8 +300,8 @@ export default function ReportDetail() {
       const data = await res.json();
       setComments((prev) => [...prev, data.comment]);
       return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || "An unexpected error occurred." };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : "An unexpected error occurred." };
     }
   };
 
@@ -341,8 +325,8 @@ export default function ReportDetail() {
       const updatedComment = await res.json();
       setComments(prev => prev.map(c => c.id === comment.id ? updatedComment : c));
       return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'An unexpected error occurred.' };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'An unexpected error occurred.' };
     }
   };
 
@@ -395,8 +379,8 @@ export default function ReportDetail() {
       
       setRelatedFiles(prev => [...prev, ...responseData.files]);
       setNewRelatedFiles([]); // Clear the new files list
-    } catch (err: any) {
-      setRelatedFileUploadMsg(err.message || "An unexpected error occurred during upload.");
+    } catch (err) {
+      setRelatedFileUploadMsg(err instanceof Error ? err.message : "An unexpected error occurred during upload.");
     } finally {
       setUploadingRelatedFile(false);
     }
@@ -427,7 +411,7 @@ export default function ReportDetail() {
   };
 
 
-  const handleAssignmentChange = async (updatedFields?: any) => {
+  const handleAssignmentChange = async (updatedFields?: Record<string, string | undefined>) => {
     if (!eventSlug || !incidentId) return;
     setAssignmentLoading(true);
     setAssignmentError('');
@@ -451,8 +435,8 @@ export default function ReportDetail() {
       const data = await res.json();
       setIncident(prev => prev ? { ...prev, ...data.incident } : null);
       setAssignmentSuccess('Incident assignment updated successfully.');
-    } catch (err: any) {
-      setAssignmentError(err.message);
+    } catch (err) {
+      setAssignmentError(err instanceof Error ? err.message : 'Assignment failed');
     } finally {
       setAssignmentLoading(false);
     }
@@ -477,7 +461,7 @@ export default function ReportDetail() {
         }
         const data = await res.json();
         setIncident(prev => prev ? { ...prev, title: data.incident.title } : null);
-    } catch (error: any) {
+    } catch (error) {
         console.error(error);
         throw error;
     }
@@ -502,7 +486,7 @@ const handleDescriptionEdit = async (newDescription: string): Promise<void> => {
         }
         const data = await res.json();
         setIncident(prev => prev ? { ...prev, description: data.incident.description } : null);
-    } catch (error: any) {
+    } catch (error) {
         console.error(error);
         throw error;
     }
@@ -512,11 +496,12 @@ const handleDescriptionEdit = async (newDescription: string): Promise<void> => {
   if (loading) return <div>Loading incident...</div>;
   if (fetchError) return <div>Error: {fetchError}</div>;
   if (!incident) return <div>Report not found.</div>;
+  if (!user) return <div>User not authenticated.</div>;
 
   return (
     <IncidentDetailView
       incident={incident}
-      user={user}
+      user={user as User}
       userRoles={userRoles}
       comments={comments}
       relatedFiles={relatedFiles}

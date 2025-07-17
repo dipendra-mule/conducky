@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, ChevronLeft, ChevronRight, Link, Check, Quote } from "lucide-react";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { SafeReactMarkdown } from "@/components/ui/secure-markdown";
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface User {
   id: string;
@@ -19,11 +19,16 @@ interface User {
 
 interface Comment {
   id: string;
-  author: User;
   body: string;
+  userId: string;
+  authorId: string;
+  incidentId: string;
+  visibility: string;
   isMarkdown: boolean;
   createdAt: string;
-  visibility: string;
+  updatedAt: string;
+  author: User;
+  user?: User;
 }
 
 interface CommentListResponse {

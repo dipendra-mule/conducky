@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Button } from '../../../../components/ui/button';
 import { OrganizationInviteManager } from '../../../../components/OrganizationInviteManager';
 import { AppBreadcrumbs } from '../../../../components/AppBreadcrumbs';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface User {
   id: string;

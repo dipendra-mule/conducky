@@ -6,7 +6,7 @@ import { IncidentDateEditForm } from "./IncidentDateEditForm";
 import { PartiesEditForm } from "./PartiesEditForm";
 import { DescriptionEditForm } from "./DescriptionEditForm";
 import { TagsEditForm } from "./TagsEditForm";
-import { SeverityEditForm } from './SeverityEditForm';
+
 import { useLogger } from '@/hooks/useLogger';
 
 interface Tag {

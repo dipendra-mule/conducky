@@ -14,7 +14,7 @@ import { AuditLogTable } from '@/components/audit/AuditLogTable';
 import { fetchEventAuditLogs } from '@/lib/audit';
 import { AuditLogEntry, AuditLogFilters, AuditLogPagination } from '@/types/audit';
 import { Shield, Calendar, Users, Activity } from 'lucide-react';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface Event {
   id: string;
@@ -49,7 +49,12 @@ export default function EventAuditPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);  const [eventLoading, setEventLoading] = useState(true);
   const [eventError, setEventError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    name?: string;
+    email: string;
+    roles?: string[];
+  } | null>(null);
   const [userEventRoles, setUserEventRoles] = useState<string[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
   
@@ -174,7 +179,7 @@ export default function EventAuditPage() {
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive">
           <AlertDescription>
-            You don't have permission to view audit logs for this event.
+            You don&apos;t have permission to view audit logs for this event.
           </AlertDescription>
         </Alert>
       </div>

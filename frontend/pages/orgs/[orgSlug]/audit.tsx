@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button';
 import { AuditLogTable } from '@/components/audit/AuditLogTable';
 import { fetchOrganizationAuditLogs } from '@/lib/audit';
 import { AuditLogEntry, AuditLogFilters, AuditLogPagination } from '@/types/audit';
-import { Shield, Building, Users, Activity, Calendar } from 'lucide-react';
-import { useLogger } from '@/hooks/useLogger';
+import { Shield, Building, Users, Activity } from 'lucide-react';
+
 
 interface Organization {
   id: string;
@@ -45,7 +45,12 @@ export default function OrganizationAuditPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);  const [orgLoading, setOrgLoading] = useState(true);
   const [orgError, setOrgError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    name?: string;
+    email: string;
+    roles?: string[];
+  } | null>(null);
   const [userOrgRoles, setUserOrgRoles] = useState<string[]>([]);
   const [authLoading, setAuthLoading] = useState(true);  
   // Check if user has required permissions
@@ -92,7 +97,7 @@ export default function OrganizationAuditPage() {
         // Extract user's role from membership data
         if (sessionData?.user && orgData.organization.memberships) {
           const userMembership = orgData.organization.memberships.find(
-            (m: any) => m.userId === sessionData.user.id
+            (m: { userId: string; role: string }) => m.userId === sessionData.user.id
           );
           setUserOrgRoles(userMembership ? [userMembership.role] : []);
         }
@@ -166,7 +171,7 @@ export default function OrganizationAuditPage() {
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive">
           <AlertDescription>
-            You don't have permission to view audit logs for this organization.
+            You don&apos;t have permission to view audit logs for this organization.
           </AlertDescription>
         </Alert>
       </div>

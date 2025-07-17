@@ -99,7 +99,7 @@ export default function OrganizationIncidents() {
         slug: data.organization.slug,
         role: userRole,
       });    } catch (err) {
-      logError('Error fetching organization', { orgSlug }, err as Error);
+      logError('Error fetching organization', { orgSlug: Array.isArray(orgSlug) ? orgSlug[0] : orgSlug }, err as Error);
       setError('Failed to load organization');
     }
   };
@@ -144,7 +144,7 @@ export default function OrganizationIncidents() {
       };
 
       setMetrics(mockMetrics);    } catch (err) {
-      logError('Error fetching report metrics', { orgSlug }, err as Error);
+      logError('Error fetching report metrics', { orgSlug: Array.isArray(orgSlug) ? orgSlug[0] : orgSlug }, err as Error);
       setError('Failed to load report metrics');
     } finally {
       setLoading(false);
@@ -153,10 +153,10 @@ export default function OrganizationIncidents() {
   const handleExport = async (format: 'csv' | 'pdf') => {
     try {
       // TODO: Implement actual export functionality
-      logInfo(`Exporting reports as ${format} for organization`, { orgSlug, format });
+      logInfo(`Exporting reports as ${format} for organization`, { orgSlug: Array.isArray(orgSlug) ? orgSlug[0] : orgSlug, format });
       // This would call an API endpoint to generate and download the export
     } catch (err) {
-      logError('Export failed', { orgSlug, format }, err as Error);
+      logError('Export failed', { orgSlug: Array.isArray(orgSlug) ? orgSlug[0] : orgSlug, format }, err as Error);
     }
   };
 

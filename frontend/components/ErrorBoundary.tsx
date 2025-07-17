@@ -51,8 +51,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       eventSlug: this.props.eventSlug,
       organizationSlug: this.props.organizationSlug,
       errorId,
-      componentStack: errorInfo.componentStack,
-      errorStack: error.stack,
+      componentStack: errorInfo.componentStack || 'unknown',
+      errorStack: error.stack || 'unknown',
     }, error, {
       errorInfo,
     });
@@ -101,7 +101,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 Something went wrong
               </h2>
               <p className="mt-2 text-center text-sm text-gray-600">
-                We've encountered an unexpected error. Our team has been notified.
+                We&apos;ve encountered an unexpected error. Our team has been notified.
               </p>
             </div>
             
@@ -183,7 +183,7 @@ export function withErrorBoundary<P extends object>(
  * Hook for programmatically triggering error boundary
  */
 export function useErrorHandler() {
-  return (error: Error, errorInfo?: { [key: string]: any }) => {
+  return (error: Error, errorInfo?: { [key: string]: unknown }) => {
     logger.error('Manual error trigger', {
       triggerType: 'manual',
     }, error, errorInfo);

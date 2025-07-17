@@ -11,7 +11,12 @@ export default function EventTagsPage() {
   const router = useRouter();
   const { eventSlug } = router.query;
   const { user } = useContext(UserContext);
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+    tags?: Array<{ id: string; name: string; color: string }>;
+  } | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -173,7 +178,7 @@ export default function EventTagsPage() {
                 <strong>About Tags:</strong> Tags help categorize and organize incidents for easier filtering and analysis.
               </p>
               <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Tags are specific to this event and won't appear in other events</li>
+                <li>Tags are specific to this event and won&apos;t appear in other events</li>
                 <li>Responders and event admins can create and manage tags</li>
                 <li>Tags can be assigned to incidents during creation or editing</li>
                 <li>Use colors to visually distinguish different types of incidents</li>

@@ -10,34 +10,10 @@ import { EventStats } from "@/components/shared/EventStats";
 import { EventActions } from "@/components/shared/EventActions";
 import { EventRecentActivity } from "@/components/shared/EventRecentActivity";
 
-// Define valid report states
-const validStates = [
-  "submitted",
-  "acknowledged",
-  "investigating",
-  "resolved",
-  "closed",
-] as const;
-
-type IncidentState = typeof validStates[number];
-
 interface User {
   id: string;
   name: string;
   email: string;
-}
-
-interface Reporter {
-  id: string;
-  email?: string;
-}
-
-interface Incident {
-  id: string;
-  type: string;
-  description: string;
-  state: IncidentState;
-  reporter?: Reporter;
 }
 
 interface Event {
@@ -47,16 +23,6 @@ interface Event {
   description?: string;
   logo?: string;
 }
-
-interface StateChangeStatus {
-  loading: boolean;
-  error: string;
-  success: string;
-}
-
-type StateChangeMap = {
-  [incidentId: string]: StateChangeStatus;
-};
 
 export default function EventDashboard() {
   const router = useRouter();

@@ -11,7 +11,7 @@ import { ArrowLeft, Building2, AlertCircle } from 'lucide-react';
 import { UserContext } from '../../_app';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AccessDenied } from '@/components/shared/AccessDenied';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface FormData {
   name: string;

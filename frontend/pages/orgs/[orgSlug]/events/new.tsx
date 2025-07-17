@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Calendar, MapPin, Users, Save } from 'lucide-react';
 import Link from 'next/link';
 import { isValidEmail } from '@/lib/utils';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface Organization {
   id: string;

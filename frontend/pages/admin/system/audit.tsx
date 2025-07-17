@@ -15,8 +15,7 @@ import { AuditLogTable } from '@/components/audit/AuditLogTable';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { fetchSystemAuditLogs } from '@/lib/audit';
 import { AuditLogEntry, AuditLogFilters, AuditLogPagination } from '@/types/audit';
-import { Shield, Server, Activity, Users, Building, Calendar } from 'lucide-react';
-import { useLogger } from '@/hooks/useLogger';
+import { Server, Activity, Users, Building, Calendar } from 'lucide-react';
 
 interface Organization {
   id: string;

@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState } from "react";
 import { Card } from "./ui/card";
 import { TitleEditForm } from './incident-detail/TitleEditForm';
 import { StateManagementSection } from './incident-detail/StateManagementSection';
@@ -9,29 +9,114 @@ import { IncidentMetaTable } from './incident-detail/IncidentMetaTable';
 import { Pencil, ChevronDown } from "lucide-react";
 import { logger } from "@/lib/logger";
 
+interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  roles?: string[];
+}
+
+interface RelatedFile {
+  id: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
+interface Incident {
+  id: string;
+  title: string;
+  description: string;
+  state: string;
+  createdAt: string;
+  updatedAt: string;
+  reporterId?: string;
+  assignedResponderId?: string;
+  severity?: string;
+  urgency?: string;
+  location?: string;
+  parties?: string;
+  incidentAt?: string;
+  resolution?: string;
+  eventId?: string;
+  reporter?: {
+    id: string;
+    name?: string;
+    email: string;
+  };
+  event?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  tags?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
+}
+
+interface Comment {
+  id: string;
+  body: string;
+  userId: string;
+  authorId: string;
+  incidentId: string;
+  visibility: string;
+  isMarkdown: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user?: User;
+}
+
+interface EventUser {
+  id: string;
+  name?: string;
+  email?: string;
+  roles?: string[];
+}
+
+interface AssignmentFields {
+  assignedResponderId?: string;
+  severity?: string;
+  resolution?: string;
+}
+
 export interface IncidentDetailViewProps {
-  incident: any;
-  user: any;
+  incident: Incident;
+  user: User;
   userRoles?: string[];
-  relatedFiles?: any[];
+  comments?: Comment[];
+  relatedFiles?: RelatedFile[];
   loading?: boolean;
   error?: string;
   eventSlug?: string;
+  isStateChanging?: boolean;
+  stateChangeError?: string | null;
   onEnhancedStateChange?: (newState: string, notes?: string, assignedToUserId?: string) => void;
   onAssignmentChange?: () => void;
   onCommentSubmit?: (body: string, visibility: string, isMarkdown?: boolean) => void;
-  onCommentEdit?: (comment: any, body: string, visibility: string, isMarkdown?: boolean) => void;
-  onCommentDelete?: (comment: any) => void;
+  onCommentEdit?: (comment: Comment, body: string, visibility: string, isMarkdown?: boolean) => void;
+  onCommentDelete?: (comment: Comment) => void;
+  onDeleteConfirm?: (comment: Comment) => Promise<void>;
+  onEditSave?: (comment: Comment, body?: string, visibility?: string, isMarkdown?: boolean) => Promise<{ success: boolean; error?: string }>;
+  onStateChange?: (newState: string, notes?: string, assignedToUserId?: string) => Promise<void>;
+  onDescriptionEdit?: (newDescription: string) => Promise<void>;
   onRelatedFileUpload?: (files: File[]) => void;
-  onRelatedFileDelete?: (file: any) => void;
-  assignmentFields?: {
-    assignedResponderId?: string;
-    severity?: string;
-    resolution?: string;
-    [key: string]: any;
-  };
-  setAssignmentFields?: (f: any) => void;
-  eventUsers?: any[];
+  onRelatedFileDelete?: (file: RelatedFile) => void;
+  newRelatedFiles?: File[];
+  setNewRelatedFiles?: (files: File[]) => void;
+  relatedFileUploadMsg?: string;
+  uploadingRelatedFile?: boolean;
+  isResponderOrAbove?: boolean;
+  assignmentFields?: AssignmentFields;
+  setAssignmentFields?: (fields: AssignmentFields) => void;
+  eventUsers?: EventUser[];
+  assignmentLoading?: boolean;
+  assignmentError?: string | null;
+  assignmentSuccess?: string | null;
   stateHistory?: Array<{
     id: string;
     fromState: string;
@@ -42,9 +127,8 @@ export interface IncidentDetailViewProps {
   }>;
   apiBaseUrl?: string;
   onTitleEdit?: (title: string) => Promise<void>;
-  onIncidentUpdate?: (updatedIncident: any) => void;
-  onTagsEdit?: (tags: any[]) => Promise<void>;
-  [key: string]: any;
+  onIncidentUpdate?: (updatedIncident: Incident) => void;
+  onTagsEdit?: (tags: Array<{ id: string; name: string; color: string }>) => Promise<void>;
 }
 
 export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
@@ -69,8 +153,7 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
   apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
   onTitleEdit,
   onIncidentUpdate,
-  onTagsEdit,
-  ...rest
+  onTagsEdit
 }) => {
   const isSystemAdmin = user && user.roles && user.roles.includes("system_admin");
   const isResponderOrAbove = userRoles.some((r) =>
@@ -346,7 +429,7 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
             <StateManagementSection
               currentState={incident.state}
               allowedTransitions={getAllowedTransitions(incident.state)}
-              onStateChange={onEnhancedStateChange as any}
+              onStateChange={onEnhancedStateChange || (() => {})}
               canChangeState={canChangeState}
               stateHistory={stateHistory}
               eventUsers={eventUsers}

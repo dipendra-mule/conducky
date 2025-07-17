@@ -8,6 +8,8 @@ interface RelatedFile {
   filename: string;
   mimetype: string;
   size: number;
+  uploadedAt: string;
+  uploadedBy?: string;
   uploader?: {
     id: string;
     name?: string | null;
@@ -15,10 +17,28 @@ interface RelatedFile {
   };
 }
 
+interface Incident {
+  id: string;
+  title: string;
+  description: string;
+  state: string;
+  createdAt: string;
+  updatedAt: string;
+  reporterId?: string;
+  assignedResponderId?: string;
+  severity?: string;
+  urgency?: string;
+  location?: string;
+  parties?: string;
+  incidentAt?: string;
+  resolution?: string;
+  eventId?: string;
+}
+
 interface RelatedFileSectionProps {
   relatedFiles: RelatedFile[];
   apiBaseUrl: string;
-  incident: Record<string, unknown> | null;
+  incident: Incident | null;
   isResponderOrAbove: boolean;
   deletingRelatedFileId: string | null;
   setDeletingRelatedFileId: (id: string | null) => void;
@@ -34,7 +54,6 @@ interface RelatedFileSectionProps {
 export function RelatedFileSection({
   relatedFiles,
   apiBaseUrl,
-  incident,
   isResponderOrAbove,
   deletingRelatedFileId,
   setDeletingRelatedFileId,
@@ -278,6 +297,7 @@ export function RelatedFileSection({
             <ul className="space-y-2">
               {newRelatedFiles.map((file, index) => (
                 <li key={index} className="flex items-center justify-between text-sm p-2 bg-background rounded-md border">
+                  {/* eslint-disable-next-line react/prop-types */}
                   <span>{file.name} ({getFileSize(file.size)})</span>
                   <Button variant="ghost" size="icon" onClick={() => handleRemoveNewFile(index)}>
                     <X className="h-4 w-4" />
@@ -351,10 +371,12 @@ export function RelatedFileSection({
           
           {viewMode === 'gallery' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {/* eslint-disable-next-line react/prop-types */}
               {relatedFiles.map(file => <RelatedFileCard key={file.id} file={file} />)}
             </div>
           ) : (
             <div className="space-y-3">
+              {/* eslint-disable-next-line react/prop-types */}
               {relatedFiles.map(file => <RelatedFileListItem key={file.id} file={file} />)}
             </div>
           )}

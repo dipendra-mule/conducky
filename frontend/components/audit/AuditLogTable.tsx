@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Calendar, Filter, Search, User, Clock, Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Filter, Search, User, Clock, Target, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AuditLogEntry, AuditLogFilters, AuditLogScope, AuditTargetType, TARGET_TYPE_LABELS } from '@/types/audit';
 import { formatActionName, getActionColor, formatTimestamp } from '@/lib/audit';
 import { cn } from '@/lib/utils';
@@ -73,7 +73,7 @@ export function AuditLogTable({
 
   const handleSortChange = (sortBy: string) => {
     const newSortOrder = filters.sortBy === sortBy && filters.sortOrder === 'desc' ? 'asc' : 'desc';
-    onFiltersChange({ ...filters, sortBy: sortBy as any, sortOrder: newSortOrder });
+    onFiltersChange({ ...filters, sortBy: sortBy as "timestamp" | "action" | "targetType", sortOrder: newSortOrder });
   };
 
   const renderFilters = () => (
@@ -126,7 +126,7 @@ export function AuditLogTable({
     </div>
   );
 
-  const renderMobileCard = (log: AuditLogEntry, index: number) => (
+  const renderMobileCard = (log: AuditLogEntry) => (
     <Card key={log.id} className="mb-4">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">

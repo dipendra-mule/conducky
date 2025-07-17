@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useLogger } from '@/hooks/useLogger';
 import { 
   ArrowLeft, 
   AlertCircle, 

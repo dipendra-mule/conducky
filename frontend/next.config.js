@@ -7,12 +7,12 @@ if (!process.env.BACKEND_API_URL || !process.env.BACKEND_API_URL.trim()) {
 }
 
 const nextConfig = {
-  // Temporarily disable strict type checking and linting during builds
+  // Re-enabled strict type checking and linting during builds
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   
   async rewrites() {

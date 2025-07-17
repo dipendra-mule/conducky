@@ -103,7 +103,7 @@ export function NavigationProvider({ children, user, events = [] }: NavigationPr
         try {
           setFavorites(JSON.parse(stored));
         } catch (e) {
-          logger.warn('Failed to parse stored favorites', { userId: user.id }, e as Error);
+          logger.error('Failed to parse stored favorites', { userId: user.id }, e as Error);
         }
       }
     }

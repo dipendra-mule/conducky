@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarIcon, ClockIcon, FileTextIcon, MessageSquareIcon, ShieldIcon } from 'lucide-react';
 import { AppBreadcrumbs } from '@/components/AppBreadcrumbs';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface UserProfile {
   user: {
@@ -36,14 +36,7 @@ interface Activity {
   timestamp: string;
 }
 
-interface Incident {
-  id: string;
-  title: string;
-  type: string;
-  state: string;
-  urgency: string;
-  createdAt: string;
-}
+
 
 export default function TeamMemberProfile() {
   const router = useRouter();
@@ -51,7 +44,15 @@ export default function TeamMemberProfile() {
   const [event, setEvent] = useState<{ id: string; name: string; slug: string; description?: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [incidents, setIncidents] = useState<Report[]>([]);
+  const [incidents, setIncidents] = useState<Array<{
+    id: string;
+    title: string;
+    type: string;
+    state: string;
+    createdAt: string;
+    severity?: string;
+    urgency?: string;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -326,7 +327,7 @@ export default function TeamMemberProfile() {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Incidents:</span>
-                      <span className="font-medium">{reports.length}</span>
+                      <span className="font-medium">{incidents.length}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Recent Activities:</span>
@@ -379,11 +380,11 @@ export default function TeamMemberProfile() {
                 <CardTitle>Incidents</CardTitle>
               </CardHeader>
               <CardContent>
-                {reports.length === 0 ? (
+                {incidents.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No incidents found.</p>
                 ) : (
                   <div className="space-y-4">
-                    {reports.map((report) => (
+                    {incidents.map((report) => (
                       <div key={report.id} className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
                            onClick={() => router.push(`/events/${eventSlug}/incidents/${report.id}`)}>
                         <div className="flex items-start justify-between">

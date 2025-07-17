@@ -455,7 +455,7 @@ export default function EventMetaCard({
                     </div>
                   </SheetHeader>
                   <div className="mt-6 prose dark:prose-invert max-h-[70vh] overflow-y-auto">
-                    <SecureMarkdown type="event">{event.codeOfConduct || "No code of conduct provided for this event."}</SecureMarkdown>
+                    <SecureMarkdown content={event.codeOfConduct || "No code of conduct provided for this event."} type="event" />
                   </div>
                 </SheetContent>
               </Sheet>
