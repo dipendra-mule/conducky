@@ -264,8 +264,8 @@ export default function ReportDetail() {
       if (data.history) {
         setStateHistory(prev => [...prev, data.history]);
       }
-    } catch (err: any) {
-      setStateChangeError(err.message);
+    } catch (err) {
+      setStateChangeError(err instanceof Error ? err.message : 'State change failed');
     } finally {
       setIsStateChanging(false);
     }
@@ -293,8 +293,8 @@ export default function ReportDetail() {
       const data = await res.json();
       setComments((prev) => [...prev, data.comment]);
       return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || "An unexpected error occurred." };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : "An unexpected error occurred." };
     }
   };
 

@@ -45,7 +45,12 @@ export default function OrganizationAuditPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);  const [orgLoading, setOrgLoading] = useState(true);
   const [orgError, setOrgError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    name?: string;
+    email: string;
+    roles?: string[];
+  } | null>(null);
   const [userOrgRoles, setUserOrgRoles] = useState<string[]>([]);
   const [authLoading, setAuthLoading] = useState(true);  
   // Check if user has required permissions
@@ -92,7 +97,7 @@ export default function OrganizationAuditPage() {
         // Extract user's role from membership data
         if (sessionData?.user && orgData.organization.memberships) {
           const userMembership = orgData.organization.memberships.find(
-            (m: any) => m.userId === sessionData.user.id
+            (m: { userId: string; role: string }) => m.userId === sessionData.user.id
           );
           setUserOrgRoles(userMembership ? [userMembership.role] : []);
         }

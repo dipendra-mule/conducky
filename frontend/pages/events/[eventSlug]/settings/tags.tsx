@@ -11,7 +11,12 @@ export default function EventTagsPage() {
   const router = useRouter();
   const { eventSlug } = router.query;
   const { user } = useContext(UserContext);
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<{
+    id: string;
+    name: string;
+    slug: string;
+    tags?: Array<{ id: string; name: string; color: string }>;
+  } | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');

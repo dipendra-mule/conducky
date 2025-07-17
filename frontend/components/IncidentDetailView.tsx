@@ -108,9 +108,8 @@ export interface IncidentDetailViewProps {
   }>;
   apiBaseUrl?: string;
   onTitleEdit?: (title: string) => Promise<void>;
-  onIncidentUpdate?: (updatedIncident: any) => void;
-  onTagsEdit?: (tags: any[]) => Promise<void>;
-  [key: string]: any;
+  onIncidentUpdate?: (updatedIncident: Incident) => void;
+  onTagsEdit?: (tags: Array<{ id: string; name: string; color: string }>) => Promise<void>;
 }
 
 export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({

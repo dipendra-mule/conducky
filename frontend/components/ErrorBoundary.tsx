@@ -183,7 +183,7 @@ export function withErrorBoundary<P extends object>(
  * Hook for programmatically triggering error boundary
  */
 export function useErrorHandler() {
-  return (error: Error, errorInfo?: { [key: string]: any }) => {
+  return (error: Error, errorInfo?: { [key: string]: unknown }) => {
     logger.error('Manual error trigger', {
       triggerType: 'manual',
     }, error, errorInfo);

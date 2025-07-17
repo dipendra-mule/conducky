@@ -49,7 +49,12 @@ export default function EventAuditPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);  const [eventLoading, setEventLoading] = useState(true);
   const [eventError, setEventError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    name?: string;
+    email: string;
+    roles?: string[];
+  } | null>(null);
   const [userEventRoles, setUserEventRoles] = useState<string[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
   

@@ -25,7 +25,7 @@ export interface LogContext {
   route?: string;
   userAgent?: string;
   timestamp?: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface LogEntry {
@@ -33,7 +33,7 @@ export interface LogEntry {
   message: string;
   context?: LogContext;
   error?: Error;
-  data?: any;
+  data?: Record<string, unknown>;
   timestamp: string;
   source: 'frontend';
 }
@@ -96,7 +96,7 @@ class FrontendLogger {
     message: string,
     context?: LogContext,
     error?: Error,
-    data?: any
+    data?: Record<string, unknown>
   ): LogEntry {
     const entry: LogEntry = {
       level,
@@ -116,7 +116,7 @@ class FrontendLogger {
 
     return entry;
   }
-  private sanitizeData(data: any): any {
+  private sanitizeData(data: Record<string, unknown>): Record<string, unknown> {
     if (!data) return data;
     
     // Remove sensitive information with more precise matching
@@ -141,7 +141,7 @@ class FrontendLogger {
     
     const sanitized = JSON.parse(JSON.stringify(data));
     
-    const sanitizeObject = (obj: any): any => {
+    const sanitizeObject = (obj: Record<string, unknown>): Record<string, unknown> => {
       if (typeof obj !== 'object' || obj === null) return obj;
       
       for (const key in obj) {
