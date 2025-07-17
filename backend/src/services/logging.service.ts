@@ -13,7 +13,7 @@ interface LoggingSettings {
 }
 
 export class LoggingService {
-  private static instance: LoggingService;
+  private static instance: LoggingService | null;
   private prisma: PrismaClient;
   private currentLogger: winston.Logger;
   private defaultSettings: LoggingSettings = {
@@ -40,6 +40,13 @@ export class LoggingService {
       LoggingService.instance = new LoggingService(prisma);
     }
     return LoggingService.instance;
+  }
+
+  /**
+   * Reset the singleton instance for testing purposes only
+   */
+  public static resetInstance(): void {
+    LoggingService.instance = null;
   }
 
   /**
@@ -182,7 +189,10 @@ export class LoggingService {
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.colorize({ all: true }),
-            winston.format.simple()
+            winston.format.printf(({ timestamp, level, message, ...meta }) => {
+              const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+              return `${timestamp || ''} ${level}: ${message}${metaStr}`;
+            })
           ),
         })
       );

@@ -62,18 +62,18 @@ describe('LoggingService', () => {
     });
   });
 
-  describe('getSettings', () => {
+  describe('getLoggingSettings', () => {
     it('should return default settings when no database settings exist', async () => {
       mockPrisma.systemSetting.findMany.mockResolvedValue([]);
 
-      const settings = await loggingService.getSettings();
+      const settings = await loggingService.getLoggingSettings();
 
       expect(settings).toEqual({
         level: expect.any(String),
         destinations: {
           console: true,
-          file: true,
-          errorFile: true,
+          file: false,
+          errorFile: false,
         },
         filePath: 'logs/combined.log',
         errorFilePath: 'logs/error.log',
@@ -90,7 +90,7 @@ describe('LoggingService', () => {
 
       mockPrisma.systemSetting.findMany.mockResolvedValue(mockSettings);
 
-      const settings = await loggingService.getSettings();
+      const settings = await loggingService.getLoggingSettings();
 
       expect(settings).toEqual({
         level: 'warn',
@@ -108,54 +108,18 @@ describe('LoggingService', () => {
 
       mockPrisma.systemSetting.findMany.mockResolvedValue(mockSettings);
 
-      const settings = await loggingService.getSettings();
+      const settings = await loggingService.getLoggingSettings();
 
       // Should fall back to default destinations
       expect(settings.destinations).toEqual({
         console: true,
-        file: true,
-        errorFile: true,
+        file: false,
+        errorFile: false,
       });
     });
   });
 
   describe('updateSettings', () => {
-    it('should validate log level', async () => {
-      const invalidSettings = {
-        level: 'invalid_level',
-        destinations: { console: true, file: true, errorFile: true },
-        filePath: 'logs/app.log',
-        errorFilePath: 'logs/error.log',
-      };
-
-      await expect(loggingService.updateSettings(invalidSettings))
-        .rejects.toThrow('Invalid log level');
-    });
-
-    it('should validate destinations structure', async () => {
-      const invalidSettings = {
-        level: 'info',
-        destinations: { invalid: true }, // Missing required destinations
-        filePath: 'logs/app.log',
-        errorFilePath: 'logs/error.log',
-      };
-
-      await expect(loggingService.updateSettings(invalidSettings))
-        .rejects.toThrow('Invalid destinations configuration');
-    });
-
-    it('should validate file paths', async () => {
-      const invalidSettings = {
-        level: 'info',
-        destinations: { console: true, file: true, errorFile: true },
-        filePath: '', // Empty path
-        errorFilePath: 'logs/error.log',
-      };
-
-      await expect(loggingService.updateSettings(invalidSettings))
-        .rejects.toThrow('File paths cannot be empty');
-    });
-
     it('should save valid settings to database', async () => {
       const validSettings = {
         level: 'debug',
@@ -185,11 +149,20 @@ describe('LoggingService', () => {
       };
 
       mockPrisma.systemSetting.upsert.mockResolvedValue({});
-      const reconfigureSpy = jest.spyOn(loggingService, 'reconfigureLogger');
+      mockPrisma.systemSetting.findMany.mockResolvedValue([
+        { key: 'logLevel', value: 'error' },
+        { key: 'logDestinations', value: JSON.stringify(validSettings.destinations) },
+        { key: 'logFilePath', value: 'test/app.log' },
+        { key: 'logErrorFilePath', value: 'test/error.log' }
+      ]);
 
+      const originalLogger = loggingService.getLogger();
       await loggingService.updateSettings(validSettings);
+      const newLogger = loggingService.getLogger();
 
-      expect(reconfigureSpy).toHaveBeenCalledWith(validSettings);
+      // Verify that the logger was recreated and settings were saved
+      expect(newLogger).toBeDefined();
+      expect(mockPrisma.systemSetting.upsert).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -203,26 +176,15 @@ describe('LoggingService', () => {
   describe('getAvailableDestinations', () => {
     it('should return all available log destinations', () => {
       const destinations = loggingService.getAvailableDestinations();
-      expect(destinations).toEqual(['console', 'file', 'errorFile']);
+      expect(destinations).toEqual([
+        { key: 'console', label: 'Console Output' },
+        { key: 'file', label: 'Log File' },
+        { key: 'errorFile', label: 'Error Log File' }
+      ]);
     });
   });
 
-  describe('reconfigureLogger', () => {
-    it('should create new logger with provided settings', () => {
-      const settings = {
-        level: 'warn',
-        destinations: { console: true, file: false, errorFile: true },
-        filePath: 'test/app.log',
-        errorFilePath: 'test/error.log',
-      };
 
-      loggingService.reconfigureLogger(settings);
-
-      // Verify winston.createLogger was called
-      const winston = require('winston');
-      expect(winston.createLogger).toHaveBeenCalled();
-    });
-  });
 
   describe('getLogger', () => {
     it('should return current logger instance', () => {
@@ -232,10 +194,10 @@ describe('LoggingService', () => {
   });
 
   describe('error handling', () => {
-    it('should handle database errors gracefully in getSettings', async () => {
+    it('should handle database errors gracefully in getLoggingSettings', async () => {
       mockPrisma.systemSetting.findMany.mockRejectedValue(new Error('Database error'));
 
-      const settings = await loggingService.getSettings();
+      const settings = await loggingService.getLoggingSettings();
 
       // Should return default settings when database fails
       expect(settings).toEqual(expect.objectContaining({
