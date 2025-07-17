@@ -130,7 +130,10 @@ export function AuditLogTable({
     <Card key={log.id} className="mb-4">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <Badge className={cn('text-xs', getActionColor(log.action))}>
+          <Badge 
+            variant="outline" 
+            className={cn('text-xs border-0', getActionColor(log.action))}
+          >
             {formatActionName(log.action)}
           </Badge>
           <span className="text-xs text-muted-foreground">
@@ -215,7 +218,10 @@ export function AuditLogTable({
               {formatTimestamp(log.timestamp)}
             </TableCell>
             <TableCell>
-              <Badge className={cn('text-xs', getActionColor(log.action))}>
+              <Badge 
+                variant="outline" 
+                className={cn('text-xs border-0', getActionColor(log.action))}
+              >
                 {formatActionName(log.action)}
               </Badge>
             </TableCell>

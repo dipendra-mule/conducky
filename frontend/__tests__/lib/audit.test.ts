@@ -28,36 +28,36 @@ describe('audit utilities', () => {
   });
 
   describe('getActionColor', () => {
-    it('should return green for create actions', () => {
-      expect(getActionColor('create_incident')).toBe('text-green-600');
-      expect(getActionColor('create_user')).toBe('text-green-600');
+    it('should return green styling for create actions', () => {
+      expect(getActionColor('create_incident')).toBe('bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200');
+      expect(getActionColor('create_user')).toBe('bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200');
     });
 
-    it('should return blue for update actions', () => {
-      expect(getActionColor('update_incident')).toBe('text-blue-600');
-      expect(getActionColor('update_user')).toBe('text-blue-600');
+    it('should return blue styling for update actions', () => {
+      expect(getActionColor('update_incident')).toBe('bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200');
+      expect(getActionColor('update_user')).toBe('bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200');
     });
 
-    it('should return red for delete actions', () => {
-      expect(getActionColor('delete_incident')).toBe('text-red-600');
-      expect(getActionColor('delete_comment')).toBe('text-red-600');
+    it('should return red styling for delete actions', () => {
+      expect(getActionColor('delete_incident')).toBe('bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200');
+      expect(getActionColor('delete_comment')).toBe('bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200');
     });
 
-    it('should return purple for resolve actions', () => {
-      expect(getActionColor('resolve_incident')).toBe('text-purple-600');
+    it('should return purple styling for resolve actions', () => {
+      expect(getActionColor('resolve_incident')).toBe('bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200');
     });
 
-    it('should return gray for close actions', () => {
-      expect(getActionColor('close_incident')).toBe('text-gray-600');
+    it('should return gray styling for close actions', () => {
+      expect(getActionColor('close_incident')).toBe('bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200');
     });
 
-    it('should return indigo for login actions', () => {
-      expect(getActionColor('login_successful')).toBe('text-indigo-600');
-      expect(getActionColor('login_failed')).toBe('text-indigo-600');
+    it('should return indigo styling for login actions', () => {
+      expect(getActionColor('login_successful')).toBe('bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200');
+      expect(getActionColor('login_failed')).toBe('bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200');
     });
 
-    it('should return default gray for unknown actions', () => {
-      expect(getActionColor('unknown_action')).toBe('text-gray-700');
+    it('should return default gray styling for unknown actions', () => {
+      expect(getActionColor('unknown_action')).toBe('bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300');
     });
   });
   describe('formatTimestamp', () => {
