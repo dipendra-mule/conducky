@@ -106,12 +106,12 @@ export function formatActionName(action: string): string {
  * Get action color for display
  */
 export function getActionColor(action: string): string {
-  if (action.includes('create')) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-  if (action.includes('update')) return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-  if (action.includes('delete')) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-  if (action.includes('resolve')) return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-  if (action.includes('close')) return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-  if (action.includes('login')) return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
+  if (action.startsWith('create')) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+  if (action.startsWith('update')) return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+  if (action.startsWith('delete')) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+  if (action.startsWith('resolve')) return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+  if (action.startsWith('close')) return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+  if (action.startsWith('login')) return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
   return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
 }
 
