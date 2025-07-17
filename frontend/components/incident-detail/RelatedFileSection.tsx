@@ -34,7 +34,6 @@ interface RelatedFileSectionProps {
 export function RelatedFileSection({
   relatedFiles,
   apiBaseUrl,
-  incident,
   isResponderOrAbove,
   deletingRelatedFileId,
   setDeletingRelatedFileId,

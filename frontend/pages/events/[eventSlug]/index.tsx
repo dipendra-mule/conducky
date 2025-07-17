@@ -33,7 +33,7 @@ interface Event {
   website?: string;
   contactEmail?: string;
   codeOfConduct?: string;
-  logo?: any;
+  logo?: string;
 }
 
 interface UserRoles {
@@ -79,13 +79,13 @@ export default function PublicEventPage() {
             setUserRoles(rolesData);
             setIsAuthenticated(true);
           }
-        } catch (rolesError) {
+        } catch {
           // User not authenticated or no roles - this is fine for public view
           setIsAuthenticated(false);
         }
         
-      } catch (err: any) {
-        setError(err.message || "Failed to load event");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load event");
       } finally {
         setLoading(false);
       }

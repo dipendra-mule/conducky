@@ -264,7 +264,7 @@ class FrontendLogger {
                 totalTime: navigation.loadEventEnd - navigation.fetchStart,
               });
             }
-          } catch (error) {
+          } catch {
             // Silently ignore performance monitoring errors in test environments
           }
         }, 0);

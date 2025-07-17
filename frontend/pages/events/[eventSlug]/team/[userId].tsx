@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarIcon, ClockIcon, FileTextIcon, MessageSquareIcon, ShieldIcon } from 'lucide-react';
 import { AppBreadcrumbs } from '@/components/AppBreadcrumbs';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface UserProfile {
   user: {
@@ -36,14 +36,7 @@ interface Activity {
   timestamp: string;
 }
 
-interface Incident {
-  id: string;
-  title: string;
-  type: string;
-  state: string;
-  urgency: string;
-  createdAt: string;
-}
+
 
 export default function TeamMemberProfile() {
   const router = useRouter();
@@ -51,7 +44,15 @@ export default function TeamMemberProfile() {
   const [event, setEvent] = useState<{ id: string; name: string; slug: string; description?: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [incidents, setIncidents] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<Array<{
+    id: string;
+    title: string;
+    type: string;
+    state: string;
+    createdAt: string;
+    severity?: string;
+    urgency?: string;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
