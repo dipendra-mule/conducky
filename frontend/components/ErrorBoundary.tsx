@@ -51,8 +51,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       eventSlug: this.props.eventSlug,
       organizationSlug: this.props.organizationSlug,
       errorId,
-      componentStack: errorInfo.componentStack,
-      errorStack: error.stack,
+      componentStack: errorInfo.componentStack || 'unknown',
+      errorStack: error.stack || 'unknown',
     }, error, {
       errorInfo,
     });

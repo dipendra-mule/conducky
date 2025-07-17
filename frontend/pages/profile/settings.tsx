@@ -484,7 +484,7 @@ export default function ProfileSettings() {
               </p>
             </CardHeader>
             <CardContent>
-              {emailEnabled === false && (
+              {!emailEnabled && (
                 <div className="mb-4 text-yellow-700 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200 rounded p-3">
                   Email notifications are currently unavailable. Please contact your administrator if you believe this is an error.
                 </div>
@@ -520,7 +520,7 @@ export default function ProfileSettings() {
                       <Switch
                         checked={!!notifications.reportAssignedEmail}
                         onCheckedChange={(checked) => handleNotificationChange('reportAssignedEmail', !!checked)}
-                        disabled={notifLoading || emailEnabled === false}
+                        disabled={notifLoading || !emailEnabled}
                       />
                     </div>
                     <Separator />
@@ -534,7 +534,7 @@ export default function ProfileSettings() {
                       <Switch
                         checked={!!notifications.reportCommentAddedEmail}
                         onCheckedChange={(checked) => handleNotificationChange('reportCommentAddedEmail', !!checked)}
-                        disabled={notifLoading || emailEnabled === false}
+                        disabled={notifLoading || !emailEnabled}
                       />
                     </div>
                     <Separator />

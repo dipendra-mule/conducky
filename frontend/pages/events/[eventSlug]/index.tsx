@@ -230,7 +230,7 @@ export default function PublicEventPage() {
             
             {isAuthenticated && !hasEventAccess && event.contactEmail && isValidEmail(event.contactEmail) && (
               <Button 
-                onClick={() => window.location.href = `mailto:${sanitizeEmail(event.contactEmail)}?subject=Request access to ${event.name}`}
+                onClick={() => window.location.href = `mailto:${sanitizeEmail(event.contactEmail!)}?subject=Request access to ${event.name}`}
                 variant="outline"
                 className="flex items-center gap-2"
               >
@@ -374,7 +374,7 @@ export default function PublicEventPage() {
                             For urgent matters or if you prefer email contact.
                           </p>
                           <Button 
-                            onClick={() => window.location.href = `mailto:${sanitizeEmail(event.contactEmail)}?subject=Incident Report for ${event.name}`}
+                            onClick={() => window.location.href = `mailto:${sanitizeEmail(event.contactEmail!)}?subject=Incident Report for ${event.name}`}
                             size="sm"
                             variant="outline"
                             className="w-full"

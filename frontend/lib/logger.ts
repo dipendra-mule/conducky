@@ -116,7 +116,7 @@ class FrontendLogger {
 
     return entry;
   }
-  private sanitizeData(data: Record<string, unknown>): Record<string, unknown> {
+  private sanitizeData(data?: Record<string, unknown>): Record<string, unknown> | undefined {
     if (!data) return data;
     
     // Remove sensitive information with more precise matching
@@ -141,20 +141,21 @@ class FrontendLogger {
     
     const sanitized = JSON.parse(JSON.stringify(data));
     
-    const sanitizeObject = (obj: Record<string, unknown>): Record<string, unknown> => {
+    const sanitizeObject = (obj: unknown): unknown => {
       if (typeof obj !== 'object' || obj === null) return obj;
       
-      for (const key in obj) {
+      const recordObj = obj as Record<string, unknown>;
+      for (const key in recordObj) {
         if (sensitivePatterns.some(pattern => pattern.test(key))) {
-          obj[key] = '[REDACTED]';
-        } else if (typeof obj[key] === 'object') {
-          obj[key] = sanitizeObject(obj[key]);
+          recordObj[key] = '[REDACTED]';
+        } else if (typeof recordObj[key] === 'object') {
+          recordObj[key] = sanitizeObject(recordObj[key]);
         }
       }
-      return obj;
+      return recordObj;
     };
     
-    return sanitizeObject(sanitized);
+    return sanitizeObject(sanitized) as Record<string, unknown>;
   }
 
   private logToConsole(entry: LogEntry): void {
@@ -172,7 +173,7 @@ class FrontendLogger {
     }
   }
 
-  private getConsoleMethod(level: LogLevel): (...args: any[]) => void {
+  private getConsoleMethod(level: LogLevel): (...args: unknown[]) => void {
     switch (level) {
       case LogLevel.DEBUG:
         return console.debug;
@@ -273,7 +274,7 @@ class FrontendLogger {
   }
 
   // Public logging methods
-  public debug(message: string, context?: LogContext, data?: any): void {
+  public debug(message: string, context?: LogContext, data?: Record<string, unknown>): void {
     if (!this.shouldLog(LogLevel.DEBUG)) return;
     
     const entry = this.createLogEntry(LogLevel.DEBUG, message, context, undefined, data);
@@ -281,7 +282,7 @@ class FrontendLogger {
     this.logToConsole(entry);
   }
 
-  public info(message: string, context?: LogContext, data?: any): void {
+  public info(message: string, context?: LogContext, data?: Record<string, unknown>): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
     
     const entry = this.createLogEntry(LogLevel.INFO, message, context, undefined, data);
@@ -293,7 +294,7 @@ class FrontendLogger {
     }
   }
 
-  public warn(message: string, context?: LogContext, data?: any): void {
+  public warn(message: string, context?: LogContext, data?: Record<string, unknown>): void {
     if (!this.shouldLog(LogLevel.WARN)) return;
     
     const entry = this.createLogEntry(LogLevel.WARN, message, context, undefined, data);
@@ -305,7 +306,7 @@ class FrontendLogger {
     }
   }
 
-  public error(message: string, context?: LogContext, error?: Error, data?: any): void {
+  public error(message: string, context?: LogContext, error?: Error, data?: Record<string, unknown>): void {
     if (!this.shouldLog(LogLevel.ERROR)) return;
     
     const entry = this.createLogEntry(LogLevel.ERROR, message, context, error, data);
@@ -319,7 +320,7 @@ class FrontendLogger {
   }
 
   // User interaction tracking
-  public trackUserAction(action: string, context?: LogContext, data?: any): void {
+  public trackUserAction(action: string, context?: LogContext, data?: Record<string, unknown>): void {
     this.info(`User action: ${action}`, {
       ...context,
       actionType: 'user_interaction',
@@ -351,9 +352,7 @@ class FrontendLogger {
   }
 
   // Form validation and submission tracking
-  public trackFormEvent(formName: string, event: 'submit' | 'error' | 'validation_error', context?: LogContext, data?: any): void {
-    const level = event === 'error' || event === 'validation_error' ? LogLevel.WARN : LogLevel.INFO;
-    
+  public trackFormEvent(formName: string, event: 'submit' | 'error' | 'validation_error', context?: LogContext, data?: Record<string, unknown>): void {
     this.info(`Form ${event}: ${formName}`, {
       ...context,
       actionType: 'form_event',
@@ -387,5 +386,5 @@ export { logger };
 // Development helpers
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   // Make logger available globally for debugging
-  (window as any).logger = logger;
+  (window as unknown as Record<string, unknown>).logger = logger;
 }

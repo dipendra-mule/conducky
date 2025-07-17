@@ -73,7 +73,7 @@ export function AuditLogTable({
 
   const handleSortChange = (sortBy: string) => {
     const newSortOrder = filters.sortBy === sortBy && filters.sortOrder === 'desc' ? 'asc' : 'desc';
-    onFiltersChange({ ...filters, sortBy: sortBy as any, sortOrder: newSortOrder });
+    onFiltersChange({ ...filters, sortBy: sortBy as "timestamp" | "action" | "targetType", sortOrder: newSortOrder });
   };
 
   const renderFilters = () => (

@@ -19,11 +19,16 @@ interface User {
 
 interface Comment {
   id: string;
-  author: User;
   body: string;
+  userId: string;
+  authorId: string;
+  incidentId: string;
+  visibility: string;
   isMarkdown: boolean;
   createdAt: string;
-  visibility: string;
+  updatedAt: string;
+  author: User;
+  user?: User;
 }
 
 interface CommentListResponse {

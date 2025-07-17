@@ -147,7 +147,7 @@ function Login() {
               }            } catch (error) {
               logger.warn('Error redeeming invite during login', { 
                 error: error instanceof Error ? error.message : String(error),
-                inviteCode: router.query.invite,
+                inviteCode: Array.isArray(router.query.invite) ? router.query.invite[0] : router.query.invite,
                 context: 'login_invite_redemption'
               });
               // Fallback to normal redirect

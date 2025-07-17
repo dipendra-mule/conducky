@@ -12,7 +12,7 @@ import { logger } from "@/lib/logger";
 interface User {
   id: string;
   name?: string;
-  email: string;
+  email?: string;
   roles?: string[];
 }
 
@@ -61,17 +61,21 @@ interface Incident {
 interface Comment {
   id: string;
   body: string;
-  visibility: string;
-  createdAt: string;
+  userId: string;
   authorId: string;
-  isMarkdown?: boolean;
+  incidentId: string;
+  visibility: string;
+  isMarkdown: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user?: User;
 }
 
 interface EventUser {
   id: string;
   name?: string;
-  email: string;
-  roles: string[];
+  email?: string;
+  roles?: string[];
 }
 
 interface AssignmentFields {
@@ -84,20 +88,35 @@ export interface IncidentDetailViewProps {
   incident: Incident;
   user: User;
   userRoles?: string[];
+  comments?: Comment[];
   relatedFiles?: RelatedFile[];
   loading?: boolean;
   error?: string;
   eventSlug?: string;
+  isStateChanging?: boolean;
+  stateChangeError?: string | null;
   onEnhancedStateChange?: (newState: string, notes?: string, assignedToUserId?: string) => void;
   onAssignmentChange?: () => void;
   onCommentSubmit?: (body: string, visibility: string, isMarkdown?: boolean) => void;
   onCommentEdit?: (comment: Comment, body: string, visibility: string, isMarkdown?: boolean) => void;
   onCommentDelete?: (comment: Comment) => void;
+  onDeleteConfirm?: (comment: Comment) => Promise<void>;
+  onEditSave?: (comment: Comment, body?: string, visibility?: string, isMarkdown?: boolean) => Promise<{ success: boolean; error?: string }>;
+  onStateChange?: (newState: string, notes?: string, assignedToUserId?: string) => Promise<void>;
+  onDescriptionEdit?: (newDescription: string) => Promise<void>;
   onRelatedFileUpload?: (files: File[]) => void;
   onRelatedFileDelete?: (file: RelatedFile) => void;
+  newRelatedFiles?: File[];
+  setNewRelatedFiles?: (files: File[]) => void;
+  relatedFileUploadMsg?: string;
+  uploadingRelatedFile?: boolean;
+  isResponderOrAbove?: boolean;
   assignmentFields?: AssignmentFields;
   setAssignmentFields?: (fields: AssignmentFields) => void;
   eventUsers?: EventUser[];
+  assignmentLoading?: boolean;
+  assignmentError?: string | null;
+  assignmentSuccess?: string | null;
   stateHistory?: Array<{
     id: string;
     fromState: string;
@@ -410,7 +429,7 @@ export const IncidentDetailView: React.FC<IncidentDetailViewProps> = ({
             <StateManagementSection
               currentState={incident.state}
               allowedTransitions={getAllowedTransitions(incident.state)}
-              onStateChange={onEnhancedStateChange as any}
+              onStateChange={onEnhancedStateChange || (() => {})}
               canChangeState={canChangeState}
               stateHistory={stateHistory}
               eventUsers={eventUsers}
