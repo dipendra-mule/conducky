@@ -37,7 +37,7 @@ if (process.env.NODE_ENV !== 'test') {  prisma.$on('query', (e) => {
     
     // Log slow queries with context
     if (duration > VERY_SLOW_QUERY_THRESHOLD) {
-      logger.warn('Very slow database query detected', {
+      logger().warn('Very slow database query detected', {
         query: e.query.slice(0, 200) + (e.query.length > 200 ? '...' : ''),
         params: e.params,
         duration: `${duration}ms`,
@@ -46,7 +46,7 @@ if (process.env.NODE_ENV !== 'test') {  prisma.$on('query', (e) => {
         performance: 'very_slow'
       });
     } else if (duration > SLOW_QUERY_THRESHOLD) {
-      logger.info('Slow database query detected', {
+      logger().info('Slow database query detected', {
         query: e.query.slice(0, 100) + (e.query.length > 100 ? '...' : ''),
         duration: `${duration}ms`,
         timestamp: e.timestamp,
@@ -56,7 +56,7 @@ if (process.env.NODE_ENV !== 'test') {  prisma.$on('query', (e) => {
     
     // Log query metrics in development for analysis
     if (process.env.NODE_ENV === 'development') {
-      logger.debug('Database query executed', {
+      logger().debug('Database query executed', {
         query: e.query.slice(0, 150) + (e.query.length > 150 ? '...' : ''),
         duration: `${duration}ms`,
         timestamp: e.timestamp,
@@ -67,7 +67,7 @@ if (process.env.NODE_ENV !== 'test') {  prisma.$on('query', (e) => {
 
   // Log database errors with context
   prisma.$on('error', (e) => {
-    logger.error('Database error occurred', {
+    logger().error('Database error occurred', {
       message: e.message,
       timestamp: e.timestamp,
       target: e.target
@@ -76,7 +76,7 @@ if (process.env.NODE_ENV !== 'test') {  prisma.$on('query', (e) => {
 
   // Log database warnings
   prisma.$on('warn', (e) => {
-    logger.warn('Database warning', {
+    logger().warn('Database warning', {
       message: e.message,
       timestamp: e.timestamp,
       target: e.target
@@ -94,7 +94,7 @@ export const databaseConfig = {
       await prisma.$connect();
       return true;
     } catch (error) {
-      logger.error('Database connection failed:', error);
+      logger().error('Database connection failed:', error);
       return false;
     }
   },

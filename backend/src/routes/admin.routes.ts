@@ -131,7 +131,7 @@ router.get('/events', requireSystemAdmin(), async (req: Request, res: Response):
       statistics,
     });
   } catch (error: any) {
-    logger.error('Error fetching admin events:', error);
+    logger().error('Error fetching admin events:', error);
     res.status(500).json({
       error: 'Failed to fetch events',
       details: error.message,
@@ -158,7 +158,7 @@ router.post('/events', strictRateLimit, validateEvent, handleValidationErrors, r
         }
     }
   } catch (error: any) {
-    logger.error('Error creating event', {
+    logger().error('Error creating event', {
       error: error.message,
       userId: req.user?.id,
       requestData: { name: req.body?.name, slug: req.body?.slug }
@@ -211,7 +211,7 @@ router.get('/events/check-slug/:slug', requireSystemAdmin(), async (req: Request
       reason: existingEvent ? 'Slug is already taken' : null,
     });
   } catch (error: any) {
-    logger.error('Error checking slug availability:', error);
+    logger().error('Error checking slug availability:', error);
     res.status(500).json({
       error: 'Failed to check slug availability',
       details: error.message,
@@ -274,7 +274,7 @@ router.get('/events/stats', requireSystemAdmin(), async (req: Request, res: Resp
       })),
     });
   } catch (error: any) {
-    logger.error('Error fetching system stats:', error);
+    logger().error('Error fetching system stats:', error);
     res.status(500).json({
       error: 'Failed to fetch system statistics',
       details: error.message,
@@ -299,28 +299,28 @@ router.get('/system/settings', requireSystemAdmin(), async (req: Request, res: R
         try {
           settingsObj[setting.key] = JSON.parse(setting.value);
         } catch (parseError) {
-          logger.error('Error parsing email settings:', parseError);
+          logger().error('Error parsing email settings:', parseError);
           settingsObj[setting.key] = null;
         }
       } else if (setting.key === 'googleOAuth') {
         try {
           settingsObj[setting.key] = JSON.parse(setting.value);
         } catch (parseError) {
-          logger.error('Error parsing Google OAuth settings:', parseError);
+          logger().error('Error parsing Google OAuth settings:', parseError);
           settingsObj[setting.key] = null;
         }
       } else if (setting.key === 'githubOAuth') {
         try {
           settingsObj[setting.key] = JSON.parse(setting.value);
         } catch (parseError) {
-          logger.error('Error parsing GitHub OAuth settings:', parseError);
+          logger().error('Error parsing GitHub OAuth settings:', parseError);
           settingsObj[setting.key] = null;
         }
       } else if (setting.key === 'logDestinations') {
         try {
           settingsObj[setting.key] = JSON.parse(setting.value);
         } catch (parseError) {
-          logger.error('Error parsing log destinations:', parseError);
+          logger().error('Error parsing log destinations:', parseError);
           settingsObj[setting.key] = null;
         }
       } else {
@@ -333,13 +333,13 @@ router.get('/system/settings', requireSystemAdmin(), async (req: Request, res: R
       const loggingSettings = await getLoggingSettings();
       settingsObj.logging = loggingSettings;
     } catch (loggingError) {
-      logger.warn('Could not fetch logging settings for system settings response:', loggingError);
+      logger().warn('Could not fetch logging settings for system settings response:', loggingError);
       settingsObj.logging = null;
     }
     
     res.json({ settings: settingsObj });
   } catch (err: any) {
-    logger.error('Error fetching admin system settings:', err);
+    logger().error('Error fetching admin system settings:', err);
     res.status(500).json({ 
       error: 'Failed to fetch system settings',
       ...(process.env.NODE_ENV !== 'production' && { details: err.message })
@@ -393,7 +393,7 @@ router.patch('/system/settings', requireSystemAdmin(), async (req: Request, res:
     // Reinitialize OAuth strategies
     await reinitializeOAuthStrategies();
   } catch (error: any) {
-    logger.error('Error updating system settings:', error);
+    logger().error('Error updating system settings:', error);
     res.status(500).json({
       error: 'Failed to update system settings',
       ...(process.env.NODE_ENV !== 'production' && { details: error.message })
@@ -433,7 +433,7 @@ router.patch('/events/:eventId/toggle', requireSystemAdmin(), async (req: Reques
       event: updatedEvent,
     });
   } catch (error) {
-    logger.error('Error toggling event status:', error);
+    logger().error('Error toggling event status:', error);
     if (error instanceof Error && error.message.includes('Record to update not found')) {
       res.status(404).json({ error: 'Event not found' });
       return;
@@ -491,7 +491,7 @@ router.get('/events/:eventId', requireSystemAdmin(), async (req: Request, res: R
       },
     });
   } catch (error: any) {
-    logger.error('Error fetching event:', error);
+    logger().error('Error fetching event:', error);
     res.status(500).json({
       error: 'Failed to fetch event',
       details: error.message,
@@ -543,7 +543,7 @@ router.get('/events/:eventId/invites', requireSystemAdmin(), async (req: Request
       })),
     });
   } catch (error: any) {
-    logger.error('Error fetching event invites:', error);
+    logger().error('Error fetching event invites:', error);
     res.status(500).json({
       error: 'Failed to fetch event invites',
       details: error.message,
@@ -656,7 +656,7 @@ router.post('/events/:eventId/invites', requireSystemAdmin(), async (req: Reques
       },
     });
   } catch (error: any) {
-    logger.error('Error creating event invite:', error);
+    logger().error('Error creating event invite:', error);
     res.status(500).json({
       error: 'Failed to create event invite',
       details: error.message,
@@ -692,7 +692,7 @@ router.get('/settings/email', requireSystemAdmin(), async (req: Request, res: Re
         const savedSettings = JSON.parse(emailSetting.value);
         emailSettings = { ...emailSettings, ...savedSettings };
       } catch (parseError) {
-        logger.error('Error parsing saved email settings:', parseError);
+        logger().error('Error parsing saved email settings:', parseError);
         // Fall back to defaults if parsing fails
       }
     }
@@ -701,7 +701,7 @@ router.get('/settings/email', requireSystemAdmin(), async (req: Request, res: Re
       email: emailSettings
     });
   } catch (error) {
-    logger.error('Error fetching email settings:', error);
+    logger().error('Error fetching email settings:', error);
     res.status(500).json({ error: 'Failed to fetch email settings.' });
   }
 });
@@ -722,25 +722,25 @@ router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedReq
       sendgridApiKey
     } = req.body;
 
-    logger.debug('PUT /settings/email REQUEST', { 
+    logger().debug('PUT /settings/email REQUEST', { 
       userId: req.user?.id,
       provider,
       fromAddress,
       hasFromName: !!fromName
     });
 
-    logger.debug('Extracted email settings values', { provider, fromAddress, fromName });
+    logger().debug('Extracted email settings values', { provider, fromAddress, fromName });
 
     // Validate required fields based on provider
     if (!provider) {
-      logger.warn('Email settings validation failed: No provider provided', { userId: req.user?.id });
+      logger().warn('Email settings validation failed: No provider provided', { userId: req.user?.id });
       return res.status(400).json({ 
         error: 'Email provider is required.' 
       });
     }
 
     if (!fromAddress) {
-      logger.warn('Email settings validation failed: No fromAddress provided', { userId: req.user?.id });
+      logger().warn('Email settings validation failed: No fromAddress provided', { userId: req.user?.id });
       return res.status(400).json({ 
         error: 'From address is required.' 
       });
@@ -749,7 +749,7 @@ router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedReq
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(fromAddress)) {
-      logger.warn('Email settings validation failed: Invalid email format', { 
+      logger().warn('Email settings validation failed: Invalid email format', { 
         userId: req.user?.id,
         fromAddress 
       });
@@ -785,7 +785,7 @@ router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedReq
       }
     });
 
-    logger.info('Email settings saved to database successfully', { 
+    logger().info('Email settings saved to database successfully', { 
       userId: req.user?.id,
       provider 
     });
@@ -794,7 +794,7 @@ router.put('/settings/email', requireSystemAdmin(), async (req: AuthenticatedReq
       message: 'Email settings saved successfully' 
     });
   } catch (error) {
-    logger.error('Error updating email settings:', error);
+    logger().error('Error updating email settings:', error);
     res.status(500).json({ error: 'Failed to update email settings.' });
   }
 });
@@ -846,10 +846,10 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
       });
     }
 
-    logger.debug(`\n=== EMAIL TEST (${provider.toUpperCase()} Provider) ===`);
-    logger.debug(`Testing email settings for user: ${user.email}`);
-    logger.debug(`From: ${fromAddress}`);
-    logger.debug(`From Name: ${fromName || 'Not set'}`);
+    logger().debug(`\n=== EMAIL TEST (${provider.toUpperCase()} Provider) ===`);
+    logger().debug(`Testing email settings for user: ${user.email}`);
+    logger().debug(`From: ${fromAddress}`);
+    logger().debug(`From Name: ${fromName || 'Not set'}`);
 
     // Import EmailService here to avoid circular imports
     const { EmailService } = require('../utils/email');
@@ -869,12 +869,12 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
       sendgridApiKey
     }, user.email);
 
-    logger.debug(`Test result: ${testResult.success ? 'SUCCESS' : 'FAILED'}`);
-    logger.debug(`Message: ${testResult.message}`);
+    logger().debug(`Test result: ${testResult.success ? 'SUCCESS' : 'FAILED'}`);
+    logger().debug(`Message: ${testResult.message}`);
     if (testResult.error) {
-      logger.debug(`Error: ${testResult.error}`);
+      logger().debug(`Error: ${testResult.error}`);
     }
-    logger.debug('=== END EMAIL TEST ===\n');
+    logger().debug('=== END EMAIL TEST ===\n');
 
     if (testResult.success) {
       res.json({
@@ -890,7 +890,7 @@ router.post('/settings/email/test', requireSystemAdmin(), async (req: Authentica
       });
     }
   } catch (error) {
-    logger.error('Error testing email connection:', error);
+    logger().error('Error testing email connection:', error);
     res.status(500).json({ 
       error: 'Failed to test email connection.',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -918,7 +918,7 @@ router.get('/settings/google-oauth', requireSystemAdmin(), async (req: Request, 
         const savedSettings = JSON.parse(googleOAuthSetting.value);
         googleOAuthSettings = { ...googleOAuthSettings, ...savedSettings };
       } catch (parseError) {
-        logger.error('Error parsing saved Google OAuth settings:', parseError);
+        logger().error('Error parsing saved Google OAuth settings:', parseError);
         // Fall back to defaults if parsing fails
       }
     }
@@ -927,7 +927,7 @@ router.get('/settings/google-oauth', requireSystemAdmin(), async (req: Request, 
       googleOAuth: googleOAuthSettings
     });
   } catch (error) {
-    logger.error('Error fetching Google OAuth settings:', error);
+    logger().error('Error fetching Google OAuth settings:', error);
     res.status(500).json({ error: 'Failed to fetch Google OAuth settings.' });
   }
 });
@@ -966,7 +966,7 @@ router.put('/settings/google-oauth', requireSystemAdmin(), async (req: Authentic
       }
     });
 
-    logger.info('Google OAuth settings saved to database successfully');
+    logger().info('Google OAuth settings saved to database successfully');
 
     res.json({ 
       message: 'Google OAuth settings saved successfully' 
@@ -975,7 +975,7 @@ router.put('/settings/google-oauth', requireSystemAdmin(), async (req: Authentic
     // Reinitialize OAuth strategies
     await reinitializeOAuthStrategies();
   } catch (error) {
-    logger.error('Error updating Google OAuth settings:', error);
+    logger().error('Error updating Google OAuth settings:', error);
     res.status(500).json({ error: 'Failed to update Google OAuth settings.' });
   }
 });
@@ -1000,7 +1000,7 @@ router.get('/settings/github-oauth', requireSystemAdmin(), async (req: Request, 
         const savedSettings = JSON.parse(githubOAuthSetting.value);
         githubOAuthSettings = { ...githubOAuthSettings, ...savedSettings };
       } catch (parseError) {
-        logger.error('Error parsing saved GitHub OAuth settings:', parseError);
+        logger().error('Error parsing saved GitHub OAuth settings:', parseError);
         // Fall back to defaults if parsing fails
       }
     }
@@ -1009,7 +1009,7 @@ router.get('/settings/github-oauth', requireSystemAdmin(), async (req: Request, 
       githubOAuth: githubOAuthSettings
     });
   } catch (error) {
-    logger.error('Error fetching GitHub OAuth settings:', error);
+    logger().error('Error fetching GitHub OAuth settings:', error);
     res.status(500).json({ error: 'Failed to fetch GitHub OAuth settings.' });
   }
 });
@@ -1048,7 +1048,7 @@ router.put('/settings/github-oauth', requireSystemAdmin(), async (req: Authentic
       }
     });
 
-    logger.info('GitHub OAuth settings saved to database successfully');
+    logger().info('GitHub OAuth settings saved to database successfully');
 
     res.json({ 
       message: 'GitHub OAuth settings saved successfully' 
@@ -1057,7 +1057,7 @@ router.put('/settings/github-oauth', requireSystemAdmin(), async (req: Authentic
     // Reinitialize OAuth strategies
     await reinitializeOAuthStrategies();
   } catch (error) {
-    logger.error('Error updating GitHub OAuth settings:', error);
+    logger().error('Error updating GitHub OAuth settings:', error);
     res.status(500).json({ error: 'Failed to update GitHub OAuth settings.' });
   }
 });
@@ -1087,13 +1087,13 @@ router.get('/oauth-providers', async (req: Request, res: Response) => {
           providers.github = true;
         }
       } catch (parseError) {
-        logger.error(`Error parsing ${setting.key} settings:`, parseError);
+        logger().error(`Error parsing ${setting.key} settings:`, parseError);
       }
     });
 
     res.json({ providers });
   } catch (error) {
-    logger.error('Error checking OAuth providers:', error);
+    logger().error('Error checking OAuth providers:', error);
     res.status(500).json({ error: 'Failed to check OAuth providers' });
   }
 });
@@ -1106,7 +1106,7 @@ router.get('/database/performance', requireAuth, requireSystemAdmin(), async (re
   try {
     const report = databaseMonitor.generateReport();
     
-    logger.info('Database performance report requested', {
+    logger().info('Database performance report requested', {
       userId: req.user.id,
       email: req.user.email,
       metricsCount: (report as any).summary?.totalQueries || 0
@@ -1118,7 +1118,7 @@ router.get('/database/performance', requireAuth, requireSystemAdmin(), async (re
       generatedAt: new Date().toISOString()
     });
   } catch (error) {
-    logger.error('Failed to generate database performance report:', error);
+    logger().error('Failed to generate database performance report:', error);
     res.status(500).json({ 
       message: 'Failed to generate performance report',
       error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
@@ -1134,7 +1134,7 @@ router.post('/database/performance/reset', requireAuth, requireSystemAdmin(), as
   try {
     databaseMonitor.resetMetrics();
     
-    logger.info('Database performance metrics reset', {
+    logger().info('Database performance metrics reset', {
       userId: req.user.id,
       email: req.user.email
     });
@@ -1145,7 +1145,7 @@ router.post('/database/performance/reset', requireAuth, requireSystemAdmin(), as
       resetAt: new Date().toISOString()
     });
   } catch (error) {
-    logger.error('Failed to reset database performance metrics:', error);
+    logger().error('Failed to reset database performance metrics:', error);
     res.status(500).json({ 
       message: 'Failed to reset performance metrics',
       error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
@@ -1171,7 +1171,7 @@ router.get('/system/logging', requireSystemAdmin(), async (req: Request, res: Re
       }
     });
   } catch (error: any) {
-    logger.error('Error fetching logging settings:', error);
+    logger().error('Error fetching logging settings:', error);
     res.status(500).json({
       error: 'Failed to fetch logging settings',
       ...(process.env.NODE_ENV !== 'production' && { details: error.message })
@@ -1197,11 +1197,33 @@ router.patch('/system/logging', requireSystemAdmin(), async (req: Request, res: 
     }
 
     // Validate destinations format
-    if (destinations && typeof destinations !== 'object') {
+    if (destinations && (typeof destinations !== 'object' || Array.isArray(destinations) || destinations === null)) {
       res.status(400).json({
         error: 'Destinations must be an object'
       });
       return;
+    }
+
+    // Validate destination structure if provided
+    if (destinations) {
+      const validKeys = ['console', 'file', 'errorFile'];
+      const invalidKeys = Object.keys(destinations).filter(key => !validKeys.includes(key));
+      if (invalidKeys.length > 0) {
+        res.status(400).json({
+          error: `Invalid destination keys: ${invalidKeys.join(', ')}`
+        });
+        return;
+      }
+
+      // Validate that each destination value is a boolean
+      for (const [key, value] of Object.entries(destinations)) {
+        if (typeof value !== 'boolean') {
+          res.status(400).json({
+            error: `Destination ${key} must be a boolean value`
+          });
+          return;
+        }
+      }
     }
 
     // Validate file paths
@@ -1219,6 +1241,44 @@ router.patch('/system/logging', requireSystemAdmin(), async (req: Request, res: 
       return;
     }
 
+    // Validate file paths for security (prevent directory traversal)
+    const validatePath = (path: string, pathName: string) => {
+      // Check for directory traversal patterns
+      if (path.includes('../') || path.includes('..\\') || path.includes('/..')) {
+        return `${pathName} contains invalid directory traversal patterns`;
+      }
+      
+      // Check for absolute paths to system directories (Unix/Linux)
+      const systemPaths = ['/etc/', '/usr/', '/var/', '/sys/', '/proc/', '/dev/', '/boot/', '/root/'];
+      if (systemPaths.some(sysPath => path.startsWith(sysPath))) {
+        return `${pathName} cannot point to system directories`;
+      }
+      
+      // Check for Windows system paths
+      const windowsSystemPaths = ['C:\\Windows\\', 'C:\\System32\\', 'C:\\Program Files\\'];
+      if (windowsSystemPaths.some(sysPath => path.toUpperCase().startsWith(sysPath.toUpperCase()))) {
+        return `${pathName} cannot point to system directories`;
+      }
+      
+      return null;
+    };
+
+    if (filePath) {
+      const pathError = validatePath(filePath, 'File path');
+      if (pathError) {
+        res.status(400).json({ error: pathError });
+        return;
+      }
+    }
+
+    if (errorFilePath) {
+      const pathError = validatePath(errorFilePath, 'Error file path');
+      if (pathError) {
+        res.status(400).json({ error: pathError });
+        return;
+      }
+    }
+
     const settings: any = {};
     if (level) settings.level = level;
     if (destinations) settings.destinations = destinations;
@@ -1227,7 +1287,7 @@ router.patch('/system/logging', requireSystemAdmin(), async (req: Request, res: 
 
     await updateLoggingSettings(settings);
 
-    logger.info('Logging settings updated', {
+    logger().info('Logging settings updated', {
       userId: (req as AuthenticatedRequest).user?.id,
       settings: settings
     });
@@ -1237,7 +1297,7 @@ router.patch('/system/logging', requireSystemAdmin(), async (req: Request, res: 
       settings: await getLoggingSettings()
     });
   } catch (error: any) {
-    logger.error('Error updating logging settings:', error);
+    logger().error('Error updating logging settings:', error);
     res.status(500).json({
       error: 'Failed to update logging settings',
       ...(process.env.NODE_ENV !== 'production' && { details: error.message })

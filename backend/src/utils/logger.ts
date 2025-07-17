@@ -39,22 +39,22 @@ class Logger {
     }
   }
   error(message: string, context?: LogContext): void {
-    logger.error(this.formatMessage(LogLevel.ERROR, message, context));
+    logger().error(this.formatMessage(LogLevel.ERROR, message, context));
   }
 
   warn(message: string, context?: LogContext): void {
-    logger.warn(this.formatMessage(LogLevel.WARN, message, context));
+    logger().warn(this.formatMessage(LogLevel.WARN, message, context));
   }
 
   info(message: string, context?: LogContext): void {
     if (this.isDevelopment || this.isProduction) {
-      logger.debug(this.formatMessage(LogLevel.INFO, message, context));
+      logger().debug(this.formatMessage(LogLevel.INFO, message, context));
     }
   }
 
   debug(message: string, context?: LogContext): void {
     if (this.isDevelopment) {
-      logger.debug(this.formatMessage(LogLevel.DEBUG, message, context));
+      logger().debug(this.formatMessage(LogLevel.DEBUG, message, context));
     }
   }
 
@@ -65,7 +65,7 @@ class Logger {
       security: true,
       severity: 'high'
     };
-    logger.error(this.formatMessage(LogLevel.ERROR, `SECURITY: ${message}`, securityContext));
+    logger().error(this.formatMessage(LogLevel.ERROR, `SECURITY: ${message}`, securityContext));
   }
 
   // Request logging helper

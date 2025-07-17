@@ -118,7 +118,7 @@ export class TagService {
         data: { tag }
       };
     } catch (error: any) {
-      logger.error('Error creating tag:', error);
+      logger().error('Error creating tag:', error);
       return {
         success: false,
         error: 'Failed to create tag.'
@@ -159,7 +159,7 @@ export class TagService {
         data: { tags }
       };
     } catch (error: any) {
-      logger.error('Error fetching tags:', error);
+      logger().error('Error fetching tags:', error);
       return {
         success: false,
         error: 'Failed to fetch tags.'
@@ -246,7 +246,7 @@ export class TagService {
         data: { tag }
       };
     } catch (error: any) {
-      logger.error('Error updating tag:', error);
+      logger().error('Error updating tag:', error);
       return {
         success: false,
         error: 'Failed to update tag.'
@@ -305,7 +305,7 @@ export class TagService {
         data: { message: 'Tag deleted successfully.' }
       };
     } catch (error: any) {
-      logger.error('Error deleting tag:', error);
+      logger().error('Error deleting tag:', error);
       return {
         success: false,
         error: 'Failed to delete tag.'
@@ -371,7 +371,7 @@ export class TagService {
         data: { message: 'Tags added to incident successfully.' }
       };
     } catch (error: any) {
-      logger.error('Error adding tags to incident:', error);
+      logger().error('Error adding tags to incident:', error);
       return {
         success: false,
         error: 'Failed to add tags to incident.'
@@ -419,7 +419,7 @@ export class TagService {
         data: { message: 'Tags removed from incident successfully.' }
       };
     } catch (error: any) {
-      logger.error('Error removing tags from incident:', error);
+      logger().error('Error removing tags from incident:', error);
       return {
         success: false,
         error: 'Failed to remove tags from incident.'
@@ -476,7 +476,7 @@ export class TagService {
         data: { incidents }
       };
     } catch (error: any) {
-      logger.error('Error fetching incidents by tag:', error);
+      logger().error('Error fetching incidents by tag:', error);
       return {
         success: false,
         error: 'Failed to fetch incidents by tag.'

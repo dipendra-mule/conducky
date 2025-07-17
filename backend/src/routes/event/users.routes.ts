@@ -32,7 +32,7 @@ router.get('/my-roles', requireRole(['reporter', 'responder', 'event_admin', 'sy
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get my roles error:', error);
+    logger().error('Get my roles error:', error);
     res.status(500).json({ error: 'Failed to fetch your roles for this event.' });
   }
 });
@@ -69,7 +69,7 @@ router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_adm
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get event users error:', error);
+    logger().error('Get event users error:', error);
     res.status(500).json({ error: 'Failed to fetch event users.' });
   }
 });
@@ -99,7 +99,7 @@ router.get('/:userId', requireRole(['responder', 'event_admin', 'system_admin'])
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get user profile error:', error);
+    logger().error('Get user profile error:', error);
     res.status(500).json({ error: 'Failed to fetch user profile.' });
   }
 });
@@ -131,7 +131,7 @@ router.get('/:userId/activity', requireRole(['responder', 'event_admin', 'system
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get user activity error:', error);
+    logger().error('Get user activity error:', error);
     res.status(500).json({ error: 'Failed to fetch user activity.' });
   }
 });
@@ -164,7 +164,7 @@ router.get('/:userId/incidents', requireRole(['responder', 'event_admin', 'syste
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get user incidents error:', error);
+    logger().error('Get user incidents error:', error);
     res.status(500).json({ error: 'Failed to fetch user incidents.' });
   }
 });
@@ -214,7 +214,7 @@ router.patch('/:userId', requireRole(['event_admin', 'system_admin']), async (re
 
     res.json({ message: 'User updated.' });
   } catch (error: any) {
-    logger.error('Update event user error:', error);
+    logger().error('Update event user error:', error);
     res.status(500).json({ error: 'Failed to update event user.' });
   }
 });
@@ -244,7 +244,7 @@ router.delete('/:userId', requireRole(['event_admin', 'system_admin']), async (r
 
     res.json({ message: 'User removed from event.' });
   } catch (error: any) {
-    logger.error('Remove user from event error:', error);
+    logger().error('Remove user from event error:', error);
     res.status(500).json({ error: 'Failed to remove user from event.' });
   }
 });

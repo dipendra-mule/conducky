@@ -47,7 +47,7 @@ export function sessionSecurity(req: Request, res: Response, next: NextFunction)
   // Check for session timeout (2 hours of inactivity)
   const inactivityTimeout = 2 * 60 * 60 * 1000; // 2 hours
   if (now - session.lastActivity > inactivityTimeout) {
-    logger.warn('Session expired due to inactivity', {
+    logger().warn('Session expired due to inactivity', {
       userId: (req.user as any)?.id,
       lastActivity: new Date(session.lastActivity).toISOString(),
       ip: req.ip
@@ -55,7 +55,7 @@ export function sessionSecurity(req: Request, res: Response, next: NextFunction)
     
     req.session.destroy((err) => {
       if (err) {
-        logger.error('Failed to destroy expired session', { error: err.message });
+        logger().error('Failed to destroy expired session', { error: err.message });
       }
     });
     
@@ -65,7 +65,7 @@ export function sessionSecurity(req: Request, res: Response, next: NextFunction)
   // Check for absolute session timeout (8 hours max)
   const absoluteTimeout = 8 * 60 * 60 * 1000; // 8 hours
   if (now - session.createdAt > absoluteTimeout) {
-    logger.warn('Session expired due to absolute timeout', {
+    logger().warn('Session expired due to absolute timeout', {
       userId: (req.user as any)?.id,
       createdAt: new Date(session.createdAt).toISOString(),
       ip: req.ip
@@ -73,7 +73,7 @@ export function sessionSecurity(req: Request, res: Response, next: NextFunction)
     
     req.session.destroy((err) => {
       if (err) {
-        logger.error('Failed to destroy expired session', { error: err.message });
+        logger().error('Failed to destroy expired session', { error: err.message });
       }
     });
     
@@ -96,14 +96,14 @@ export function sessionSecurity(req: Request, res: Response, next: NextFunction)
     
     req.session.regenerate((err) => {
       if (err) {
-        logger.error('Failed to regenerate session', { error: err.message });
+        logger().error('Failed to regenerate session', { error: err.message });
         return next();
       }
       
       // Restore preserved data to new session
       Object.assign(req.session, preservedData);
       
-      logger.debug('Session ID regenerated', { 
+      logger().debug('Session ID regenerated', { 
         userId: (req.user as any)?.id,
         ip: req.ip 
       });

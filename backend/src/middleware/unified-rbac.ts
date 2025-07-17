@@ -34,7 +34,7 @@ export function requireSystemAdmin() {
 
       next();
     } catch (error) {
-      logger.error('[UnifiedRBAC Middleware] Error checking system admin:', error);
+      logger().error('[UnifiedRBAC Middleware] Error checking system admin:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -67,7 +67,7 @@ export function requireOrgRole(roleNames: string[] = ['org_admin', 'org_viewer']
 
       next();
     } catch (error) {
-      logger.error('[UnifiedRBAC Middleware] Error checking org role:', error);
+      logger().error('[UnifiedRBAC Middleware] Error checking org role:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -133,7 +133,7 @@ export function requireEventRole(roleNames: string[] = ['event_admin', 'responde
       
       next();
     } catch (error) {
-      logger.error('[UnifiedRBAC Middleware] Error checking event role:', error);
+      logger().error('[UnifiedRBAC Middleware] Error checking event role:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -189,7 +189,7 @@ export function requireUnifiedRole(
 
       next();
     } catch (error) {
-      logger.error('[UnifiedRBAC Middleware] Error checking unified role:', error);
+      logger().error('[UnifiedRBAC Middleware] Error checking unified role:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -231,7 +231,7 @@ export function requireMinimumLevel(
 
       next();
     } catch (error) {
-      logger.error('[UnifiedRBAC Middleware] Error checking minimum level:', error);
+      logger().error('[UnifiedRBAC Middleware] Error checking minimum level:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };

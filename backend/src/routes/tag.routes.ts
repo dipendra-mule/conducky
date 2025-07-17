@@ -75,7 +75,7 @@ router.get('/event/:eventId', requireRole(['reporter', 'responder', 'event_admin
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Error fetching tags:', error);
+    logger().error('Error fetching tags:', error);
     res.status(500).json({ error: 'Failed to fetch tags.' });
   }
 });
@@ -137,7 +137,7 @@ router.get('/event/slug/:eventSlug', requireRole(['reporter', 'responder', 'even
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Error fetching tags by event slug:', error);
+    logger().error('Error fetching tags by event slug:', error);
     res.status(500).json({ error: 'Failed to fetch tags.' });
   }
 });
@@ -217,7 +217,7 @@ router.post('/', requireRole(['responder', 'event_admin', 'system_admin']), asyn
 
     res.status(201).json(result.data);
   } catch (error: any) {
-    logger.error('Error creating tag:', error);
+    logger().error('Error creating tag:', error);
     res.status(500).json({ error: 'Failed to create tag.' });
   }
 });
@@ -288,7 +288,7 @@ router.put('/:tagId', requireRole(['responder', 'event_admin', 'system_admin']),
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Error updating tag:', error);
+    logger().error('Error updating tag:', error);
     res.status(500).json({ error: 'Failed to update tag.' });
   }
 });
@@ -345,7 +345,7 @@ router.delete('/:tagId', requireRole(['responder', 'event_admin', 'system_admin'
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Error deleting tag:', error);
+    logger().error('Error deleting tag:', error);
     res.status(500).json({ error: 'Failed to delete tag.' });
   }
 });
@@ -422,7 +422,7 @@ router.post('/incident/:incidentId/add', requireRole(['responder', 'event_admin'
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Error adding tags to incident:', error);
+    logger().error('Error adding tags to incident:', error);
     res.status(500).json({ error: 'Failed to add tags to incident.' });
   }
 });
@@ -499,7 +499,7 @@ router.post('/incident/:incidentId/remove', requireRole(['responder', 'event_adm
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Error removing tags from incident:', error);
+    logger().error('Error removing tags from incident:', error);
     res.status(500).json({ error: 'Failed to remove tags from incident.' });
   }
 });
@@ -563,7 +563,7 @@ router.get('/:tagId/incidents', requireRole(['reporter', 'responder', 'event_adm
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Error fetching incidents by tag:', error);
+    logger().error('Error fetching incidents by tag:', error);
     res.status(500).json({ error: 'Failed to fetch incidents by tag.' });
   }
 });

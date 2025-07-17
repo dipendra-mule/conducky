@@ -54,7 +54,7 @@ class DatabaseMonitoringService {
     
     // Detect potential N+1 queries (more than 10 queries per request)
     if (queryCount > 10) {
-      logger.warn('Potential N+1 query pattern detected', {
+      logger().warn('Potential N+1 query pattern detected', {
         requestId,
         queryCount,
         performance: 'n_plus_one_suspected'

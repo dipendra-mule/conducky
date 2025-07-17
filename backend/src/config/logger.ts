@@ -66,7 +66,7 @@ const createDefaultLogger = () => {
 
   (logger as any).stream = {
     write: (message: string) => {
-      logger.http(message.trim());
+      getLogger().http(message.trim());
     },
   };
 
@@ -102,7 +102,16 @@ export const getLogger = () => {
 /**
  * Update logging settings (if configurable logging is available)
  */
-export const updateLoggingSettings = async (settings: any) => {
+export const updateLoggingSettings = async (settings: Partial<{
+  level: string;
+  destinations: {
+    console: boolean;
+    file: boolean;
+    errorFile: boolean;
+  };
+  filePath: string;
+  errorFilePath: string;
+}>) => {
   if (loggingService) {
     await loggingService.updateSettings(settings);
     logger = loggingService.getLogger();
@@ -150,4 +159,4 @@ export const getAvailableDestinations = () => {
 };
 
 // Export the default logger for backward compatibility
-export default getLogger();
+export { getLogger as default };

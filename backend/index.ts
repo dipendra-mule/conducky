@@ -32,13 +32,13 @@ import { validateEncryptionKey } from './src/utils/encryption';
 // Skip encryption validation in test environment unless specifically needed
 if (process.env.NODE_ENV !== 'test') {
   try {
-    logger.info('🔐 Validating encryption key...');
+    logger().info('🔐 Validating encryption key...');
     validateEncryptionKey(process.env.ENCRYPTION_KEY || '');
-    logger.info('✅ Encryption key validation passed');
+    logger().info('✅ Encryption key validation passed');
   } catch (error) {
-    logger.error('❌ Encryption key validation failed:', (error as Error).message);
-    logger.error('🔧 Please set a valid ENCRYPTION_KEY environment variable');
-    logger.error('📖 See documentation for encryption key requirements');
+    logger().error('❌ Encryption key validation failed:', (error as Error).message);
+    logger().error('🔧 Please set a valid ENCRYPTION_KEY environment variable');
+    logger().error('📖 See documentation for encryption key requirements');
     process.exit(1);
   }
 }
@@ -89,13 +89,13 @@ if (process.env.NODE_ENV === 'production') {
 
 // Graceful shutdown handling
 process.on('SIGINT', async () => {
-  logger.info('🛑 SIGINT received, shutting down gracefully...');
+  logger().info('🛑 SIGINT received, shutting down gracefully...');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  logger.info('🛑 SIGTERM received, shutting down gracefully...');
+  logger().info('🛑 SIGTERM received, shutting down gracefully...');
   await prisma.$disconnect();
   process.exit(0);
 });
@@ -217,7 +217,7 @@ app.get('/files/:relatedFileId/download', async (req, res) => {
       res.status(404).json({ error: 'File not found' });
     }
   } catch (error: any) {
-    logger.error(`Failed to download related file ${relatedFileId}:`, error);
+          logger().error(`Failed to download related file ${relatedFileId}:`, error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -439,8 +439,8 @@ app.use((req: any, res: any) => {
 if (process.env.NODE_ENV !== 'test') {
   const host = '0.0.0.0'; // Always bind to 0.0.0.0 for container compatibility
   app.listen(PORT, host, () => {
-    logger.info(`Server running on ${host}:${PORT}`);
-    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger().info(`Server running on ${host}:${PORT}`);
+logger().info(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
 

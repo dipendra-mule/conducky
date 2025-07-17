@@ -70,7 +70,7 @@ export function requireAuth(req: any, res: Response, next: NextFunction) {
     return next();
   }
   
-  logger.warn('Authentication required', {
+  logger().warn('Authentication required', {
     ip: req.ip,
     userAgent: req.get('User-Agent'),
     path: req.path,
@@ -133,7 +133,7 @@ export function loginMiddleware(req: Request, res: Response, next: NextFunction)
             userId: undefined // No userId for failed login
           });
         } catch (auditErr) {
-          logger.error('Failed to log audit for failed login:', auditErr);
+          logger().error('Failed to log audit for failed login:', auditErr);
         }
       }
       return res.status(401).json({ error: info?.message || 'Invalid credentials' });
@@ -153,7 +153,7 @@ export function loginMiddleware(req: Request, res: Response, next: NextFunction)
           userId: user.id
         });
       } catch (auditErr) {
-        logger.error('Failed to log audit for successful login:', auditErr);
+        logger().error('Failed to log audit for successful login:', auditErr);
       }
       
       return res.json({
@@ -176,7 +176,7 @@ export function logoutMiddleware(req: Request, res: Response): void {
     // Destroy the session to fully clear it
     req.session.destroy((sessionErr: any) => {
       if (sessionErr) {
-        logger.error('Session destruction failed:', sessionErr);
+        logger().error('Session destruction failed:', sessionErr);
         return res.status(500).json({ error: 'Logout failed.' });
       }
       

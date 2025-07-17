@@ -33,13 +33,13 @@ async function getOAuthSettings() {
           oauthSettings.github = parsed;
         }
       } catch (parseError) {
-        logger.error(`Error parsing ${setting.key} settings:`, parseError);
+        logger().error(`Error parsing ${setting.key} settings:`, parseError);
       }
     });
 
     return oauthSettings;
   } catch (error) {
-    logger.error('Error fetching OAuth settings from database:', error);
+    logger().error('Error fetching OAuth settings from database:', error);
     return {
       google: { clientId: '', clientSecret: '', enabled: false },
       github: { clientId: '', clientSecret: '', enabled: false }
@@ -188,14 +188,14 @@ async function initializeOAuthStrategies() {
 
           return done(null, user);
         } catch (error) {
-          logger.error('Google OAuth error:', error);
+          logger().error('Google OAuth error:', error);
           return done(error, false);
         }
       }
     ));
-    logger.info('Google OAuth strategy initialized from database settings');
+    logger().info('Google OAuth strategy initialized from database settings');
   } else {
-    logger.info('Google OAuth disabled or not configured');
+    logger().info('Google OAuth disabled or not configured');
   }
 
   // GitHub OAuth Strategy
@@ -289,20 +289,20 @@ async function initializeOAuthStrategies() {
 
           return done(null, user);
         } catch (error) {
-          logger.error('GitHub OAuth error:', error);
+          logger().error('GitHub OAuth error:', error);
           return done(error, false);
         }
       }
     ));
-    logger.info('GitHub OAuth strategy initialized from database settings');
+    logger().info('GitHub OAuth strategy initialized from database settings');
   } else {
-    logger.info('GitHub OAuth disabled or not configured');
+    logger().info('GitHub OAuth disabled or not configured');
   }
 }
 
 // Initialize OAuth strategies on startup
 initializeOAuthStrategies().catch(error => {
-  logger.error('Error initializing OAuth strategies:', error);
+  logger().error('Error initializing OAuth strategies:', error);
 });
 
 // Export a function to reinitialize strategies when settings change

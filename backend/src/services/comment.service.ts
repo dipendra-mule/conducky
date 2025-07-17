@@ -72,9 +72,9 @@ export class CommentService {
         decrypted.body = decryptField(decrypted.body);
       }
     } catch (error) {
-      logger.error('Error decrypting comment data:', error);
+      logger().error('Error decrypting comment data:', error);
       // Don't throw error - return original data to prevent breaking the app
-      logger.warn('Returning original encrypted comment data due to decryption failure');
+      logger().warn('Returning original encrypted comment data due to decryption failure');
     }
     
     return decrypted;
@@ -147,7 +147,7 @@ export class CommentService {
         data: { comment: decryptedComment }
       };
     } catch (error: unknown) {
-      logger.error('Error creating comment:', error);
+      logger().error('Error creating comment:', error);
       return {
         success: false,
         error: 'Failed to create comment.'
@@ -264,7 +264,7 @@ export class CommentService {
         }
       };
     } catch (error: unknown) {
-      logger.error('Error fetching report comments:', error);
+      logger().error('Error fetching report comments:', error);
       return {
         success: false,
         error: 'Failed to fetch comments.'
@@ -305,7 +305,7 @@ export class CommentService {
         data: { comment: decryptedComment }
       };
     } catch (error: unknown) {
-      logger.error('Error fetching comment:', error);
+      logger().error('Error fetching comment:', error);
       return {
         success: false,
         error: 'Failed to fetch comment.'
@@ -386,7 +386,7 @@ export class CommentService {
         data: { comment: decryptedComment }
       };
     } catch (error: unknown) {
-      logger.error('Error updating comment:', error);
+      logger().error('Error updating comment:', error);
       return {
         success: false,
         error: 'Failed to update comment.'
@@ -444,7 +444,7 @@ export class CommentService {
         data: { message: 'Comment deleted successfully' }
       };
     } catch (error: unknown) {
-      logger.error('Error deleting comment:', error);
+      logger().error('Error deleting comment:', error);
       return {
         success: false,
         error: 'Failed to delete comment.'
@@ -470,7 +470,7 @@ export class CommentService {
         data: { count }
       };
     } catch (error: unknown) {
-      logger.error('Error getting comment count:', error);
+      logger().error('Error getting comment count:', error);
       return {
         success: false,
         error: 'Failed to get comment count.'
@@ -595,7 +595,7 @@ export class CommentService {
         }
       };
     } catch (error: unknown) {
-      logger.error('Error fetching comments by author:', error);
+      logger().error('Error fetching comments by author:', error);
       return {
         success: false,
         error: 'Failed to fetch comments by author.'
@@ -648,7 +648,7 @@ export class CommentService {
         }
       };
     } catch (error: unknown) {
-      logger.error('Error checking comment visibility permissions:', error);
+      logger().error('Error checking comment visibility permissions:', error);
       return {
         success: false,
         error: 'Failed to check comment permissions.'

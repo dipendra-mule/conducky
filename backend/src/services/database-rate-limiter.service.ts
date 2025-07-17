@@ -89,7 +89,7 @@ export class DatabaseRateLimiter {
         next();
       } catch (error) {
         // Log error but don't block request on rate limiting failure
-        logger.error('Rate limiting error:', error);
+        logger().error('Rate limiting error:', error);
         next();
       }
     };
@@ -142,7 +142,7 @@ export class DatabaseRateLimiter {
       });
     } catch (error) {
       // Log cleanup errors but don't fail the request
-      logger.error('Rate limit cleanup error:', error);
+      logger().error('Rate limit cleanup error:', error);
     }
   }
 

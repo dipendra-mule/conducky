@@ -236,7 +236,7 @@ export class LoggingService {
     // Add stream for Morgan HTTP logging
     (logger as any).stream = {
       write: (message: string) => {
-        logger.http(message.trim());
+        logger().http(message.trim());
       },
     };
 

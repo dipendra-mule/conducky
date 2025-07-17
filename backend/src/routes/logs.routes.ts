@@ -119,7 +119,8 @@ router.post('/logs',  // Validation
       };
 
       // Log to backend logger with appropriate level
-      logger[logMethod as keyof typeof logger](`[Frontend] ${message}`, logData);
+      const loggerInstance = logger();
+      loggerInstance[logMethod as keyof typeof loggerInstance](`[Frontend] ${message}`, logData);
 
       res.status(200).json({ 
         message: 'Log received successfully',
@@ -127,7 +128,7 @@ router.post('/logs',  // Validation
       });
 
     } catch (err) {
-      logger.error('Error processing frontend log', { error: err });
+      logger().error('Error processing frontend log', { error: err });
       res.status(500).json({ 
         message: 'Internal server error processing log'
       });
