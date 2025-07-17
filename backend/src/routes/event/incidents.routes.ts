@@ -260,7 +260,7 @@ router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_adm
         const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
         
         // Validate pagination parameters before proceeding
-        if (page < 1 || limit < 1) {
+        if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
             res.status(400).json({ error: 'Invalid pagination parameters. Page and limit must be positive integers.' });
             return;
         }
@@ -434,7 +434,8 @@ router.get('/:incidentId/related-files/:fileId/download', requireRole(['reporter
         const result = await incidentService.getRelatedFile(fileId);
 
         if (result.success && result.data) {
-            res.setHeader('Content-Disposition', `attachment; filename="${result.data.filename}"`);
+            res.setHeader('Content-Disposition', `attachment; filename="${result.data.filename.replace(/"/g, '\\"')}"`);
+
             res.setHeader('Content-Type', result.data.mimetype);
             res.setHeader('Content-Length', result.data.size.toString());
             res.send(result.data.data);
