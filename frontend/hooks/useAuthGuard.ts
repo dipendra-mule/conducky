@@ -75,7 +75,7 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}): AuthGuardState 
   
   const isAuthenticated = !!user;
   const hasRequiredRole = requiredRoles.length === 0 || 
-    (user?.roles && requiredRoles.some(role => user.roles.includes(role)));
+    (user?.roles && requiredRoles.some(role => user.roles!.includes(role))) || false;
   
   // Mark auth as loaded when session loading is complete
   useEffect(() => {

@@ -5,19 +5,19 @@ import { UserContext } from "../pages/_app";
 
 const mockUser = { id: "test", email: "test@example.com" };
 
-// Mock fetch
-beforeEach(() => {
-  global.fetch = jest.fn();
-});
+// Reset mocks between tests
 afterEach(() => {
   jest.resetAllMocks();
 });
 
 describe("CoCTeamList", () => {
+  // Type assertion for fetch mock
+  const mockFetch = global.fetch as jest.MockedFunction<typeof global.fetch>;
+
   it("shows loading state", () => {
-    fetch.mockReturnValue(new Promise(() => {})); // never resolves
+    mockFetch.mockReturnValue(new Promise(() => {})); // never resolves
     render(
-      <UserContext.Provider value={{ user: mockUser }}>
+      <UserContext.Provider value={{ user: mockUser, setUser: jest.fn(), sessionLoading: false }}>
         <CoCTeamList eventSlug="test-event" />
       </UserContext.Provider>
     );
@@ -25,9 +25,9 @@ describe("CoCTeamList", () => {
   });
 
   it("shows error state", async () => {
-    fetch.mockRejectedValueOnce(new Error("fail"));
+    mockFetch.mockRejectedValueOnce(new Error("fail"));
     render(
-      <UserContext.Provider value={{ user: mockUser }}>
+      <UserContext.Provider value={{ user: mockUser, setUser: jest.fn(), sessionLoading: false }}>
         <CoCTeamList eventSlug="test-event" />
       </UserContext.Provider>
     );
@@ -37,16 +37,16 @@ describe("CoCTeamList", () => {
   });
 
   it("shows empty state if no users", async () => {
-    fetch.mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ users: [] }),
     });
-    fetch.mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ users: [] }),
     });
     render(
-      <UserContext.Provider value={{ user: mockUser }}>
+      <UserContext.Provider value={{ user: mockUser, setUser: jest.fn(), sessionLoading: false }}>
         <CoCTeamList eventSlug="test-event" />
       </UserContext.Provider>
     );
@@ -56,13 +56,13 @@ describe("CoCTeamList", () => {
   });
 
   it("shows team members", async () => {
-    fetch.mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         users: [{ id: "1", name: "Alice", email: "alice@example.com" }],
       }),
     });
-    fetch.mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         users: [{ id: "2", name: "Bob", email: "bob@example.com" }],

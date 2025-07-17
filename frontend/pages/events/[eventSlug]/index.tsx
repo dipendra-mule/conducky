@@ -412,7 +412,7 @@ export default function PublicEventPage() {
             </CardHeader>
             <CardContent>
               <div className="prose dark:prose-invert max-w-none max-h-96 overflow-y-auto">
-                                  <SecureMarkdown type="event">{event.codeOfConduct || ""}</SecureMarkdown>
+                                  <SecureMarkdown content={event.codeOfConduct || ""} type="event" />
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button 

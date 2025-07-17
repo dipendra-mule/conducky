@@ -17,7 +17,7 @@ jest.mock('next/router', () => ({
 describe('Login page', () => {
   it('renders email and password fields and login button', () => {
     render(
-      <UserContext.Provider value={{ user: null, setUser: jest.fn() }}>
+      <UserContext.Provider value={{ user: null, setUser: jest.fn(), sessionLoading: false }}>
         <LoginPage />
       </UserContext.Provider>
     );
