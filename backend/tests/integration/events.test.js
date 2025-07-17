@@ -56,10 +56,19 @@ describe("Event endpoints", () => {
       expect(res.body).toHaveProperty("message", "Role assigned.");
     });
     it("should fail if missing fields", async () => {
+      // Create unique slug to avoid conflicts with other tests
+      const uniqueSlug = `role-event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
       const eventRes = await request(app)
         .post("/api/events")
         .set("x-test-user-id", "1")
-        .send({ name: "Role Event2", slug: "role-event2" });
+        .send({ name: "Role Event2", slug: uniqueSlug });
+      
+      // Ensure event creation succeeded before proceeding
+      expect(eventRes.statusCode).toBe(201);
+      expect(eventRes.body).toHaveProperty("event");
+      expect(eventRes.body.event).toHaveProperty("id");
+      
       const eventId = eventRes.body.event.id;
       const res = await request(app).post(`/api/events/${eventId}/roles`).set("x-test-user-id", "1").send({});
       expect(res.statusCode).toBe(400);
