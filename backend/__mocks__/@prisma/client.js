@@ -543,9 +543,24 @@ class PrismaClient {
         return deletedIncident;
       }),
       create: jest.fn(({ data }) => {
+        // Transform Prisma relation syntax to flat structure
+        const transformedData = { ...data };
+        
+        // Handle event relation: { event: { connect: { id: "1" } } } -> { eventId: "1" }
+        if (data.event?.connect?.id) {
+          transformedData.eventId = data.event.connect.id;
+          delete transformedData.event;
+        }
+        
+        // Handle reporter relation: { reporter: { connect: { id: "1" } } } -> { reporterId: "1" }
+        if (data.reporter?.connect?.id) {
+          transformedData.reporterId = data.reporter.connect.id;
+          delete transformedData.reporter;
+        }
+        
         const newIncident = {
           id: `r${inMemoryStore.incidents.length + 1}`,
-          ...data,
+          ...transformedData,
         };
         inMemoryStore.incidents.push(newIncident);
         return newIncident;

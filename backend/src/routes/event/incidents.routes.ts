@@ -392,7 +392,7 @@ router.post('/:incidentId/related-files', fileUploadRateLimit, requireRole(['rep
 });
 
 // Download a related file
-router.get('/:incidentId/related-files/:fileId/download', requireEventRole(['reporter', 'responder', 'event_admin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/:incidentId/related-files/:fileId/download', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
     try {
         const { eventId, slug, incidentId, fileId } = req.params;
         const user = req.user as any;
@@ -416,7 +416,7 @@ router.get('/:incidentId/related-files/:fileId/download', requireEventRole(['rep
         const result = await incidentService.getRelatedFile(fileId);
 
         if (result.success && result.data) {
-            res.setHeader('Content-Disposition', 'attachment; filename=' + result.data.filename);
+            res.setHeader('Content-Disposition', `attachment; filename="${result.data.filename}"`);
             res.setHeader('Content-Type', result.data.mimetype);
             res.setHeader('Content-Length', result.data.size.toString());
             res.send(result.data.data);
