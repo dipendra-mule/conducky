@@ -36,7 +36,7 @@ export class AuthController {
         user: result.data?.user
       });
     } catch (error) {
-      logger.error('Registration error:', error);
+      logger().error('Registration error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -59,7 +59,7 @@ export class AuthController {
 
       res.status(200).json({ available: result.data });
     } catch (error) {
-      logger.error('Email check error:', error);
+      logger().error('Email check error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -77,7 +77,7 @@ export class AuthController {
 
       res.status(200).json({ message: result.data?.message || 'Request processed' });
     } catch (error) {
-      logger.error('Forgot password error:', error);
+      logger().error('Forgot password error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -100,7 +100,7 @@ export class AuthController {
 
       res.status(200).json({ valid: true, email: result.data });
     } catch (error) {
-      logger.error('Token validation error:', error);
+      logger().error('Token validation error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -118,7 +118,7 @@ export class AuthController {
 
       res.status(200).json({ message: result.data?.message || 'Password reset successful' });
     } catch (error) {
-      logger.error('Reset password error:', error);
+      logger().error('Reset password error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -142,7 +142,7 @@ export class AuthController {
 
       res.status(200).json(result.data);
     } catch (error) {
-      logger.error('Session error:', error);
+      logger().error('Session error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

@@ -149,7 +149,7 @@ export const getEventAuditLogs = [
 
       res.json(response);
     } catch (error) {
-      logger.error('Error fetching event audit logs:', error);
+      logger().error('Error fetching event audit logs:', error);
       res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   }
@@ -284,7 +284,7 @@ export const getOrganizationAuditLogs = [
 
       res.json(response);
     } catch (error) {
-      logger.error('Error fetching organization audit logs:', error);
+      logger().error('Error fetching organization audit logs:', error);
       res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   }
@@ -416,7 +416,7 @@ export const getSystemAuditLogs = [
 
       res.json(response);
     } catch (error) {
-      logger.error('Error fetching system audit logs:', error);
+      logger().error('Error fetching system audit logs:', error);
       res.status(500).json({ error: 'Failed to fetch audit logs' });
     }
   }

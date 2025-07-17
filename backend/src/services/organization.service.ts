@@ -800,7 +800,7 @@ export class OrganizationService {
         data: { organization }
       };
     } catch (error: any) {
-      logger.error('Error uploading organization logo:', error);
+      logger().error('Error uploading organization logo:', error);
       return {
         success: false,
         error: 'Failed to upload logo.'
@@ -841,7 +841,7 @@ export class OrganizationService {
         }
       };
     } catch (error: any) {
-      logger.error('Error fetching organization logo:', error);
+      logger().error('Error fetching organization logo:', error);
       return {
         success: false,
         error: 'Failed to fetch logo.'

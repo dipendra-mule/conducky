@@ -29,6 +29,18 @@ else
     # Don't exit on seeding failure as it might just mean roles already exist
 fi
 
+# Run logging settings seeding (safe for production)
+echo "🔧 Running logging settings seeding..."
+npm run seed:logging
+
+# Check if logging seeding was successful
+if [ $? -eq 0 ]; then
+    echo "✅ Logging settings seeding completed successfully"
+else
+    echo "⚠️  Logging settings seeding failed (this might be expected if settings already exist)"
+    # Don't exit on seeding failure as it might just mean settings already exist
+fi
+
 # Build the application
 echo "🔨 Building application..."
 npm run build

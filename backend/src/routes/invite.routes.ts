@@ -22,7 +22,7 @@ router.get('/:code', async (req: Request, res: Response): Promise<void> => {
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get invite details error:', error);
+    logger().error('Get invite details error:', error);
     res.status(500).json({ error: 'Failed to get invite details.' });
   }
 });
@@ -54,7 +54,7 @@ router.post('/:code/redeem', requireAuth, async (req: any, res: Response): Promi
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Invite redeem error:', error);
+    logger().error('Invite redeem error:', error);
     res.status(500).json({ error: 'Failed to redeem invite.' });
   }
 });

@@ -31,7 +31,7 @@ router.put('/', requireAuth, async (req: any, res: Response): Promise<void> => {
     const updated = await updateUserNotificationSettings(userId, req.body);
     res.json(updated);
   } catch (err) {
-    logger.error('Notification settings update error (PUT):', err);
+    logger().error('Notification settings update error (PUT):', err);
     res.status(500).json({ error: 'Failed to update notification settings' });
   }
 });
@@ -47,7 +47,7 @@ router.patch('/', requireAuth, async (req: any, res: Response): Promise<void> =>
     const updated = await updateUserNotificationSettings(userId, req.body);
     res.json(updated);
   } catch (err) {
-    logger.error('Notification settings update error (PATCH):', err);
+    logger().error('Notification settings update error (PATCH):', err);
     res.status(500).json({ error: 'Failed to update notification settings' });
   }
 });

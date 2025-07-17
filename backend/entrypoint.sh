@@ -16,6 +16,9 @@ npx prisma migrate deploy
 echo "Seeding roles..."
 npm run seed:roles
 
+echo "Seeding logging settings..."
+npm run seed:logging
+
 # Always ensure email templates are available (needed for both dev and prod)
 echo "Ensuring email templates are available..."
 mkdir -p /app/dist/email-templates

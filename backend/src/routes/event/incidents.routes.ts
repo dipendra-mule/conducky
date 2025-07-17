@@ -78,7 +78,7 @@ router.post(
                 res.status(400).json({ error: result.error });
             }
         } catch (error: any) {
-            logger.error('Create incident error:', error);
+            logger().error('Create incident error:', error);
             res.status(500).json({ error: 'Failed to create incident.' });
         }
     }
@@ -181,7 +181,7 @@ router.get('/export', requireRole(['responder', 'event_admin', 'system_admin']),
             res.send(content);
         }
     } catch (error: any) {
-        logger.error('Export incidents error:', error);
+        logger().error('Export incidents error:', error);
         res.status(500).json({ error: 'Failed to export incidents.' });
     }
 });
@@ -244,7 +244,7 @@ router.post('/bulk', requireRole(['responder', 'event_admin', 'system_admin']), 
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Bulk update incidents error:', error);
+        logger().error('Bulk update incidents error:', error);
         res.status(500).json({ error: 'Failed to perform bulk action.' });
     }
 });
@@ -303,7 +303,7 @@ router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_adm
             res.status(500).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Get event incidents error:', error);
+        logger().error('Get event incidents error:', error);
         res.status(500).json({ error: 'Failed to get event incidents.' });
     }
 });
@@ -339,7 +339,7 @@ router.get('/:incidentId', requireRole(['reporter', 'responder', 'event_admin', 
             res.status(404).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Get incident details error:', error);
+        logger().error('Get incident details error:', error);
         res.status(500).json({ error: 'Failed to get incident details.' });
     }
 });
@@ -398,13 +398,13 @@ router.post('/:incidentId/related-files', fileUploadRateLimit, requireRole(['rep
         const result = await incidentService.uploadRelatedFiles(incidentId, relatedFilesData);
 
         if (result.success) {
-            logger.info('Successfully uploaded related files');
+            logger().info('Successfully uploaded related files');
             res.status(201).json(result.data);
         } else {
             res.status(500).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Upload related files error:', error);
+        logger().error('Upload related files error:', error);
         res.status(500).json({ error: 'Failed to upload related files.' });
     }
 });
@@ -443,7 +443,7 @@ router.get('/:incidentId/related-files/:fileId/download', requireRole(['reporter
             res.status(404).json({ error: result.error || 'File not found.' });
         }
     } catch (error: any) {
-        logger.error('Download file error:', error);
+        logger().error('Download file error:', error);
         res.status(500).json({ error: 'Failed to download file.' });
     }
 });
@@ -478,7 +478,7 @@ router.delete('/:incidentId/related-files/:fileId', requireRole(['responder', 'e
             res.status(404).json({ error: result.error || 'File not found or failed to delete.' });
         }
     } catch (error: any) {
-        logger.error('Delete file error:', error);
+        logger().error('Delete file error:', error);
         res.status(500).json({ error: 'Failed to delete file.' });
     }
 });
@@ -518,7 +518,7 @@ router.patch('/:incidentId', requireRole(['responder', 'event_admin', 'system_ad
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Update incident error:', error);
+        logger().error('Update incident error:', error);
         res.status(500).json({ error: 'Failed to update incident.' });
     }
 });
@@ -555,7 +555,7 @@ router.patch('/:incidentId/state', requireRole(['responder', 'event_admin', 'sys
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Update incident state error:', error);
+        logger().error('Update incident state error:', error);
         res.status(500).json({ error: 'Failed to update incident state.' });
     }
 });
@@ -614,7 +614,7 @@ router.patch('/:incidentId/description', requireRole(['reporter', 'responder', '
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Update incident description error:', error);
+        logger().error('Update incident description error:', error);
         res.status(500).json({ error: 'Failed to update incident description.' });
     }
 });
@@ -649,7 +649,7 @@ router.patch('/:incidentId/incident-date', requireRole(['reporter', 'responder',
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Update incident date error:', error);
+        logger().error('Update incident date error:', error);
         res.status(500).json({ error: 'Failed to update incident date.' });
     }
 });
@@ -684,7 +684,7 @@ router.patch('/:incidentId/parties', requireRole(['reporter', 'responder', 'even
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Update incident parties error:', error);
+        logger().error('Update incident parties error:', error);
         res.status(500).json({ error: 'Failed to update incident parties.' });
     }
 });
@@ -719,7 +719,7 @@ router.get('/:incidentId/state-history', requireRole(['reporter', 'responder', '
             res.status(404).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Get incident state history error:', error);
+        logger().error('Get incident state history error:', error);
         res.status(500).json({ error: 'Failed to get incident state history.' });
     }
 });
@@ -759,7 +759,7 @@ router.patch('/:incidentId/assignment', requireRole(['responder', 'event_admin',
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Update incident assignment error:', error);
+        logger().error('Update incident assignment error:', error);
         res.status(500).json({ error: 'Failed to update incident assignment.' });
     }
 });
@@ -784,7 +784,7 @@ router.post('/:incidentId/tags', requireRole(['responder', 'event_admin', 'syste
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Error adding tags to incident:', error);
+        logger().error('Error adding tags to incident:', error);
         res.status(500).json({ error: 'Failed to add tags to incident.' });
     }
 });
@@ -813,7 +813,7 @@ router.delete('/:incidentId/tags/:tagId', requireRole(['responder', 'event_admin
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Error removing tag from incident:', error);
+        logger().error('Error removing tag from incident:', error);
         res.status(500).json({ error: 'Failed to remove tag from incident.' });
     }
 });

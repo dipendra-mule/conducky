@@ -19,7 +19,7 @@ const uploadLogo = createUploadMiddleware({
 
 // Get an event by its slug or ID
 router.get('/', async (req: Request, res: Response): Promise<void> => {
-  logger.debug('[Event GET /] slug:', req.params.slug, 'eventId:', req.params.eventId, 'req.path:', req.path);
+  logger().debug('[Event GET /] slug:', req.params.slug, 'eventId:', req.params.eventId, 'req.path:', req.path);
   try {
     const { slug, eventId } = req.params;
     
@@ -47,7 +47,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       res.status(404).json({ error: result.error });
     }
   } catch (error: any) {
-    logger.error('Get event by slug/ID error:', error);
+    logger().error('Get event by slug/ID error:', error);
     res.status(500).json({ error: 'Failed to fetch event.' });
   }
 });
@@ -76,7 +76,7 @@ router.get('/my-roles', requireRole(['reporter', 'responder', 'event_admin', 'sy
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get my roles error:', error);
+    logger().error('Get my roles error:', error);
     res.status(500).json({ error: 'Failed to fetch your roles for this event.' });
   }
 });
@@ -105,7 +105,7 @@ router.get('/stats', requireRole(['responder', 'event_admin', 'system_admin']), 
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get event stats error:', error);
+    logger().error('Get event stats error:', error);
     res.status(500).json({ error: 'Failed to fetch event stats.' });
   }
 });
@@ -134,7 +134,7 @@ router.get('/cardstats', requireRole(['reporter', 'responder', 'event_admin', 's
 
     res.json(result.data);
   } catch (error: any) {
-    logger.error('Get event card stats error:', error);
+    logger().error('Get event card stats error:', error);
     res.status(500).json({ error: 'Failed to fetch event card stats.' });
   }
 });
@@ -150,7 +150,7 @@ router.get('/members', requireRole(['event_admin', 'system_admin']), async (req:
       res.status(404).json({ error: result.error });
     }
   } catch (error: any) {
-    logger.error('Get event members error:', error);
+    logger().error('Get event members error:', error);
     res.status(500).json({ error: 'Failed to get event members.' });
   }
 });
@@ -184,7 +184,7 @@ router.post('/invites', requireRole(['event_admin', 'system_admin']), async (req
       res.status(400).json({ error: result.error });
     }
   } catch (error: any) {
-    logger.error('Create invite error:', error);
+    logger().error('Create invite error:', error);
     res.status(500).json({ error: 'Failed to create invite.' });
   }
 });
@@ -200,7 +200,7 @@ router.get('/invites', requireRole(['event_admin', 'system_admin']), async (req:
       res.status(404).json({ error: result.error });
     }
   } catch (error: any) {
-    logger.error('Get event invites error:', error);
+    logger().error('Get event invites error:', error);
     res.status(500).json({ error: 'Failed to get event invites.' });
   }
 });
@@ -220,7 +220,7 @@ router.patch('/', requireRole(['event_admin', 'system_admin']), uploadLogo.singl
       res.status(400).json({ error: result.error });
     }
   } catch (error: any) {
-    logger.error('Update event error:', error);
+    logger().error('Update event error:', error);
     res.status(500).json({ error: 'Failed to update event.' });
   }
 });

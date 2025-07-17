@@ -54,7 +54,7 @@ router.patch('/:notificationId/read', requireAuth, async (req: any, res: Respons
     res.json({ message: 'Notification marked as read' });
 
   } catch (err: any) {
-    logger.error('Error marking notification as read:', err);
+    logger().error('Error marking notification as read:', err);
     res.status(500).json({ error: 'Failed to mark notification as read.' });
   }
 });
@@ -85,7 +85,7 @@ router.delete('/:notificationId', requireAuth, async (req: any, res: Response): 
 
     res.json(result.data);
   } catch (err: any) {
-    logger.error('Error deleting notification:', err);
+    logger().error('Error deleting notification:', err);
     res.status(500).json({ error: 'Failed to delete notification.' });
   }
 });

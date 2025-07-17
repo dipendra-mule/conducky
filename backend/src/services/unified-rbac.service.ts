@@ -112,7 +112,7 @@ export class UnifiedRBACService {
     } catch (error) {
       // Log error safely without exposing sensitive details
       if (process.env.NODE_ENV === 'development') {
-        logger.error('[UnifiedRBAC] Error checking role:', error);
+        logger().error('[UnifiedRBAC] Error checking role:', error);
       }
       return false;
     }
@@ -225,7 +225,7 @@ export class UnifiedRBACService {
     } catch (error) {
       // Remove this line entirely
       if (process.env.NODE_ENV === 'development') {
-        logger.error('[UnifiedRBAC] Error checking event role:', error);
+        logger().error('[UnifiedRBAC] Error checking event role:', error);
       }
       return false;
     }
@@ -317,7 +317,7 @@ export class UnifiedRBACService {
       if (!role) {
         // Don't log the role name to prevent information disclosure
         if (process.env.NODE_ENV === 'development') {
-          logger.error(`[UnifiedRBAC] Role not found: ${roleName}`);
+          logger().error(`[UnifiedRBAC] Role not found: ${roleName}`);
         }
         return false;
       }
@@ -351,7 +351,7 @@ export class UnifiedRBACService {
       return true;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error('[UnifiedRBAC] Error granting role:', error);
+        logger().error('[UnifiedRBAC] Error granting role:', error);
       }
       return false;
     }
@@ -374,7 +374,7 @@ export class UnifiedRBACService {
       if (!role) {
         // Don't log the role name to prevent information disclosure
         if (process.env.NODE_ENV === 'development') {
-          logger.error(`[UnifiedRBAC] Role not found: ${roleName}`);
+          logger().error(`[UnifiedRBAC] Role not found: ${roleName}`);
         }
         return false;
       }
@@ -394,7 +394,7 @@ export class UnifiedRBACService {
       return true;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error('[UnifiedRBAC] Error revoking role:', error);
+        logger().error('[UnifiedRBAC] Error revoking role:', error);
       }
       return false;
     }
@@ -411,7 +411,7 @@ export class UnifiedRBACService {
       return role?.level || 0;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error('[UnifiedRBAC] Error getting role level:', error);
+        logger().error('[UnifiedRBAC] Error getting role level:', error);
       }
       return 0;
     }
@@ -432,7 +432,7 @@ export class UnifiedRBACService {
       return maxLevel >= minLevel;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error('[UnifiedRBAC] Error checking minimum level:', error);
+        logger().error('[UnifiedRBAC] Error checking minimum level:', error);
       }
       return false;
     }

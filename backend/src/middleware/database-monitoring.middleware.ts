@@ -43,7 +43,7 @@ export const databaseMonitoringMiddleware = (
     // Log request performance summary in development
     if (process.env.NODE_ENV === 'development') {
       const metrics = databaseMonitor.getMetrics();
-      logger.debug('Request database performance', {
+      logger().debug('Request database performance', {
         method: req.method,
         url: req.url,
         monitoringId,

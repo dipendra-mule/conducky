@@ -81,14 +81,14 @@ export async function createNotification({
             actionUrl: actionUrl || undefined,
           });
         } catch (emailError) {
-          logger.error('Failed to send notification email:', emailError);
+          logger().error('Failed to send notification email:', emailError);
           // Continue with notification creation even if email fails
         }
       }
     }
     return notification;
   } catch (error) {
-    logger.error('Failed to create notification:', error);
+    logger().error('Failed to create notification:', error);
     throw error;
   }
 }
@@ -109,7 +109,7 @@ export async function notifyIncidentEvent(incidentId: string, type: string, excl
 
     if (!incident) {
       if (process.env.NODE_ENV !== 'test') {
-        logger.error('Incident not found for notification:', incidentId);
+        logger().error('Incident not found for notification:', incidentId);
       }
       return;
     }
@@ -199,7 +199,7 @@ export async function notifyIncidentEvent(incidentId: string, type: string, excl
           };
           
           if (!(inputType in typeMap)) {
-            logger.warn(`Unknown notification type: ${inputType}, falling back to 'incident_submitted'`);
+            logger().warn(`Unknown notification type: ${inputType}, falling back to 'incident_submitted'`);
             return 'incident_submitted';
           }
           return typeMap[inputType];
@@ -221,11 +221,11 @@ export async function notifyIncidentEvent(incidentId: string, type: string, excl
     
     // Only log in non-test environments
     if (process.env.NODE_ENV !== 'test') {
-      logger.info(`Created ${notifications.length} notifications for incident ${incidentId}`);
+      logger().info(`Created ${notifications.length} notifications for incident ${incidentId}`);
     }
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {
-      logger.error('Failed to notify incident event:', error);
+      logger().error('Failed to notify incident event:', error);
     }
   }
 }
@@ -247,7 +247,7 @@ export async function markNotificationAsRead(notificationId: string, userId: str
     });
     return notification;
   } catch (error) {
-    logger.error('Failed to mark notification as read:', error);
+    logger().error('Failed to mark notification as read:', error);
     throw error;
   }
 }
@@ -269,7 +269,7 @@ export async function markAllNotificationsAsRead(userId: string) {
     });
     return result;
   } catch (error) {
-    logger.error('Failed to mark all notifications as read:', error);
+    logger().error('Failed to mark all notifications as read:', error);
     throw error;
   }
 }
@@ -293,7 +293,7 @@ export async function getNotificationStats(userId: string) {
 
     return { total, unread, urgent };
   } catch (error) {
-    logger.error('Failed to get notification stats:', error);
+    logger().error('Failed to get notification stats:', error);
     throw error;
   }
 }

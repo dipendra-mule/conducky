@@ -31,7 +31,7 @@ router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_adm
             res.status(500).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Get comments error:', error);
+        logger().error('Get comments error:', error);
         res.status(500).json({ error: 'Failed to fetch comments.' });
     }
 });
@@ -82,7 +82,7 @@ router.post(
                 res.status(400).json({ error: result.error });
             }
         } catch (error: any) {
-            logger.error('Create comment error:', error);
+            logger().error('Create comment error:', error);
             res.status(500).json({ error: 'Failed to create comment.' });
         }
     }

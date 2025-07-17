@@ -175,7 +175,7 @@ export class UserService {
         }
       };
     } catch (error: any) {
-      logger.error('Error updating profile:', error);
+      logger().error('Error updating profile:', error);
       return {
         success: false,
         error: 'Failed to update profile.'
@@ -214,7 +214,7 @@ export class UserService {
       try {
         isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash || '');
       } catch (err) {
-        logger.error('Error comparing passwords:', err);
+        logger().error('Error comparing passwords:', err);
         return {
           success: false,
           error: 'Unable to verify current password.'
@@ -251,7 +251,7 @@ export class UserService {
         data: { message: 'Password updated successfully!' }
       };
     } catch (error: any) {
-      logger.error('Error changing password:', error);
+      logger().error('Error changing password:', error);
       return {
         success: false,
         error: 'Failed to change password.'
@@ -345,7 +345,7 @@ export class UserService {
         data: { events, globalRoles }
       };
     } catch (error: any) {
-      logger.error('Error fetching user events:', error);
+      logger().error('Error fetching user events:', error);
       return {
         success: false,
         error: 'Failed to fetch events.'
@@ -641,7 +641,7 @@ export class UserService {
         }
       };
     } catch (error: any) {
-      logger.error('Error fetching user reports:', error);
+      logger().error('Error fetching user reports:', error);
       return {
         success: false,
         error: 'Failed to fetch incidents.'
@@ -704,7 +704,7 @@ export class UserService {
         data: { message: `Successfully left ${eventName}.` }
       };
     } catch (error: any) {
-      logger.error('Error leaving event:', error);
+      logger().error('Error leaving event:', error);
       return {
         success: false,
         error: 'Failed to leave event.'
@@ -775,7 +775,7 @@ export class UserService {
         data: { eventCount, incidentCount, needsResponseCount }
       };
     } catch (error: any) {
-      logger.error('Error fetching quick stats:', error);
+      logger().error('Error fetching quick stats:', error);
       return {
         success: false,
         error: 'Failed to fetch quick stats.'
@@ -920,7 +920,7 @@ export class UserService {
         data: { activity: sortedActivities }
       };
     } catch (error: any) {
-      logger.error('Error fetching activity:', error);
+      logger().error('Error fetching activity:', error);
       return {
         success: false,
         error: 'Failed to fetch activity.'
@@ -972,7 +972,7 @@ export class UserService {
         data: { avatarId: avatar.id }
       };
     } catch (error: any) {
-      logger.error('Failed to upload avatar:', error);
+      logger().error('Failed to upload avatar:', error);
       return {
         success: false,
         error: 'Failed to upload avatar.'
@@ -991,7 +991,7 @@ export class UserService {
         data: undefined
       };
     } catch (error: any) {
-      logger.error('Failed to delete avatar:', error);
+      logger().error('Failed to delete avatar:', error);
       return {
         success: false,
         error: 'Failed to delete avatar.'
@@ -1024,7 +1024,7 @@ export class UserService {
         }
       };
     } catch (error: any) {
-      logger.error('Failed to fetch avatar:', error);
+      logger().error('Failed to fetch avatar:', error);
       return {
         success: false,
         error: 'Failed to fetch avatar.'

@@ -149,9 +149,18 @@ For detailed security configuration, see the [Admin Security Guide](website/docs
 ## Backend: Prisma & Database
 
   ```sh
-- **To run the seed script (populate default roles, a test event, and test users), run:**
+- **Essential seeding (automatically run on startup):**
   ```sh
-  docker-compose exec backend npm run seed
+  # Roles and logging settings are seeded automatically during container startup
+  # Manual commands if needed:
+  docker-compose exec backend npm run seed:roles    # Essential user roles
+  docker-compose exec backend npm run seed:logging  # Default logging settings
+  ```
+
+- **Development seeding (optional):**
+  ```sh
+  docker-compose exec backend npm run seed          # Includes roles, logging, and test data
+  docker-compose exec backend npm run sample-data   # Additional sample organizations and incidents
   ```
 
 - If you encounter errors about missing Prisma client, re-run the generate command:

@@ -105,9 +105,15 @@ Also consider the Pulumi program at [mattstratton/conducky-pulumi](https://githu
    cd backend
    npx prisma migrate deploy
    ```
-5. (Optional) Seed with sample data:
+5. Seed essential system data (required):
    ```bash
-   npm run seed
+   npm run seed:roles      # Essential user roles
+   npm run seed:logging    # Default logging configuration
+   ```
+6. (Optional) Seed with sample data for development:
+   ```bash
+   npm run seed           # Includes roles, logging, and test data
+   npm run sample-data    # Additional sample organizations and incidents
    ```
 
 ## Security Considerations

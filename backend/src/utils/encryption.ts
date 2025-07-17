@@ -30,7 +30,7 @@ export function validateEncryptionKey(key: string): void {
   ];
   
   if (weakKeys.includes(key)) {
-    logger.warn('⚠️  WARNING: Using a default or weak encryption key. This should be changed in production!');
+    logger().warn('⚠️  WARNING: Using a default or weak encryption key. This should be changed in production!');
   }
   
   // In production, warn if key appears to be the default dev key
@@ -99,7 +99,7 @@ export function encryptField(text: string): string {
     
     // Don't log sensitive encryption errors in production
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Encryption error:', error);
+      logger().error('Encryption error:', error);
     }
     throw new Error('Failed to encrypt field');
   }
@@ -155,7 +155,7 @@ export function decryptField(encryptedText: string): string {
   } catch (error) {
     // Don't log sensitive decryption errors in production
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Decryption error:', error);
+      logger().error('Decryption error:', error);
     }
     // Return original value if decryption fails (graceful degradation)
     return encryptedText;

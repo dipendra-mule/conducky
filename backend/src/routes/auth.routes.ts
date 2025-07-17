@@ -78,7 +78,7 @@ router.post('/register/invite/:inviteCode', authRateLimit, async (req: Request, 
     }
 
     res.status(201).json(result.data);  } catch (error: any) {
-    logger.error('Register with invite error:', error);
+    logger().error('Register with invite error:', error);
     res.status(500).json({ error: 'Registration with invite failed.' });
   }
 });
@@ -106,7 +106,7 @@ router.get('/session', async (req: any, res: Response): Promise<void> => {
     } else {
       res.json({ authenticated: false });
     }  } catch (error: any) {
-    logger.error('Session check error:', error);
+    logger().error('Session check error:', error);
     res.status(500).json({ error: 'Failed to check session.' });
   }
 });
@@ -158,7 +158,7 @@ router.get('/session-debug', async (req: any, res: Response): Promise<void> => {
     }
 
     res.json(diagnostics);  } catch (error: any) {
-    logger.error('Session debug error:', error);
+    logger().error('Session debug error:', error);
     res.status(500).json({ error: 'Debug failed', details: error.message });
   }
 });
@@ -189,7 +189,7 @@ router.post('/forgot-password', passwordResetRateLimit, async (req: Request, res
     }
 
     res.json({ message: result.data?.message });  } catch (error: any) {
-    logger.error('Forgot password error:', error);
+    logger().error('Forgot password error:', error);
     res.status(500).json({ error: 'Password reset request failed.' });
   }
 });
@@ -211,7 +211,7 @@ router.post('/reset-password', passwordResetRateLimit, async (req: Request, res:
     }
 
     res.json({ message: result.data?.message });  } catch (error: any) {
-    logger.error('Reset password error:', error);
+    logger().error('Reset password error:', error);
     res.status(500).json({ error: 'Password reset failed.' });
   }
 });
@@ -247,7 +247,7 @@ router.get('/validate-reset-token', async (req: Request, res: Response): Promise
       email: result.data.email,
       expiresAt: result.data.expiresAt
     });  } catch (error: any) {
-    logger.error('Token validation error:', error);
+    logger().error('Token validation error:', error);
     res.status(500).json({ error: 'Token validation failed.' });
   }
 });
@@ -312,7 +312,7 @@ router.get('/google/callback',
       // Save session before redirect to ensure persistence
     req.session.save((err) => {
       if (err) {
-        logger.error('Google OAuth session save error:', err);
+        logger().error('Google OAuth session save error:', err);
       }
       res.redirect(`${frontendUrl}${nextUrl}`);
     });
@@ -379,7 +379,7 @@ router.get('/github/callback',
       // Save session before redirect to ensure persistence
     req.session.save((err) => {
       if (err) {
-        logger.error('GitHub OAuth session save error:', err);
+        logger().error('GitHub OAuth session save error:', err);
       }
       res.redirect(`${frontendUrl}${nextUrl}`);
     });

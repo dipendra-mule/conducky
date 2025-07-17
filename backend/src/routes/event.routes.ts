@@ -26,7 +26,7 @@ router.get('/', requireSystemAdmin(), async (req: Request, res: Response): Promi
             res.status(500).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Failed to list events', { error: error.message });
+        logger().error('Failed to list events', { error: error.message });
         res.status(500).json({ error: 'Failed to list events' });
     }
 });
@@ -46,7 +46,7 @@ router.post('/', requireSystemAdmin(), async (req: Request, res: Response): Prom
             }
         }
     } catch (error: any) {
-        logger.error('Failed to create event', { error: error.message });
+        logger().error('Failed to create event', { error: error.message });
         res.status(500).json({ error: 'Failed to create event' });
     }
 });
@@ -65,7 +65,7 @@ router.post('/:eventId/roles', requireSystemAdmin(), async (req: Request, res: R
             res.status(400).json({ error: result.error });
         }
     } catch (error: any) {
-        logger.error('Failed to assign role', { error: error.message, eventId: req.params.eventId });
+        logger().error('Failed to assign role', { error: error.message, eventId: req.params.eventId });
         res.status(500).json({ error: 'Failed to assign role' });
     }
 });

@@ -46,7 +46,7 @@ router.patch('/me/profile', requireAuth, async (req: any, res: Response): Promis
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Profile update error:', error);
+      logger().error('Profile update error:', error);
     }
     res.status(500).json({ error: 'Failed to update profile.' });
   }
@@ -77,7 +77,7 @@ router.patch('/me/password', requireAuth, async (req: any, res: Response): Promi
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Password change error:', error);
+      logger().error('Password change error:', error);
     }
     res.status(500).json({ error: 'Failed to change password.' });
   }
@@ -102,7 +102,7 @@ router.get('/me/events', requireAuth, async (req: any, res: Response): Promise<v
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Get user events error:', error);
+      logger().error('Get user events error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch user events.' });
   }
@@ -155,7 +155,7 @@ router.get('/me/incidents', requireAuth, async (req: any, res: Response): Promis
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Get user reports error:', error);
+      logger().error('Get user reports error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch user incidents.' });
   }
@@ -187,7 +187,7 @@ router.delete('/me/events/:eventId', requireAuth, async (req: any, res: Response
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Leave event error:', error);
+      logger().error('Leave event error:', error);
     }
     res.status(500).json({ error: 'Failed to leave event.' });
   }
@@ -212,7 +212,7 @@ router.get('/me/quickstats', requireAuth, async (req: any, res: Response): Promi
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Get quick stats error:', error);
+      logger().error('Get quick stats error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch quick stats.' });
   }
@@ -237,7 +237,7 @@ router.get('/me/activity', requireAuth, async (req: any, res: Response): Promise
     res.json(result.data);
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Get activity error:', error);
+      logger().error('Get activity error:', error);
     }
     res.status(500).json({ error: 'Failed to fetch activity.' });
   }
@@ -267,7 +267,7 @@ router.get('/:userId/avatar', async (req: Request, res: Response): Promise<void>
     
     res.send(data);
   } catch (error: any) {
-    logger.error('Get user avatar error:', error);
+    logger().error('Get user avatar error:', error);
     res.status(500).json({ error: 'Failed to get user avatar.' });
   }
 });
@@ -305,7 +305,7 @@ router.post('/:userId/avatar', fileUploadRateLimit, uploadAvatar.single('avatar'
     res.status(200).json({ success: true, avatarId: result.data!.avatarId });
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Upload user avatar error:', error);
+      logger().error('Upload user avatar error:', error);
     }
     res.status(500).json({ error: 'Failed to upload avatar.', details: error.message });
   }
@@ -332,7 +332,7 @@ router.delete('/:userId/avatar', async (req: any, res: Response): Promise<void> 
     res.status(204).send();
   } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Delete user avatar error:', error);
+      logger().error('Delete user avatar error:', error);
     }
     res.status(500).json({ error: 'Failed to delete avatar.', details: error.message });
   }
@@ -417,7 +417,7 @@ router.get('/me/notifications', requireAuth, async (req: any, res: Response): Pr
 
   } catch (err: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Error fetching notifications:', err);
+      logger().error('Error fetching notifications:', err);
     }
     res.status(500).json({ error: 'Failed to fetch notifications.' });
   }
@@ -473,7 +473,7 @@ router.get('/me/notifications/stats', requireAuth, async (req: any, res: Respons
 
   } catch (err: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Error fetching notification stats:', err);
+      logger().error('Error fetching notification stats:', err);
     }
     res.status(500).json({ error: 'Failed to fetch notification statistics.' });
   }
@@ -506,7 +506,7 @@ router.patch('/me/notifications/read-all', requireAuth, async (req: any, res: Re
 
   } catch (err: any) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('Error marking all notifications as read:', err);
+      logger().error('Error marking all notifications as read:', err);
     }
     res.status(500).json({ error: 'Failed to mark notifications as read.' });
   }
