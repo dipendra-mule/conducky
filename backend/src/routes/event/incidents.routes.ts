@@ -84,39 +84,6 @@ router.post(
     }
 );
 
-// Bulk update incidents
-router.post(
-    '/bulk',
-    requireRole(['event_admin', 'system_admin']),
-    async (req: Request, res: Response) => {
-        try {
-            const { eventId } = req.params;
-            const { incidentIds, action, ...options } = req.body;
-            const user = req.user as UserResponse;
-
-            const result = await incidentService.bulkUpdateIncidents(
-                eventId,
-                incidentIds,
-                action,
-                { ...options, userId: user.id }
-            );
-
-            if (result.success) {
-                res.status(200).json(result.data);
-            } else {
-                res.status(400).json({ error: result.error });
-            }
-        } catch (error) {
-            logger.error('Failed to bulk update incidents', {
-                error,
-                eventId: req.params.eventId,
-                userId: (req.user as UserResponse)?.id,
-            });
-            res.status(500).json({ error: 'Failed to bulk update incidents' });
-        }
-    }
-);
-
 // Export incidents
 router.get('/export', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
     try {
@@ -140,10 +107,12 @@ router.get('/export', requireRole(['responder', 'event_admin', 'system_admin']),
             currentEventId = eventIdFromSlug;
         }
 
-        // Check user access
-        const accessResult = await incidentService.checkIncidentAccess(user.id, 'dummy', currentEventId);
-        if (!accessResult.success) {
-            res.status(403).json({ error: 'Access denied' });
+        // Verify user has proper permissions for this specific event
+        const { UnifiedRBACService } = require('../../services/unified-rbac.service');
+        const rbacService = new UnifiedRBACService(prisma);
+        const hasEventRole = await rbacService.hasEventRole(user.id, currentEventId, ['responder', 'event_admin']);
+        if (!hasEventRole) {
+            res.status(403).json({ error: 'Insufficient permissions to export incidents from this event' });
             return;
         }
 
@@ -154,7 +123,7 @@ router.get('/export', requireRole(['responder', 'event_admin', 'system_admin']),
             queryOptions.incidentIds = incidentIds;
         }
 
-        const result = await incidentService.getIncidentsByEventId(currentEventId, queryOptions);
+        const result = await incidentService.getEventIncidents(currentEventId, user.id, queryOptions);
         if (!result.success || !result.data) {
             res.status(500).json({ error: 'Failed to fetch incidents' });
             return;
@@ -188,9 +157,9 @@ router.get('/export', requireRole(['responder', 'event_admin', 'system_admin']),
             res.setHeader('Content-Type', 'text/csv; charset=utf-8');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
             res.send(csv);
-        } else if (format === 'pdf') {
+        } else {
             // Generate simple text format for PDF
-            let content = `${eventName} - Incident Reports\n`;
+            let content = `Event Reports - ${slug}\n`;
             content += `Generated on: ${new Date().toLocaleDateString()}\n\n`;
             
             incidents.forEach(incident => {
@@ -246,17 +215,6 @@ router.post('/bulk', requireRole(['responder', 'event_admin', 'system_admin']), 
             currentEventId = eventIdFromSlug;
         }
 
-        // Validate action-specific requirements
-        if (action === 'assign' && !assignedTo) {
-            res.status(400).json({ error: 'assignedTo is required for assign action' });
-            return;
-        }
-
-        if (action === 'status' && !status) {
-            res.status(400).json({ error: 'status is required for status action' });
-            return;
-        }
-
         const result = await incidentService.bulkUpdateIncidents(
             currentEventId,
             incidentIds,
@@ -270,7 +228,18 @@ router.post('/bulk', requireRole(['responder', 'event_admin', 'system_admin']), 
         );
 
         if (result.success) {
-            res.json(result.data);
+            // Check if there were validation errors
+            if (result.data && result.data.errors && result.data.errors.length > 0) {
+                // Return 400 for validation errors with error details
+                res.status(400).json({ 
+                    error: 'Validation errors occurred',
+                    details: result.data.errors,
+                    updated: result.data.updated || 0
+                });
+            } else {
+                // Return 200 for successful operations
+                res.status(200).json(result.data);
+            }
         } else {
             res.status(400).json({ error: result.error });
         }
@@ -284,13 +253,30 @@ router.post('/bulk', requireRole(['responder', 'event_admin', 'system_admin']), 
 router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
     try {
         const { eventId, slug } = req.params;
+        const user = req.user as UserResponse;
+        
+        // Parse and validate pagination parameters
+        const page = req.query.page ? parseInt(req.query.page as string) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+        
+        // Validate pagination parameters before proceeding
+        if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+            res.status(400).json({ error: 'Invalid pagination parameters. Page and limit must be positive integers.' });
+            return;
+        }
+        
+        // Extract all query parameters that the service expects
         const queryOptions = {
-            page: parseInt(req.query.page as string) || 1,
-            limit: parseInt(req.query.limit as string) || 10,
-            sort: req.query.sort as string || 'incidentAt',
+            page,
+            limit,
+            sort: req.query.sort as string || 'createdAt',
             order: req.query.order as string || 'desc',
-            filter: req.query.filter as string || '',
             search: req.query.search as string || '',
+            status: req.query.status as string,
+            severity: req.query.severity as string,
+            assigned: req.query.assigned as string,
+            userId: req.query.userId as string,
+            includeStats: req.query.includeStats === 'true'
         };
 
         let currentEventId = eventId;
@@ -308,7 +294,8 @@ router.get('/', requireRole(['reporter', 'responder', 'event_admin', 'system_adm
             return;
         }
 
-        const result = await incidentService.getIncidentsByEventId(currentEventId, queryOptions);
+        // Use the enhanced service method that handles filtering
+        const result = await incidentService.getEventIncidents(currentEventId, user.id, queryOptions);
 
         if (result.success) {
             res.json(result.data);
@@ -423,7 +410,7 @@ router.post('/:incidentId/related-files', fileUploadRateLimit, requireRole(['rep
 });
 
 // Download a related file
-router.get('/:incidentId/related-files/:fileId/download', requireEventRole(['reporter', 'responder', 'event_admin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/:incidentId/related-files/:fileId/download', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
     try {
         const { eventId, slug, incidentId, fileId } = req.params;
         const user = req.user as any;
@@ -447,7 +434,8 @@ router.get('/:incidentId/related-files/:fileId/download', requireEventRole(['rep
         const result = await incidentService.getRelatedFile(fileId);
 
         if (result.success && result.data) {
-            res.setHeader('Content-Disposition', 'attachment; filename=' + result.data.filename);
+            res.setHeader('Content-Disposition', `attachment; filename="${result.data.filename.replace(/"/g, '\\"')}"`);
+
             res.setHeader('Content-Type', result.data.mimetype);
             res.setHeader('Content-Length', result.data.size.toString());
             res.send(result.data.data);
@@ -580,11 +568,6 @@ router.patch('/:incidentId/description', requireRole(['reporter', 'responder', '
         const { description } = req.body;
         const user = req.user as any;
 
-        if (!description || typeof description !== 'string' || description.trim().length === 0) {
-            res.status(400).json({ error: 'Description is required' });
-            return;
-        }
-
         let currentEventId = eventId;
         if (slug) {
             const eventIdFromSlug = await eventService.getEventIdBySlug(slug);
@@ -593,6 +576,34 @@ router.patch('/:incidentId/description', requireRole(['reporter', 'responder', '
                 return;
             }
             currentEventId = eventIdFromSlug;
+        }
+
+        // Check permissions first before validation to return proper error codes
+        const incident = await incidentService.getIncidentById(incidentId);
+        if (!incident.success || !incident.data) {
+            res.status(404).json({ error: 'Incident not found.' });
+            return;
+        }
+
+        if (incident.data.incident.eventId !== currentEventId) {
+            res.status(404).json({ error: 'Incident not found for this event.' });
+            return;
+        }
+
+        // Check authorization before validation
+        const isReporter = !!(incident.data.incident.reporterId && user.id === incident.data.incident.reporterId);
+        // Use unified RBAC to check event permissions (description requires admin+ access)
+        const hasEventRole = await incidentService.checkIncidentEditAccess(user.id, incidentId, currentEventId);
+
+        if (!hasEventRole.success || !hasEventRole.data?.canEdit) {
+            res.status(403).json({ error: 'Insufficient permissions to edit this incident description.' });
+            return;
+        }
+
+        // Now validate the description input
+        if (!description || typeof description !== 'string' || description.trim().length === 0) {
+            res.status(400).json({ error: 'Description is required' });
+            return;
         }
 
         const result = await incidentService.updateIncidentDescription(currentEventId, incidentId, description.trim(), user.id);
@@ -703,7 +714,7 @@ router.get('/:incidentId/state-history', requireRole(['reporter', 'responder', '
         const result = await incidentService.getIncidentStateHistory(incidentId);
 
         if (result.success) {
-            res.json({ history: result.data });
+            res.json(result.data);
         } else {
             res.status(404).json({ error: result.error });
         }

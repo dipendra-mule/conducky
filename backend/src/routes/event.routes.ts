@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
 const eventService = new EventService(prisma);
 
 // Get all events (System Admin only)
-router.get('/', requireSystemAdmin, async (req: Request, res: Response): Promise<void> => {
+router.get('/', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
     try {
         const result = await eventService.listAllEvents();
 
@@ -32,7 +32,7 @@ router.get('/', requireSystemAdmin, async (req: Request, res: Response): Promise
 });
 
 // Create a new event (System Admin only)
-router.post('/', requireSystemAdmin, async (req: Request, res: Response): Promise<void> => {
+router.post('/', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
     try {
         const result = await eventService.createEvent(req.body);
 
@@ -52,7 +52,7 @@ router.post('/', requireSystemAdmin, async (req: Request, res: Response): Promis
 });
 
 // Assign a role to a user in an event (System Admin only)
-router.post('/:eventId/roles', requireSystemAdmin, async (req: Request, res: Response): Promise<void> => {
+router.post('/:eventId/roles', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
     try {
         const { eventId } = req.params;
         const { userId, roleName } = req.body;

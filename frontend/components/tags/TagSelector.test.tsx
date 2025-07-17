@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import { TagSelector, Tag } from "./TagSelector";
 
 // Mock fetch
@@ -39,7 +39,9 @@ describe("TagSelector", () => {
   it("renders error state when fetch fails", async () => {
     mockFetch.mockRejectedValueOnce(new Error("Failed to fetch"));
     
-    render(<TagSelector {...defaultProps} />);
+    await act(async () => {
+      render(<TagSelector {...defaultProps} />);
+    });
     
     await waitFor(() => {
       expect(screen.getByText("Failed to load tags")).toBeInTheDocument();
@@ -52,7 +54,9 @@ describe("TagSelector", () => {
       json: async () => ({ tags: mockTags }),
     });
     
-    render(<TagSelector {...defaultProps} />);
+    await act(async () => {
+      render(<TagSelector {...defaultProps} />);
+    });
     
     await waitFor(() => {
       expect(screen.getByText("Tags")).toBeInTheDocument();
@@ -68,12 +72,14 @@ describe("TagSelector", () => {
     
     const selectedTags = [mockTags[0]];
     
-    render(
-      <TagSelector 
-        {...defaultProps} 
-        selectedTags={selectedTags}
-      />
-    );
+    await act(async () => {
+      render(
+        <TagSelector 
+          {...defaultProps} 
+          selectedTags={selectedTags}
+        />
+      );
+    });
     
     await waitFor(() => {
       expect(screen.getByText("Harassment")).toBeInTheDocument();
@@ -89,13 +95,15 @@ describe("TagSelector", () => {
     
     const selectedTags = [mockTags[0]];
     
-    render(
-      <TagSelector 
-        {...defaultProps} 
-        selectedTags={selectedTags}
-        disabled={true}
-      />
-    );
+    await act(async () => {
+      render(
+        <TagSelector 
+          {...defaultProps} 
+          selectedTags={selectedTags}
+          disabled={true}
+        />
+      );
+    });
     
     await waitFor(() => {
       expect(screen.getByText("Harassment")).toBeInTheDocument();
@@ -112,13 +120,15 @@ describe("TagSelector", () => {
     const onTagsChange = jest.fn();
     const selectedTags = [mockTags[0], mockTags[1]];
     
-    render(
-      <TagSelector 
-        {...defaultProps} 
-        selectedTags={selectedTags}
-        onTagsChange={onTagsChange}
-      />
-    );
+    await act(async () => {
+      render(
+        <TagSelector 
+          {...defaultProps} 
+          selectedTags={selectedTags}
+          onTagsChange={onTagsChange}
+        />
+      );
+    });
     
     await waitFor(() => {
       expect(screen.getByText("Harassment")).toBeInTheDocument();
@@ -135,7 +145,9 @@ describe("TagSelector", () => {
       json: async () => ({ tags: [] }),
     });
     
-    render(<TagSelector {...defaultProps} />);
+    await act(async () => {
+      render(<TagSelector {...defaultProps} />);
+    });
     
     await waitFor(() => {
       expect(screen.getByText("No tags available for this event. Contact an event administrator to create tags.")).toBeInTheDocument();
@@ -148,25 +160,29 @@ describe("TagSelector", () => {
       json: async () => ({ tags: mockTags }),
     });
     
-    render(
-      <TagSelector 
-        {...defaultProps} 
-        selectedTags={mockTags}
-      />
-    );
+    await act(async () => {
+      render(
+        <TagSelector 
+          {...defaultProps} 
+          selectedTags={mockTags}
+        />
+      );
+    });
     
     await waitFor(() => {
       expect(screen.getByText("All available tags have been selected.")).toBeInTheDocument();
     });
   });
 
-  it("fetches tags from correct API endpoint", () => {
+  it("fetches tags from correct API endpoint", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ tags: mockTags }),
     });
     
-    render(<TagSelector {...defaultProps} eventSlug="my-event" />);
+    await act(async () => {
+      render(<TagSelector {...defaultProps} eventSlug="my-event" />);
+    });
     
     expect(mockFetch).toHaveBeenCalledWith(
       "http://localhost:4000/api/tags/event/slug/my-event",

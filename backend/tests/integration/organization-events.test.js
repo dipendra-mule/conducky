@@ -7,6 +7,7 @@ describe('Organization Events API', () => {
       // Test that the route exists (will return 401 due to auth, not 404)
       const res = await request(app)
         .post('/api/organizations/test-org-id/events')
+        .set('x-test-disable-auth', 'true')
         .send({
           name: 'Test Event',
           slug: 'test-event'
@@ -21,7 +22,8 @@ describe('Organization Events API', () => {
     it('should have organization events list route', async () => {
       // Test that the route exists (will return 401 due to auth, not 404)
       const res = await request(app)
-        .get('/api/organizations/test-org-id/events');
+        .get('/api/organizations/test-org-id/events')
+        .set('x-test-disable-auth', 'true');
 
       // Should not be 404 (route exists)
       expect(res.status).not.toBe(404);

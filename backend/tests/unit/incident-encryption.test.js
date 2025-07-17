@@ -106,7 +106,7 @@ describe('Phase 1 Encryption - Incident and Comment Services', () => {
         
         // Other fields should not be encrypted
         expect(createData.title).toBe(incidentData.title);
-        expect(createData.eventId).toBe(incidentData.eventId);
+        expect(createData.event.connect.id).toBe(incidentData.eventId);
         expect(createData.severity).toBe(incidentData.urgency);
       });
 

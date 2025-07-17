@@ -581,10 +581,17 @@ describe('Event Reports Export and Bulk Actions', () => {
     });
 
     test('should require appropriate role', async () => {
+      // Reporters should not be able to export incidents (security fix)
       await request(app)
         .get(`/api/events/slug/${testSlug}/incidents/export?format=csv`)
         .set('x-test-user-id', reporterId)
-        .expect(200); // Incidenter should be able to export (their own reports)
+        .expect(403); // Reporters cannot export incidents for security reasons
+      
+      // Responders should be able to export
+      await request(app)
+        .get(`/api/events/slug/${testSlug}/incidents/export?format=csv`)
+        .set('x-test-user-id', responderId)
+        .expect(200);
     });
   });
 
@@ -656,7 +663,8 @@ describe('Event Reports Export and Bulk Actions', () => {
     });
 
     test('should validate required fields', async () => {
-      await request(app)
+      // Should now return 400 for validation errors (security fix)
+      const response1 = await request(app)
         .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
@@ -664,9 +672,12 @@ describe('Event Reports Export and Bulk Actions', () => {
           incidentIds: [incidentIds[0]]
           // Missing assignedTo
         })
-        .expect(200); // Returns 200 but with errors
+        .expect(400); // Now properly returns 400 for validation errors
+      
+      expect(response1.body.error).toBe('Validation errors occurred');
+      expect(response1.body.details[0]).toContain('assignedTo is required for assign action');
 
-      await request(app)
+      const response2 = await request(app)
         .post(`/api/events/slug/${testSlug}/incidents/bulk`)
         .set('x-test-user-id', responderId)
         .send({
@@ -674,7 +685,10 @@ describe('Event Reports Export and Bulk Actions', () => {
           incidentIds: [incidentIds[0]]
           // Missing status
         })
-        .expect(200); // Returns 200 but with errors
+        .expect(400); // Now properly returns 400 for validation errors
+      
+      expect(response2.body.error).toBe('Validation errors occurred');
+      expect(response2.body.details[0]).toContain('status is required for status action');
     });
 
     test('should validate invalid status', async () => {
@@ -686,11 +700,10 @@ describe('Event Reports Export and Bulk Actions', () => {
           incidentIds: [incidentIds[0]],
           status: 'invalid_status'
         })
-        .expect(200);
+        .expect(400); // Now properly returns 400 for validation errors
 
-      expect(response.body.updated).toBe(0);
-      expect(response.body.errors).toHaveLength(1);
-      expect(response.body.errors[0]).toContain('Invalid status');
+      expect(response.body.error).toBe('Validation errors occurred');
+      expect(response.body.details[0]).toContain('Invalid status: invalid_status. Valid statuses are:');
     });
 
     test('should require authentication', async () => {

@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Card } from "../ui/card";
-import { X, Plus, Tag as TagIcon } from "lucide-react";
+import { X, TagIcon } from "lucide-react";
 
 export interface Tag {
   id: string;
@@ -42,7 +39,7 @@ export function TagSelector({
           credentials: 'include'
         });
 
-        if (response.ok) {
+        if (response && response.ok) {
           const data = await response.json();
           setAvailableTags(data.tags || []);
         } else {
