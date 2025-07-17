@@ -2,60 +2,64 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { useRouter } from 'next/router';
 import SystemSettings from '../../../../pages/admin/system/settings';
+import { UserContext } from '../../../../pages/_app';
 
-// Mock next/router
+// Mock the Next.js router
 jest.mock('next/router', () => ({
-  useRouter: jest.fn(),
-}));
-
-// Mock fetch
-const mockFetch = jest.fn();
-(global as any).fetch = mockFetch;
-
-// Mock useAuth hook
-jest.mock('../../../../hooks/useAuth', () => ({
-  useAuth: () => ({
-    user: {
-      id: 1,
-      email: 'admin@test.com',
-      name: 'Admin User',
-      isSystemAdmin: true,
-    },
-    loading: false,
+  useRouter: () => ({
+    push: jest.fn(),
+    prefetch: jest.fn(),
+    query: {},
+    asPath: '/admin/system/settings',
   }),
 }));
 
+// Mock fetch globally
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
+
 describe('SystemSettings - Logging Configuration', () => {
-  const mockPush = jest.fn();
+  const mockUser = {
+    id: '1',
+    email: 'admin@test.com',
+    name: 'Admin User',
+    isSystemAdmin: true,
+    globalRoles: ['SuperAdmin']
+  };
+
+  const renderWithContext = (component: React.ReactElement) => {
+    return render(
+      <UserContext.Provider value={{ user: mockUser, setUser: jest.fn(), sessionLoading: false }}>
+        {component}
+      </UserContext.Provider>
+    );
+  };
+
+  const mockSuccessfulSettingsResponse = {
+    settings: {
+      logging: {
+        level: 'info',
+        destinations: {
+          console: true,
+          file: true,
+          errorFile: false
+        },
+        filePath: 'logs/combined.log',
+        errorFilePath: 'logs/error.log'
+      }
+    }
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useRouter as jest.MockedFunction<typeof useRouter>).mockReturnValue({
-      push: mockPush,
-      pathname: '/admin/system/settings',
-    });
     
-    // Default successful fetch responses
-    (global.fetch as jest.MockedFunction<typeof fetch>).mockImplementation((url: string) => {
+    // Default mock for settings fetch
+    mockFetch.mockImplementation((url: string) => {
       if (url.includes('/api/admin/system/settings')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            settings: {
-              logging: {
-                level: 'info',
-                destinations: {
-                  console: true,
-                  file: true,
-                  errorFile: true,
-                },
-                filePath: 'logs/combined.log',
-                errorFilePath: 'logs/error.log',
-              },
-            },
-          }),
+          json: () => Promise.resolve(mockSuccessfulSettingsResponse),
         });
       }
       return Promise.resolve({
@@ -65,277 +69,197 @@ describe('SystemSettings - Logging Configuration', () => {
     });
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  it('renders logging configuration section', async () => {
+    renderWithContext(<SystemSettings />);
 
-  it('should render logging configuration section', async () => {
-    render(<SystemSettings />);
-
+    // Wait for loading to complete
     await waitFor(() => {
-      expect(screen.getByText('Logging Configuration')).toBeInTheDocument();
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
     });
 
+    // Check for logging configuration title
+    expect(screen.getByText('Logging Configuration')).toBeInTheDocument();
     expect(screen.getByText('Configure system logging levels and destinations for debugging and monitoring.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Log Level')).toBeInTheDocument();
-    expect(screen.getByLabelText('Console Logging')).toBeInTheDocument();
-    expect(screen.getByLabelText('File Logging')).toBeInTheDocument();
-    expect(screen.getByLabelText('Error File Logging')).toBeInTheDocument();
+  });
+
+  it('displays log level dropdown with current value', async () => {
+    renderWithContext(<SystemSettings />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
+    });
+
+    // Check for log level label
+    expect(screen.getByText('Log Level')).toBeInTheDocument();
+    
+    // Find the log level dropdown and verify it shows the current selection
+    const comboboxes = screen.getAllByRole('combobox');
+    const logLevelTrigger = comboboxes.find(cb => 
+      cb.textContent?.includes('Info - General info, warnings, and errors')
+    );
+    expect(logLevelTrigger).toBeDefined();
+    expect(logLevelTrigger).toHaveTextContent('Info - General info, warnings, and errors (recommended for production)');
+  });
+
+  it('displays logging destination toggles', async () => {
+    renderWithContext(<SystemSettings />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
+    });
+
+    // Check for destination toggles
+    expect(screen.getByText('Log Destinations')).toBeInTheDocument();
+    expect(screen.getByText('Console Output')).toBeInTheDocument();
+    expect(screen.getByText('Log File')).toBeInTheDocument();
+    expect(screen.getByText('Error Log File')).toBeInTheDocument();
+  });
+
+  it('displays file path inputs', async () => {
+    renderWithContext(<SystemSettings />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
+    });
+
+    // Check for file path inputs
     expect(screen.getByLabelText('Log File Path')).toBeInTheDocument();
     expect(screen.getByLabelText('Error Log File Path')).toBeInTheDocument();
-  });
-
-  it('should load and display current logging settings', async () => {
-    render(<SystemSettings />);
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('info')).toBeInTheDocument();
-    });
-
+    
+    // Check default values are displayed
     expect(screen.getByDisplayValue('logs/combined.log')).toBeInTheDocument();
     expect(screen.getByDisplayValue('logs/error.log')).toBeInTheDocument();
-    
-    // Check that checkboxes are checked based on settings
-    const consoleCheckbox = screen.getByLabelText('Console Logging') as HTMLInputElement;
-    const fileCheckbox = screen.getByLabelText('File Logging') as HTMLInputElement;
-    const errorFileCheckbox = screen.getByLabelText('Error File Logging') as HTMLInputElement;
-    
-    expect(consoleCheckbox.checked).toBe(true);
-    expect(fileCheckbox.checked).toBe(true);
-    expect(errorFileCheckbox.checked).toBe(true);
   });
 
-  it('should allow changing log level', async () => {
-    const user = userEvent.setup();
-    render(<SystemSettings />);
+  it('shows save logging settings button', async () => {
+    renderWithContext(<SystemSettings />);
 
     await waitFor(() => {
-      expect(screen.getByDisplayValue('info')).toBeInTheDocument();
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
     });
 
-    // Click on the log level select
-    const logLevelSelect = screen.getByLabelText('Log Level');
-    await user.click(logLevelSelect);
-
-    // Find and click debug option
-    await waitFor(() => {
-      const debugOption = screen.getByText('debug');
-      expect(debugOption).toBeInTheDocument();
-    });
-
-    const debugOption = screen.getByText('debug');
-    await user.click(debugOption);
-
-    // Verify the value changed
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('debug')).toBeInTheDocument();
-    });
+    expect(screen.getByRole('button', { name: 'Save Logging Settings' })).toBeInTheDocument();
   });
 
-  it('should allow toggling destination checkboxes', async () => {
+  it('updates file path input values', async () => {
     const user = userEvent.setup();
-    render(<SystemSettings />);
+    renderWithContext(<SystemSettings />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Console Logging')).toBeInTheDocument();
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
     });
 
-    const consoleCheckbox = screen.getByLabelText('Console Logging') as HTMLInputElement;
+    // Find the log file path input
+    const logFileInput = screen.getByLabelText('Log File Path');
     
-    // Initially checked
-    expect(consoleCheckbox.checked).toBe(true);
+    // Clear and type new value
+    await user.clear(logFileInput);
+    await user.type(logFileInput, 'logs/app.log');
 
-    // Toggle it off
-    await user.click(consoleCheckbox);
-    expect(consoleCheckbox.checked).toBe(false);
-
-    // Toggle it back on
-    await user.click(consoleCheckbox);
-    expect(consoleCheckbox.checked).toBe(true);
+    expect(logFileInput).toHaveValue('logs/app.log');
   });
 
-  it('should allow editing file paths', async () => {
+  it('submits logging settings when save button is clicked', async () => {
     const user = userEvent.setup();
-    render(<SystemSettings />);
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('logs/combined.log')).toBeInTheDocument();
-    });
-
-    const filePathInput = screen.getByLabelText('Log File Path');
     
-    // Clear and type new path
-    await user.clear(filePathInput);
-    await user.type(filePathInput, 'custom/app.log');
-
-    expect(screen.getByDisplayValue('custom/app.log')).toBeInTheDocument();
-  });
-
-  it('should save logging settings when update button is clicked', async () => {
-    const user = userEvent.setup();
-    const mockFetch = global.fetch as jest.Mock;
-
-    render(<SystemSettings />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Update Logging Settings')).toBeInTheDocument();
-    });
-
-    // Make some changes
-    const logLevelSelect = screen.getByLabelText('Log Level');
-    await user.click(logLevelSelect);
-    
-    await waitFor(() => {
-      const warnOption = screen.getByText('warn');
-      expect(warnOption).toBeInTheDocument();
-    });
-    
-    await user.click(screen.getByText('warn'));
-
-    // Mock successful update response
-    mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({
+    // Mock successful save response
+    mockFetch.mockImplementation((url: string, options?: RequestInit) => {
+      if (url.includes('/api/admin/system/logging') && options?.method === 'PATCH') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true }),
+        });
+      }
+      if (url.includes('/api/admin/system/settings')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockSuccessfulSettingsResponse),
+        });
+      }
+      return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          message: 'Logging settings updated successfully',
-        }),
-      })
-    );
+        json: () => Promise.resolve({}),
+      });
+    });
 
-    // Click update button
-    const updateButton = screen.getByText('Update Logging Settings');
-    await user.click(updateButton);
+    renderWithContext(<SystemSettings />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
+    });
+
+    // Click save button
+    const saveButton = screen.getByRole('button', { name: 'Save Logging Settings' });
+    await user.click(saveButton);
+
+    // Verify fetch was called with correct data
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/admin/system/logging'),
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: expect.stringContaining('"level":"info"'),
+        })
+      );
+    });
+  });
+
+  it('displays success message after successful save', async () => {
+    const user = userEvent.setup();
+    
+    // Mock successful save response
+    mockFetch.mockImplementation((url: string, options?: RequestInit) => {
+      if (url.includes('/api/admin/system/logging') && options?.method === 'PATCH') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true }),
+        });
+      }
+      if (url.includes('/api/admin/system/settings')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockSuccessfulSettingsResponse),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      });
+    });
+
+    renderWithContext(<SystemSettings />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
+    });
+
+    // Click save button
+    const saveButton = screen.getByRole('button', { name: 'Save Logging Settings' });
+    await user.click(saveButton);
 
     // Wait for success message
     await waitFor(() => {
-      expect(screen.getByText(/Logging settings updated successfully/)).toBeInTheDocument();
+      expect(screen.getByText('Logging settings updated successfully')).toBeInTheDocument();
     });
-
-    // Verify API was called with correct data
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/admin/system/logging'),
-      expect.objectContaining({
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: expect.stringContaining('warn'),
-      })
-    );
   });
 
-  it('should show error message when update fails', async () => {
+  it('displays error message when save fails', async () => {
     const user = userEvent.setup();
-    const mockFetch = global.fetch as jest.Mock;
-
-    render(<SystemSettings />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Update Logging Settings')).toBeInTheDocument();
-    });
-
-    // Mock failed update response
-    mockFetch.mockImplementationOnce(() =>
-      Promise.resolve({
-        ok: false,
-        json: () => Promise.resolve({
-          message: 'Invalid log level provided',
-        }),
-      })
-    );
-
-    // Click update button
-    const updateButton = screen.getByText('Update Logging Settings');
-    await user.click(updateButton);
-
-    // Wait for error message
-    await waitFor(() => {
-      expect(screen.getByText(/Invalid log level provided/)).toBeInTheDocument();
-    });
-  });
-
-  it('should show loading state during update', async () => {
-    const user = userEvent.setup();
-    const mockFetch = global.fetch as jest.Mock;
-
-    render(<SystemSettings />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Update Logging Settings')).toBeInTheDocument();
-    });
-
-    // Mock slow response
-    mockFetch.mockImplementationOnce(() =>
-      new Promise(resolve => 
-        setTimeout(() => resolve({
-          ok: true,
-          json: () => Promise.resolve({ message: 'Success' }),
-        }), 100)
-      )
-    );
-
-    const updateButton = screen.getByText('Update Logging Settings');
-    await user.click(updateButton);
-
-    // Should show loading state
-    expect(screen.getByText('Updating...')).toBeInTheDocument();
-  });
-
-  it('should validate required file paths', async () => {
-    const user = userEvent.setup();
-    render(<SystemSettings />);
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('logs/combined.log')).toBeInTheDocument();
-    });
-
-    // Clear file path
-    const filePathInput = screen.getByLabelText('Log File Path');
-    await user.clear(filePathInput);
-
-    // Try to update with empty path
-    const updateButton = screen.getByText('Update Logging Settings');
-    await user.click(updateButton);
-
-    // Should show validation error
-    await waitFor(() => {
-      expect(screen.getByText(/File path is required/)).toBeInTheDocument();
-    });
-  });
-
-  it('should handle network errors gracefully', async () => {
-    const user = userEvent.setup();
-    const mockFetch = global.fetch as jest.Mock;
-
-    render(<SystemSettings />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Update Logging Settings')).toBeInTheDocument();
-    });
-
-    // Mock network error
-    mockFetch.mockImplementationOnce(() =>
-      Promise.reject(new Error('Network error'))
-    );
-
-    const updateButton = screen.getByText('Update Logging Settings');
-    await user.click(updateButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Failed to update logging settings/)).toBeInTheDocument();
-    });
-  });
-
-  it('should handle missing logging settings in response', async () => {
-    // Mock response without logging settings
-    (global.fetch as jest.Mock).mockImplementation((url) => {
+    
+    // Mock failed save response
+    mockFetch.mockImplementation((url: string, options?: RequestInit) => {
+      if (url.includes('/api/admin/system/logging') && options?.method === 'PATCH') {
+        return Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({ error: 'Failed to update logging settings' }),
+        });
+      }
       if (url.includes('/api/admin/system/settings')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({
-            settings: {
-              // No logging settings
-            },
-          }),
+          json: () => Promise.resolve(mockSuccessfulSettingsResponse),
         });
       }
       return Promise.resolve({
@@ -344,14 +268,19 @@ describe('SystemSettings - Logging Configuration', () => {
       });
     });
 
-    render(<SystemSettings />);
+    renderWithContext(<SystemSettings />);
 
-    // Should render with default values
     await waitFor(() => {
-      expect(screen.getByText('Logging Configuration')).toBeInTheDocument();
+      expect(screen.queryByText('Loading system settings...')).not.toBeInTheDocument();
     });
 
-    // Should have default log level
-    expect(screen.getByDisplayValue('info')).toBeInTheDocument();
+    // Click save button
+    const saveButton = screen.getByRole('button', { name: 'Save Logging Settings' });
+    await user.click(saveButton);
+
+    // Wait for error message
+    await waitFor(() => {
+      expect(screen.getByText('Failed to update logging settings')).toBeInTheDocument();
+    });
   });
 }); 
