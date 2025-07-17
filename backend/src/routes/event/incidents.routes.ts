@@ -85,7 +85,7 @@ router.post(
 );
 
 // Export incidents
-router.get('/export', requireRole(['reporter', 'responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
+router.get('/export', requireRole(['responder', 'event_admin', 'system_admin']), async (req: Request, res: Response): Promise<void> => {
     try {
         const { eventId, slug } = req.params;
         const { format, ids } = req.query;
@@ -107,7 +107,16 @@ router.get('/export', requireRole(['reporter', 'responder', 'event_admin', 'syst
             currentEventId = eventIdFromSlug;
         }
 
-        // Get incidents to export (access is already controlled by requireRole middleware)
+        // Verify user has proper permissions for this specific event
+        const { UnifiedRBACService } = require('../../services/unified-rbac.service');
+        const rbacService = new UnifiedRBACService(prisma);
+        const hasEventRole = await rbacService.hasEventRole(user.id, currentEventId, ['responder', 'event_admin']);
+        if (!hasEventRole) {
+            res.status(403).json({ error: 'Insufficient permissions to export incidents from this event' });
+            return;
+        }
+
+        // Get incidents to export
         let queryOptions: any = { page: 1, limit: 1000 };
         if (ids) {
             const incidentIds = (ids as string).split(',');
@@ -219,9 +228,18 @@ router.post('/bulk', requireRole(['responder', 'event_admin', 'system_admin']), 
         );
 
         if (result.success) {
-            // Always return 200 OK for bulk operations, even if there are validation errors
-            // The errors are included in the response data
-            res.status(200).json(result.data);
+            // Check if there were validation errors
+            if (result.data && result.data.errors && result.data.errors.length > 0) {
+                // Return 400 for validation errors with error details
+                res.status(400).json({ 
+                    error: 'Validation errors occurred',
+                    details: result.data.errors,
+                    updated: result.data.updated || 0
+                });
+            } else {
+                // Return 200 for successful operations
+                res.status(200).json(result.data);
+            }
         } else {
             res.status(400).json({ error: result.error });
         }

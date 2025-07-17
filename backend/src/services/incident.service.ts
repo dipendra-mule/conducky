@@ -2433,8 +2433,28 @@ export class IncidentService {
           if (!options.assignedTo) {
             errors.push('assignedTo is required for assign action');
           } else {
-            updateData.assignedResponderId = options.assignedTo;
-            auditAction = 'bulk_assign';
+            // Validate assigned user exists and has appropriate role
+            const assignedUser = await this.prisma.user.findUnique({
+              where: { id: options.assignedTo }
+            });
+
+            if (!assignedUser) {
+              errors.push('Assigned user not found');
+            } else {
+              // Check if user has appropriate role using unified RBAC
+              const hasEventRole = await this.unifiedRBAC.hasEventRole(
+                options.assignedTo, 
+                eventId, 
+                ['responder', 'event_admin']
+              );
+
+              if (!hasEventRole) {
+                errors.push('Assigned user must have Responder or Event Admin role for this event');
+              } else {
+                updateData.assignedResponderId = options.assignedTo;
+                auditAction = 'bulk_assign';
+              }
+            }
           }
           break;
 
