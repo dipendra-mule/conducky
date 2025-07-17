@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { SecureMarkdown } from "@/components/ui/secure-markdown";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
+
 import { Alert, AlertDescription } from "../../../components/ui/alert";
 import { Separator } from "../../../components/ui/separator";
 import { isValidEmail, sanitizeEmail } from "../../../lib/utils";
@@ -11,7 +11,7 @@ import {
   ShieldCheck, 
   MessageSquare, 
   Users, 
-  Clock, 
+ 
   ArrowRight, 
   Mail, 
   Globe, 
@@ -256,7 +256,7 @@ export default function PublicEventPage() {
           <CardContent className="space-y-6">
             <p className="text-gray-600 dark:text-gray-400">
               Our incident management system ensures that all incidents are handled professionally, 
-              confidentially, and with care. Here's how the process works:
+              confidentially, and with care. Here&apos;s how the process works:
             </p>
             
             {/* Process Steps */}
@@ -267,7 +267,7 @@ export default function PublicEventPage() {
                 </div>
                 <h3 className="font-semibold">1. Submit Report</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Securely submit your incident report with as much detail as you're comfortable sharing
+                  Securely submit your incident report with as much detail as you&apos;re comfortable sharing
                 </p>
               </div>
               
@@ -297,7 +297,7 @@ export default function PublicEventPage() {
                 </div>
                 <h3 className="font-semibold">4. Resolution</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  The incident is resolved and you're updated on the outcome and next steps
+                  The incident is resolved and you&apos;re updated on the outcome and next steps
                 </p>
               </div>
             </div>
@@ -439,7 +439,7 @@ export default function PublicEventPage() {
             <CardContent className="space-y-4">
               <p className="text-gray-600 dark:text-gray-400">
                 To submit incidents, participate in discussions, or join the response team, 
-                you'll need to be invited to this event.
+                you&apos;ll need to be invited to this event.
               </p>
               
               <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4">
@@ -448,7 +448,7 @@ export default function PublicEventPage() {
                   <li>• Event organizers will send you an invite link</li>
                   <li>• Check your email for an invitation from this event</li>
                   <li>• Contact the event organizers if you need access</li>
-                  {!isAuthenticated && <li>• <a href="/register" className="text-blue-600 dark:text-blue-400 hover:underline">Create an account</a> if you don't have one</li>}
+                  {!isAuthenticated && <li>• <a href="/register" className="text-blue-600 dark:text-blue-400 hover:underline">Create an account</a> if you don&apos;t have one</li>}
                 </ul>
               </div>
               

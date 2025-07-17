@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, Check, X, Github } from 'lucide-react';
-import { useLogger } from '@/hooks/useLogger';
+
 
 interface PasswordStrength {
   score: number;

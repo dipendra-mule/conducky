@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button';
 import { AuditLogTable } from '@/components/audit/AuditLogTable';
 import { fetchOrganizationAuditLogs } from '@/lib/audit';
 import { AuditLogEntry, AuditLogFilters, AuditLogPagination } from '@/types/audit';
-import { Shield, Building, Users, Activity, Calendar } from 'lucide-react';
-import { useLogger } from '@/hooks/useLogger';
+import { Shield, Building, Users, Activity } from 'lucide-react';
+
 
 interface Organization {
   id: string;
@@ -166,7 +166,7 @@ export default function OrganizationAuditPage() {
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive">
           <AlertDescription>
-            You don't have permission to view audit logs for this organization.
+            You don&apos;t have permission to view audit logs for this organization.
           </AlertDescription>
         </Alert>
       </div>

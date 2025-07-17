@@ -64,18 +64,7 @@ interface AssignmentFields {
   state?: string;
 }
 
-const validStates = [
-  "submitted",
-  "acknowledged",
-  "investigating",
-  "resolved",
-  "closed",
-];
 
-const visibilityOptions = [
-  { value: "public", label: "Public (visible to all involved)" },
-  { value: "internal", label: "Internal (responders/admins only)" },
-];
 
 export default function ReportDetail() {
   const router = useRouter();
@@ -222,18 +211,8 @@ export default function ReportDetail() {
     }
   }, [incident?.createdAt, incident?.updatedAt]);
 
-  const isSystemAdmin =
-    user && user.roles && user.roles.includes("system_admin");
-  const canChangeState =
-    isSystemAdmin ||
-    userRoles.some((r) => ["responder", "event_admin", "system_admin"].includes(r));
   const isResponderOrAbove = userRoles.some((r) =>
     ["responder", "event_admin", "system_admin"].includes(r),
-  );
-
-  // Helper: check if user is admin or system admin
-  const isAdminOrSystemAdmin = userRoles.some((r) =>
-    ["event_admin", "system_admin"].includes(r),
   );
 
   // Fetch event users for assignment dropdown if admin/responder
@@ -292,9 +271,7 @@ export default function ReportDetail() {
     }
   };
 
-  const handleLegacyStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    await handleStateChange(e.target.value);
-  };
+
   const handleCommentSubmit = async (body: string, visibility: string, isMarkdown?: boolean) => {
     if (!eventSlug || !incidentId) return { success: false, error: "Missing event or incident ID" };
 

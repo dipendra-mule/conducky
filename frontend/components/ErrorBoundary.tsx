@@ -101,7 +101,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 Something went wrong
               </h2>
               <p className="mt-2 text-center text-sm text-gray-600">
-                We've encountered an unexpected error. Our team has been notified.
+                We&apos;ve encountered an unexpected error. Our team has been notified.
               </p>
             </div>
             
