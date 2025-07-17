@@ -16,7 +16,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 // Import logger configuration
-import logger from './src/config/logger';
+import logger, { initializeLoggingService } from './src/config/logger';
 
 // Import comprehensive security middleware
 import { securityHeaders, apiSecurityHeaders, corsSecurityOptions, inputSecurityCheck, requestSizeLimit } from './src/middleware/security';
@@ -68,6 +68,14 @@ import { setupSwagger } from './src/config/swagger';
 
 // Initialize Prisma client (after environment is loaded)
 const prisma = new PrismaClient();
+
+// Initialize configurable logging service
+(async () => {
+  await initializeLoggingService(prisma);
+})().catch(error => {
+  console.error('Failed to initialize logging service:', error);
+});
+
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
 if (isNaN(PORT) || PORT < 1 || PORT > 65535) {

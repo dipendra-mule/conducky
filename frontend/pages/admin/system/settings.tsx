@@ -42,11 +42,23 @@ interface GitHubOAuthSettings {
   enabled?: boolean;
 }
 
+interface LoggingSettings {
+  level: string;
+  destinations: {
+    console: boolean;
+    file: boolean;
+    errorFile: boolean;
+  };
+  filePath: string;
+  errorFilePath: string;
+}
+
 interface SystemSettings {
   showPublicEventList?: string;
   email?: EmailSettings;
   googleOAuth?: GoogleOAuthSettings;
   githubOAuth?: GitHubOAuthSettings;
+  logging?: LoggingSettings;
 }
 
 export default function SystemSettings() {
@@ -73,6 +85,16 @@ export default function SystemSettings() {
     clientId: '',
     clientSecret: '',
     enabled: false
+  });
+  const [loggingSettings, setLoggingSettings] = useState<LoggingSettings>({
+    level: 'error',
+    destinations: {
+      console: true,
+      file: false,
+      errorFile: false
+    },
+    filePath: 'logs/combined.log',
+    errorFilePath: 'logs/error.log'
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -103,6 +125,10 @@ export default function SystemSettings() {
         setGitHubOAuthSettings(prev => ({
           ...prev,
           ...data.settings?.githubOAuth
+        }));
+        setLoggingSettings(prev => ({
+          ...prev,
+          ...data.settings?.logging
         }));
       } else {
         setError('Failed to load system settings');
@@ -282,6 +308,40 @@ export default function SystemSettings() {
 
   const handleGitHubOAuthSettingChange = (key: keyof GitHubOAuthSettings, value: string | boolean) => {
     setGitHubOAuthSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const updateLoggingSettings = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch(
+        (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') + '/api/admin/system/logging',
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(loggingSettings),
+        }
+      );
+
+      if (response.ok) {
+        setSuccess('Logging settings updated successfully');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update logging settings');
+      }
+    } catch {
+      setError('Network error updating logging settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLoggingSettingChange = (key: keyof LoggingSettings, value: string | boolean | object) => {
+    setLoggingSettings(prev => ({ ...prev, [key]: value }));
   };
 
   useEffect(() => {
@@ -811,6 +871,135 @@ export default function SystemSettings() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Logging Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Logging Configuration
+              </CardTitle>
+              <CardDescription>
+                Configure system logging levels and destinations for debugging and monitoring.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Log Level */}
+              <div className="space-y-2">
+                <Label htmlFor="log-level">Log Level</Label>
+                <Select 
+                  value={loggingSettings.level} 
+                  onValueChange={(value) => handleLoggingSettingChange('level', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select log level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="error">Error - Critical errors only</SelectItem>
+                    <SelectItem value="warn">Warning - Warnings and errors</SelectItem>
+                    <SelectItem value="info">Info - General info, warnings, and errors (recommended for production)</SelectItem>
+                    <SelectItem value="http">HTTP - Request logging plus all above levels</SelectItem>
+                    <SelectItem value="debug">Debug - All messages including detailed debugging (recommended for development)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Each level includes all higher priority levels. Error = most restrictive, Debug = most verbose.
+                </p>
+              </div>
+
+              {/* Log Destinations */}
+              <div className="space-y-3">
+                <Label>Log Destinations</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="log-console"
+                      checked={loggingSettings.destinations.console}
+                      onCheckedChange={(checked) => 
+                        handleLoggingSettingChange('destinations', {
+                          ...loggingSettings.destinations,
+                          console: checked
+                        })
+                      }
+                    />
+                    <Label htmlFor="log-console">Console Output</Label>
+                    <p className="text-xs text-muted-foreground ml-2">
+                      Log to console (stdout)
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="log-file"
+                      checked={loggingSettings.destinations.file}
+                      onCheckedChange={(checked) => 
+                        handleLoggingSettingChange('destinations', {
+                          ...loggingSettings.destinations,
+                          file: checked
+                        })
+                      }
+                    />
+                    <Label htmlFor="log-file">Log File</Label>
+                    <p className="text-xs text-muted-foreground ml-2">
+                      Log all messages to file
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="log-error-file"
+                      checked={loggingSettings.destinations.errorFile}
+                      onCheckedChange={(checked) => 
+                        handleLoggingSettingChange('destinations', {
+                          ...loggingSettings.destinations,
+                          errorFile: checked
+                        })
+                      }
+                    />
+                    <Label htmlFor="log-error-file">Error Log File</Label>
+                    <p className="text-xs text-muted-foreground ml-2">
+                      Log errors to separate file
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* File Paths */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="log-file-path">Log File Path</Label>
+                  <Input
+                    id="log-file-path"
+                    value={loggingSettings.filePath}
+                    onChange={(e) => handleLoggingSettingChange('filePath', e.target.value)}
+                    placeholder="logs/combined.log"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Path to the main log file (relative to application directory)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="log-error-file-path">Error Log File Path</Label>
+                  <Input
+                    id="log-error-file-path"
+                    value={loggingSettings.errorFilePath}
+                    onChange={(e) => handleLoggingSettingChange('errorFilePath', e.target.value)}
+                    placeholder="logs/error.log"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Path to the error log file (relative to application directory)
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={updateLoggingSettings} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Logging Settings'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

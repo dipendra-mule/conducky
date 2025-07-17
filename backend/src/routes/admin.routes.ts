@@ -3,7 +3,12 @@ import { requireAuth, AuthUser } from '../middleware/auth';
 import { requireSystemAdmin } from '../utils/rbac';
 import { PrismaClient } from '@prisma/client';
 import { reinitializeOAuthStrategies } from '../config/passport';
-import logger from '../config/logger';
+import logger, { 
+  updateLoggingSettings, 
+  getLoggingSettings, 
+  getAvailableLogLevels, 
+  getAvailableDestinations 
+} from '../config/logger';
 import { databaseMonitor } from '../services/database-monitoring.service';
 
 // Import security middleware
@@ -311,10 +316,26 @@ router.get('/system/settings', requireSystemAdmin(), async (req: Request, res: R
           logger.error('Error parsing GitHub OAuth settings:', parseError);
           settingsObj[setting.key] = null;
         }
+      } else if (setting.key === 'logDestinations') {
+        try {
+          settingsObj[setting.key] = JSON.parse(setting.value);
+        } catch (parseError) {
+          logger.error('Error parsing log destinations:', parseError);
+          settingsObj[setting.key] = null;
+        }
       } else {
         settingsObj[setting.key] = setting.value;
       }
     });
+
+    // Add logging settings to the response
+    try {
+      const loggingSettings = await getLoggingSettings();
+      settingsObj.logging = loggingSettings;
+    } catch (loggingError) {
+      logger.warn('Could not fetch logging settings for system settings response:', loggingError);
+      settingsObj.logging = null;
+    }
     
     res.json({ settings: settingsObj });
   } catch (err: any) {
@@ -1128,6 +1149,98 @@ router.post('/database/performance/reset', requireAuth, requireSystemAdmin(), as
     res.status(500).json({ 
       message: 'Failed to reset performance metrics',
       error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    });
+  }
+});
+
+/**
+ * GET /api/admin/system/logging
+ * Get current logging configuration (System Admin only)
+ */
+router.get('/system/logging', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const settings = await getLoggingSettings();
+    const availableLevels = getAvailableLogLevels();
+    const availableDestinations = getAvailableDestinations();
+
+    res.json({
+      settings,
+      options: {
+        levels: availableLevels,
+        destinations: availableDestinations
+      }
+    });
+  } catch (error: any) {
+    logger.error('Error fetching logging settings:', error);
+    res.status(500).json({
+      error: 'Failed to fetch logging settings',
+      ...(process.env.NODE_ENV !== 'production' && { details: error.message })
+    });
+  }
+});
+
+/**
+ * PATCH /api/admin/system/logging
+ * Update logging configuration (System Admin only)
+ */
+router.patch('/system/logging', requireSystemAdmin(), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { level, destinations, filePath, errorFilePath } = req.body;
+
+    // Validate log level
+    if (level && !getAvailableLogLevels().includes(level)) {
+      res.status(400).json({
+        error: 'Invalid log level',
+        validLevels: getAvailableLogLevels()
+      });
+      return;
+    }
+
+    // Validate destinations format
+    if (destinations && typeof destinations !== 'object') {
+      res.status(400).json({
+        error: 'Destinations must be an object'
+      });
+      return;
+    }
+
+    // Validate file paths
+    if (filePath && typeof filePath !== 'string') {
+      res.status(400).json({
+        error: 'File path must be a string'
+      });
+      return;
+    }
+
+    if (errorFilePath && typeof errorFilePath !== 'string') {
+      res.status(400).json({
+        error: 'Error file path must be a string'
+      });
+      return;
+    }
+
+    const settings: any = {};
+    if (level) settings.level = level;
+    if (destinations) settings.destinations = destinations;
+    if (filePath) settings.filePath = filePath;
+    if (errorFilePath) settings.errorFilePath = errorFilePath;
+
+    await updateLoggingSettings(settings);
+
+    logger.info('Logging settings updated', {
+      userId: (req as AuthenticatedRequest).user?.id,
+      settings: settings
+    });
+
+    res.json({
+      message: 'Logging settings updated successfully',
+      settings: await getLoggingSettings()
+    });
+  } catch (error: any) {
+    logger.error('Error updating logging settings:', error);
+    res.status(500).json({
+      error: 'Failed to update logging settings',
+      ...(process.env.NODE_ENV !== 'production' && { details: error.message })
     });
   }
 });
