@@ -32,7 +32,7 @@ describe('Auth endpoints', () => {
     it('should fail if password is weak', async () => {
       const res = await request(app).post('/api/auth/register').send({ email: 'weak@example.com', password: 'password', name: 'Weak User' });
       expect(res.statusCode).toBe(400);
-      expect(res.body.error).toContain('Password must meet all security requirements');
+      expect(res.body.error).toContain('Password must contain at least one');
     });
     it('should fail if email already registered', async () => {
       await request(app).post('/api/auth/register').send({ email: 'dupe@example.com', password: 'StrongPass123!', name: 'Dupe' });

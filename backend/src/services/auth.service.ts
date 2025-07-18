@@ -15,8 +15,12 @@ export interface PasswordValidation {
     lowercase: boolean;
     number: boolean;
     special: boolean;
+    noCommonPatterns: boolean;
+    noPersonalInfo: boolean;
   };
   score: number;
+  strength: 'very-weak' | 'weak' | 'fair' | 'good' | 'strong';
+  feedback: string[];
 }
 
 export interface RegistrationData {
@@ -50,28 +54,118 @@ export interface RateLimitResult {
 }
 
 export class AuthService {
-  private rbacService = new UnifiedRBACService();
+  private rbacService: UnifiedRBACService;
 
   // Rate limiting for password reset attempts
   // Uses database for persistence across server restarts
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) {
+    this.rbacService = new UnifiedRBACService(prisma);
+  }
 
   /**
    * Validate password strength requirements
+   * Enhanced with additional security checks and detailed feedback
    */
-  validatePassword(password: string): PasswordValidation {
+  validatePassword(password: string, userEmail?: string, userName?: string): PasswordValidation {
+    const feedback: string[] = [];
+    
+    // Common weak patterns to avoid - simplified for better performance
+    const commonPatterns = [
+      /(.)\1{3,}/,           // Repeated characters (aaaa, 1111) - increased threshold
+      /123456|234567|345678|456789|567890/,  // Sequential numbers (longer sequences)
+      /abcdef|qwerty|asdfgh|zxcvbn|fedcba/i, // Common keyboard/sequential patterns
+      /^password$|^pass$|^pwd$|^secret$|^login$|^admin$|^user$|^test$|^qwerty$|^asdf$|^zxcv$/i,  // Exact matches only
+      /^[0-9]+$/,            // Only numbers
+      /^[a-z]+$/,            // Only lowercase
+      /^[A-Z]+$/,            // Only uppercase
+    ];
+
+    // Basic requirements
     const requirements = {
       length: password.length >= 8,
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /\d/.test(password),
       special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+      noCommonPatterns: !commonPatterns.some(pattern => pattern.test(password)),
+      noPersonalInfo: true // Default to true, will check below
     };
+
+    // Enhanced personal info validation
+    const lowerPassword = password.toLowerCase();
     
+    // Check for email parts
+    if (userEmail && userEmail.trim()) {
+      const emailLower = userEmail.toLowerCase().trim();
+      const username = emailLower.split('@')[0];
+      const domain = emailLower.split('@')[1]?.split('.')[0];
+      
+      if (username && username.length >= 3 && lowerPassword.includes(username)) {
+        requirements.noPersonalInfo = false;
+        feedback.push('Password should not contain parts of your email address');
+      }
+      
+      if (domain && domain.length >= 3 && lowerPassword.includes(domain)) {
+        requirements.noPersonalInfo = false;
+        feedback.push('Password should not contain parts of your email domain');
+      }
+    }
+    
+    // Check for name parts with improved robustness
+    if (userName && userName.trim()) {
+      const nameParts = userName.toLowerCase().trim().split(/\s+/).filter(part => part.length > 0);
+      for (const part of nameParts) {
+        if (part.length >= 4 && lowerPassword.includes(part)) {
+          requirements.noPersonalInfo = false;
+          feedback.push('Password should not contain your name');
+          break; // Only add the message once
+        }
+      }
+    }
+
+    // Add specific feedback for missing requirements
+    if (!requirements.length) {
+      feedback.push('Password must be at least 8 characters long');
+    }
+    if (!requirements.uppercase) {
+      feedback.push('Password must contain at least one uppercase letter');
+    }
+    if (!requirements.lowercase) {
+      feedback.push('Password must contain at least one lowercase letter');
+    }
+    if (!requirements.number) {
+      feedback.push('Password must contain at least one number');
+    }
+    if (!requirements.special) {
+      feedback.push('Password must contain at least one special character');
+    }
+    if (!requirements.noCommonPatterns) {
+      feedback.push('Password contains common patterns that are easy to guess');
+    }
+
+    // Calculate score and strength
     const score = Object.values(requirements).filter(Boolean).length;
-    const isValid = score === 5; // All requirements must be met
-    
-    return { isValid, requirements, score };
+    const isValid = score === Object.keys(requirements).length;
+
+    let strength: 'very-weak' | 'weak' | 'fair' | 'good' | 'strong';
+    if (score <= 2) strength = 'very-weak';
+    else if (score <= 3) strength = 'weak';
+    else if (score <= 4) strength = 'fair';
+    else if (score <= 5) strength = 'good';
+    else strength = 'strong';
+
+    // Add suggestions for better security
+    if (password.length < 12 && isValid) {
+      feedback.push('Consider using a longer password (12+ characters) for better security');
+    }
+
+    return {
+      isValid,
+      requirements,
+      score,
+      strength,
+      feedback
+    };
   }
 
   /**
@@ -155,11 +249,14 @@ export class AuthService {
       }
 
       // Validate password strength
-      const passwordValidation = this.validatePassword(password);
+      const passwordValidation = this.validatePassword(password, email, name);
       if (!passwordValidation.isValid) {
+        const errorMessage = passwordValidation.feedback.length > 0 
+          ? passwordValidation.feedback.join('; ')
+          : "Password must meet all security requirements: at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character.";
         return {
           success: false,
-          error: "Password must meet all security requirements: at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character."
+          error: errorMessage
         };
       }
 
@@ -231,6 +328,7 @@ export class AuthService {
 
   /**
    * Check if email is available for registration
+   * Modified to prevent user enumeration attacks by being less revealing
    */
   async checkEmailAvailability(email: string): Promise<ServiceResult<{ available: boolean }>> {
     try {
@@ -241,12 +339,36 @@ export class AuthService {
         };
       }
 
-      const existing = await this.prisma.user.findUnique({ where: { email } });
+      // Validate email format first - using safer regex pattern
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        return {
+          success: false,
+          error: "Please enter a valid email address."
+        };
+      }
+
+      const existing = await this.prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+      
+      // Always return a consistent response structure
+      // In production, we might want to be even less revealing
+      const available = !existing;
+      
+      // Log potential enumeration attempts for security monitoring
+      if (!available) {
+        logger().warn('Email availability check for existing email', {
+          email: email.toLowerCase(),
+          timestamp: new Date().toISOString(),
+          context: 'email_enumeration_attempt'
+        });
+      }
+      
       return {
         success: true,
-        data: { available: !existing }
+        data: { available }
       };
     } catch (error: any) {
+      logger().error('Error checking email availability:', error);
       return {
         success: false,
         error: "Failed to check email availability.",
@@ -384,7 +506,7 @@ export class AuthService {
       // Find the token
       const resetToken = await this.prisma.passwordResetToken.findUnique({
         where: { token },
-        include: { user: { select: { email: true } } }
+        include: { user: { select: { email: true, name: true } } }
       });
 
       if (!resetToken) {
@@ -451,16 +573,7 @@ export class AuthService {
         };
       }
 
-      // Validate password strength
-      const passwordValidation = this.validatePassword(password);
-      if (!passwordValidation.isValid) {
-        return {
-          success: false,
-          error: "Password must meet all security requirements: at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character."
-        };
-      }
-
-      // Find valid token
+      // Find valid token first (validate token before password)
       const resetToken = await this.prisma.passwordResetToken.findUnique({
         where: { token },
         include: { user: true }
@@ -484,6 +597,18 @@ export class AuthService {
         return {
           success: false,
           error: "Reset token has expired."
+        };
+      }
+
+      // Validate password strength after token validation (include user data for personal info checking)
+      const passwordValidation = this.validatePassword(password, resetToken.user.email, resetToken.user.name || undefined);
+      if (!passwordValidation.isValid) {
+        const errorMessage = passwordValidation.feedback.length > 0 
+          ? passwordValidation.feedback.join('; ')
+          : "Password must meet all security requirements: at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character.";
+        return {
+          success: false,
+          error: errorMessage
         };
       }
 

@@ -148,7 +148,7 @@ describe("Profile Management API", () => {
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.error).toContain("security requirements");
+      expect(res.body.error).toContain("Password must be at least 8 characters long");
     });
 
     it("should require both passwords", async () => {

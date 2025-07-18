@@ -182,3 +182,26 @@ export const commentCreationRateLimit = rateLimit({
     });
   }
 });
+
+/**
+ * Email check rate limiting
+ * 5 checks per 15 minutes per IP to prevent user enumeration
+ */
+export const emailCheckRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 email checks per windowMs
+  message: {
+    error: 'Too many email checks from this IP, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: shouldSkipRateLimit,
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      error: 'Email check rate limit exceeded',
+      message: 'Too many email check attempts from this IP, please try again later.',
+      retryAfter: '15 minutes'
+    });
+  }
+});
