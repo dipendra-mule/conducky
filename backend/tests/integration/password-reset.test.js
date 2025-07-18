@@ -122,7 +122,7 @@ describe("Password Reset Integration Tests", () => {
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.error).toContain("Password must meet all security requirements");
+      expect(res.body.error).toContain("Password must be at least 8 characters long");
     });
 
     it("should fail with missing token", async () => {
@@ -276,7 +276,7 @@ describe("Password Reset Integration Tests", () => {
           });
 
         expect(res.statusCode).toBe(400);
-        expect(res.body.error).toContain("Password must meet all security requirements");
+        expect(res.body.error).toContain("Password must contain at least one");
       }
     });
   });

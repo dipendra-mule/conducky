@@ -67,17 +67,18 @@ export class AuthService {
   validatePassword(password: string, userEmail?: string, userName?: string): PasswordValidation {
     const feedback: string[] = [];
     
-    // Common weak patterns to avoid
+    // Common weak patterns to avoid (made less strict)
     const commonPatterns = [
-      /(.)\1{2,}/,           // Repeated characters (aaa, 111)
-      /123|234|345|456|567|678|789|890/,  // Sequential numbers
-      /abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz/i, // Sequential letters
-      /password|pass|pwd|secret|login|admin|user|test|qwerty|asdf|zxcv/i,  // Common weak words
+      /(.)\1{3,}/,           // Repeated characters (aaaa, 1111) - increased threshold
+      /123456|234567|345678|456789|567890/,  // Sequential numbers (longer sequences)
+      /abcdef|bcdefg|cdefgh|defghi|efghij|fghijk|ghijkl|hijklm|ijklmn|jklmno|klmnop|lmnopq|mnopqr|nopqrs|opqrst|pqrstu|qrstuv|rstuvw|stuvwx|tuvwxy|uvwxyz/i, // Sequential letters (longer sequences)
+      /^password$|^pass$|^pwd$|^secret$|^login$|^admin$|^user$|^test$|^qwerty$|^asdf$|^zxcv$/i,  // Exact matches only
       /^[0-9]+$/,            // Only numbers
       /^[a-z]+$/,            // Only lowercase
       /^[A-Z]+$/,            // Only uppercase
     ];
-    
+
+    // Basic requirements
     const requirements = {
       length: password.length >= 8,
       uppercase: /[A-Z]/.test(password),
@@ -85,10 +86,21 @@ export class AuthService {
       number: /\d/.test(password),
       special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
       noCommonPatterns: !commonPatterns.some(pattern => pattern.test(password)),
-      noPersonalInfo: this.checkPersonalInfo(password, userEmail, userName)
+      noPersonalInfo: true // Default to true, will check below
     };
+
+    // Check for personal info if provided
+    if (userEmail && password.toLowerCase().includes(userEmail.split('@')[0].toLowerCase())) {
+      requirements.noPersonalInfo = false;
+      feedback.push('Password should not contain parts of your email address');
+    }
     
-    // Provide specific feedback for failed requirements
+    if (userName && password.toLowerCase().includes(userName.toLowerCase())) {
+      requirements.noPersonalInfo = false;
+      feedback.push('Password should not contain your name');
+    }
+
+    // Add specific feedback for missing requirements
     if (!requirements.length) {
       feedback.push('Password must be at least 8 characters long');
     }
@@ -107,33 +119,30 @@ export class AuthService {
     if (!requirements.noCommonPatterns) {
       feedback.push('Password contains common patterns that are easy to guess');
     }
-    if (!requirements.noPersonalInfo) {
-      feedback.push('Password should not contain personal information like email or name');
-    }
-    
-    // Additional length-based feedback
-    if (password.length < 12) {
+
+    // Calculate score and strength
+    const score = Object.values(requirements).filter(Boolean).length;
+    const isValid = score === Object.keys(requirements).length;
+
+    let strength: 'very-weak' | 'weak' | 'fair' | 'good' | 'strong';
+    if (score <= 2) strength = 'very-weak';
+    else if (score <= 3) strength = 'weak';
+    else if (score <= 4) strength = 'fair';
+    else if (score <= 5) strength = 'good';
+    else strength = 'strong';
+
+    // Add suggestions for better security
+    if (password.length < 12 && isValid) {
       feedback.push('Consider using a longer password (12+ characters) for better security');
     }
-    
-    const score = Object.values(requirements).filter(Boolean).length;
-    const isValid = score >= 7; // All basic requirements + enhanced checks
-    
-    // Determine strength based on score and additional factors
-    let strength: 'very-weak' | 'weak' | 'fair' | 'good' | 'strong';
-    if (score < 4) {
-      strength = 'very-weak';
-    } else if (score < 5) {
-      strength = 'weak';
-    } else if (score < 6) {
-      strength = 'fair';
-    } else if (score < 7) {
-      strength = 'good';
-    } else {
-      strength = password.length >= 12 ? 'strong' : 'good';
-    }
-    
-    return { isValid, requirements, score, strength, feedback };
+
+    return {
+      isValid,
+      requirements,
+      score,
+      strength,
+      feedback
+    };
   }
 
   /**
@@ -572,19 +581,7 @@ export class AuthService {
         };
       }
 
-      // Validate password strength
-      const passwordValidation = this.validatePassword(password);
-      if (!passwordValidation.isValid) {
-        const errorMessage = passwordValidation.feedback.length > 0 
-          ? passwordValidation.feedback.join('; ')
-          : "Password must meet all security requirements: at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character.";
-        return {
-          success: false,
-          error: errorMessage
-        };
-      }
-
-      // Find valid token
+      // Find valid token first (validate token before password)
       const resetToken = await this.prisma.passwordResetToken.findUnique({
         where: { token },
         include: { user: true }
@@ -608,6 +605,18 @@ export class AuthService {
         return {
           success: false,
           error: "Reset token has expired."
+        };
+      }
+
+      // Validate password strength after token validation
+      const passwordValidation = this.validatePassword(password);
+      if (!passwordValidation.isValid) {
+        const errorMessage = passwordValidation.feedback.length > 0 
+          ? passwordValidation.feedback.join('; ')
+          : "Password must meet all security requirements: at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character.";
+        return {
+          success: false,
+          error: errorMessage
         };
       }
 
