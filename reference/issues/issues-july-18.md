@@ -101,13 +101,15 @@ After thoroughly reviewing the codebase and examining each GitHub issue, here's 
 
 **Impact**: Significantly improves keyboard navigation UX - users can now use dropdown menus and select components without keyboard shortcuts interfering.
 
-### ⏳ Phase 3: Code Quality (Medium Priority)
+### ⏳ Phase 3: Code Quality and API Security (Medium Priority)
 **Status**: 📋 PLANNED
-**Target Issues**: #197, #215, #354
-**Estimated Timeline**: 1-2 days
+**Target Issues**: #137, #197, #215, #354
+**Estimated Timeline**: 2-3 days
 **PR**: TBD
 
 #### Tasks:
+- [ ] **Issue #137**: Implement incident API field filtering for unauthorized users (incremental approach)
+- [ ] **Issue #137**: Ensure TypeScript compatibility while adding field restrictions
 - [ ] **Issue #197 & #215**: Implement structured error handling with error codes
 - [ ] **Issue #197 & #215**: Replace .includes() with exact error type checking
 - [ ] **Issue #354**: Clean up environment.ts file
