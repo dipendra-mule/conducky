@@ -198,7 +198,11 @@ class PrismaClient {
             (where.id && e.id === where.id) ||
             (where.slug && e.slug === where.slug),
         );
-        if (idx === -1) throw new Error("Event not found");
+        if (idx === -1) {
+          const err = new Error("An operation failed because it depends on one or more records that were required but not found. Record to update not found.");
+          err.code = "P2025";
+          throw err;
+        }
         inMemoryStore.events[idx] = { ...inMemoryStore.events[idx], ...data };
         return inMemoryStore.events[idx];
       }),

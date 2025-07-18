@@ -331,7 +331,7 @@ router.get('/:incidentId', requireRole(['reporter', 'responder', 'event_admin', 
             return;
         }
 
-        const result = await incidentService.getIncidentById(incidentId, currentEventId);
+        const result = await incidentService.getIncidentByIdFiltered(incidentId, user.id, currentEventId);
 
         if (result.success) {
             res.json(result.data);

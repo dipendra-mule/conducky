@@ -73,9 +73,9 @@ router.delete('/:notificationId', requireAuth, async (req: any, res: Response): 
     const result = await notificationService.deleteNotification(notificationId, req.user.id);
     
     if (!result.success) {
-      if (result.error?.includes('not found')) {
+      if (result.error === 'Notification not found') {
         res.status(404).json({ error: result.error });
-      } else if (result.error?.includes('Not authorized')) {
+      } else if (result.error === 'Not authorized to delete this notification') {
         res.status(403).json({ error: result.error });
       } else {
         res.status(400).json({ error: result.error });

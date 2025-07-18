@@ -39,7 +39,7 @@ router.post('/', requireSystemAdmin(), async (req: Request, res: Response): Prom
         if (result.success) {
             res.status(201).json(result.data);
         } else {
-            if (result.error?.includes('exists')) {
+            if (result.error === 'Slug already exists.') {
                 res.status(409).json({ error: result.error });
             } else {
                 res.status(400).json({ error: result.error });

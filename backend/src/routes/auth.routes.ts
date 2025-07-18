@@ -180,7 +180,7 @@ router.post('/forgot-password', passwordResetRateLimit, async (req: Request, res
     
     if (!result.success) {
       // Check if it's a rate limiting error
-      if (result.error && result.error.includes('Too many password reset attempts')) {
+      if (result.error && result.error.startsWith('Too many password reset attempts')) {
         res.status(429).json({ error: result.error });
         return;
       }
