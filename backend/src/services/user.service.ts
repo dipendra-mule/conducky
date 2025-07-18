@@ -91,10 +91,11 @@ export interface AvatarUpload {
 }
 
 export class UserService {
-  private unifiedRBAC = new UnifiedRBACService();
+  private unifiedRBAC: UnifiedRBACService;
   private authService: AuthService;
 
   constructor(private prisma: PrismaClient) {
+    this.unifiedRBAC = new UnifiedRBACService(prisma);
     this.authService = new AuthService(prisma);
   }
 

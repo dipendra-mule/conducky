@@ -54,11 +54,13 @@ export interface RateLimitResult {
 }
 
 export class AuthService {
-  private rbacService = new UnifiedRBACService();
+  private rbacService: UnifiedRBACService;
 
   // Rate limiting for password reset attempts
   // Uses database for persistence across server restarts
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) {
+    this.rbacService = new UnifiedRBACService(prisma);
+  }
 
   /**
    * Validate password strength requirements
@@ -337,8 +339,8 @@ export class AuthService {
         };
       }
 
-      // Validate email format first
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // Validate email format first - using safer regex pattern
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(email)) {
         return {
           success: false,
@@ -504,7 +506,7 @@ export class AuthService {
       // Find the token
       const resetToken = await this.prisma.passwordResetToken.findUnique({
         where: { token },
-        include: { user: { select: { email: true } } }
+        include: { user: { select: { email: true, name: true } } }
       });
 
       if (!resetToken) {
@@ -598,8 +600,8 @@ export class AuthService {
         };
       }
 
-      // Validate password strength after token validation
-      const passwordValidation = this.validatePassword(password);
+      // Validate password strength after token validation (include user data for personal info checking)
+      const passwordValidation = this.validatePassword(password, resetToken.user.email, resetToken.user.name || undefined);
       if (!passwordValidation.isValid) {
         const errorMessage = passwordValidation.feedback.length > 0 
           ? passwordValidation.feedback.join('; ')
