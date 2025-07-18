@@ -83,10 +83,10 @@ After thoroughly reviewing the codebase and examining each GitHub issue, here's 
 - [x] Create Phase 1 PR - Ready to submit
 
 ### ⏳ Phase 2: API and Access Control (Medium Priority)  
-**Status**: 📋 PLANNED
+**Status**: 🔄 IN PROGRESS
 **Target Issues**: #137, #319
-**Estimated Timeline**: 2-3 days
-**PR**: TBD
+**Timeline**: Started - 2-3 days estimated
+**PR**: `feature/phase2-api-access-control`
 
 #### Tasks:
 - [ ] **Issue #137**: Review incident API response fields

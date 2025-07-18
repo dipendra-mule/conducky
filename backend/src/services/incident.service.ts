@@ -104,6 +104,34 @@ export interface IncidentWithDetails {
   };
 }
 
+/**
+ * Minimal incident data for unauthorized/low-privilege users
+ * Only includes non-sensitive fields that are safe for reporters to see
+ */
+export interface IncidentMinimal {
+  id: string;
+  title: string;
+  state: string;
+  severity?: string | null;
+  incidentAt?: Date | null;
+  createdAt: Date;
+  eventId: string;
+  event?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  tags?: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
+  userRoles?: string[];
+  _count?: {
+    comments: number;
+  };
+}
+
 export interface UserIncidentsResponse {
   incidents: IncidentWithDetails[];
   total: number;
@@ -570,6 +598,39 @@ export class IncidentService {
       };
     } catch (error: any) {
       logger().error('Error fetching incident:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch incident.'
+      };
+    }
+  }
+
+  /**
+   * Get a single report by ID with field filtering based on user authorization
+   */
+  async getIncidentByIdFiltered(incidentId: string, userId: string, eventId?: string): Promise<ServiceResult<{ incident: IncidentWithDetails | IncidentMinimal }>> {
+    try {
+      const result = await this.getIncidentById(incidentId, eventId);
+      
+      if (!result.success || !result.data) {
+        return result;
+      }
+
+      const incident = result.data.incident;
+      const isReporter = incident.reporterId === userId;
+      
+      // Check user roles for this event
+      const userRoles = await this.unifiedRBAC.getUserRoles(userId, 'event', incident.eventId);
+      const roles = userRoles.map((ur: any) => ur.role.name);
+      
+      const filteredIncident = this.filterIncidentFields(incident, roles, isReporter, userId);
+      
+      return {
+        success: true,
+        data: { incident: filteredIncident }
+      };
+    } catch (error: any) {
+      logger().error('Error fetching filtered incident:', error);
       return {
         success: false,
         error: 'Failed to fetch incident.'
@@ -2015,7 +2076,7 @@ export class IncidentService {
    * Get reports for a specific event with enhanced filtering, search, and optional stats
    */
   async getEventIncidents(eventId: string, userId: string, query: IncidentQuery & { includeStats?: boolean }): Promise<ServiceResult<{
-    incidents: IncidentWithDetails[];
+    incidents: (IncidentWithDetails | IncidentMinimal)[];
     total: number;
     page: number;
     limit: number;
@@ -2168,13 +2229,19 @@ export class IncidentService {
         // Decrypt sensitive data for this incident
         const decryptedIncident = this.decryptIncidentData(incidentWithoutComments);
         
-        return {
+        const incidentWithCount = {
           ...decryptedIncident,
           _count: {
             comments: visibleCommentCount
           },
           userRoles: [] // Roles are not directly available here, but can be fetched if needed
         };
+
+        // Apply field filtering based on user authorization level
+        const isReporter = incident.reporterId === userId;
+        const userRoles = isResponderOrAbove ? ['responder'] : ['reporter'];
+        
+        return this.filterIncidentFields(incidentWithCount, userRoles, isReporter, userId);
       });
 
       // Get total count
@@ -2670,5 +2737,42 @@ export class IncidentService {
         error: 'Failed to update incident tags.'
       };
     }
+  }
+
+  /**
+   * Filter incident fields based on user authorization level
+   * Responders/admins get full details, reporters get minimal fields
+   */
+  private filterIncidentFields(
+    incident: IncidentWithDetails, 
+    userRoles: string[], 
+    isReporter: boolean,
+    userId: string
+  ): IncidentWithDetails | IncidentMinimal {
+    const isResponderOrAbove = userRoles.some((r: string) => 
+      ['responder', 'event_admin', 'system_admin'].includes(r)
+    );
+    
+    // If user is responder/admin or the reporter of this specific incident, return full details
+    if (isResponderOrAbove || (isReporter && incident.reporterId === userId)) {
+      return incident;
+    }
+    
+    // Otherwise, return minimal fields for reporters viewing others' incidents
+    const minimalIncident: IncidentMinimal = {
+      id: incident.id,
+      title: incident.title,
+      state: incident.state,
+      severity: incident.severity,
+      incidentAt: incident.incidentAt,
+      createdAt: incident.createdAt,
+      eventId: incident.eventId,
+      event: incident.event,
+      tags: incident.tags,
+      userRoles: incident.userRoles,
+      _count: incident._count
+    };
+    
+    return minimalIncident;
   }
 }
