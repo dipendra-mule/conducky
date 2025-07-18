@@ -432,9 +432,9 @@ router.patch('/events/:eventId/toggle', requireSystemAdmin(), async (req: Reques
       message: `Event ${enabled ? 'enabled' : 'disabled'} successfully`,
       event: updatedEvent,
     });
-  } catch (error) {
+  } catch (error: any) {
     logger().error('Error toggling event status:', error);
-    if (error instanceof Error && error.message === 'Record to update not found.') {
+    if (error?.code === 'P2025') {
       res.status(404).json({ error: 'Event not found' });
       return;
     }
