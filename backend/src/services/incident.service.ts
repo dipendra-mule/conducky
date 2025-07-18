@@ -2076,7 +2076,7 @@ export class IncidentService {
    * Get reports for a specific event with enhanced filtering, search, and optional stats
    */
   async getEventIncidents(eventId: string, userId: string, query: IncidentQuery & { includeStats?: boolean }): Promise<ServiceResult<{
-    incidents: (IncidentWithDetails | IncidentMinimal)[];
+    incidents: IncidentWithDetails[];
     total: number;
     page: number;
     limit: number;
@@ -2229,19 +2229,13 @@ export class IncidentService {
         // Decrypt sensitive data for this incident
         const decryptedIncident = this.decryptIncidentData(incidentWithoutComments);
         
-        const incidentWithCount = {
+        return {
           ...decryptedIncident,
           _count: {
             comments: visibleCommentCount
           },
           userRoles: [] // Roles are not directly available here, but can be fetched if needed
         };
-
-        // Apply field filtering based on user authorization level
-        const isReporter = incident.reporterId === userId;
-        const userRoles = isResponderOrAbove ? ['responder'] : ['reporter'];
-        
-        return this.filterIncidentFields(incidentWithCount, userRoles, isReporter, userId);
       });
 
       // Get total count

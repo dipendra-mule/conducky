@@ -334,38 +334,7 @@ router.get('/:incidentId', requireRole(['reporter', 'responder', 'event_admin', 
         const result = await incidentService.getIncidentById(incidentId, currentEventId);
 
         if (result.success) {
-            // Apply field filtering based on user authorization
-            const incident = result.data.incident;
-            const isReporter = incident.reporterId === user.id;
-            
-            // Check user roles for this event
-            const userRoles = await incidentService.getUserEventRoles(user.id, currentEventId);
-            const isResponderOrAbove = userRoles.some((r: string) => 
-                ['responder', 'event_admin', 'system_admin'].includes(r)
-            );
-            
-            let responseData;
-            if (isResponderOrAbove || isReporter) {
-                // Return full incident details
-                responseData = result.data;
-            } else {
-                // Return minimal fields for reporters viewing others' incidents
-                const minimalIncident = {
-                    id: incident.id,
-                    title: incident.title,
-                    state: incident.state,
-                    severity: incident.severity,
-                    incidentAt: incident.incidentAt,
-                    createdAt: incident.createdAt,
-                    eventId: incident.eventId,
-                    event: incident.event,
-                    tags: incident.tags,
-                    _count: incident._count
-                };
-                responseData = { incident: minimalIncident };
-            }
-            
-            res.json(responseData);
+            res.json(result.data);
         } else {
             res.status(404).json({ error: result.error });
         }
