@@ -160,13 +160,13 @@ export function useKeyboardShortcuts({
 
     // Special handling for Escape key - should only work for modifiers or when no UI elements are open
     if (event.key === 'Escape') {
-      // Check if any dropdowns, modals, or menus are currently open
-      const hasOpenDropdown = document.querySelector('[data-state="open"]') ||
-                             document.querySelector('.dropdown-menu[data-state="open"]') ||
-                             document.querySelector('[role="menu"]:not([hidden])') ||
-                             document.querySelector('[role="dialog"]:not([hidden])');
-      
-      if (hasOpenDropdown) {
+      // Check if current target is within an open UI component
+      const isInOpenComponent = target.closest('[data-state="open"]') ||2
+                               target.closest('.dropdown-menu[data-state="open"]') ||2
+                               target.closest('[role="menu"]:not([hidden])') ||2
+                               target.closest('[role="dialog"]:not([hidden])');
+  
+      if (isInOpenComponent) {
         // Let the UI component handle the Escape key
         return;
       }
