@@ -120,6 +120,58 @@ export function useKeyboardShortcuts({
       return;
     }
 
+    // Enhanced exclusions for UI navigation elements
+    // Don't trigger shortcuts when user is navigating dropdowns, menus, or other interactive elements
+    if (
+      // Dropdown menus and select components
+      target.closest('[role="menu"]') ||
+      target.closest('[role="menubar"]') ||
+      target.closest('[role="menuitem"]') ||
+      target.closest('[role="listbox"]') ||
+      target.closest('[role="option"]') ||
+      target.closest('[role="combobox"]') ||
+      target.closest('.dropdown-menu') ||
+      target.closest('[data-radix-collection-item]') || // Radix UI components
+      target.closest('[data-select-trigger]') ||
+      target.closest('[data-select-content]') ||
+      
+      // Modal dialogs and overlays
+      target.closest('[role="dialog"]') ||
+      target.closest('[role="alertdialog"]') ||
+      target.closest('.modal') ||
+      target.closest('[data-dialog-content]') ||
+      
+      // Navigation elements that should handle their own keyboard navigation
+      target.closest('[role="navigation"]') ||
+      target.closest('nav') ||
+      target.closest('[role="tabpanel"]') ||
+      target.closest('[role="tablist"]') ||
+      
+      // Any element with specific keyboard navigation handling
+      target.closest('[data-keyboard-navigation]') ||
+      target.hasAttribute('tabindex') ||
+      
+      // Buttons and links that might be part of dropdown menus
+      (target.tagName === 'BUTTON' && target.closest('[role="menu"]')) ||
+      (target.tagName === 'A' && target.closest('[role="menu"]'))
+    ) {
+      return;
+    }
+
+    // Special handling for Escape key - should only work for modifiers or when no UI elements are open
+    if (event.key === 'Escape') {
+      // Check if any dropdowns, modals, or menus are currently open
+      const hasOpenDropdown = document.querySelector('[data-state="open"]') ||
+                             document.querySelector('.dropdown-menu[data-state="open"]') ||
+                             document.querySelector('[role="menu"]:not([hidden])') ||
+                             document.querySelector('[role="dialog"]:not([hidden])');
+      
+      if (hasOpenDropdown) {
+        // Let the UI component handle the Escape key
+        return;
+      }
+    }
+
     // Find matching shortcut
     const shortcut = shortcuts.find(s => {
       const keyMatch = s.key.toLowerCase() === event.key.toLowerCase();
