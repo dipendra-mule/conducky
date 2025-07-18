@@ -7,7 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import logger from '../config/logger';
 
 // Import security middleware
-import { authRateLimit, passwordResetRateLimit } from '../middleware/rate-limit';
+import { authRateLimit, passwordResetRateLimit, emailCheckRateLimit } from '../middleware/rate-limit';
 import { validateUser, handleValidationErrors } from '../middleware/validation';
 
 // Extend session interface to include OAuth state
@@ -164,7 +164,7 @@ router.get('/session-debug', async (req: any, res: Response): Promise<void> => {
 });
 
 // Check email availability
-router.get('/check-email', authController.checkEmail.bind(authController));
+router.get('/check-email', emailCheckRateLimit, authController.checkEmail.bind(authController));
 
 // Forgot password
 router.post('/forgot-password', passwordResetRateLimit, async (req: Request, res: Response): Promise<void> => {

@@ -50,6 +50,14 @@ export class AuthController {
         return;
       }
 
+      // Log the email check attempt for security monitoring
+      logger().info('Email availability check attempted', {
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        timestamp: new Date().toISOString(),
+        context: 'email_check_attempt'
+      });
+
       const result = await this.authService.checkEmailAvailability(email as string);
       
       if (!result.success) {
@@ -57,7 +65,13 @@ export class AuthController {
         return;
       }
 
-      res.status(200).json({ available: result.data });
+      // Add a small artificial delay to make automated enumeration less efficient
+      // Only in production to avoid slowing down tests and development
+      if (process.env.NODE_ENV === 'production') {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      res.status(200).json({ available: result.data?.available });
     } catch (error) {
       logger().error('Email check error:', error);
       res.status(500).json({ error: 'Internal server error' });

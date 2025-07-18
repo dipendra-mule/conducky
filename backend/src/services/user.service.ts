@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { ServiceResult } from '../types';
 import { UnifiedRBACService } from './unified-rbac.service';
+import { AuthService } from './auth.service';
 import logger from '../config/logger';
 
 export interface ProfileUpdateData {
@@ -90,28 +91,11 @@ export interface AvatarUpload {
 }
 
 export class UserService {
-  private unifiedRBAC: UnifiedRBACService;
+  private unifiedRBAC = new UnifiedRBACService();
+  private authService: AuthService;
 
   constructor(private prisma: PrismaClient) {
-    this.unifiedRBAC = new UnifiedRBACService(prisma);
-  }
-
-  /**
-   * Validate password strength requirements
-   */
-  private validatePassword(password: string) {
-    const requirements = {
-      length: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /\d/.test(password),
-      special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
-    };
-    
-    const score = Object.values(requirements).filter(Boolean).length;
-    const isValid = score === 5; // All requirements must be met
-    
-    return { isValid, requirements, score };
+    this.authService = new AuthService(prisma);
   }
 
   /**
@@ -229,11 +213,14 @@ export class UserService {
       }
 
       // Validate new password strength
-      const passwordValidation = this.validatePassword(newPassword);
+      const passwordValidation = this.authService.validatePassword(newPassword, user.email, user.name || undefined);
       if (!passwordValidation.isValid) {
+        const errorMessage = passwordValidation.feedback.length > 0 
+          ? passwordValidation.feedback.join('; ')
+          : 'New password must meet all security requirements: at least 8 characters, uppercase letter, lowercase letter, number, and special character.';
         return {
           success: false,
-          error: 'New password must meet all security requirements: at least 8 characters, uppercase letter, lowercase letter, number, and special character.'
+          error: errorMessage
         };
       }
 
