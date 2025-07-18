@@ -140,13 +140,19 @@ export function validateEnvironment(): { valid: boolean; errors: string[] } {
   }
 
   // Validate URL formats
-  try {
-    new URL(config.FRONTEND_BASE_URL);
-    new URL(config.BACKEND_BASE_URL);
-    new URL(config.API_BASE_URL);
-  } catch (error) {
-    errors.push('Invalid URL format for FRONTEND_BASE_URL, BACKEND_BASE_URL, or API_BASE_URL');
-  }
+  const urlsToValidate = [
+    { name: 'FRONTEND_BASE_URL', value: config.FRONTEND_BASE_URL },
+    { name: 'BACKEND_BASE_URL', value: config.BACKEND_BASE_URL },
+    { name: 'API_BASE_URL', value: config.API_BASE_URL }
+  ];
+
+  urlsToValidate.forEach(({ name, value }) => {
+    try {
+      new URL(value);
+    } catch (error) {
+      errors.push(`Invalid URL format for ${name}: ${value}`);
+    }
+  });
 
   return {
     valid: errors.length === 0,
