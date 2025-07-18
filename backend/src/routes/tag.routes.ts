@@ -65,7 +65,7 @@ router.get('/event/:eventId', requireRole(['reporter', 'responder', 'event_admin
     const result = await tagService.getTagsByEvent(eventId, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('No access')) {
+      if (result.error === 'No access to this event.') {
         res.status(403).json({ error: result.error });
         return;
       }
@@ -127,7 +127,7 @@ router.get('/event/slug/:eventSlug', requireRole(['reporter', 'responder', 'even
     const result = await tagService.getTagsByEvent(event.id, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('No access')) {
+      if (result.error === 'No access to this event.') {
         res.status(403).json({ error: result.error });
         return;
       }
@@ -207,7 +207,7 @@ router.post('/', requireRole(['responder', 'event_admin', 'system_admin']), asyn
     const result = await tagService.createTag({ name, color, eventId }, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('Insufficient permissions')) {
+      if (result.error === 'Insufficient permissions. Only responders and above can manage tags.') {
         res.status(403).json({ error: result.error });
         return;
       }
@@ -274,11 +274,11 @@ router.put('/:tagId', requireRole(['responder', 'event_admin', 'system_admin']),
     const result = await tagService.updateTag(tagId, { name, color }, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('Insufficient permissions')) {
+      if (result.error === 'Insufficient permissions. Only responders and above can manage tags.') {
         res.status(403).json({ error: result.error });
         return;
       }
-      if (result.error?.includes('not found')) {
+      if (result.error === 'Tag not found.') {
         res.status(404).json({ error: result.error });
         return;
       }
@@ -331,11 +331,11 @@ router.delete('/:tagId', requireRole(['responder', 'event_admin', 'system_admin'
     const result = await tagService.deleteTag(tagId, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('Insufficient permissions')) {
+      if (result.error === 'Insufficient permissions. Only responders and above can manage tags.') {
         res.status(403).json({ error: result.error });
         return;
       }
-      if (result.error?.includes('not found')) {
+      if (result.error === 'Tag not found.') {
         res.status(404).json({ error: result.error });
         return;
       }
@@ -408,11 +408,11 @@ router.post('/incident/:incidentId/add', requireRole(['responder', 'event_admin'
     const result = await tagService.addTagsToIncident(incidentId, tagIds, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('Insufficient permissions')) {
+      if (result.error === 'Insufficient permissions. Only responders and above can manage incident tags.') {
         res.status(403).json({ error: result.error });
         return;
       }
-      if (result.error?.includes('not found')) {
+      if (result.error === 'Incident not found.') {
         res.status(404).json({ error: result.error });
         return;
       }
@@ -485,11 +485,11 @@ router.post('/incident/:incidentId/remove', requireRole(['responder', 'event_adm
     const result = await tagService.removeTagsFromIncident(incidentId, tagIds, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('Insufficient permissions')) {
+      if (result.error === 'Insufficient permissions. Only responders and above can manage incident tags.') {
         res.status(403).json({ error: result.error });
         return;
       }
-      if (result.error?.includes('not found')) {
+      if (result.error === 'Incident not found.') {
         res.status(404).json({ error: result.error });
         return;
       }
@@ -549,11 +549,11 @@ router.get('/:tagId/incidents', requireRole(['reporter', 'responder', 'event_adm
     const result = await tagService.getIncidentsByTag(tagId, user.id);
 
     if (!result.success) {
-      if (result.error?.includes('No access')) {
+      if (result.error === 'No access to this event.') {
         res.status(403).json({ error: result.error });
         return;
       }
-      if (result.error?.includes('not found')) {
+      if (result.error === 'Tag not found.') {
         res.status(404).json({ error: result.error });
         return;
       }

@@ -151,7 +151,7 @@ router.post('/events', strictRateLimit, validateEvent, handleValidationErrors, r
         res.status(201).json(result.data);
     } else {
         // Use a 409 status for "slug already exists" conflicts
-        if (result.error?.includes('exists')) {
+        if (result.error === 'Slug already exists.') {
             res.status(409).json({ error: result.error });
         } else {
             res.status(400).json({ error: result.error });
@@ -434,7 +434,7 @@ router.patch('/events/:eventId/toggle', requireSystemAdmin(), async (req: Reques
     });
   } catch (error) {
     logger().error('Error toggling event status:', error);
-    if (error instanceof Error && error.message.includes('Record to update not found')) {
+    if (error instanceof Error && error.message === 'Record to update not found.') {
       res.status(404).json({ error: 'Event not found' });
       return;
     }

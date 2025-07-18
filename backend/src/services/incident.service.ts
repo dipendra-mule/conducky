@@ -4,6 +4,7 @@ import { UnifiedRBACService } from './unified-rbac.service';
 import { logAudit } from '../utils/audit';
 import logger from '../config/logger';
 import { encryptField, decryptField, isEncrypted } from '../utils/encryption';
+
 import { Prisma } from '@prisma/client';
 
 export interface IncidentCreateData {
@@ -2229,13 +2230,15 @@ export class IncidentService {
         // Decrypt sensitive data for this incident
         const decryptedIncident = this.decryptIncidentData(incidentWithoutComments);
         
-        return {
+        const incidentWithCount = {
           ...decryptedIncident,
           _count: {
             comments: visibleCommentCount
           },
           userRoles: [] // Roles are not directly available here, but can be fetched if needed
         };
+
+        return incidentWithCount;
       });
 
       // Get total count
