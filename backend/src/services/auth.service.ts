@@ -67,11 +67,11 @@ export class AuthService {
   validatePassword(password: string, userEmail?: string, userName?: string): PasswordValidation {
     const feedback: string[] = [];
     
-    // Common weak patterns to avoid (made less strict)
+    // Common weak patterns to avoid - simplified for better performance
     const commonPatterns = [
       /(.)\1{3,}/,           // Repeated characters (aaaa, 1111) - increased threshold
       /123456|234567|345678|456789|567890/,  // Sequential numbers (longer sequences)
-      /abcdef|bcdefg|cdefgh|defghi|efghij|fghijk|ghijkl|hijklm|ijklmn|jklmno|klmnop|lmnopq|mnopqr|nopqrs|opqrst|pqrstu|qrstuv|rstuvw|stuvwx|tuvwxy|uvwxyz/i, // Sequential letters (longer sequences)
+      /abcdef|qwerty|asdfgh|zxcvbn|fedcba/i, // Common keyboard/sequential patterns
       /^password$|^pass$|^pwd$|^secret$|^login$|^admin$|^user$|^test$|^qwerty$|^asdf$|^zxcv$/i,  // Exact matches only
       /^[0-9]+$/,            // Only numbers
       /^[a-z]+$/,            // Only lowercase
@@ -89,15 +89,36 @@ export class AuthService {
       noPersonalInfo: true // Default to true, will check below
     };
 
-    // Check for personal info if provided
-    if (userEmail && password.toLowerCase().includes(userEmail.split('@')[0].toLowerCase())) {
-      requirements.noPersonalInfo = false;
-      feedback.push('Password should not contain parts of your email address');
+    // Enhanced personal info validation
+    const lowerPassword = password.toLowerCase();
+    
+    // Check for email parts
+    if (userEmail && userEmail.trim()) {
+      const emailLower = userEmail.toLowerCase().trim();
+      const username = emailLower.split('@')[0];
+      const domain = emailLower.split('@')[1]?.split('.')[0];
+      
+      if (username && username.length >= 3 && lowerPassword.includes(username)) {
+        requirements.noPersonalInfo = false;
+        feedback.push('Password should not contain parts of your email address');
+      }
+      
+      if (domain && domain.length >= 3 && lowerPassword.includes(domain)) {
+        requirements.noPersonalInfo = false;
+        feedback.push('Password should not contain parts of your email domain');
+      }
     }
     
-    if (userName && password.toLowerCase().includes(userName.toLowerCase())) {
-      requirements.noPersonalInfo = false;
-      feedback.push('Password should not contain your name');
+    // Check for name parts with improved robustness
+    if (userName && userName.trim()) {
+      const nameParts = userName.toLowerCase().trim().split(/\s+/).filter(part => part.length > 0);
+      for (const part of nameParts) {
+        if (part.length >= 4 && lowerPassword.includes(part)) {
+          requirements.noPersonalInfo = false;
+          feedback.push('Password should not contain your name');
+          break; // Only add the message once
+        }
+      }
     }
 
     // Add specific feedback for missing requirements
@@ -143,37 +164,6 @@ export class AuthService {
       strength,
       feedback
     };
-  }
-
-  /**
-   * Check if password contains personal information
-   */
-  private checkPersonalInfo(password: string, userEmail?: string, userName?: string): boolean {
-    const lowerPassword = password.toLowerCase();
-    
-    // Check against email
-    if (userEmail) {
-      const emailParts = userEmail.toLowerCase().split('@');
-      const username = emailParts[0];
-      const domain = emailParts[1]?.split('.')[0];
-      
-      if (lowerPassword.includes(username) || 
-          (domain && lowerPassword.includes(domain))) {
-        return false;
-      }
-    }
-    
-    // Check against name
-    if (userName) {
-      const nameParts = userName.toLowerCase().split(/\s+/);
-      for (const part of nameParts) {
-        if (part.length >= 3 && lowerPassword.includes(part)) {
-          return false;
-        }
-      }
-    }
-    
-    return true;
   }
 
   /**
