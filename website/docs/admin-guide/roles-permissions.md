@@ -207,4 +207,4 @@ The system implements intelligent role inheritance to simplify management:
 - [Organization Management](./organization-management.md)
 - [System Configuration](./system-configuration.md)
 - [User Management](../user-guide/user-management.md)
-- [API Authentication](../developer-docs/api-documentation.md#authentication)
+- [API Authentication](../developer-docs/api-documentation.md#authentication-testing)

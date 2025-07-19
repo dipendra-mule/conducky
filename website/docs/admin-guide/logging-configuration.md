@@ -289,7 +289,7 @@ The system validates all settings before saving:
 
 ## Related Documentation
 
-- [System Management](/docs/admin-guide/system-management)
-- [Database Monitoring](/docs/admin-guide/database-monitoring)
-- [Audit Logging](/docs/security/audit-logging)
-- [Deployment Guide](/docs/admin-guide/deployment) 
+- [System Management](./system-management/overview)
+- [Database Monitoring](./database-monitoring)
+- [Audit Logging](../security/audit-logging)
+- [Deployment Guide](./deployment) 

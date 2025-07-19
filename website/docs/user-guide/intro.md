@@ -41,7 +41,7 @@ This section is for **all users** of Conducky, including event attendees, Code o
 - **[Public Event Pages](./public-event-pages)** - Understanding public event information
 
 ### Incident Management
-- **[Report Submission](./getting-started/overview#your-first-event)** - How to submit incident reports
+- **[Report Submission](./getting-started/first-steps#getting-oriented-in-your-event)** - How to submit incident reports
 - **[Incident Comments](./incident-comments)** - Communication and collaboration on incidents
 - **[Cross-Event Incidents](./cross-event-incidents)** - Managing incidents across multiple events
 
@@ -57,7 +57,7 @@ This section is for **all users** of Conducky, including event attendees, Code o
 
 ### Event Attendees (Reporters)
 If you're attending an event and may need to incident reports:
-- **Start with**: [Quick Start](./quick-start) → [Report Submission](./getting-started/overview#your-first-event)
+- **Start with**: [Quick Start](./quick-start) → [Report Submission](./getting-started/first-steps#getting-oriented-in-your-event)
 - **Key sections**: Authentication, Navigation, FAQ
 - **Your role**: Submit incidents, track your submissions, communicate with response teams
 
@@ -95,7 +95,7 @@ Understanding your role helps you focus on the most relevant documentation:
 ## 🔗 Quick Navigation
 
 ### By Task
-- **I need to submit an incident** → [Quick Start](./quick-start) → [Getting Started](./getting-started/overview#your-first-event)
+- **I need to submit an incident** → [Quick Start](./quick-start) → [Getting Started](./getting-started/first-steps#getting-oriented-in-your-event)
 - **I can't access something** → [Troubleshooting](./troubleshooting) → [FAQ](./faq/overview)
 - **I need to invite someone** → [Invite Links](./invite-links) → [User Management](./user-management)
 - **I'm managing multiple events** → [Cross-Event Incidents](./cross-event-incidents) → [Navigation](./navigation/overview)
@@ -126,7 +126,7 @@ If you need to integrate Conducky with other systems:
 ### Quick Problem Solving
 1. **Can't log in or access features?** → [Troubleshooting](./troubleshooting#authentication-issues)
 2. **Navigation not working?** → [Troubleshooting](./troubleshooting#navigation-issues)
-3. **Report submission problems?** → [Troubleshooting](./troubleshooting#report-issues)
+3. **Report submission problems?** → [Troubleshooting](./troubleshooting#incident-issues)
 4. **General questions?** → [FAQ](./faq/overview)
 
 ### Contact Support
